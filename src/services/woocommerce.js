@@ -336,5 +336,87 @@ export const reportsAPI = {
   },
 };
 
+// Categories API
+export const categoriesAPI = {
+  getAll: async (params = {}) => {
+    try {
+      const api = getApi();
+      const queryParams = {
+        per_page: 100,
+        ...params,
+      };
+      const response = await api.get('/products/categories', { params: queryParams });
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+};
+
+// Attributes API
+export const attributesAPI = {
+  getAll: async (params = {}) => {
+    try {
+      const api = getApi();
+      const queryParams = {
+        per_page: 100,
+        ...params,
+      };
+      const response = await api.get('/products/attributes', { params: queryParams });
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+  
+  getTerms: async (attributeId, params = {}) => {
+    try {
+      const api = getApi();
+      const queryParams = {
+        per_page: 100,
+        ...params,
+      };
+      const response = await api.get(`/products/attributes/${attributeId}/terms`, { params: queryParams });
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+};
+
+// Media/Images API - Uses WordPress REST API
+export const mediaAPI = {
+  upload: async (file) => {
+    try {
+      const { url, key, secret } = getWooCommerceConfig();
+      
+      if (!url || !key || !secret) {
+        throw new Error('WooCommerce API credentials not configured.');
+      }
+      
+      // WordPress REST API endpoint for media
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await axios.post(
+        `${url}/wp-json/wp/v2/media`,
+        formData,
+        {
+          auth: {
+            username: key,
+            password: secret,
+          },
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+};
+
 export default getApi;
 

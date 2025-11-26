@@ -42,7 +42,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         `}
       >
         <div className={`flex items-center justify-between p-6 border-b border-gray-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <h1 className="text-2xl font-bold text-primary-600">WooCommerce</h1>
+          <h1 className={`text-2xl font-bold text-primary-600 ${isRTL ? 'text-right' : 'text-left'}`}>WooCommerce</h1>
           <button
             className="lg:hidden text-gray-500 hover:text-gray-700"
             onClick={onClose}
@@ -51,7 +51,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           </button>
         </div>
         
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className={`flex-1 p-4 space-y-2 ${isRTL ? 'text-right' : 'text-left'}`}>
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -67,7 +67,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                   }
                 }}
                 className={`
-                  flex items-center ${isRTL ? 'flex-row-reverse' : ''} space-x-3 px-4 py-3 rounded-lg
+                  flex items-center ${isRTL ? 'flex-row-reverse justify-end' : ''} ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'} px-4 py-3 rounded-lg
                   transition-colors duration-200
                   ${isActive 
                     ? 'bg-primary-50 text-primary-600 font-medium' 
@@ -75,8 +75,8 @@ const Sidebar = ({ isOpen, onClose }) => {
                   }
                 `}
               >
-                <Icon size={20} />
-                <span>{item.label}</span>
+                <Icon size={20} className={isRTL ? 'ml-3' : ''} />
+                <span className={isRTL ? 'text-right' : ''}>{item.label}</span>
               </Link>
             );
           })}

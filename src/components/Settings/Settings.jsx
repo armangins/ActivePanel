@@ -66,15 +66,16 @@ const Settings = () => {
       localStorage.setItem('consumer_key', settings.consumerKey);
       localStorage.setItem('consumer_secret', settings.consumerSecret);
 
-      // Also update environment variables (for development)
-      // In production, these should be set as actual environment variables
+      // Settings are saved - no need to reload, API will use new credentials on next call
+      setMessage({ type: 'success', text: t('settingsSaved') });
       
-      setMessage({ type: 'success', text: 'Settings saved successfully!' });
+      // Notify other components (like ConnectionStatus) that settings were updated
+      window.dispatchEvent(new Event('settingsUpdated'));
       
-      // Reload page to apply new settings
+      // Clear message after 3 seconds
       setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+        setMessage(null);
+      }, 3000);
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to save settings: ' + error.message });
     } finally {

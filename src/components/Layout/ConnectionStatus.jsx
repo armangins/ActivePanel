@@ -12,7 +12,17 @@ const ConnectionStatus = () => {
     checkConnection();
     // Check connection every 30 seconds
     const interval = setInterval(checkConnection, 30000);
-    return () => clearInterval(interval);
+    
+    // Listen for settings updates
+    const handleSettingsUpdate = () => {
+      checkConnection();
+    };
+    window.addEventListener('settingsUpdated', handleSettingsUpdate);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate);
+    };
   }, []);
 
   const checkConnection = async () => {
