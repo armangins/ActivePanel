@@ -42,9 +42,9 @@ const Sidebar = ({ isOpen, onClose }) => {
         `}
       >
         <div className={`flex items-center justify-between p-6 border-b border-gray-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <h1 className={`text-2xl font-bold text-primary-600 ${isRTL ? 'text-right' : 'text-left'}`}>WooCommerce</h1>
+          <h1 className={`text-2xl font-bold text-primary-500 ${isRTL ? 'text-right' : 'text-left'}`}>WooCommerce</h1>
           <button
-            className="lg:hidden text-gray-500 hover:text-gray-700"
+            className="lg:hidden text-gray-500 hover:text-primary-500"
             onClick={onClose}
           >
             <X size={24} />
@@ -67,16 +67,25 @@ const Sidebar = ({ isOpen, onClose }) => {
                   }
                 }}
                 className={`
-                  flex items-center ${isRTL ? 'flex-row-reverse justify-end' : ''} ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'} px-4 py-3 rounded-lg
+                  flex items-center gap-3 px-4 py-3 rounded-lg
                   transition-colors duration-200
                   ${isActive 
-                    ? 'bg-primary-50 text-primary-600 font-medium' 
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? 'text-primary-500 font-medium' 
+                    : 'text-gray-700 hover:bg-primary-50 hover:text-primary-500'
                   }
                 `}
+                style={isActive ? { backgroundColor: '#EBF3FF' } : {}}
               >
-                <Icon size={20} className={isRTL ? 'ml-3' : ''} />
-                <span className={isRTL ? 'text-right' : ''}>{item.label}</span>
+                <Icon 
+                  size={20} 
+                  style={isActive ? { color: '#4560FF' } : {}}
+                />
+                <span 
+                  className={isRTL ? 'text-right' : ''}
+                  style={isActive ? { color: '#4560FF' } : {}}
+                >
+                  {item.label}
+                </span>
               </Link>
             );
           })}

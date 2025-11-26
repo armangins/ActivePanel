@@ -384,6 +384,63 @@ export const attributesAPI = {
   },
 };
 
+// Variations API
+export const variationsAPI = {
+  getByProductId: async (productId, params = {}) => {
+    try {
+      const api = getApi();
+      const queryParams = {
+        per_page: 100,
+        ...params,
+      };
+      const response = await api.get(`/products/${productId}/variations`, { params: queryParams });
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+  
+  getById: async (productId, variationId) => {
+    try {
+      const api = getApi();
+      const response = await api.get(`/products/${productId}/variations/${variationId}`);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+  
+  create: async (productId, variationData) => {
+    try {
+      const api = getApi();
+      const response = await api.post(`/products/${productId}/variations`, variationData);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+  
+  update: async (productId, variationId, variationData) => {
+    try {
+      const api = getApi();
+      const response = await api.put(`/products/${productId}/variations/${variationId}`, variationData);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+  
+  delete: async (productId, variationId) => {
+    try {
+      const api = getApi();
+      const response = await api.delete(`/products/${productId}/variations/${variationId}`, { force: true });
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+};
+
 // Media/Images API - Uses WordPress REST API
 export const mediaAPI = {
   upload: async (file) => {

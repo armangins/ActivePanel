@@ -40,7 +40,7 @@ const Customers = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading customers...</p>
         </div>
       </div>
@@ -90,7 +90,7 @@ const Customers = () => {
             >
               <div className="flex items-start space-x-4">
                 <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <User className="text-primary-600" size={24} />
+                  <User className="text-primary-500" size={24} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-lg font-semibold text-gray-900 truncate">

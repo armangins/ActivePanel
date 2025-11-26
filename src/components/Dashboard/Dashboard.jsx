@@ -28,7 +28,7 @@ const StatCard = ({ title, value, change, icon: Icon, trend, isRTL }) => {
           )}
         </div>
         <div className="p-3 bg-primary-50 rounded-lg">
-          <Icon className="text-primary-600" size={24} />
+          <Icon className="text-primary-500" size={24} />
         </div>
       </div>
     </div>
@@ -95,7 +95,7 @@ const Dashboard = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">{t('loading')}</p>
         </div>
       </div>
@@ -191,10 +191,12 @@ const Dashboard = () => {
                     <td className="py-3 px-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                         order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                        order.status === 'processing' ? 'text-primary-500' :
                         order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-gray-100 text-gray-800'
-                      }`}>
+                      }`}
+                      style={order.status === 'processing' ? { backgroundColor: '#EBF3FF' } : {}}
+                      >
                         {t(order.status)}
                       </span>
                     </td>

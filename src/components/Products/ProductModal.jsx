@@ -139,8 +139,24 @@ const ProductModal = ({ product, onClose, onSave }) => {
     setFormData({ ...formData, attributes: updated });
   };
 
+  const steps = [
+    // Step 1: Product details
+    { id: 'general', label: isRTL ? 'פרטי מוצר' : 'Product Details', icon: Package },
+    // Step 2: Images
+    { id: 'media', label: isRTL ? 'תמונות' : 'Images', icon: ImageIcon },
+    // Step 3: Attributes & variations (and shipping section in the form)
+    { id: 'shipping', label: isRTL ? 'תכונות ווריאציות' : 'Attributes & Variations', icon: Package },
+  ];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    // Only allow submission on the last step
+    if (currentStep < steps.length - 1) {
+      return;
+    }
+    
     if (!validateStep(currentStep)) {
       return;
     }
@@ -179,22 +195,19 @@ const ProductModal = ({ product, onClose, onSave }) => {
 
       if (product) {
         await productsAPI.update(product.id, productData);
+        // Show success message box
+        alert(t('productUpdated'));
+        onSave();
       } else {
         await productsAPI.create(productData);
+        onSave();
       }
-      onSave();
     } catch (err) {
       alert(t('error') + ': ' + err.message);
     } finally {
       setSaving(false);
     }
   };
-
-  const steps = [
-    { id: 'general', label: isRTL ? 'פרטי מוצר' : 'Product Details', icon: Package },
-    { id: 'media', label: isRTL ? 'תמונות ותכונות' : 'Images & Attributes', icon: ImageIcon },
-    { id: 'shipping', label: isRTL ? 'משלוח ווריאציות' : 'Shipping & Variations', icon: Package },
-  ];
 
   const validateStep = (stepIndex) => {
     const errors = {};
@@ -266,18 +279,19 @@ const ProductModal = ({ product, onClose, onSave }) => {
               {t('step')} {currentStep + 1} {t('of')} {steps.length}: {steps[currentStep].label}
             </h3>
           </div>
-          <div className={`flex ${isRTL ? 'flex-row-reverse' : ''} items-center justify-between`}>
-            {steps.map((step, index) => {
+          <div className={`flex ${isRTL ? 'flex-row-reverse' : ''} items-center justify-end gap-8`}>
+            {(isRTL ? [...steps].reverse() : steps).map((step, index) => {
+              const actualIndex = isRTL ? steps.length - 1 - index : index;
               const Icon = step.icon;
-              const isActive = index === currentStep;
-              const isCompleted = index < currentStep;
-              const isClickable = index <= currentStep;
+              const isActive = actualIndex === currentStep;
+              const isCompleted = actualIndex < currentStep;
+              const isClickable = actualIndex <= currentStep;
               
               return (
-                <div key={step.id} className={`flex ${isRTL ? 'flex-row-reverse' : ''} items-center flex-1`}>
+                <div key={step.id} className={`flex ${isRTL ? 'flex-row-reverse' : ''} items-center`}>
                   <button
                     type="button"
-                    onClick={() => isClickable && goToStep(index)}
+                    onClick={() => isClickable && goToStep(actualIndex)}
                     disabled={!isClickable}
                     className={`flex ${isRTL ? 'flex-row-reverse' : ''} items-center space-x-3 ${
                       isClickable ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed opacity-50'
@@ -286,7 +300,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                     <div
                       className={`w-12 h-12 rounded-full flex items-center justify-center border-3 transition-all shadow-md ${
                         isActive
-                          ? 'bg-primary-600 border-primary-600 text-white scale-110 shadow-lg'
+                          ? 'bg-primary-500 border-primary-500 text-white scale-110 shadow-lg'
                           : isCompleted
                           ? 'bg-green-500 border-green-500 text-white'
                           : 'bg-white border-gray-300 text-gray-400'
@@ -300,13 +314,13 @@ const ProductModal = ({ product, onClose, onSave }) => {
                     </div>
                     <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
                       <div className={`text-xs font-semibold ${isRTL ? 'text-right' : 'text-left'} ${
-                        isActive ? 'text-primary-600' : isCompleted ? 'text-green-600' : 'text-gray-500'
+                        isActive ? 'text-primary-500' : isCompleted ? 'text-green-600' : 'text-gray-500'
                       }`}>
-                        {t('step')} {index + 1}
+                        {t('step')} {actualIndex + 1}
                       </div>
                       <div
                         className={`text-base font-bold ${
-                          isActive ? 'text-primary-600' : isCompleted ? 'text-green-600' : 'text-gray-500'
+                          isActive ? 'text-primary-500' : isCompleted ? 'text-green-600' : 'text-gray-500'
                         }`}
                       >
                         {step.label}
@@ -315,8 +329,8 @@ const ProductModal = ({ product, onClose, onSave }) => {
                   </button>
                   {index < steps.length - 1 && (
                     <div
-                      className={`flex-1 h-1 mx-6 rounded-full transition-all ${
-                        isCompleted ? 'bg-green-500' : isActive ? 'bg-primary-300' : 'bg-gray-300'
+                      className={`w-24 h-1 mx-6 rounded-full transition-all ${
+                        isCompleted ? 'bg-green-500' : isActive ? 'bg-primary-500' : 'bg-gray-300'
                       }`}
                     />
                   )}
@@ -326,7 +340,16 @@ const ProductModal = ({ product, onClose, onSave }) => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+        <form 
+          onSubmit={handleSubmit} 
+          onKeyDown={(e) => {
+            // Prevent form submission on Enter key unless on last step
+            if (e.key === 'Enter' && currentStep < steps.length - 1) {
+              e.preventDefault();
+            }
+          }}
+          className="flex-1 overflow-y-auto"
+        >
           <div className="p-6 space-y-6">
             {/* General Step */}
             {currentStep === 0 && (
@@ -517,7 +540,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
               </div>
             )}
 
-            {/* Images & Attributes Step */}
+            {/* Images Step */}
             {currentStep === 1 && (
               <div className="space-y-6">
                 {/* Images Section */}
@@ -541,7 +564,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                       <label htmlFor="image-upload" className="cursor-pointer">
                         {uploadingImage ? (
                           <div className="flex flex-col items-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mb-2"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mb-2"></div>
                             <span className="text-sm text-gray-600">{t('loading')}</span>
                           </div>
                         ) : (
@@ -559,7 +582,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                       {formData.images.map((image, index) => (
                         <div key={image.id} className="relative group">
                           {index === 0 && (
-                            <span className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded z-10">
+                            <span className="absolute top-2 left-2 bg-primary-500 text-white text-xs px-2 py-1 rounded z-10">
                               {t('setFeaturedImage')}
                             </span>
                           )}
@@ -572,7 +595,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                             <button
                               type="button"
                               onClick={() => setFeaturedImage(image.id)}
-                              className="opacity-0 group-hover:opacity-100 text-white bg-primary-600 p-2 rounded"
+                              className="opacity-0 group-hover:opacity-100 bg-primary-500 text-white p-2 rounded"
                               title={t('setFeaturedImage')}
                             >
                               <ImageIcon size={16} />
@@ -591,13 +614,18 @@ const ProductModal = ({ product, onClose, onSave }) => {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
 
+            {/* Attributes & Variations Step */}
+            {currentStep === 2 && (
+              <div className="space-y-6">
                 {/* Attributes Section */}
-                <div className="space-y-4 border-t pt-6">
+                <div className="space-y-4">
+                  <h3 className={`text-lg font-semibold text-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {t('attributes')}
+                  </h3>
                   <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
-                    <h3 className={`text-lg font-semibold text-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>
-                      {t('attributes')}
-                    </h3>
                     <button
                       type="button"
                       onClick={addAttribute}
@@ -722,78 +750,6 @@ const ProductModal = ({ product, onClose, onSave }) => {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-
-            {/* Shipping & Variations Step */}
-            {currentStep === 2 && (
-              <div className="space-y-6">
-                {/* Shipping Section */}
-                <div className="space-y-4">
-                  <h3 className={`text-lg font-semibold text-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {isRTL ? 'משלוח' : 'Shipping'}
-                  </h3>
-                  <div>
-                    <label className={`block text-sm font-medium text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                      {t('weight')}
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={formData.weight}
-                      onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                      className="input-field"
-                      placeholder="kg"
-                    />
-                  </div>
-
-                  <div>
-                    <label className={`block text-sm font-medium text-gray-700 mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-                      {t('dimensions')}
-                    </label>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className={`block text-xs text-gray-600 mb-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-                          {t('length')}
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={formData.length}
-                          onChange={(e) => setFormData({ ...formData, length: e.target.value })}
-                          className="input-field"
-                          placeholder="cm"
-                        />
-                      </div>
-                      <div>
-                        <label className={`block text-xs text-gray-600 mb-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-                          {t('width')}
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={formData.width}
-                          onChange={(e) => setFormData({ ...formData, width: e.target.value })}
-                          className="input-field"
-                          placeholder="cm"
-                        />
-                      </div>
-                      <div>
-                        <label className={`block text-xs text-gray-600 mb-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-                          {t('height')}
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={formData.height}
-                          onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-                          className="input-field"
-                          placeholder="cm"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
                 {/* Variations Section */}
                 <div className="space-y-4 border-t pt-6">
@@ -818,8 +774,8 @@ const ProductModal = ({ product, onClose, onSave }) => {
                       )}
                     </div>
                   ) : (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <p className="text-blue-800">
+                    <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
+                      <p className="text-primary-800">
                         {isRTL 
                           ? 'וריאציות זמינות רק עבור מוצרים משתנים. שנה את סוג המוצר ל"משתנה" בשלב הכללי כדי להשתמש בוריאציות.'
                           : 'Variations are only available for variable products. Change the product type to "Variable" in the General step to use variations.'}
@@ -831,8 +787,10 @@ const ProductModal = ({ product, onClose, onSave }) => {
             )}
           </div>
 
-          {/* Form Actions */}
-          <div className={`flex ${isRTL ? 'flex-row-reverse' : ''} justify-between items-center p-6 border-t border-gray-200 bg-gray-50`}>
+          {/* Form Actions - sticky at bottom */}
+          <div
+            className={`sticky bottom-0 flex ${isRTL ? 'flex-row-reverse' : ''} justify-between items-center p-6 border-t border-gray-200 bg-gray-50`}
+          >
             <div className={`flex ${isRTL ? 'flex-row-reverse' : ''} items-center space-x-2 text-sm text-gray-600`}>
               <span>
                 {t('step')} {currentStep + 1} {t('of')} {steps.length}
@@ -870,11 +828,16 @@ const ProductModal = ({ product, onClose, onSave }) => {
                 </button>
               ) : (
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSubmit(e);
+                  }}
                   className="btn-primary"
                   disabled={saving || !isCurrentStepValid}
                 >
-                  {saving ? t('saving') : product ? t('updateProduct') : t('createProduct')}
+                  {saving ? t('saving') : product ? t('update') : t('createProduct')}
                 </button>
               )}
             </div>

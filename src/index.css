@@ -18,11 +18,13 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors duration-200 font-medium;
+    background-color: #4560FF;
+    @apply text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity duration-200 font-medium;
   }
   
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium;
+    background-color: #4560FF;
+    @apply text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity duration-200 font-medium;
   }
   
   .card {
@@ -30,7 +32,7 @@
   }
   
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all;
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all;
   }
   
   /* RTL Support - Using direct CSS properties to avoid circular dependencies */
@@ -39,7 +41,7 @@
   }
   
   [dir="rtl"] .text-right {
-    text-align: left;
+    text-align: right;
   }
   
   [dir="rtl"] .ml-1 {

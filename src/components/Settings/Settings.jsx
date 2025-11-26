@@ -185,9 +185,9 @@ const Settings = () => {
         </div>
       </div>
 
-      <div className="card max-w-2xl bg-blue-50 border-blue-200">
-        <h3 className="text-lg font-semibold text-blue-900 mb-2">How to Get API Credentials</h3>
-        <ol className="list-decimal list-inside space-y-2 text-sm text-blue-800">
+      <div className="card max-w-2xl bg-primary-50 border-primary-200">
+        <h3 className="text-lg font-semibold text-primary-900 mb-2">How to Get API Credentials</h3>
+        <ol className="list-decimal list-inside space-y-2 text-sm text-primary-800">
           <li>Log in to your WooCommerce store admin panel</li>
           <li>Navigate to WooCommerce → Settings → Advanced → REST API</li>
           <li>Click "Add Key" to create a new API key</li>

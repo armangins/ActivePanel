@@ -14,7 +14,7 @@ const Header = ({ onMenuClick }) => {
         <div className={`flex items-center space-x-4 flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <button
             onClick={onMenuClick}
-            className="lg:hidden text-gray-600 hover:text-gray-900"
+            className="lg:hidden text-gray-600 hover:text-primary-500"
           >
             <Menu size={24} />
           </button>
@@ -41,7 +41,7 @@ const Header = ({ onMenuClick }) => {
           <div className="relative">
             <button
               onClick={() => setShowLangMenu(!showLangMenu)}
-              className="flex items-center space-x-2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center space-x-2 p-2 text-gray-600 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors"
             >
               <Globe size={20} />
               <span className="hidden md:inline text-sm font-medium">{language.toUpperCase()}</span>
@@ -58,9 +58,10 @@ const Header = ({ onMenuClick }) => {
                       changeLanguage('he');
                       setShowLangMenu(false);
                     }}
-                    className={`w-full text-left px-4 py-2 hover:bg-gray-50 rounded-t-lg ${
-                      language === 'he' ? 'bg-primary-50 text-primary-600 font-medium' : ''
+                    className={`w-full text-left px-4 py-2 hover:bg-primary-50 rounded-t-lg ${
+                      language === 'he' ? 'text-primary-500 font-medium' : ''
                     }`}
+                    style={language === 'he' ? { backgroundColor: '#EBF3FF' } : {}}
                   >
                     עברית
                   </button>
@@ -69,9 +70,10 @@ const Header = ({ onMenuClick }) => {
                       changeLanguage('en');
                       setShowLangMenu(false);
                     }}
-                    className={`w-full text-left px-4 py-2 hover:bg-gray-50 rounded-b-lg ${
-                      language === 'en' ? 'bg-primary-50 text-primary-600 font-medium' : ''
+                    className={`w-full text-left px-4 py-2 hover:bg-primary-50 rounded-b-lg ${
+                      language === 'en' ? 'text-primary-500 font-medium' : ''
                     }`}
+                    style={language === 'en' ? { backgroundColor: '#EBF3FF' } : {}}
                   >
                     English
                   </button>
@@ -80,14 +82,14 @@ const Header = ({ onMenuClick }) => {
             )}
           </div>
           
-          <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+          <button className="relative p-2 text-gray-600 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors">
             <Bell size={20} />
             <span className={`absolute top-1 ${isRTL ? 'left-1' : 'right-1'} w-2 h-2 bg-red-500 rounded-full`}></span>
           </button>
           
           <div className={`flex items-center space-x-3 ${isRTL ? 'pr-4 pl-0 border-r' : 'pl-4 border-l'} border-gray-200`}>
             <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-              <User size={18} className="text-primary-600" />
+              <User size={18} className="text-primary-500" />
             </div>
             <div className="hidden md:block">
               <p className="text-sm font-medium text-gray-900">{t('adminUser')}</p>

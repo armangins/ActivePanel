@@ -53,7 +53,7 @@ const Orders = () => {
       case 'completed':
         return 'bg-green-100 text-green-800';
       case 'processing':
-        return 'bg-blue-100 text-blue-800';
+        return 'text-primary-500';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
       case 'on-hold':
@@ -83,7 +83,7 @@ const Orders = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading orders...</p>
         </div>
       </div>
@@ -176,6 +176,7 @@ const Orders = () => {
                         value={order.status}
                         onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
                         className={`text-xs font-medium rounded-full px-3 py-1 border-0 ${getStatusColor(order.status)} cursor-pointer`}
+                        style={order.status === 'processing' ? { backgroundColor: '#EBF3FF' } : {}}
                       >
                         <option value="pending">Pending</option>
                         <option value="processing">Processing</option>
@@ -191,7 +192,7 @@ const Orders = () => {
                     <td className="py-3 px-4 text-right">
                       <button
                         onClick={() => setSelectedOrder(order)}
-                        className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                        className="p-2 text-primary-500 hover:bg-primary-50 rounded-lg transition-colors"
                         title="View Details"
                       >
                         <Eye size={18} />
