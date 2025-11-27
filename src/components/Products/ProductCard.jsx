@@ -50,19 +50,22 @@ const ProductCard = ({
       <div className="p-4 flex flex-col flex-1">
         {/* Product Name, Stock Status, and SKU */}
         <div className="mb-3">
-          <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-center gap-2 mb-2`}>
+          <div className={`flex items-center ${'flex-row-reverse'} justify-center gap-2 mb-2`}>
             <h3 className="text-lg font-semibold text-gray-900 flex-1 line-clamp-1 text-left">
               {productName}
             </h3>
-            <span className={`px-2 py-1 text-xs font-medium rounded flex-shrink-0 ${
-              stockStatus === 'instock' 
-                ? 'text-primary-500' 
-                : 'bg-red-100 text-red-800'
-            }`}
-            style={stockStatus === 'instock' ? { backgroundColor: '#EBF3FF' } : {}}
-            >
-              {stockStatusLabel}
-            </span>
+            {stockStatus === 'instock' ? (
+              <div className={`flex items-center gap-1.5 flex-shrink-0 ${'flex-row-reverse'}`}>
+                <span className="text-xs font-medium text-gray-700">
+                  {stockStatusLabel}
+                </span>
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              </div>
+            ) : (
+              <span className="px-2 py-1 text-xs font-medium rounded flex-shrink-0 bg-red-100 text-red-800">
+                {stockStatusLabel}
+              </span>
+            )}
           </div>
           {sku && (
             <p className="text-sm text-gray-500 text-left">{sku}</p>
@@ -70,7 +73,7 @@ const ProductCard = ({
         </div>
 
         {/* First Row: Prices and Discount */}
-        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-end gap-2 pt-3 border-t border-gray-200 flex-wrap`}>
+        <div className={`flex items-center ${'flex-row-reverse'} justify-end gap-2 pt-3 border-t border-gray-200 flex-wrap`}>
           {salePrice ? (
             <>
               <p className="text-2xl font-bold text-primary-500">
@@ -97,7 +100,7 @@ const ProductCard = ({
         {/* Second Row: Action Buttons and Stock (stock under buttons) */}
         <div className="flex pt-2 mt-auto w-full justify-start">
           <div className="flex flex-col items-start w-full">
-            <div className={`flex ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-2`}>
+            <div className={`flex ${'flex-row-reverse'} gap-2`}>
               <button
                 onClick={(e) => {
                   e.stopPropagation();

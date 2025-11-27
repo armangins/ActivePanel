@@ -74,7 +74,7 @@ const ConnectionStatus = () => {
 
   return (
     <div
-      className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} space-x-2 px-3 py-1.5 rounded-lg text-sm font-medium ${getStatusColor()}`}
+      className={`flex items-center flex-row-reverse space-x-2 px-3 py-1.5 rounded-lg text-sm font-medium ${getStatusColor()}`}
       title={status === 'error' ? t('clickToCheck') : message}
       onClick={checkConnection}
       style={{ cursor: 'pointer' }}

@@ -1,0 +1,18 @@
+<svg width="180" height="50" viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Three angled rectangular shapes with gradient colors -->
+  <g>
+    <!-- Left shape - Cyan -->
+    <path d="M5 15 L12 10 L12 40 L5 35 Z" fill="#00D4FF"/>
+    
+    <!-- Middle shape - Medium Blue -->
+    <path d="M12 10 L19 5 L19 35 L12 40 Z" fill="#0066FF"/>
+    
+    <!-- Right shape - Purple -->
+    <path d="M19 5 L26 10 L26 40 L19 35 Z" fill="#6B46C1"/>
+  </g>
+  
+  <!-- Text: ActivePanel -->
+  <text x="35" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="400" fill="#4B5563" letter-spacing="0">
+    ActivePanel
+  </text>
+</svg>

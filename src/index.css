@@ -2,9 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Fonts - Polin Hebrew Font */
+@font-face {
+  font-family: 'Polin';
+  src: url('./fonts/Polin-Regular.woff2') format('woff2'),
+       url('./fonts/Polin-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
+  html, body {
+    font-family: 'Polin', 'Arial Hebrew', sans-serif;
+  }
+  
   body {
     @apply bg-gray-50 text-gray-900;
+  }
+  
+  * {
+    font-family: inherit;
   }
   
   [dir="rtl"] {
@@ -40,9 +58,41 @@
     text-align: right;
   }
   
-  [dir="rtl"] .text-right {
-    text-align: right;
-  }
+[dir="rtl"] .text-right {
+  text-align: right;
+}
+
+/* Range slider RTL support */
+[dir="rtl"] input[type="range"] {
+  direction: rtl;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #4560FF;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #4560FF;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
   
   [dir="rtl"] .ml-1 {
     margin-right: 0.25rem;
@@ -147,6 +197,20 @@
   [dir="rtl"] .right-1 {
     left: 0.25rem;
     right: auto;
+  }
+  
+  /* Sidebar menu hover state */
+  .sidebar-menu-item:hover:not(.active) {
+    background-color: #EBF3FF !important;
+    color: #4560FF !important;
+  }
+  
+  .sidebar-menu-item:hover:not(.active) svg {
+    color: #4560FF !important;
+  }
+  
+  .sidebar-menu-item:hover:not(.active) span {
+    color: #4560FF !important;
   }
 }
 

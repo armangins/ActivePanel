@@ -24,6 +24,12 @@ export default {
         // Secondary color - #EBF3FF for badges and active states
         secondary: '#EBF3FF',
       },
+      fontFamily: {
+        // Default font - Polin (local font)
+        sans: ['Polin', 'Arial Hebrew', 'sans-serif'],
+        // Custom Hebrew font
+        hebrew: ['Polin', 'Arial Hebrew', 'sans-serif'],
+      },
     },
   },
   plugins: [],

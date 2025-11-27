@@ -1,7 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Package, Image as ImageIcon, Upload, Trash, Plus, X, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import UploadIcon from '../Common/UploadIcon';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { productsAPI, categoriesAPI, attributesAPI, mediaAPI } from '../../services/woocommerce';
+import ProductModalHeader from './ProductModal/ProductModalHeader';
+import ProductModalGeneralStep from './ProductModal/ProductModalGeneralStep';
+import ProductModalImagesStep from './ProductModal/ProductModalImagesStep';
+import ProductModalAttributesStep from './ProductModal/ProductModalAttributesStep';
+import ProductModalFooter from './ProductModal/ProductModalFooter';
 
 const ProductModal = ({ product, onClose, onSave }) => {
   const { t, isRTL } = useLanguage();
@@ -9,6 +15,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
   const [allCategories, setAllCategories] = useState([]);
   const [allAttributes, setAllAttributes] = useState([]);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
   
   const [formData, setFormData] = useState({
@@ -37,6 +44,32 @@ const ProductModal = ({ product, onClose, onSave }) => {
     loadCategories();
     loadAttributes();
   }, []);
+
+  // Update formData when product prop changes (when editing)
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        type: product.type || 'simple',
+        name: product.name || '',
+        regular_price: product.regular_price || product.price || '',
+        sale_price: product.sale_price || '',
+        sku: product.sku || '',
+        stock_quantity: product.stock_quantity || '',
+        description: product.description || '',
+        short_description: product.short_description || '',
+        stock_status: product.stock_status || 'instock',
+        categories: product.categories?.map(c => c.id) || [],
+        images: product.images || [],
+        attributes: product.attributes || [],
+        variations: product.variations || [],
+        weight: product.weight || '',
+        length: product.dimensions?.length || '',
+        width: product.dimensions?.width || '',
+        height: product.dimensions?.height || '',
+        tags: product.tags?.map(t => ({ id: t.id, name: t.name })) || [],
+      });
+    }
+  }, [product]);
 
   const loadCategories = async () => {
     try {
@@ -70,17 +103,40 @@ const ProductModal = ({ product, onClose, onSave }) => {
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {
+      setUploadError(null);
+      return;
+    }
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setUploadError(t('invalidImageFile') || 'Please select a valid image file.');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      setUploadError(t('fileTooLarge') || 'Image size should be less than 10MB.');
+      return;
+    }
+
+    setUploadError(null);
     setUploadingImage(true);
+    
     try {
       const uploadedImage = await mediaAPI.upload(file);
       setFormData({
         ...formData,
         images: [...formData.images, { id: uploadedImage.id, src: uploadedImage.source_url }],
       });
+      // Clear any previous errors on success
+      setUploadError(null);
+      // Reset the input field to allow uploading the same file again
+      e.target.value = '';
     } catch (err) {
-      alert(t('error') + ': ' + err.message);
+      console.error('Image upload error:', err);
+      setUploadError(err.message || t('uploadFailed') || 'Failed to upload image. Please try again.');
     } finally {
       setUploadingImage(false);
     }
@@ -141,11 +197,11 @@ const ProductModal = ({ product, onClose, onSave }) => {
 
   const steps = [
     // Step 1: Product details
-    { id: 'general', label: isRTL ? 'פרטי מוצר' : 'Product Details', icon: Package },
+    { id: 'general', label: 'פרטי מוצר', icon: Package },
     // Step 2: Images
-    { id: 'media', label: isRTL ? 'תמונות' : 'Images', icon: ImageIcon },
+    { id: 'media', label: 'תמונות', icon: ImageIcon },
     // Step 3: Attributes & variations (and shipping section in the form)
-    { id: 'shipping', label: isRTL ? 'תכונות ווריאציות' : 'Attributes & Variations', icon: Package },
+    { id: 'shipping', label: 'תכונות ווריאציות', icon: Package },
   ];
 
   const handleSubmit = async (e) => {
@@ -214,10 +270,10 @@ const ProductModal = ({ product, onClose, onSave }) => {
     switch (stepIndex) {
       case 0: // General
         if (!formData.name || formData.name.trim() === '') {
-          errors.name = isRTL ? 'שם המוצר נדרש' : 'Product name is required';
+          errors.name = 'שם המוצר נדרש';
         }
         if (!formData.regular_price || formData.regular_price === '') {
-          errors.regular_price = isRTL ? 'מחיר רגיל נדרש' : 'Regular price is required';
+          errors.regular_price = 'מחיר רגיל נדרש';
         }
         setValidationErrors(errors);
         return Object.keys(errors).length === 0;
@@ -264,81 +320,20 @@ const ProductModal = ({ product, onClose, onSave }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className={`text-2xl font-bold text-gray-900 ${isRTL ? 'text-right' : 'text-left'}`}>
-            {product ? t('editProduct') : t('createProduct')}
-          </h2>
-        </div>
-
-        {/* Step Progress Indicator - Enhanced Visibility */}
-        <div className="px-6 py-6 border-b-2 border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
-          <div className="mb-4">
-            <h3 className={`text-lg font-semibold text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
-              {t('step')} {currentStep + 1} {t('of')} {steps.length}: {steps[currentStep].label}
-            </h3>
-          </div>
-          <div className={`flex ${isRTL ? 'flex-row-reverse' : ''} items-center justify-end gap-8`}>
-            {(isRTL ? [...steps].reverse() : steps).map((step, index) => {
-              const actualIndex = isRTL ? steps.length - 1 - index : index;
-              const Icon = step.icon;
-              const isActive = actualIndex === currentStep;
-              const isCompleted = actualIndex < currentStep;
-              const isClickable = actualIndex <= currentStep;
-              
-              return (
-                <div key={step.id} className={`flex ${isRTL ? 'flex-row-reverse' : ''} items-center`}>
-                  <button
-                    type="button"
-                    onClick={() => isClickable && goToStep(actualIndex)}
-                    disabled={!isClickable}
-                    className={`flex ${isRTL ? 'flex-row-reverse' : ''} items-center space-x-3 ${
-                      isClickable ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed opacity-50'
-                    } transition-all`}
-                  >
-                    <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center border-3 transition-all shadow-md ${
-                        isActive
-                          ? 'bg-primary-500 border-primary-500 text-white scale-110 shadow-lg'
-                          : isCompleted
-                          ? 'bg-green-500 border-green-500 text-white'
-                          : 'bg-white border-gray-300 text-gray-400'
-                      }`}
-                    >
-                      {isCompleted ? (
-                        <Check size={24} />
-                      ) : (
-                        <Icon size={24} />
-                      )}
-                    </div>
-                    <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
-                      <div className={`text-xs font-semibold ${isRTL ? 'text-right' : 'text-left'} ${
-                        isActive ? 'text-primary-500' : isCompleted ? 'text-green-600' : 'text-gray-500'
-                      }`}>
-                        {t('step')} {actualIndex + 1}
-                      </div>
-                      <div
-                        className={`text-base font-bold ${
-                          isActive ? 'text-primary-500' : isCompleted ? 'text-green-600' : 'text-gray-500'
-                        }`}
-                      >
-                        {step.label}
-                      </div>
-                    </div>
-                  </button>
-                  {index < steps.length - 1 && (
-                    <div
-                      className={`w-24 h-1 mx-6 rounded-full transition-all ${
-                        isCompleted ? 'bg-green-500' : isActive ? 'bg-primary-500' : 'bg-gray-300'
-                      }`}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <ProductModalHeader 
+          steps={steps}
+          currentStep={currentStep}
+          onClose={onClose}
+          goToStep={goToStep}
+        />
 
         <form 
           onSubmit={handleSubmit} 
@@ -351,11 +346,21 @@ const ProductModal = ({ product, onClose, onSave }) => {
           className="flex-1 overflow-y-auto"
         >
           <div className="p-6 space-y-6">
-            {/* General Step */}
             {currentStep === 0 && (
+              <ProductModalGeneralStep
+                formData={formData}
+                setFormData={setFormData}
+                validationErrors={validationErrors}
+                setValidationErrors={setValidationErrors}
+                allCategories={allCategories}
+              />
+            )}
+
+            {/* Old General Step - Remove after testing */}
+            {false && currentStep === 0 && (
               <div className="space-y-4">
                 <div>
-                  <label className={`block text-sm font-medium text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <label className={`block text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
                     {t('productType')}
                   </label>
                   <select
@@ -371,7 +376,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-medium text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <label className={`block text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
                     {t('productName')} *
                   </label>
                   <input
@@ -387,14 +392,14 @@ const ProductModal = ({ product, onClose, onSave }) => {
                     className={`input-field ${validationErrors.name ? 'border-red-500' : ''}`}
                   />
                   {validationErrors.name && (
-                    <p className={`text-red-500 text-xs mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <p className={`text-red-500 text-xs mt-1 ${'text-right'}`}>
                       {validationErrors.name}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-medium text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <label className={`block text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
                     {t('shortDescription')}
                   </label>
                   <textarea
@@ -406,7 +411,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-medium text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <label className={`block text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
                     {t('description')}
                   </label>
                   <textarea
@@ -419,7 +424,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className={`block text-sm font-medium text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <label className={`block text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
                       {t('regularPrice')} *
                     </label>
                     <input
@@ -436,13 +441,13 @@ const ProductModal = ({ product, onClose, onSave }) => {
                       className={`input-field ${validationErrors.regular_price ? 'border-red-500' : ''}`}
                     />
                     {validationErrors.regular_price && (
-                      <p className={`text-red-500 text-xs mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <p className={`text-red-500 text-xs mt-1 ${'text-right'}`}>
                         {validationErrors.regular_price}
                       </p>
                     )}
                   </div>
                   <div>
-                    <label className={`block text-sm font-medium text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <label className={`block text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
                       {t('salePrice')}
                     </label>
                     <input
@@ -457,7 +462,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className={`block text-sm font-medium text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <label className={`block text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
                       {t('sku')}
                     </label>
                     <input
@@ -468,7 +473,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                     />
                   </div>
                   <div>
-                    <label className={`block text-sm font-medium text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <label className={`block text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
                       {t('stockStatus')}
                     </label>
                     <select
@@ -484,7 +489,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-medium text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <label className={`block text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
                     {t('stockQuantity')}
                   </label>
                   <input
@@ -496,7 +501,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-medium text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <label className={`block text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
                     {t('categories')}
                   </label>
                   <select
@@ -515,12 +520,12 @@ const ProductModal = ({ product, onClose, onSave }) => {
                     ))}
                   </select>
                   <p className="text-xs text-gray-500 mt-1">
-                    {isRTL ? 'החזק Ctrl (Cmd ב-Mac) כדי לבחור מספר קטגוריות' : 'Hold Ctrl (Cmd on Mac) to select multiple categories'}
+                    החזק Ctrl (Cmd ב-Mac) כדי לבחור מספר קטגוריות
                   </p>
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-medium text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <label className={`block text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
                     {t('tags')}
                   </label>
                   <input
@@ -545,14 +550,20 @@ const ProductModal = ({ product, onClose, onSave }) => {
               <div className="space-y-6">
                 {/* Images Section */}
                 <div className="space-y-4">
-                  <h3 className={`text-lg font-semibold text-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <h3 className={`text-lg font-semibold text-gray-800 ${'text-right'}`}>
                     {t('images')}
                   </h3>
                   <div>
-                    <label className={`block text-sm font-medium text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <label className={`block text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
                       {t('addImage')}
                     </label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <div className={`border-2 border-dashed rounded-lg p-6 text-center ${
+                      uploadError 
+                        ? 'border-red-300 bg-red-50' 
+                        : uploadingImage 
+                        ? 'border-primary-300 bg-primary-50' 
+                        : 'border-gray-300'
+                    }`}>
                       <input
                         type="file"
                         accept="image/*"
@@ -561,19 +572,30 @@ const ProductModal = ({ product, onClose, onSave }) => {
                         id="image-upload"
                         disabled={uploadingImage}
                       />
-                      <label htmlFor="image-upload" className="cursor-pointer">
+                      <label htmlFor="image-upload" className={`cursor-pointer ${uploadingImage ? 'pointer-events-none' : ''}`}>
                         {uploadingImage ? (
                           <div className="flex flex-col items-center">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mb-2"></div>
-                            <span className="text-sm text-gray-600">{t('loading')}</span>
+                            <span className="text-sm text-gray-600">{t('uploading') || t('loading')}</span>
                           </div>
                         ) : (
                           <div className="flex flex-col items-center">
-                            <Upload className="text-gray-400 mb-2" size={32} />
+                            <UploadIcon size={32} className="text-gray-400 mb-2" />
                             <span className="text-sm text-gray-600">{t('addImage')}</span>
+                            <span className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 10MB</span>
                           </div>
                         )}
                       </label>
+                      {uploadError && (
+                        <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded-lg">
+                          <p className="text-sm text-red-800 text-left">{uploadError}</p>
+                          {uploadError.includes('Application Password') && (
+                            <p className="text-xs text-red-600 mt-2 text-left">
+                              {t('goToSettings') || 'Go to Settings → WordPress Application Password to configure.'}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -622,10 +644,10 @@ const ProductModal = ({ product, onClose, onSave }) => {
               <div className="space-y-6">
                 {/* Attributes Section */}
                 <div className="space-y-4">
-                  <h3 className={`text-lg font-semibold text-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <h3 className={`text-lg font-semibold text-gray-800 ${'text-right'}`}>
                     {t('attributes')}
                   </h3>
-                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+                  <div className={`flex items-center ${'flex-row-reverse'} justify-between`}>
                     <button
                       type="button"
                       onClick={addAttribute}
@@ -641,7 +663,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                       <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className={`block text-sm font-medium text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                            <label className={`block text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
                               {t('attributeName')} *
                             </label>
                             <select
@@ -660,7 +682,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                               }}
                               className="input-field mb-2"
                             >
-                              <option value="">{isRTL ? '-- בחר תכונה קיימת או הזן חדשה --' : '-- Select existing or enter new --'}</option>
+                              <option value="">-- בחר תכונה קיימת או הזן חדשה --</option>
                               {allAttributes.map((att) => (
                                 <option key={att.id} value={att.id}>
                                   {att.name}
@@ -708,7 +730,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                         </div>
 
                         <div>
-                          <label className={`block text-sm font-medium text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                          <label className={`block text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
                             {t('attributeValues')}
                           </label>
                           <div className="flex flex-wrap gap-2 mb-2">
@@ -753,7 +775,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
 
                 {/* Variations Section */}
                 <div className="space-y-4 border-t pt-6">
-                  <h3 className={`text-lg font-semibold text-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <h3 className={`text-lg font-semibold text-gray-800 ${'text-right'}`}>
                     {t('variations')}
                   </h3>
                   {formData.type === 'variable' ? (
@@ -789,14 +811,14 @@ const ProductModal = ({ product, onClose, onSave }) => {
 
           {/* Form Actions - sticky at bottom */}
           <div
-            className={`sticky bottom-0 flex ${isRTL ? 'flex-row-reverse' : ''} justify-between items-center p-6 border-t border-gray-200 bg-gray-50`}
+            className={`sticky bottom-0 flex ${'flex-row-reverse'} justify-between items-center p-6 border-t border-gray-200 bg-gray-50`}
           >
-            <div className={`flex ${isRTL ? 'flex-row-reverse' : ''} items-center space-x-2 text-sm text-gray-600`}>
+            <div className={`flex ${'flex-row-reverse'} items-center space-x-2 text-sm text-gray-600`}>
               <span>
                 {t('step')} {currentStep + 1} {t('of')} {steps.length}
               </span>
             </div>
-            <div className={`flex ${isRTL ? 'flex-row-reverse' : ''} space-x-3`}>
+            <div className={`flex ${'flex-row-reverse'} space-x-3`}>
               <button
                 type="button"
                 onClick={onClose}
@@ -809,7 +831,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                 <button
                   type="button"
                   onClick={handlePrevious}
-                  className={`btn-secondary flex items-center ${isRTL ? 'flex-row-reverse' : ''} space-x-2`}
+                  className={`btn-secondary flex items-center ${'flex-row-reverse'} space-x-2`}
                   disabled={saving}
                 >
                   {isRTL ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
@@ -820,7 +842,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className={`btn-primary flex items-center ${isRTL ? 'flex-row-reverse' : ''} space-x-2`}
+                  className={`btn-primary flex items-center ${'flex-row-reverse'} space-x-2`}
                   disabled={saving || !isCurrentStepValid}
                 >
                   <span>{t('next')}</span>

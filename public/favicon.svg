@@ -1,0 +1,13 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Simplified logo for favicon - three angled shapes -->
+  <g>
+    <path d="M4 10 L7 8 L7 24 L4 22 Z" fill="#00D4FF"/>
+    <path d="M7 8 L10 6 L10 22 L7 24 Z" fill="#0066FF"/>
+    <path d="M10 6 L13 8 L13 24 L10 22 Z" fill="#6B46C1"/>
+  </g>
+  
+  <!-- Simplified text: cf -->
+  <text x="17" y="22" font-family="system-ui, sans-serif" font-size="7" font-weight="400" fill="#9CA3AF">
+    cf
+  </text>
+</svg>

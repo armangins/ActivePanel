@@ -63,19 +63,22 @@ const VariationCard = ({
 
         {/* Stock Status */}
         <div className="mb-2">
-          <span className={`px-2 py-1 text-xs font-medium rounded ${
-            stockStatus === 'instock' 
-              ? 'text-primary-500' 
-              : 'bg-red-100 text-red-800'
-          }`}
-          style={stockStatus === 'instock' ? { backgroundColor: '#EBF3FF' } : {}}
-          >
-            {stockStatusLabel}
-          </span>
+          {stockStatus === 'instock' ? (
+            <div className={`flex items-center gap-1.5 ${'flex-row-reverse'}`}>
+              <span className="text-xs font-medium text-gray-700">
+                {stockStatusLabel}
+              </span>
+              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+            </div>
+          ) : (
+            <span className="px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-800">
+              {stockStatusLabel}
+            </span>
+          )}
         </div>
 
         {/* Prices */}
-        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-end gap-2 pt-2 border-t border-gray-200 flex-wrap`}>
+        <div className={`flex items-center ${'flex-row-reverse'} justify-end gap-2 pt-2 border-t border-gray-200 flex-wrap`}>
           {displaySalePrice ? (
             <>
               <p className="text-lg font-bold text-primary-500">

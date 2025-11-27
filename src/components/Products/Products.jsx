@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { productsAPI, categoriesAPI } from '../../services/woocommerce';
 import ProductModal from './ProductModal';
-import ProductDetailsModal from './ProductDetailsModal';
+import ProductDetailsModal from './ProductDetailsModal/ProductDetailsModal';
 import ProductsHeader from './ProductsHeader';
 import ProductFilters from './ProductFilters';
 import ProductGrid from './ProductGrid';
+import ProductList from './ProductList';
 import EmptyState from './EmptyState';
 import LoadingState from './LoadingState';
 import ErrorState from './ErrorState';
@@ -35,6 +36,9 @@ const Products = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); // edit/create modal
   const [isDetailsOpen, setIsDetailsOpen] = useState(false); // view-only details
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [sortField, setSortField] = useState(null); // 'name' or 'price'
+  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' or 'desc'
 
   const loadCategories = async () => {
     try {
@@ -149,16 +153,33 @@ const Products = () => {
 
 
   const handleDelete = async (id) => {
-    if (!window.confirm(t('deleteProduct'))) {
-      return;
+    // Close any open modals for this product
+    if (selectedProduct?.id === id) {
+      setIsModalOpen(false);
+      setIsDetailsOpen(false);
+      setSelectedProduct(null);
     }
 
+    // Store current products count before deletion
+    const currentProductsCount = products.length;
+
     try {
-      await productsAPI.delete(id);
+      // Optimistically update UI first for instant feedback
       setProducts((prev) => prev.filter((p) => p.id !== id));
       setTotalProducts((prev) => Math.max(prev - 1, 0));
+      
+      // Then delete from API
+      await productsAPI.delete(id);
+      
+      // If we're on the last page and it becomes empty, go to previous page
+      if (currentProductsCount === 1 && page > 1) {
+        loadProducts(page - 1, true);
+      }
     } catch (err) {
+      // Revert optimistic update on error
       alert(t('error') + ': ' + err.message);
+      // Reload products to sync with server
+      loadProducts(page, true);
     }
   };
 
@@ -184,8 +205,46 @@ const Products = () => {
     return true;
   });
 
+  // Sort products
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (!sortField) return 0;
+
+    if (sortField === 'name') {
+      const nameA = (a.name || '').toLowerCase();
+      const nameB = (b.name || '').toLowerCase();
+      if (sortDirection === 'asc') {
+        return nameA.localeCompare(nameB);
+      } else {
+        return nameB.localeCompare(nameA);
+      }
+    }
+
+    if (sortField === 'price') {
+      const priceA = parseFloat(a.price || a.regular_price || 0);
+      const priceB = parseFloat(b.price || b.regular_price || 0);
+      if (sortDirection === 'asc') {
+        return priceA - priceB;
+      } else {
+        return priceB - priceA;
+      }
+    }
+
+    return 0;
+  });
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new field with ascending direction
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
   const hasActiveFilters = selectedCategory || minPrice || maxPrice || searchQuery;
-  const displayedCount = (searchQuery || selectedCategory || minPrice || maxPrice) ? filteredProducts.length : products.length;
+  const displayedCount = sortedProducts.length;
   const totalCount = totalProducts || products.length;
 
   const clearFilters = () => {
@@ -214,13 +273,14 @@ const Products = () => {
           setSelectedProduct(null);
           setIsModalOpen(true);
         }}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         isRTL={isRTL}
         t={t}
-      />
-
-      <ProductFilters
-        showFilters={showFilters}
         onToggleFilters={() => setShowFilters(!showFilters)}
+        hasActiveFilters={hasActiveFilters}
+        activeFilterCount={activeFilterCount}
+        showFilters={showFilters}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         categories={categories}
@@ -230,8 +290,11 @@ const Products = () => {
         onMinPriceChange={setMinPrice}
         maxPrice={maxPrice}
         onMaxPriceChange={setMaxPrice}
+        products={products}
+      />
+
+      <ProductFilters
         hasActiveFilters={hasActiveFilters}
-        activeFilterCount={activeFilterCount}
         onClearFilters={clearFilters}
         isRTL={isRTL}
         t={t}
@@ -243,23 +306,62 @@ const Products = () => {
         </div>
       )}
 
-      {filteredProducts.length === 0 ? (
+      {sortedProducts.length === 0 ? (
         <EmptyState searchQuery={searchQuery} isRTL={isRTL} t={t} />
-      ) : (
+      ) : viewMode === 'grid' ? (
         <ProductGrid
-          products={filteredProducts}
+          products={sortedProducts}
           onView={(product) => {
             setSelectedProduct(product);
             setIsDetailsOpen(true);
           }}
           onEdit={(product) => {
+            // Open modal immediately with existing product data
             setSelectedProduct(product);
             setIsModalOpen(true);
+            // Load full product details in background
+            productsAPI.getById(product.id)
+              .then(fullProduct => {
+                setSelectedProduct(fullProduct);
+              })
+              .catch(err => {
+                console.error('Failed to load full product details:', err);
+                // Don't show error - modal already open with partial data
+              });
           }}
           onDelete={handleDelete}
           formatCurrency={formatCurrency}
           isRTL={isRTL}
           t={t}
+        />
+      ) : (
+        <ProductList
+          products={sortedProducts}
+          onView={(product) => {
+            setSelectedProduct(product);
+            setIsDetailsOpen(true);
+          }}
+          onEdit={(product) => {
+            // Open modal immediately with existing product data
+            setSelectedProduct(product);
+            setIsModalOpen(true);
+            // Load full product details in background
+            productsAPI.getById(product.id)
+              .then(fullProduct => {
+                setSelectedProduct(fullProduct);
+              })
+              .catch(err => {
+                console.error('Failed to load full product details:', err);
+                // Don't show error - modal already open with partial data
+              });
+          }}
+          onDelete={handleDelete}
+          formatCurrency={formatCurrency}
+          isRTL={isRTL}
+          t={t}
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onSort={handleSort}
         />
       )}
 
