@@ -86,7 +86,7 @@ const CouponModal = ({ coupon, onClose, onSave, formatCurrency, isRTL, t }) => {
       const data = await productsAPI.getAll({ per_page: 100 });
       setAllProducts(data);
     } catch (err) {
-      console.error('Failed to load products:', err);
+      // Failed to load products
     } finally {
       setLoading(false);
     }
@@ -97,7 +97,7 @@ const CouponModal = ({ coupon, onClose, onSave, formatCurrency, isRTL, t }) => {
       const data = await categoriesAPI.getAll();
       setAllCategories(data);
     } catch (err) {
-      console.error('Failed to load categories:', err);
+      // Failed to load categories
     }
   };
 

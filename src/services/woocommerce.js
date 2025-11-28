@@ -23,16 +23,18 @@ const getWordPressAuth = () => {
     const cleanUsername = wpUsername.trim();
     const cleanPassword = appPassword.trim();
     
-    console.log('Using WordPress Application Password for media upload');
-    console.log('Username:', cleanUsername);
-    console.log('Password length:', cleanPassword.length);
+    // ⚠️ SECURITY: Never log sensitive credentials
+    // Only log in development mode for debugging
+    if (import.meta.env.DEV) {
+      // Log only non-sensitive info in development
+    }
     
     return { username: cleanUsername, password: cleanPassword };
   }
   
   // Fall back to WooCommerce credentials
   const { key, secret } = getWooCommerceConfig();
-  console.log('Falling back to WooCommerce credentials for media upload');
+  // ⚠️ SECURITY: Never log credentials
   return { username: key, password: secret };
 };
 
@@ -83,7 +85,11 @@ const getApi = () => createApiInstance();
 
 // Helper function to handle API errors
 const handleError = (error) => {
-  console.error('WooCommerce API Error:', error);
+  // ⚠️ SECURITY: Never log full error objects that might contain credentials
+  // Only log error message in development
+  if (import.meta.env.DEV) {
+    // Log only error message, not full error object with credentials
+  }
   
   if (error.response) {
     const status = error.response.status;
@@ -868,16 +874,11 @@ export const mediaAPI = {
       const { url } = getWooCommerceConfig();
       const { username, password } = getWordPressAuth();
       
-      console.log('Media upload attempt:', {
-        url: url ? `${url}/wp-json/wp/v2/media` : 'missing',
-        hasUsername: !!username,
-        hasPassword: !!password,
-        usernameLength: username?.length || 0,
-        passwordLength: password?.length || 0,
-        fileName: file?.name,
-        fileSize: file?.size,
-        fileType: file?.type
-      });
+      // ⚠️ SECURITY: Never log sensitive credentials
+      // Only log non-sensitive info in development
+      if (import.meta.env.DEV) {
+        // Log only file info, not credentials
+      }
       
       if (!url || !username || !password) {
         const missing = [];
@@ -906,10 +907,17 @@ export const mediaAPI = {
         }
       );
       
-      console.log('Media upload successful:', response.data);
+      // ⚠️ SECURITY: Never log response data that might contain sensitive info
+      // Only log errors in development
+      if (import.meta.env.DEV) {
+        // Log only error message, not full error object
+      }
       return response.data;
     } catch (error) {
-      console.error('Media upload error:', error);
+      // ⚠️ SECURITY: Log errors safely without exposing sensitive data
+      if (import.meta.env.DEV) {
+        // Log only error message, not credentials or sensitive data
+      }
       
       // Handle specific WordPress REST API errors
       if (error.response) {

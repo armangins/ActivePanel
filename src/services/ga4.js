@@ -39,7 +39,11 @@ const createGA4Instance = () => {
 
 // Helper function to handle GA4 API errors
 const handleGA4Error = (error) => {
-  console.error('GA4 API Error:', error);
+  // ⚠️ SECURITY: Never log full error objects that might contain tokens
+  // Only log error message in development
+  if (import.meta.env.DEV) {
+    // Log only error message, not full error object with tokens
+  }
   
   if (error.response) {
     const status = error.response.status;

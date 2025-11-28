@@ -75,18 +75,18 @@ const ProductModal = ({ product, onClose, onSave }) => {
     try {
       const data = await categoriesAPI.getAll();
       setAllCategories(data);
-    } catch (err) {
-      console.error('Failed to load categories:', err);
-    }
+      } catch (err) {
+        // Failed to load categories
+      }
   };
 
   const loadAttributes = async () => {
     try {
       const data = await attributesAPI.getAll();
       setAllAttributes(data);
-    } catch (err) {
-      console.error('Failed to load attributes:', err);
-    }
+      } catch (err) {
+        // Failed to load attributes
+      }
   };
 
   const loadAttributeTerms = async (attributeId, attrIndex) => {
@@ -96,9 +96,9 @@ const ProductModal = ({ product, onClose, onSave }) => {
       const updated = [...formData.attributes];
       updated[attrIndex].options = terms.map(t => t.name);
       setFormData({ ...formData, attributes: updated });
-    } catch (err) {
-      console.error('Failed to load attribute terms:', err);
-    }
+      } catch (err) {
+        // Failed to load attribute terms
+      }
   };
 
   const handleImageUpload = async (e) => {
@@ -135,7 +135,6 @@ const ProductModal = ({ product, onClose, onSave }) => {
       // Reset the input field to allow uploading the same file again
       e.target.value = '';
     } catch (err) {
-      console.error('Image upload error:', err);
       setUploadError(err.message || t('uploadFailed') || 'Failed to upload image. Please try again.');
     } finally {
       setUploadingImage(false);

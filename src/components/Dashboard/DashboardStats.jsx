@@ -13,7 +13,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
  * @param {Function} t - Translation function
  * @param {boolean} isRTL - Whether the layout is right-to-left
  */
-const DashboardStats = ({ stats, changes = {}, formatCurrency, t, isRTL }) => {
+const DashboardStats = ({ stats, changes = {}, formatCurrency, t, isRTL, onCardClick }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <StatCard
@@ -23,6 +23,7 @@ const DashboardStats = ({ stats, changes = {}, formatCurrency, t, isRTL }) => {
         trend={changes.revenue?.startsWith('+') ? 'up' : 'down'}
         icon={DollarSign}
         isRTL={isRTL}
+        onClick={() => onCardClick && onCardClick('revenue')}
       />
       <StatCard
         title={t('totalOrders')}
@@ -31,6 +32,7 @@ const DashboardStats = ({ stats, changes = {}, formatCurrency, t, isRTL }) => {
         trend={changes.orders?.startsWith('+') ? 'up' : 'down'}
         icon={ShoppingCart}
         isRTL={isRTL}
+        onClick={() => onCardClick && onCardClick('orders')}
       />
       <StatCard
         title={t('totalCustomers')}
@@ -39,6 +41,7 @@ const DashboardStats = ({ stats, changes = {}, formatCurrency, t, isRTL }) => {
         trend={changes.customers?.startsWith('+') ? 'up' : 'down'}
         icon={Users}
         isRTL={isRTL}
+        onClick={() => onCardClick && onCardClick('customers')}
       />
       <StatCard
         title={t('totalProducts')}
@@ -47,6 +50,7 @@ const DashboardStats = ({ stats, changes = {}, formatCurrency, t, isRTL }) => {
         trend={changes.products?.startsWith('+') ? 'up' : 'down'}
         icon={Package}
         isRTL={isRTL}
+        onClick={() => onCardClick && onCardClick('products')}
       />
     </div>
   );

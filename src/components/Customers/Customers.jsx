@@ -14,7 +14,7 @@ const PER_PAGE = 24;
 
 const Customers = () => {
   const { t, isRTL } = useLanguage();
-  const [customers, setCustomers] = useState([]);
+  const [allCustomers, setAllCustomers] = useState([]); // All loaded customers (no filter)
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
@@ -24,6 +24,7 @@ const Customers = () => {
   const [hasMore, setHasMore] = useState(false);
   const [totalCustomers, setTotalCustomers] = useState(0);
 
+  // Load all customers without filters (for client-side filtering)
   const loadCustomers = useCallback(async (pageToLoad = 1, reset = false) => {
     try {
       reset ? setLoading(true) : setLoadingMore(true);
@@ -39,10 +40,10 @@ const Customers = () => {
       setPage(pageToLoad);
       
       if (reset) {
-        setCustomers(data);
+        setAllCustomers(data);
       } else {
         // Avoid duplicates
-        setCustomers((prev) => {
+        setAllCustomers((prev) => {
           const existingIds = new Set(prev.map(c => c.id));
           const newCustomers = data.filter(c => !existingIds.has(c.id));
           return [...prev, ...newCustomers];
@@ -59,11 +60,10 @@ const Customers = () => {
     loadCustomers(1, true);
   }, [loadCustomers]);
 
-  // Infinite scroll effect
+  // Infinite scroll effect - only when no search query
   useEffect(() => {
-    // Only enable infinite scroll when there's no search query
     if (searchQuery) {
-      return;
+      return; // Don't load more when searching (we filter client-side)
     }
 
     let ticking = false;
@@ -97,7 +97,7 @@ const Customers = () => {
       }, 100);
     };
 
-    if (!loading && customers.length > 0) {
+    if (!loading && allCustomers.length > 0) {
       checkInitialLoad();
     }
 
@@ -108,10 +108,10 @@ const Customers = () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', checkInitialLoad);
     };
-  }, [hasMore, loading, loadingMore, page, searchQuery, loadCustomers, customers.length]);
+  }, [hasMore, loading, loadingMore, page, searchQuery, loadCustomers, allCustomers.length]);
 
-  // Filter customers by search query (client-side filtering)
-  const filteredCustomers = customers.filter(customer => {
+  // Client-side filtering - instant!
+  const filteredCustomers = allCustomers.filter(customer => {
     if (!searchQuery) return true;
     
     const query = searchQuery.toLowerCase();

@@ -35,7 +35,7 @@ const OrderDetailsModal = ({ order, onClose, onStatusUpdate, formatCurrency, isR
         const fullOrderData = await ordersAPI.getById(order.id);
         setFullOrder(fullOrderData);
       } catch (error) {
-        console.error('Failed to load full order details:', error);
+        // Failed to load full order details
         // Fall back to the order passed as prop
       } finally {
         setLoading(false);

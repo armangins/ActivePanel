@@ -32,7 +32,7 @@ const CustomerDetailsModal = ({ customer, onClose, isRTL, t }) => {
         const fullCustomerData = await customersAPI.getById(customer.id);
         setFullCustomer(fullCustomerData);
       } catch (error) {
-        console.error('Failed to load full customer details:', error);
+        // Failed to load full customer details
         // Fall back to the customer passed as prop
       } finally {
         setLoading(false);

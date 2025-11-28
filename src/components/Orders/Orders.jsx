@@ -6,6 +6,7 @@ import SearchInput from '../Common/SearchInput';
 import OrderDetailsModal from './OrderDetailsModal/OrderDetailsModal';
 import OrdersHeader from './OrdersHeader';
 import OrdersTable from './OrdersTable';
+import OrderStatusCards from './OrderStatusCards';
 import EmptyState from './EmptyState';
 import LoadingState from './LoadingState';
 import ErrorState from './ErrorState';
@@ -15,7 +16,7 @@ const PER_PAGE = 50;
 
 const Orders = () => {
   const { t, formatCurrency, isRTL } = useLanguage();
-  const [orders, setOrders] = useState([]);
+  const [allOrders, setAllOrders] = useState([]); // All loaded orders (no filter)
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
@@ -25,7 +26,9 @@ const Orders = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [totalOrders, setTotalOrders] = useState(0);
+  const [statusCounts, setStatusCounts] = useState({});
 
+  // Load orders without status filter (load all orders)
   const loadOrders = useCallback(async (pageToLoad = 1, reset = false) => {
     try {
       reset ? setLoading(true) : setLoadingMore(true);
@@ -38,11 +41,7 @@ const Orders = () => {
         order: 'desc'
       };
 
-      // Apply status filter if not 'all'
-      if (statusFilter !== 'all') {
-        params.status = statusFilter;
-      }
-
+      // Don't apply status filter - load all orders
       const { data, total, totalPages } = await ordersAPI.list(params);
       
       setTotalOrders(total);
@@ -50,10 +49,10 @@ const Orders = () => {
       setPage(pageToLoad);
       
       if (reset) {
-        setOrders(data);
+        setAllOrders(data);
       } else {
         // Avoid duplicates
-        setOrders((prev) => {
+        setAllOrders((prev) => {
           const existingIds = new Set(prev.map(o => o.id));
           const newOrders = data.filter(o => !existingIds.has(o.id));
           return [...prev, ...newOrders];
@@ -64,11 +63,43 @@ const Orders = () => {
     } finally {
       reset ? setLoading(false) : setLoadingMore(false);
     }
-  }, [statusFilter, t]);
+  }, [t]);
+
+  const loadStatusCounts = useCallback(async () => {
+    try {
+      const statuses = ['pending', 'processing', 'on-hold', 'completed', 'cancelled', 'refunded'];
+      const counts = {};
+      
+      // Get total count for all orders
+      const allOrdersData = await ordersAPI.list({ per_page: 1 });
+      counts.all = allOrdersData.total || 0;
+      
+      // Get count for each status
+      await Promise.all(
+        statuses.map(async (status) => {
+          try {
+            const statusData = await ordersAPI.list({ status, per_page: 1 });
+            counts[status] = statusData.total || 0;
+          } catch (err) {
+            counts[status] = 0;
+          }
+        })
+      );
+      
+      setStatusCounts(counts);
+    } catch (err) {
+      // Failed to load status counts
+      setStatusCounts({});
+    }
+  }, []);
+
+  useEffect(() => {
+    loadStatusCounts();
+  }, [loadStatusCounts]);
 
   useEffect(() => {
     loadOrders(1, true);
-  }, [loadOrders]); // Reload when status filter changes (loadOrders depends on statusFilter)
+  }, [loadOrders]); // Load all orders once on mount
 
   // Infinite scroll effect
   useEffect(() => {
@@ -88,7 +119,7 @@ const Orders = () => {
         const documentHeight = document.documentElement.scrollHeight;
 
         if (scrollTop + windowHeight >= documentHeight - 200) {
-          if (hasMore && !loading && !loadingMore && !searchQuery) {
+          if (hasMore && !loading && !loadingMore && !searchQuery && statusFilter === 'all') {
             loadOrders(page + 1, false);
           }
         }
@@ -102,13 +133,13 @@ const Orders = () => {
         const windowHeight = window.innerHeight;
         const documentHeight = document.documentElement.scrollHeight;
         
-        if (documentHeight <= windowHeight + 100 && hasMore && !loading && !loadingMore) {
+        if (documentHeight <= windowHeight + 100 && hasMore && !loading && !loadingMore && statusFilter === 'all') {
           loadOrders(page + 1, false);
         }
       }, 100);
     };
 
-    if (!loading && orders.length > 0) {
+    if (!loading && allOrders.length > 0) {
       checkInitialLoad();
     }
 
@@ -119,33 +150,53 @@ const Orders = () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', checkInitialLoad);
     };
-  }, [hasMore, loading, loadingMore, page, searchQuery, loadOrders, orders.length]);
+  }, [hasMore, loading, loadingMore, page, searchQuery, statusFilter, loadOrders, allOrders.length]);
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
+      const order = allOrders.find(o => o.id === orderId);
+      const oldStatus = order?.status;
+      
       await ordersAPI.update(orderId, { status: newStatus });
-      setOrders(orders.map(order => 
+      setAllOrders(allOrders.map(order => 
         order.id === orderId ? { ...order, status: newStatus } : order
       ));
       if (selectedOrder?.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
+      }
+      
+      // Update status counts
+      if (oldStatus && oldStatus !== newStatus) {
+        setStatusCounts(prev => ({
+          ...prev,
+          [oldStatus]: Math.max(0, (prev[oldStatus] || 0) - 1),
+          [newStatus]: (prev[newStatus] || 0) + 1,
+        }));
       }
     } catch (err) {
       alert(t('error') + ': ' + err.message);
     }
   };
 
-  // Filter orders by search query (client-side filtering)
-  const filteredOrders = orders.filter(order => {
-    if (!searchQuery) return true;
+  // Filter orders by status and search query (client-side filtering - instant!)
+  const filteredOrders = allOrders.filter(order => {
+    // Apply status filter
+    if (statusFilter !== 'all' && order.status !== statusFilter) {
+      return false;
+    }
     
-    const query = searchQuery.toLowerCase();
-    return (
-      order.id.toString().includes(query) ||
-      order.billing?.first_name?.toLowerCase().includes(query) ||
-      order.billing?.last_name?.toLowerCase().includes(query) ||
-      order.billing?.email?.toLowerCase().includes(query)
-    );
+    // Apply search query filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        order.id.toString().includes(query) ||
+        order.billing?.first_name?.toLowerCase().includes(query) ||
+        order.billing?.last_name?.toLowerCase().includes(query) ||
+        order.billing?.email?.toLowerCase().includes(query)
+      );
+    }
+    
+    return true;
   });
 
   const displayedCount = filteredOrders.length;
@@ -162,6 +213,13 @@ const Orders = () => {
         totalCount={totalOrders}
         isRTL={isRTL}
         t={t}
+      />
+
+      {/* Order Status Cards */}
+      <OrderStatusCards
+        statusCounts={statusCounts}
+        onStatusClick={(status) => setStatusFilter(status)}
+        selectedStatus={statusFilter}
       />
 
       {/* Filters */}

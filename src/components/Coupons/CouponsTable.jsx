@@ -23,7 +23,7 @@ const CouponsTable = ({ coupons, onEdit, onDelete, formatCurrency, isRTL, t }) =
       setCopiedCode(code);
       setTimeout(() => setCopiedCode(null), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      // Failed to copy
     }
   };
 

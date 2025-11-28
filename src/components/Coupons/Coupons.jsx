@@ -13,7 +13,7 @@ const PER_PAGE = 50;
 
 const Coupons = () => {
   const { t, formatCurrency, isRTL } = useLanguage();
-  const [coupons, setCoupons] = useState([]);
+  const [allCoupons, setAllCoupons] = useState([]); // All loaded coupons (no filter)
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
@@ -24,6 +24,7 @@ const Coupons = () => {
   const [hasMore, setHasMore] = useState(false);
   const [totalCoupons, setTotalCoupons] = useState(0);
 
+  // Load all coupons without filters (for client-side filtering)
   const loadCoupons = useCallback(async (pageToLoad = 1, reset = false) => {
     try {
       reset ? setLoading(true) : setLoadingMore(true);
@@ -41,10 +42,10 @@ const Coupons = () => {
       setPage(pageToLoad);
       
       if (reset) {
-        setCoupons(data);
+        setAllCoupons(data);
       } else {
         // Avoid duplicates
-        setCoupons((prev) => {
+        setAllCoupons((prev) => {
           const existingIds = new Set(prev.map(c => c.id));
           const newCoupons = data.filter(c => !existingIds.has(c.id));
           return [...prev, ...newCoupons];
@@ -61,9 +62,9 @@ const Coupons = () => {
     loadCoupons(1, true);
   }, [loadCoupons]);
 
-  // Infinite scroll effect
+  // Infinite scroll effect - only when no search query
   useEffect(() => {
-    if (searchQuery) return; // Disable scroll when searching
+    if (searchQuery) return; // Don't load more when searching (we filter client-side)
     
     let ticking = false;
     const handleScroll = () => {
@@ -101,24 +102,20 @@ const Coupons = () => {
       setSelectedCoupon(null);
     }
 
-    const currentCouponsCount = coupons.length;
-
     try {
-      setCoupons((prev) => prev.filter((c) => c.id !== id));
+      // Optimistically update UI first for instant feedback
+      setAllCoupons((prev) => prev.filter((c) => c.id !== id));
       setTotalCoupons((prev) => Math.max(prev - 1, 0));
       
       await couponsAPI.delete(id);
-      
-      if (currentCouponsCount === 1 && page > 1) {
-        loadCoupons(page - 1, true);
-      }
     } catch (err) {
       alert(t('error') + ': ' + err.message);
-      loadCoupons(page, true);
+      loadCoupons(1, true);
     }
   };
 
-  const filteredCoupons = coupons.filter(coupon => {
+  // Client-side filtering - instant!
+  const filteredCoupons = allCoupons.filter(coupon => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
@@ -131,7 +128,7 @@ const Coupons = () => {
     return <LoadingState t={t} />;
   }
 
-  if (error && !coupons.length) {
+  if (error && !allCoupons.length) {
     return <ErrorState error={error} onRetry={() => loadCoupons(1, true)} t={t} />;
   }
 

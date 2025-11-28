@@ -12,11 +12,11 @@ import { TrendingUp, TrendingDown } from 'lucide-react';
  * @param {string} trend - Trend direction: 'up' or 'down'
  * @param {boolean} isRTL - Whether the layout is right-to-left
  */
-const StatCard = ({ title, value, change, icon: Icon, trend, isRTL }) => {
+const StatCard = ({ title, value, change, icon: Icon, trend, isRTL, onClick }) => {
   const isPositive = trend === 'up';
   
   return (
-    <div className="card hover:shadow-lg transition-shadow">
+    <div className="card hover:shadow-lg transition-all cursor-pointer" onClick={onClick}>
       <div className={`flex items-center ${'flex-row-reverse'} justify-between`}>
         <div className="flex-1">
           <p className={`text-sm text-gray-600 mb-1 ${'text-right'}`}>{title}</p>

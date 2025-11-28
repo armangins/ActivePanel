@@ -38,7 +38,7 @@ const ProductDetailsModal = ({ product, onClose, formatCurrency }) => {
         const data = await variationsAPI.getByProductId(product.id);
         setVariations(data || []);
       } catch (error) {
-        console.error('Failed to load variations:', error);
+        // Failed to load variations
         setVariationsError(error.message || t('error'));
       } finally {
         setLoadingVariations(false);

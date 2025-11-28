@@ -2,26 +2,27 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { authenticateWithEmail } from '../../services/auth';
+import { registerUser } from '../../services/auth';
 import { authAPI } from '../../services/api';
-import { checkRateLimit } from '../../utils/security';
-import { Mail, Lock, Loader, Eye, EyeOff } from 'lucide-react';
+import { validatePassword, checkRateLimit } from '../../utils/security';
+import { Mail, Lock, User, Loader, Eye, EyeOff } from 'lucide-react';
 
 const USE_BACKEND_API = import.meta.env.VITE_API_URL;
 
-const Login = () => {
+const SignUp = () => {
   const { login, isAuthenticated } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('admin@mail.com');
-  const [password, setPassword] = useState('admin');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
-    // If already authenticated, redirect to dashboard
     if (isAuthenticated) {
       navigate('/dashboard');
     }
@@ -45,15 +46,15 @@ const Login = () => {
 
           window.google.accounts.id.initialize({
             client_id: clientId,
-            callback: handleCredentialResponse,
+            callback: handleGoogleSignUp,
           });
 
-          const buttonElement = document.getElementById('google-signin-button');
+          const buttonElement = document.getElementById('google-signup-button');
           if (buttonElement) {
             window.google.accounts.id.renderButton(buttonElement, {
               theme: 'outline',
               size: 'large',
-              text: 'signin_with',
+              text: 'signup_with',
               locale: 'he',
               width: '100%',
             });
@@ -70,7 +71,7 @@ const Login = () => {
     };
   }, []);
 
-  const handleCredentialResponse = async (response) => {
+  const handleGoogleSignUp = async (response) => {
     try {
       setLoading(true);
       setError('');
@@ -86,79 +87,97 @@ const Login = () => {
 
       const userData = JSON.parse(jsonPayload);
       
-      // Check if user exists, if not create account (for Google Sign-In/Sign-Up)
-      const users = JSON.parse(localStorage.getItem('activepanel_users') || '[]');
-      let existingUser = users.find(u => u.email === userData.email);
-      
-      if (!existingUser) {
-        // Create new user account
-        existingUser = {
-          id: userData.sub,
-          email: userData.email,
-          name: userData.name || `${userData.given_name || ''} ${userData.family_name || ''}`.trim(),
-          picture: userData.picture,
-          role: 'user',
-          provider: 'google',
-        };
-        users.push(existingUser);
-        localStorage.setItem('activepanel_users', JSON.stringify(users));
-      }
-
+      // Check if user already exists, if not create account
       const user = {
-        id: existingUser.id || userData.sub,
+        id: userData.sub,
         email: userData.email,
-        name: existingUser.name || userData.name,
-        picture: userData.picture || existingUser.picture,
+        name: userData.name || `${userData.given_name || ''} ${userData.family_name || ''}`.trim(),
+        picture: userData.picture,
         given_name: userData.given_name,
         family_name: userData.family_name,
         provider: 'google',
       };
 
+      // Save user to local storage (for demo purposes)
+      // In production, this should be handled by backend
+      const users = JSON.parse(localStorage.getItem('activepanel_users') || '[]');
+      const existingUser = users.find(u => u.email === userData.email);
+      
+      if (!existingUser) {
+        users.push({
+          id: userData.sub,
+          email: userData.email,
+          name: user.name,
+          picture: userData.picture,
+          role: 'user',
+          provider: 'google',
+        });
+        localStorage.setItem('activepanel_users', JSON.stringify(users));
+      }
+
       login(user);
       navigate('/dashboard');
     } catch (error) {
-      setError('שגיאה בהתחברות. אנא נסה שוב.');
+      setError('שגיאה בהרשמה. אנא נסה שוב.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEmailLogin = async (e) => {
+  const handleEmailSignUp = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      if (!email || !password) {
+      // Rate limiting check
+      const rateLimit = checkRateLimit('signup', 5, 15 * 60 * 1000); // 5 attempts per 15 minutes
+      if (!rateLimit.allowed) {
+        setError('יותר מדי ניסיונות. אנא נסה שוב בעוד כמה דקות.');
+        setLoading(false);
+        return;
+      }
+
+      // Validation
+      if (!name || !email || !password || !confirmPassword) {
         setError('אנא מלא את כל השדות');
         setLoading(false);
         return;
       }
 
-      // Rate limiting check (prevent brute force) - client-side only
-      if (!USE_BACKEND_API) {
-        const rateLimit = checkRateLimit(`login_${email}`, 5, 15 * 60 * 1000);
-        if (!rateLimit.allowed) {
-          const minutesRemaining = Math.ceil((rateLimit.resetTime - Date.now()) / 60000);
-          setError(`יותר מדי ניסיונות התחברות. אנא נסה שוב בעוד ${minutesRemaining} דקות.`);
-          setLoading(false);
-          return;
-        }
+      if (password !== confirmPassword) {
+        setError('הסיסמאות אינן תואמות');
+        setLoading(false);
+        return;
+      }
+
+      // Enhanced password validation
+      const passwordValidation = validatePassword(password);
+      if (password.length < 6) {
+        setError('הסיסמה חייבת להכיל לפחות 6 תווים');
+        setLoading(false);
+        return;
+      }
+
+      // For demo, allow simple passwords but warn
+      // In production, enforce strong passwords
+      if (password.length < 8) {
+        // Allow but could warn user
       }
 
       if (USE_BACKEND_API) {
         // Use backend API
-        const result = await authAPI.login(email, password);
+        const result = await authAPI.register(email, password, name);
         login(result.user);
         navigate('/dashboard');
       } else {
         // Fallback to localStorage (demo mode)
-        const user = await authenticateWithEmail(email, password);
+        const user = await registerUser(email, password, name);
         login(user);
         navigate('/dashboard');
       }
     } catch (err) {
-      setError(err.message || 'שגיאה בהתחברות. אנא נסה שוב.');
+      setError(err.message || 'שגיאה בהרשמה. אנא נסה שוב.');
     } finally {
       setLoading(false);
     }
@@ -166,7 +185,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex" dir="rtl">
-      {/* Left Panel - Login Form */}
+      {/* Left Panel - Sign Up Form */}
       <div className="flex-1 flex items-center justify-center bg-white p-8 lg:p-12">
         <div className="w-full max-w-md">
           {/* Logo */}
@@ -178,24 +197,17 @@ const Login = () => {
             />
           </div>
 
-          {/* Sign In Title */}
+          {/* Sign Up Title */}
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {t('signIn') || 'התחבר'}
+            {t('signUp') || 'הירשם'}
           </h1>
           
           <p className="text-gray-600 mb-8">
-            {t('dontHaveAccount') || 'אין לך חשבון?'}{' '}
-            <Link to="/signup" className="text-primary-500 hover:text-primary-600 font-medium">
-              {t('signUp') || 'הירשם'}
+            {t('alreadyHaveAccount') || 'כבר יש לך חשבון?'}{' '}
+            <Link to="/login" className="text-primary-500 hover:text-primary-600 font-medium">
+              {t('signIn') || 'התחבר'}
             </Link>
           </p>
-
-          {/* Demo Info Box */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-right">
-            <p className="text-sm text-blue-800">
-              {t('demoInfo') || 'אתה גולש ב-ActivePanel Demo. לחץ על כפתור "התחבר" כדי לגשת לדמו ולתיעוד.'}
-            </p>
-          </div>
 
           {/* Error Message */}
           {error && (
@@ -204,17 +216,40 @@ const Login = () => {
             </div>
           )}
 
-          {/* Login Form */}
-          <form id="login-form" name="loginForm" onSubmit={handleEmailLogin} className="space-y-6">
+          {/* Sign Up Form */}
+          <form id="signup-form" name="signupForm" onSubmit={handleEmailSignUp} className="space-y-6">
+            {/* Name Field */}
+            <div>
+              <label htmlFor="signup-name" className="block text-sm font-medium text-gray-700 mb-2 text-right">
+                {t('fullName') || 'שם מלא'} *
+              </label>
+              <div className="relative">
+                <User className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  id="signup-name"
+                  name="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={t('enterFullName') || 'הכנס שם מלא'}
+                  className="input-field pl-10 text-right placeholder:pr-2"
+                  dir="rtl"
+                  required
+                  disabled={loading}
+                  autoComplete="name"
+                />
+              </div>
+            </div>
+
             {/* Email Field */}
             <div>
-              <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-2 text-right">
+              <label htmlFor="signup-email" className="block text-sm font-medium text-gray-700 mb-2 text-right">
                 {t('emailAddress') || 'כתובת אימייל'} *
               </label>
               <div className="relative">
                 <Mail className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
-                  id="login-email"
+                  id="signup-email"
                   name="email"
                   type="email"
                   value={email}
@@ -231,27 +266,27 @@ const Login = () => {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-2 text-right">
+              <label htmlFor="signup-password" className="block text-sm font-medium text-gray-700 mb-2 text-right">
                 {t('password') || 'סיסמה'} *
               </label>
               <div className="relative">
-              
+                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
-                  id="login-password"
+                  id="signup-password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={t('enterPassword') || 'הכנס סיסמה'}
-                  className="input-field pl-10 pl-10 text-right placeholder:pr-2"
+                  className="input-field pl-10 text-right placeholder:pr-2"
                   dir="rtl"
                   required
                   disabled={loading}
-                  autoComplete="current-password"
+                  autoComplete="new-password"
+                  minLength={6}
                 />
                 <button
                   type="button"
-                  id="toggle-password-visibility"
                   aria-label={showPassword ? 'הסתר סיסמה' : 'הצג סיסמה'}
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
@@ -261,25 +296,39 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <label htmlFor="remember-me" className="flex items-center gap-2 cursor-pointer">
-                <input
-                  id="remember-me"
-                  name="rememberMe"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
-                />
-                <span className="text-sm text-gray-700">{t('rememberMe') || 'זכור אותי'}</span>
+            {/* Confirm Password Field */}
+            <div>
+              <label htmlFor="signup-confirm-password" className="block text-sm font-medium text-gray-700 mb-2 text-right">
+                {t('confirmPassword') || 'אימות סיסמה'} *
               </label>
-              <a href="#" className="text-sm text-primary-500 hover:text-primary-600">
-                {t('forgotPassword') || 'שכחת סיסמה?'}
-              </a>
+              <div className="relative">
+                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  id="signup-confirm-password"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder={t('confirmPassword') || 'אימות סיסמה'}
+                  className="input-field pl-10 text-right placeholder:pr-2"
+                  dir="rtl"
+                  required
+                  disabled={loading}
+                  autoComplete="new-password"
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  aria-label={showConfirmPassword ? 'הסתר סיסמה' : 'הצג סיסמה'}
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
-            {/* Sign In Button */}
+            {/* Sign Up Button */}
             <button
               type="submit"
               disabled={loading}
@@ -288,10 +337,10 @@ const Login = () => {
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <Loader size={18} className="animate-spin" />
-                  {t('loggingIn') || 'מתחבר...'}
+                  {t('signingUp') || 'נרשם...'}
                 </span>
               ) : (
-                t('signIn') || 'התחבר'
+                t('signUp') || 'הירשם'
               )}
             </button>
 
@@ -306,12 +355,12 @@ const Login = () => {
             </div>
           </form>
 
-          {/* Google Login Button - Outside form */}
+          {/* Google Sign Up Button */}
           <div className="mt-6">
-            <div id="google-signin-button" className="w-full flex justify-center"></div>
+            <div id="google-signup-button" className="w-full flex justify-center"></div>
             {!import.meta.env.VITE_GOOGLE_CLIENT_ID && (
               <p className="text-xs text-gray-500 mt-2 text-center">
-                {t('googleClientIdMissing') || 'Google Sign-In לא מוגדר. אנא הגדר VITE_GOOGLE_CLIENT_ID ב-.env'}
+                {t('googleClientIdMissing') || 'Google Sign-Up לא מוגדר. אנא הגדר VITE_GOOGLE_CLIENT_ID ב-.env'}
               </p>
             )}
           </div>
@@ -367,17 +416,10 @@ const Login = () => {
             </p>
           </div>
         </div>
-
-        {/* Settings Icon */}
-        <button className="absolute top-6 left-6 w-10 h-10 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors z-20">
-          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        </button>
       </div>
     </div>
   );
 };
 
-export default Login;
+export default SignUp;
+

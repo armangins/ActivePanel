@@ -4,6 +4,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { testConnection } from '../../services/woocommerce';
 import { testGA4Connection } from '../../services/ga4';
 import { clearAllCache } from '../../services/cache';
+import GA4Connection from './GA4Connection';
 
 const Settings = () => {
   const { t, isRTL } = useLanguage();
@@ -276,112 +277,11 @@ const Settings = () => {
 
       case 'ga4':
         return (
-          <div className="space-y-6">
-            <p className={`text-sm text-gray-600 ${'text-right'}`}>
-              {t('ga4SettingsDesc') || 'חבר ל-Google Analytics 4 כדי לאמת תנועה, הזמנות ואירועי מסחר אלקטרוני'}
-            </p>
-
-            <div>
-              <label htmlFor="ga4-property-id" className={`flex items-center text-sm font-medium text-gray-700 mb-2 ${'flex-row-reverse'}`}>
-                <BarChart3 size={16} className={'ml-2'} />
-                {t('ga4PropertyId') || 'GA4 Property ID'}
-              </label>
-              <input
-                id="ga4-property-id"
-                name="ga4PropertyId"
-                type="text"
-                placeholder="123456789"
-                value={settings.ga4PropertyId}
-                onChange={(e) => setSettings({ ...settings, ga4PropertyId: e.target.value })}
-                className="input-field text-right"
-                dir="ltr"
-                autoComplete="off"
-              />
-              <p className={`text-xs text-gray-500 mt-1 ${'text-right'}`}>
-                {t('ga4PropertyIdDesc') || 'מצא אותו ב-GA4: Admin → Property Settings → Property ID'}
-              </p>
-            </div>
-
-            <div>
-              <label htmlFor="ga4-access-token" className={`flex items-center text-sm font-medium text-gray-700 mb-2 ${'flex-row-reverse'}`}>
-                <Key size={16} className={'ml-2'} />
-                {t('ga4AccessToken') || 'Access Token'}
-              </label>
-              <div className="relative">
-                <input
-                  id="ga4-access-token"
-                  name="ga4AccessToken"
-                  type="password"
-                  placeholder="ya29.a0AfH6..."
-                  value={settings.ga4AccessToken}
-                  onChange={(e) => setSettings({ ...settings, ga4AccessToken: e.target.value })}
-                  className="input-field pr-10 text-right"
-                  dir="ltr"
-                  autoComplete="off"
-                />
-                <button
-                  type="button"
-                  id="toggle-ga4-token"
-                  aria-label="הצג/הסתר אסימון גישה"
-                  onClick={() => {
-                    const input = document.getElementById('ga4-access-token');
-                    if (input) {
-                      input.type = input.type === 'password' ? 'text' : 'password';
-                    }
-                  }}
-                  className={`absolute top-1/2 -translate-y-1/2 ${'left-3'} text-gray-500 hover:text-gray-700`}
-                >
-                  <Eye size={18} />
-                </button>
-              </div>
-              <p className={`text-xs text-gray-500 mt-1 ${'text-right'}`}>
-                {t('ga4AccessTokenDesc') || 'OAuth 2.0 access token from Google Cloud Console. For production, use a backend proxy.'}
-              </p>
-              <a
-                href="https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/properties/runReport"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`text-xs text-primary-500 hover:underline mt-1 block ${'text-right'}`}
-              >
-                {t('learnMoreGA4') || 'למד עוד על אימות GA4 API'}
-              </a>
-            </div>
-
-            <div className="pt-4 border-t border-gray-200">
-              <button
-                onClick={async () => {
-                  if (!settings.ga4PropertyId || !settings.ga4AccessToken) {
-                    setMessage({ type: 'error', text: t('fillGA4Fields') || 'Please fill in GA4 Property ID and Access Token' });
-                    return;
-                  }
-                  setTesting(true);
-                  setMessage(null);
-                  try {
-                    await testGA4Connection();
-                    setMessage({ type: 'success', text: t('ga4ConnectionSuccess') || 'GA4 connection successful!' });
-                  } catch (error) {
-                    setMessage({ type: 'error', text: error.message });
-                  } finally {
-                    setTesting(false);
-                  }
-                }}
-                disabled={testing || !settings.ga4PropertyId || !settings.ga4AccessToken}
-                className={`btn-secondary flex items-center ${'flex-row-reverse space-x-reverse'} disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                {testing ? (
-                  <>
-                    <Loader size={18} className="animate-spin" />
-                    <span>{t('testing')}</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle size={18} />
-                    <span>{t('testGA4Connection') || 'בדוק חיבור GA4'}</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
+          <GA4Connection
+            settings={settings}
+            onSettingsChange={setSettings}
+            onTestConnection={handleTestConnection}
+          />
         );
 
       case 'products':

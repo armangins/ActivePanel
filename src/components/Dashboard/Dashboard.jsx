@@ -12,8 +12,10 @@ import GA4TrafficCard from './GA4TrafficCard';
 import GA4EcommerceCard from './GA4EcommerceCard';
 import LowStockCard from './LowStockCard';
 import LowStockSidebar from './LowStockSidebar';
+import DashboardSidebar from './DashboardSidebar';
 import LoadingState from './LoadingState';
 import ErrorState from './ErrorState';
+import { DollarSign, ShoppingCart, Users, Package } from 'lucide-react';
 
 const Dashboard = () => {
   const { t, formatCurrency, isRTL } = useLanguage();
@@ -41,11 +43,23 @@ const Dashboard = () => {
   const [previousLowStockCount, setPreviousLowStockCount] = useState(0);
   const [lowStockProducts, setLowStockProducts] = useState([]);
   const [isLowStockSidebarOpen, setIsLowStockSidebarOpen] = useState(false);
+  const [sidebarState, setSidebarState] = useState({
+    type: null, // 'revenue', 'orders', 'customers', 'products', 'recentOrders', 'topSellers', 'mostOrdered', 'mostSold'
+    isOpen: false,
+  });
+  const [allOrders, setAllOrders] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [allCustomers, setAllCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingSecondary, setLoadingSecondary] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchCriticalData();
+    // Load secondary data after a short delay to prioritize critical content
+    setTimeout(() => {
+      fetchSecondaryData();
+    }, 100);
   }, []);
 
   // Calculate percentage change
@@ -55,50 +69,31 @@ const Dashboard = () => {
     return change >= 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`;
   };
 
-  const fetchDashboardData = async () => {
+  // Load critical data first (stats cards) - this is what users see immediately
+  const fetchCriticalData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Get date ranges for GA4 (use relative dates like "30daysAgo" and "today")
-      const startDate = '30daysAgo';
-      const endDate = 'today';
-
-      // Fetch data in parallel - only real API data
+      // Fetch only critical data needed for stats cards
       const [
-        recentOrdersResponse,
-        allOrdersResponse,
-        allProductsResponse,
-        topSellersResponse,
         totalProducts,
         totalOrders,
         totalCustomers,
-        lowStockProducts,
-        ga4Traffic,
-        ga4Purchases,
-        ga4AddToCart,
-        ga4Revenue,
+        recentOrdersResponse,
+        allOrdersResponse,
       ] = await Promise.all([
-        ordersAPI.getAll({ per_page: 10, orderby: 'date', order: 'desc' }),
-        ordersAPI.getAll({ per_page: 100, orderby: 'date', order: 'desc' }), // All orders for revenue calculation
-        productsAPI.getAll({ per_page: 100 }),
-        reportsAPI.getTopSellers().catch(() => []), // Real API data - top sellers
         productsAPI.getTotalCount(),
         ordersAPI.getTotalCount(),
         customersAPI.getTotalCount(),
-        productsAPI.getLowStockProducts().catch(() => []), // Low stock products (uses threshold from settings)
-        // GA4 data - catch errors silently if not configured
-        getTrafficData(startDate, endDate).catch(() => null),
-        getPurchaseEvents(startDate, endDate).catch(() => null),
-        getAddToCartEvents(startDate, endDate).catch(() => null),
-        getRevenueData(startDate, endDate).catch(() => null),
+        ordersAPI.getAll({ per_page: 10, orderby: 'date', order: 'desc' }),
+        ordersAPI.getAll({ per_page: 100, orderby: 'date', order: 'desc' }), // For revenue calculation
       ]);
 
-      // Calculate TOTAL revenue - ONLY from completed orders (all time)
-      // Filter completed orders and calculate total revenue
-      const allCompletedOrders = (allOrdersResponse || []).filter(order => {
-        return order && order.status === 'completed';
-      });
+      // Calculate revenue from completed orders
+      const allCompletedOrders = (allOrdersResponse || []).filter(order => 
+        order && order.status === 'completed'
+      );
       
       const totalRevenue = allCompletedOrders.reduce(
         (sum, order) => {
@@ -107,28 +102,17 @@ const Dashboard = () => {
         },
         0
       );
-      
-      // Debug logging
-      console.log('Total orders loaded:', allOrdersResponse?.length || 0);
-      console.log('Completed orders:', allCompletedOrders.length);
-      console.log('Total revenue:', totalRevenue);
 
-      // Calculate current month revenue for comparison - ONLY from completed orders
+      // Calculate previous month revenue for comparison
       const now = new Date();
       const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       
       const currentMonthOrders = allCompletedOrders.filter(order => {
         const orderDate = new Date(order.date_created);
         return orderDate >= currentMonthStart;
       });
       
-      const currentMonthRevenue = currentMonthOrders.reduce(
-        (sum, order) => sum + parseFloat(order.total || 0),
-        0
-      );
-
-      // Calculate previous month revenue for comparison - ONLY from completed orders
-      const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const previousMonthOrders = allCompletedOrders.filter(order => {
         const orderDate = new Date(order.date_created);
         return orderDate >= previousMonthStart && orderDate < currentMonthStart;
@@ -139,7 +123,6 @@ const Dashboard = () => {
         0
       );
 
-      // Store previous stats for comparison
       setPreviousStats({
         totalRevenue: previousRevenue,
         totalOrders: previousMonthOrders.length,
@@ -154,14 +137,50 @@ const Dashboard = () => {
         totalProducts,
       });
 
+      setRecentOrders(recentOrdersResponse.slice(0, 5));
+      setAllOrders(allOrdersResponse || []);
+    } catch (err) {
+      setError(err.message || t('error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load secondary data (products, GA4, etc.) - can load after initial render
+  const fetchSecondaryData = async () => {
+    try {
+      setLoadingSecondary(true);
+
+      const startDate = '30daysAgo';
+      const endDate = 'today';
+
+      // Fetch secondary data in parallel
+      const [
+        allProductsResponse,
+        topSellersResponse,
+        lowStockProducts,
+        ga4Traffic,
+        ga4Purchases,
+        ga4AddToCart,
+        ga4Revenue,
+      ] = await Promise.all([
+        productsAPI.getAll({ per_page: 100 }),
+        reportsAPI.getTopSellers().catch(() => []),
+        productsAPI.getLowStockProducts().catch(() => []),
+        // GA4 data - load in background, catch errors silently
+        getTrafficData(startDate, endDate).catch(() => null),
+        getPurchaseEvents(startDate, endDate).catch(() => null),
+        getAddToCartEvents(startDate, endDate).catch(() => null),
+        getRevenueData(startDate, endDate).catch(() => null),
+      ]);
+
       // Set low stock count and products
       const currentLowStockCount = lowStockProducts?.length || 0;
       setLowStockCount(currentLowStockCount);
       setLowStockProducts(lowStockProducts || []);
-      // For now, we'll use 0 as previous (could be enhanced to track over time)
       setPreviousLowStockCount(0);
 
-      setRecentOrders(recentOrdersResponse.slice(0, 5));
+      setAllProducts(allProductsResponse || []);
 
       // Most Sold Products - Use REAL API data: total_sales field from WooCommerce
       // total_sales is a real field that WooCommerce tracks automatically
@@ -178,9 +197,10 @@ const Dashboard = () => {
 
       // Most Ordered Products - Count from REAL order line_items data
       // This is real data: products that actually appeared in completed orders
+      // Use allOrders from state (already loaded in critical data)
       const productOrderCounts = {};
       
-      (allOrdersResponse || []).forEach(order => {
+      (allOrders || []).forEach(order => {
         if (order && order.line_items && Array.isArray(order.line_items)) {
           order.line_items.forEach(item => {
             const productId = item.product_id;
@@ -260,12 +280,29 @@ const Dashboard = () => {
       setGA4AddToCartData(ga4AddToCart);
       setGA4RevenueData(ga4Revenue);
     } catch (err) {
-      setError(err.message || t('error'));
-      console.error('Dashboard error:', err);
+      // Don't show error for secondary data - it's not critical
     } finally {
-      setLoading(false);
+      setLoadingSecondary(false);
     }
   };
+
+  // Load customers only when sidebar is opened (lazy loading)
+  const loadCustomersIfNeeded = async () => {
+    if (allCustomers.length === 0 && sidebarState.type === 'customers') {
+      try {
+        const customersData = await customersAPI.getAll({ per_page: 100 });
+        setAllCustomers(customersData || []);
+      } catch (err) {
+        setAllCustomers([]);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (sidebarState.isOpen && sidebarState.type === 'customers') {
+      loadCustomersIfNeeded();
+    }
+  }, [sidebarState.isOpen, sidebarState.type]);
 
   // Calculate changes
   const changes = {
@@ -281,31 +318,43 @@ const Dashboard = () => {
   }
 
   if (error) {
-    return <ErrorState error={error} onRetry={fetchDashboardData} t={t} />;
+    return <ErrorState error={error} onRetry={fetchCriticalData} t={t} />;
   }
 
   return (
     <div className="space-y-6" dir="rtl">
       <DashboardHeader t={t} isRTL={isRTL} />
 
+      {/* Critical content - shown immediately */}
       <DashboardStats
         stats={stats}
         changes={changes}
         formatCurrency={formatCurrency}
         t={t}
         isRTL={isRTL}
+        onCardClick={(type) => {
+          setSidebarState({ type, isOpen: true });
+        }}
       />
 
-      {/* Low Stock Products Card */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div onClick={() => setIsLowStockSidebarOpen(true)} className="cursor-pointer">
-          <LowStockCard
-            count={lowStockCount}
-            change={changes.lowStock}
-            trend={changes.lowStock?.startsWith('+') ? 'up' : 'down'}
-          />
+      {/* Low Stock Products Card - Load after critical data */}
+      {loadingSecondary ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="card animate-pulse">
+            <div className="h-24 bg-gray-200 rounded"></div>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div onClick={() => setIsLowStockSidebarOpen(true)} className="cursor-pointer">
+            <LowStockCard
+              count={lowStockCount}
+              change={changes.lowStock}
+              trend={changes.lowStock?.startsWith('+') ? 'up' : 'down'}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Low Stock Sidebar */}
       <LowStockSidebar
@@ -334,8 +383,11 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Recent Orders */}
-      <div className="card">
+      {/* Recent Orders - Already loaded with critical data */}
+      <div 
+        className="card cursor-pointer hover:shadow-lg transition-shadow"
+        onClick={() => setSidebarState({ type: 'recentOrders', isOpen: true })}
+      >
         <h2 className={`text-xl font-semibold text-gray-900 mb-4 ${'text-right'}`}>
           {t('recentOrders')}
         </h2>
@@ -347,8 +399,16 @@ const Dashboard = () => {
         />
       </div>
 
-      {/* Products Grid - Three Column Layout (only real data) */}
-      {(mostViewedProducts.length > 0 || mostAddedToCartProducts.length > 0 || mostSoldProducts.length > 0) && (
+      {/* Products Grid - Load after secondary data */}
+      {loadingSecondary ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="card animate-pulse">
+              <div className="h-64 bg-gray-200 rounded"></div>
+            </div>
+          ))}
+        </div>
+      ) : (mostViewedProducts.length > 0 || mostAddedToCartProducts.length > 0 || mostSoldProducts.length > 0) && (
         <div className={`grid gap-6 ${
           mostViewedProducts.length > 0 && mostAddedToCartProducts.length > 0 && mostSoldProducts.length > 0
             ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
@@ -358,7 +418,10 @@ const Dashboard = () => {
         }`}>
           {/* Top Sellers (from Reports API or total_sales) */}
           {mostViewedProducts.length > 0 && (
-            <div className="card">
+            <div 
+              className="card cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => setSidebarState({ type: 'topSellers', isOpen: true })}
+            >
               <h2 className={`text-lg font-semibold text-gray-900 mb-4 ${'text-right'}`}>
                 {t('topSellers') || 'Top Sellers'}
               </h2>
@@ -373,7 +436,10 @@ const Dashboard = () => {
 
           {/* Most Ordered Products (from real orders) */}
           {mostAddedToCartProducts.length > 0 && (
-            <div className="card">
+            <div 
+              className="card cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => setSidebarState({ type: 'mostOrdered', isOpen: true })}
+            >
               <h2 className={`text-lg font-semibold text-gray-900 mb-4 ${'text-right'}`}>
                 {t('mostOrderedProducts') || 'Most Ordered Products'}
               </h2>
@@ -388,7 +454,10 @@ const Dashboard = () => {
 
           {/* Most Sold Products */}
           {mostSoldProducts.length > 0 && (
-            <div className="card">
+            <div 
+              className="card cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => setSidebarState({ type: 'mostSold', isOpen: true })}
+            >
               <h2 className={`text-lg font-semibold text-gray-900 mb-4 ${'text-right'}`}>
                 {t('mostSoldProducts') || 'Most Sold Products'}
               </h2>
@@ -402,8 +471,212 @@ const Dashboard = () => {
           )}
         </div>
       )}
+
+      {/* Generic Dashboard Sidebar */}
+      <DashboardSidebar
+        isOpen={sidebarState.isOpen}
+        onClose={() => {
+          setSidebarState({ type: null, isOpen: false });
+        }}
+        title={getSidebarTitle(sidebarState.type, t)}
+        subtitle={getSidebarSubtitle(sidebarState.type, t, stats, allOrders, allProducts, allCustomers, mostViewedProducts, mostAddedToCartProducts, mostSoldProducts)}
+        icon={getSidebarIcon(sidebarState.type)}
+        items={getSidebarItems(sidebarState.type, allOrders, allProducts, allCustomers, mostViewedProducts, mostAddedToCartProducts, mostSoldProducts)}
+        renderItem={getSidebarRenderItem(sidebarState.type, t)}
+        formatCurrency={formatCurrency}
+      />
     </div>
   );
+};
+
+// Helper functions for sidebar
+const getSidebarTitle = (type, t) => {
+  if (!type) return '';
+  const titles = {
+    revenue: t('totalRevenue') || 'סה"כ הכנסות',
+    orders: t('totalOrders') || 'סה"כ הזמנות',
+    customers: t('totalCustomers') || 'סה"כ לקוחות',
+    products: t('totalProducts') || 'סה"כ מוצרים',
+    recentOrders: t('recentOrders') || 'הזמנות אחרונות',
+    topSellers: t('topSellers') || 'המוצרים הנמכרים ביותר',
+    mostOrdered: t('mostOrderedProducts') || 'המוצרים המבוקשים ביותר',
+    mostSold: t('mostSoldProducts') || 'המוצרים הנמכרים ביותר',
+  };
+  return titles[type] || '';
+};
+
+const getSidebarSubtitle = (type, t, stats, allOrders, allProducts, allCustomers, mostViewedProducts, mostAddedToCartProducts, mostSoldProducts) => {
+  if (!type) return '';
+  const subtitles = {
+    revenue: `${allOrders.filter(o => o.status === 'completed').length} ${t('completedOrders') || 'הזמנות הושלמו'}`,
+    orders: `${allOrders.length} ${t('totalOrders') || 'הזמנות'}`,
+    customers: `${allCustomers.length} ${t('customers') || 'לקוחות'}`,
+    products: `${allProducts.length} ${t('products') || 'מוצרים'}`,
+    recentOrders: `${allOrders.length} ${t('totalOrders') || 'הזמנות'}`,
+    topSellers: `${mostViewedProducts?.length || 0} ${t('products') || 'מוצרים'}`,
+    mostOrdered: `${mostAddedToCartProducts?.length || 0} ${t('products') || 'מוצרים'}`,
+    mostSold: `${mostSoldProducts?.length || 0} ${t('products') || 'מוצרים'}`,
+  };
+  return subtitles[type] || '';
+};
+
+const getSidebarIcon = (type) => {
+  if (!type) return null;
+  const icons = {
+    revenue: DollarSign,
+    orders: ShoppingCart,
+    customers: Users,
+    products: Package,
+    recentOrders: ShoppingCart,
+    topSellers: Package,
+    mostOrdered: Package,
+    mostSold: Package,
+  };
+  return icons[type] || null;
+};
+
+const getSidebarItems = (type, allOrders, allProducts, allCustomers, mostViewedProducts, mostAddedToCartProducts, mostSoldProducts) => {
+  if (!type) return [];
+  switch (type) {
+    case 'revenue':
+      return allOrders.filter(o => o.status === 'completed');
+    case 'orders':
+      return allOrders;
+    case 'customers':
+      return allCustomers;
+    case 'products':
+      return allProducts;
+    case 'recentOrders':
+      return allOrders.slice(0, 50).sort((a, b) => new Date(b.date_created) - new Date(a.date_created));
+    case 'topSellers':
+      return mostViewedProducts || [];
+    case 'mostOrdered':
+      return mostAddedToCartProducts || [];
+    case 'mostSold':
+      return mostSoldProducts || [];
+    default:
+      return [];
+  }
+};
+
+const getSidebarRenderItem = (type, t) => {
+  if (!type) return () => null;
+  return (item, formatCurrency) => {
+    switch (type) {
+      case 'revenue':
+      case 'orders':
+      case 'recentOrders':
+        return (
+          <div className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-medium text-gray-900 mb-1">
+                {t('order') || 'הזמנה'} #{item.id}
+              </h3>
+              <div className="flex items-center gap-2 mb-2">
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  item.status === 'completed' ? 'bg-green-50 text-green-600' : 
+                  item.status === 'processing' ? 'bg-blue-50 text-blue-600' : 
+                  'bg-gray-50 text-gray-600'
+                } font-medium`}>
+                  {item.status || 'pending'}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {new Date(item.date_created).toLocaleDateString('he-IL')}
+                </span>
+              </div>
+              <p className="text-sm font-semibold text-gray-900">
+                {formatCurrency(item.total)}
+              </p>
+            </div>
+          </div>
+        );
+      case 'customers':
+        return (
+          <div className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                <Users className="text-primary-600" size={20} />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-medium text-gray-900 mb-1">
+                {item.first_name || item.last_name 
+                  ? `${item.first_name || ''} ${item.last_name || ''}`.trim() 
+                  : item.username || item.email || `${t('customer') || 'לקוח'} #${item.id}`}
+              </h3>
+              {item.email && (
+                <p className="text-xs text-gray-500 mb-1">{item.email}</p>
+              )}
+              {item.username && item.username !== item.email && (
+                <p className="text-xs text-gray-500 mb-1">@{item.username}</p>
+              )}
+              <div className="flex items-center gap-3 mt-2">
+                {item.orders_count !== undefined && (
+                  <span className="text-xs text-gray-600">
+                    {item.orders_count} {t('orders') || 'הזמנות'}
+                  </span>
+                )}
+                {item.total_spent !== undefined && item.total_spent > 0 && (
+                  <span className="text-xs text-gray-600">
+                    {formatCurrency(item.total_spent)} {t('totalSpent') || 'סה"כ הוצא'}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      case 'products':
+      case 'topSellers':
+      case 'mostOrdered':
+      case 'mostSold':
+        const imageUrl = item.images && item.images.length > 0 
+          ? item.images[0].src 
+          : '/placeholder-product.png';
+        return (
+          <div className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+            <div className="flex-shrink-0">
+              <img
+                src={imageUrl}
+                alt={item.name}
+                className="w-16 h-16 object-cover rounded-lg"
+                onError={(e) => {
+                  e.target.src = '/placeholder-product.png';
+                }}
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-medium text-gray-900 mb-1 truncate">
+                {item.name}
+              </h3>
+              <div className="flex items-center gap-2 mb-2">
+                {item.sold_quantity !== undefined && (
+                  <span className="text-xs text-gray-500">
+                    {t('sold') || 'נמכר'}: {item.sold_quantity}
+                  </span>
+                )}
+                {item.order_count !== undefined && (
+                  <span className="text-xs text-gray-500">
+                    {t('orders') || 'הזמנות'}: {item.order_count}
+                  </span>
+                )}
+                {item.sku && (
+                  <span className="text-xs text-gray-500">
+                    SKU: {item.sku}
+                  </span>
+                )}
+              </div>
+              {item.price && (
+                <p className="text-sm font-semibold text-gray-900">
+                  {formatCurrency(item.price)}
+                </p>
+              )}
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 };
 
 export default Dashboard;

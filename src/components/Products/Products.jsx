@@ -18,7 +18,7 @@ const PER_PAGE = 24;
 
 const Products = () => {
   const { t, formatCurrency, isRTL } = useLanguage();
-  const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]); // All loaded products (no filter)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,11 +44,12 @@ const Products = () => {
     try {
       const data = await categoriesAPI.getAll();
       setCategories(data);
-    } catch (err) {
-      console.error('Failed to load categories:', err);
-    }
+      } catch (err) {
+        // Failed to load categories
+      }
   };
 
+  // Load all products without filters (for client-side filtering)
   const loadProducts = useCallback(async (pageToLoad = 1, reset = false) => {
     try {
       reset ? setLoading(true) : setLoadingMore(true);
@@ -63,10 +64,10 @@ const Products = () => {
       setPage(pageToLoad);
       
       if (reset) {
-        setProducts(data);
+        setAllProducts(data);
       } else {
         // Avoid duplicates by checking if product already exists
-        setProducts((prev) => {
+        setAllProducts((prev) => {
           const existingIds = new Set(prev.map(p => p.id));
           const newProducts = data.filter(p => !existingIds.has(p.id));
           return [...prev, ...newProducts];
@@ -85,12 +86,11 @@ const Products = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Infinite scroll effect
+  // Infinite scroll effect - only when no filters are active
   useEffect(() => {
-    // Only enable infinite scroll when there are no active filters/search
     const activeFilters = selectedCategory || minPrice || maxPrice || searchQuery;
     
-    // Don't set up scroll listener if filters are active
+    // Don't set up scroll listener if filters are active (we already have all data)
     if (activeFilters) {
       return;
     }
@@ -101,14 +101,11 @@ const Products = () => {
       ticking = true;
       
       requestAnimationFrame(() => {
-        // Check if user is near the bottom of the page
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         const windowHeight = window.innerHeight;
         const documentHeight = document.documentElement.scrollHeight;
 
-        // Load more when user is within 200px of the bottom
         if (scrollTop + windowHeight >= documentHeight - 200) {
-          // Double check conditions before loading
           const stillActiveFilters = selectedCategory || minPrice || maxPrice || searchQuery;
           if (hasMore && !loading && !loadingMore && !stillActiveFilters) {
             loadProducts(page + 1, false);
@@ -118,23 +115,19 @@ const Products = () => {
       });
     };
 
-    // Check if we need to load more immediately (content doesn't fill viewport)
     const checkInitialLoad = () => {
-      // Wait a bit for DOM to update
       setTimeout(() => {
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         const windowHeight = window.innerHeight;
         const documentHeight = document.documentElement.scrollHeight;
         
-        // If content is shorter than viewport and we have more to load
         if (documentHeight <= windowHeight + 100 && hasMore && !loading && !loadingMore) {
           loadProducts(page + 1, false);
         }
       }, 100);
     };
 
-    // Check after products are loaded and rendered
-    if (!loading && products.length > 0) {
+    if (!loading && allProducts.length > 0) {
       checkInitialLoad();
     }
 
@@ -145,7 +138,7 @@ const Products = () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', checkInitialLoad);
     };
-  }, [hasMore, loading, loadingMore, page, selectedCategory, minPrice, maxPrice, searchQuery, loadProducts, products.length]);
+  }, [hasMore, loading, loadingMore, page, selectedCategory, minPrice, maxPrice, searchQuery, loadProducts, allProducts.length]);
 
   const refreshProducts = () => {
     loadProducts(1, true);
@@ -160,30 +153,23 @@ const Products = () => {
       setSelectedProduct(null);
     }
 
-    // Store current products count before deletion
-    const currentProductsCount = products.length;
-
     try {
       // Optimistically update UI first for instant feedback
-      setProducts((prev) => prev.filter((p) => p.id !== id));
+      setAllProducts((prev) => prev.filter((p) => p.id !== id));
       setTotalProducts((prev) => Math.max(prev - 1, 0));
       
       // Then delete from API
       await productsAPI.delete(id);
-      
-      // If we're on the last page and it becomes empty, go to previous page
-      if (currentProductsCount === 1 && page > 1) {
-        loadProducts(page - 1, true);
-      }
     } catch (err) {
       // Revert optimistic update on error
       alert(t('error') + ': ' + err.message);
       // Reload products to sync with server
-      loadProducts(page, true);
+      loadProducts(1, true);
     }
   };
 
-  const filteredProducts = products.filter(product => {
+  // Client-side filtering - instant!
+  const filteredProducts = allProducts.filter(product => {
     // Search filter
     const matchesSearch = 
       product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -245,7 +231,7 @@ const Products = () => {
 
   const hasActiveFilters = selectedCategory || minPrice || maxPrice || searchQuery;
   const displayedCount = sortedProducts.length;
-  const totalCount = totalProducts || products.length;
+  const totalCount = totalProducts || allProducts.length;
 
   const clearFilters = () => {
     setSelectedCategory('');
@@ -258,7 +244,7 @@ const Products = () => {
     return <LoadingState t={t} />;
   }
 
-  if (error && !products.length) {
+  if (error && !allProducts.length) {
     return <ErrorState error={error} onRetry={() => loadProducts(1, true)} t={t} />;
   }
 
@@ -290,7 +276,7 @@ const Products = () => {
         onMinPriceChange={setMinPrice}
         maxPrice={maxPrice}
         onMaxPriceChange={setMaxPrice}
-        products={products}
+        products={allProducts}
       />
 
       <ProductFilters
@@ -325,7 +311,7 @@ const Products = () => {
                 setSelectedProduct(fullProduct);
               })
               .catch(err => {
-                console.error('Failed to load full product details:', err);
+                // Failed to load full product details
                 // Don't show error - modal already open with partial data
               });
           }}
@@ -351,7 +337,7 @@ const Products = () => {
                 setSelectedProduct(fullProduct);
               })
               .catch(err => {
-                console.error('Failed to load full product details:', err);
+                // Failed to load full product details
                 // Don't show error - modal already open with partial data
               });
           }}
@@ -371,8 +357,8 @@ const Products = () => {
         <LoadMoreButton onLoadMore={() => loadProducts(page + 1, false)} t={t} />
       )}
 
-      {!hasMore && products.length > 0 && !hasActiveFilters && (
-        <EndOfResults displayedCount={products.length} totalCount={totalProducts} t={t} />
+      {!hasMore && allProducts.length > 0 && !hasActiveFilters && (
+        <EndOfResults displayedCount={allProducts.length} totalCount={totalProducts} t={t} />
       )}
 
       {/* Product Details Modal (view-only) */}

@@ -26,7 +26,7 @@ const ProductDetailsHeader = ({ product, onClose, isRTL, t }) => {
           <a
             href={product.permalink}
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noopener noreferrer nofollow"
             className="btn-secondary text-sm"
           >
             {t('viewOnSite')}

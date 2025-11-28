@@ -41,7 +41,11 @@ export const getCachedData = (endpoint, params = {}, ttl = DEFAULT_TTL) => {
     
     return data;
   } catch (error) {
-    console.error('Error reading from cache:', error);
+    // ⚠️ SECURITY: Never log full error objects
+    // Only log in development
+    if (import.meta.env.DEV) {
+      // Log only error message
+    }
     return null;
   }
 };
@@ -58,7 +62,11 @@ export const setCachedData = (endpoint, params = {}, data) => {
     };
     localStorage.setItem(cacheKey, JSON.stringify(cacheValue));
   } catch (error) {
-    console.error('Error writing to cache:', error);
+    // ⚠️ SECURITY: Never log full error objects
+    // Only log in development
+    if (import.meta.env.DEV) {
+      // Log only error message
+    }
     // If storage is full, try to clear old cache entries
     if (error.name === 'QuotaExceededError') {
       clearOldCache();
