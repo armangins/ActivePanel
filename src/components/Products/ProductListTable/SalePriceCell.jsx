@@ -27,3 +27,6 @@ const SalePriceCell = ({ product, formatCurrency }) => {
 export default SalePriceCell;
 
 
+
+
+

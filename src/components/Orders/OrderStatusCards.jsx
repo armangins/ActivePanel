@@ -1,4 +1,11 @@
-import { ShoppingCart, Clock, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { 
+  ShoppingCartIcon as ShoppingCart, 
+  ClockIcon as Clock, 
+  CheckCircleIcon as CheckCircle, 
+  XCircleIcon as XCircle, 
+  ExclamationCircleIcon as AlertCircle, 
+  ArrowPathIcon as RefreshCw 
+} from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 /**
@@ -58,8 +65,8 @@ const OrderStatusCards = ({ statusCounts = {}, onStatusClick, selectedStatus }) 
       key: 'cancelled',
       label: t('cancelled') || 'בוטל',
       icon: XCircle,
-      color: 'bg-red-50',
-      iconColor: 'text-red-500',
+      color: 'bg-orange-50',
+      iconColor: 'text-orange-500',
       count: statusCounts.cancelled || 0,
     },
     {
@@ -92,7 +99,7 @@ const OrderStatusCards = ({ statusCounts = {}, onStatusClick, selectedStatus }) 
                 <p className="text-2xl font-bold text-gray-900 text-right">{status.count}</p>
               </div>
               <div className={`p-3 ${status.color} rounded-lg flex-shrink-0`}>
-                <Icon className={status.iconColor} size={20} />
+                <Icon className={`${status.iconColor} w-5 h-5`} />
               </div>
             </div>
           </div>
@@ -103,4 +110,7 @@ const OrderStatusCards = ({ statusCounts = {}, onStatusClick, selectedStatus }) 
 };
 
 export default OrderStatusCards;
+
+
+
 

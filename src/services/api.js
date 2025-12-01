@@ -8,6 +8,15 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
+// In-memory token storage
+let authToken = null;
+
+export const setAuthToken = (token) => {
+  authToken = token;
+};
+
+export const getAuthToken = () => authToken;
+
 /**
  * Get CSRF token from cookie or header
  */
@@ -24,7 +33,7 @@ const getCSRFToken = () => {
  * Create axios instance with default config
  */
 const createApiClient = () => {
-  
+
   const instance = axios.create({
     baseURL: API_URL,
     withCredentials: true, // Important for cookies
@@ -40,13 +49,12 @@ const createApiClient = () => {
       if (csrfToken) {
         config.headers['X-CSRF-Token'] = csrfToken;
       }
-      
-      // Add auth token from localStorage if available (fallback)
-      const token = localStorage.getItem('auth_token');
-      if (token && !config.headers.Authorization) {
-        config.headers.Authorization = `Bearer ${token}`;
+
+      // Add auth token from memory if available
+      if (authToken && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${authToken}`;
       }
-      
+
       return config;
     },
     (error) => {
@@ -62,7 +70,7 @@ const createApiClient = () => {
       if (csrfToken) {
         document.cookie = `csrf-token=${csrfToken}; path=/; SameSite=Strict`;
       }
-      
+
       return response;
     },
     async (error) => {
@@ -75,22 +83,21 @@ const createApiClient = () => {
             {},
             { withCredentials: true }
           );
-          
+
           // Retry original request
           const originalRequest = error.config;
           if (refreshResponse.data.token) {
-            localStorage.setItem('auth_token', refreshResponse.data.token);
+            setAuthToken(refreshResponse.data.token);
             originalRequest.headers.Authorization = `Bearer ${refreshResponse.data.token}`;
             return instance(originalRequest);
           }
         } catch (refreshError) {
           // Refresh failed - logout user
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('user');
+          setAuthToken(null);
           window.location.href = '/login';
         }
       }
-      
+
       return Promise.reject(error);
     }
   );
@@ -114,12 +121,12 @@ export const authAPI = {
       name,
       _csrf: getCSRFToken(), // CSRF token in body
     });
-    
-    // Store token in localStorage as fallback
+
+    // Store token in memory
     if (response.data.token) {
-      localStorage.setItem('auth_token', response.data.token);
+      setAuthToken(response.data.token);
     }
-    
+
     return response.data;
   },
 
@@ -132,12 +139,12 @@ export const authAPI = {
       password,
       _csrf: getCSRFToken(),
     });
-    
-    // Store token in localStorage as fallback
+
+    // Store token in memory
     if (response.data.token) {
-      localStorage.setItem('auth_token', response.data.token);
+      setAuthToken(response.data.token);
     }
-    
+
     return response.data;
   },
 
@@ -149,11 +156,11 @@ export const authAPI = {
       credential,
       _csrf: getCSRFToken(),
     });
-    
+
     if (response.data.token) {
-      localStorage.setItem('auth_token', response.data.token);
+      setAuthToken(response.data.token);
     }
-    
+
     return response.data;
   },
 
@@ -166,8 +173,7 @@ export const authAPI = {
     } catch (error) {
       // Continue even if logout fails
     } finally {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user');
+      setAuthToken(null);
     }
   },
 
@@ -186,11 +192,11 @@ export const authAPI = {
     const response = await api.post('/auth/refresh', {}, {
       withCredentials: true,
     });
-    
+
     if (response.data.token) {
-      localStorage.setItem('auth_token', response.data.token);
+      setAuthToken(response.data.token);
     }
-    
+
     return response.data;
   },
 };

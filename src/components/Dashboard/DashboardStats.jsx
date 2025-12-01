@@ -1,21 +1,33 @@
-import { DollarSign, ShoppingCart, Users, Package } from 'lucide-react';
-import StatCard from './StatCard';
-import { useLanguage } from '../../contexts/LanguageContext';
+import { memo, useCallback } from 'react';
+import { 
+  CurrencyDollarIcon as DollarSign, 
+  ShoppingCartIcon as ShoppingCart, 
+  UsersIcon as Users, 
+  ExclamationTriangleIcon as AlertTriangle 
+} from '@heroicons/react/24/outline';
+import { StatCard } from '../ui';
 
 /**
  * DashboardStats Component
  * 
- * Displays statistics cards for revenue, orders, customers, and products.
+ * Displays statistics cards for revenue, orders, customers, and low stock products.
  * 
  * @param {Object} stats - Statistics object with totalRevenue, totalOrders, totalCustomers, totalProducts
  * @param {Object} changes - Changes object with percentage changes for each stat
+ * @param {number} lowStockCount - Number of products with low/out of stock
  * @param {Function} formatCurrency - Function to format currency values
  * @param {Function} t - Translation function
  * @param {boolean} isRTL - Whether the layout is right-to-left
+ * @param {Function} onCardClick - Callback when a card is clicked
+ * @param {Function} onLowStockClick - Callback when low stock card is clicked
  */
-const DashboardStats = ({ stats, changes = {}, formatCurrency, t, isRTL, onCardClick }) => {
+const DashboardStats = memo(({ stats, changes = {}, lowStockCount = 0, formatCurrency, t, isRTL, onCardClick, onLowStockClick }) => {
+  const handleRevenueClick = useCallback(() => onCardClick && onCardClick('revenue'), [onCardClick]);
+  const handleOrdersClick = useCallback(() => onCardClick && onCardClick('orders'), [onCardClick]);
+  const handleCustomersClick = useCallback(() => onCardClick && onCardClick('customers'), [onCardClick]);
+  const handleLowStockClick = useCallback(() => onLowStockClick && onLowStockClick(), [onLowStockClick]);
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
       <StatCard
         title={t('totalRevenue')}
         value={formatCurrency(stats.totalRevenue)}
@@ -23,7 +35,7 @@ const DashboardStats = ({ stats, changes = {}, formatCurrency, t, isRTL, onCardC
         trend={changes.revenue?.startsWith('+') ? 'up' : 'down'}
         icon={DollarSign}
         isRTL={isRTL}
-        onClick={() => onCardClick && onCardClick('revenue')}
+        onClick={handleRevenueClick}
       />
       <StatCard
         title={t('totalOrders')}
@@ -32,7 +44,8 @@ const DashboardStats = ({ stats, changes = {}, formatCurrency, t, isRTL, onCardC
         trend={changes.orders?.startsWith('+') ? 'up' : 'down'}
         icon={ShoppingCart}
         isRTL={isRTL}
-        onClick={() => onCardClick && onCardClick('orders')}
+        onClick={handleOrdersClick}
+        iconBgColor="#CBD5E1"
       />
       <StatCard
         title={t('totalCustomers')}
@@ -41,20 +54,24 @@ const DashboardStats = ({ stats, changes = {}, formatCurrency, t, isRTL, onCardC
         trend={changes.customers?.startsWith('+') ? 'up' : 'down'}
         icon={Users}
         isRTL={isRTL}
-        onClick={() => onCardClick && onCardClick('customers')}
+        onClick={handleCustomersClick}
+        iconBgColor="#2278FC"
       />
       <StatCard
-        title={t('totalProducts')}
-        value={stats.totalProducts}
-        change={changes.products}
-        trend={changes.products?.startsWith('+') ? 'up' : 'down'}
-        icon={Package}
+        title={t('lowStockProducts')}
+        value={lowStockCount}
+        change={changes.lowStock}
+        trend={changes.lowStock?.startsWith('+') ? 'up' : 'down'}
+        icon={AlertTriangle}
         isRTL={isRTL}
-        onClick={() => onCardClick && onCardClick('products')}
+        onClick={handleLowStockClick}
+        iconBgColor="#FF5200"
       />
     </div>
   );
-};
+});
+
+DashboardStats.displayName = 'DashboardStats';
 
 export default DashboardStats;
 

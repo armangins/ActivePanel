@@ -23,7 +23,7 @@ const StockCell = ({ product, isRTL, t }) => {
           <span className="w-2 h-2 rounded-full bg-green-500"></span>
         </div>
       ) : (
-        <span className="text-sm font-medium text-red-600">
+        <span className="text-sm font-medium text-orange-600">
           {stockStatusLabel}
         </span>
       )}

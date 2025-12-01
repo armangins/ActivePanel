@@ -6,7 +6,7 @@ import ProductListRow from './ProductListRow';
  * ProductListTable Component
  * 
  * Main table component that displays products in a list/table format.
- * Handles product selection state and action menu state.
+ * Handles action menu state.
  * 
  * @param {Array} products - Array of product objects to display
  * @param {Function} onView - Callback when a product row is clicked
@@ -20,33 +20,7 @@ import ProductListRow from './ProductListRow';
  * @param {Function} onSort - Callback when sort is triggered
  */
 const ProductListTable = ({ products, onView, onEdit, onDelete, formatCurrency, isRTL, t, sortField, sortDirection, onSort }) => {
-  // State for managing selected products (for bulk operations)
-  const [selectedProducts, setSelectedProducts] = useState([]);
-  
-  // State for managing which product's action menu is open
   const [actionMenuOpen, setActionMenuOpen] = useState(null);
-
-  /**
-   * Toggle selection for a single product
-   */
-  const toggleProductSelection = (productId) => {
-    setSelectedProducts(prev => 
-      prev.includes(productId) 
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-    );
-  };
-
-  /**
-   * Toggle selection for all products
-   */
-  const toggleSelectAll = () => {
-    if (selectedProducts.length === products.length) {
-      setSelectedProducts([]);
-    } else {
-      setSelectedProducts(products.map(p => p.id));
-    }
-  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -54,8 +28,6 @@ const ProductListTable = ({ products, onView, onEdit, onDelete, formatCurrency, 
         <table className="w-full table-auto">
           <ProductListHeader
             products={products}
-            selectedProducts={selectedProducts}
-            onSelectAll={toggleSelectAll}
             isRTL={isRTL}
             t={t}
             sortField={sortField}
@@ -67,9 +39,7 @@ const ProductListTable = ({ products, onView, onEdit, onDelete, formatCurrency, 
               <ProductListRow
                 key={product.id}
                 product={product}
-                isSelected={selectedProducts.includes(product.id)}
                 isActionMenuOpen={actionMenuOpen === product.id}
-                onSelect={() => toggleProductSelection(product.id)}
                 onView={onView}
                 onEdit={onEdit}
                 onDelete={onDelete}

@@ -4,6 +4,15 @@
 
 /* Custom Fonts - Polin Hebrew Font */
 @font-face {
+  font-family: 'Polin Light';
+  src: url('./fonts/Polin-Light.woff2') format('woff2'),
+       url('./fonts/Polin-Light.woff') format('woff');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: 'Polin';
   src: url('./fonts/Polin-Regular.woff2') format('woff2'),
        url('./fonts/Polin-Regular.woff') format('woff');
@@ -12,25 +21,90 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Polin Bold';
+  src: url('./fonts/Polin-Bold.woff2') format('woff2'),
+       url('./fonts/Polin-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
+  /* Default body text - Polin Light (Thin) */
   html, body {
-    font-family: 'Polin', 'Arial Hebrew', sans-serif;
+    font-family: 'Polin Light', 'Polin', 'Arial Hebrew', sans-serif;
   }
   
   body {
     @apply bg-gray-50 text-gray-900;
   }
   
-  * {
-    font-family: inherit;
+  /* All text defaults to Light (Thin) unless specified */
+  p, span, div, a, li, td, th, label, input, textarea, select, button {
+    font-family: 'Polin Light', 'Polin', 'Arial Hebrew', sans-serif;
+  }
+  
+  /* Subtitles - Polin Regular (h4, h5, h6, medium text sizes) */
+  h4, h5, h6,
+  .text-sm, .text-base, .text-lg,
+  .text-xl:not(.font-bold):not(.font-semibold) {
+    font-family: 'Polin', 'Arial Hebrew', sans-serif;
+  }
+  
+  /* Page titles and big titles - Polin Bold (h1, h2, h3) */
+  h1, h2, h3 {
+    font-family: 'Polin Bold', 'Polin', 'Arial Hebrew', sans-serif;
+  }
+  
+  /* Big titles - Polin Bold */
+  .text-2xl.font-bold,
+  .text-2xl.font-semibold,
+  .text-3xl,
+  .text-3xl.font-bold,
+  .text-3xl.font-semibold,
+  .text-4xl,
+  .text-4xl.font-bold,
+  .text-4xl.font-semibold,
+  .text-xl.font-bold,
+  .text-xl.font-semibold {
+    font-family: 'Polin Bold', 'Polin', 'Arial Hebrew', sans-serif;
   }
   
   [dir="rtl"] {
     direction: rtl;
+    text-align: right;
   }
   
   [dir="ltr"] {
     direction: ltr;
+  }
+  
+  /* Force RTL text alignment globally */
+  [dir="rtl"] * {
+    text-align: inherit;
+  }
+  
+  [dir="rtl"] input,
+  [dir="rtl"] textarea,
+  [dir="rtl"] select,
+  [dir="rtl"] label,
+  [dir="rtl"] p,
+  [dir="rtl"] h1,
+  [dir="rtl"] h2,
+  [dir="rtl"] h3,
+  [dir="rtl"] h4,
+  [dir="rtl"] h5,
+  [dir="rtl"] h6,
+  [dir="rtl"] span,
+  [dir="rtl"] div {
+    text-align: right;
+  }
+  
+  /* Override text-center and text-left in RTL */
+  [dir="rtl"] .text-center,
+  [dir="rtl"] .text-left {
+    text-align: right !important;
   }
 }
 
@@ -51,6 +125,17 @@
   
   .input-field {
     @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all;
+  }
+  
+  /* Title font utility class */
+  .font-title {
+    font-family: 'Polin Bold', 'Polin', 'Arial Hebrew', sans-serif;
+  }
+  
+  /* Regular font utility class */
+  .font-regular {
+    font-family: 'Polin', 'Arial Hebrew', sans-serif;
+    font-weight: normal;
   }
   
   /* RTL Support - Using direct CSS properties to avoid circular dependencies */
@@ -149,10 +234,6 @@ input[type="range"]::-moz-range-thumb {
     padding-right: 0;
   }
   
-  [dir="rtl"] .pr-10 {
-    padding-left: 2.5rem;
-    padding-right: 0;
-  }
   
   [dir="rtl"] .space-x-2 > * + * {
     margin-right: 0.5rem;
@@ -197,6 +278,106 @@ input[type="range"]::-moz-range-thumb {
   [dir="rtl"] .right-1 {
     left: 0.25rem;
     right: auto;
+  }
+
+  /* Mobile optimizations */
+  @media (max-width: 1023px) {
+    /* Better touch targets - only for interactive buttons without explicit sizing */
+    button:not([class*="w-"]):not([class*="h-"]):not([class*="p-"]),
+    a[role="button"]:not([class*="w-"]):not([class*="h-"]) {
+      min-height: 44px;
+    }
+
+    /* Prevent text selection on buttons for better mobile UX */
+    button, [role="button"] {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    
+    /* Prevent horizontal scroll on mobile */
+    body {
+      overflow-x: hidden;
+    }
+  }
+
+  /* Safe area insets for mobile devices with notches */
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  
+  /* Main content padding to accommodate mobile bottom nav */
+  .main-content-padding {
+    padding-bottom: 1.5rem; /* Default desktop */
+  }
+  
+  @media (max-width: 1023px) {
+    .main-content-padding {
+      padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 1rem) !important;
+    }
+  }
+
+  .safe-area-inset-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Touch manipulation for better mobile performance */
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Smooth scrolling for mobile */
+  @media (max-width: 1023px) {
+    html {
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+    }
+    
+  }
+  
+  /* Ensure bottom nav is 100% width on mobile */
+  @media (max-width: 1023px) {
+    nav.fixed.bottom-0.lg\\:hidden {
+      width: 100% !important;
+      max-width: 100% !important;
+      left: 0 !important;
+      right: 0 !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+  }
+  
+  /* Ensure sidebar is completely off-screen when closed on mobile */
+  @media (max-width: 1023px) {
+    /* Sidebar completely hidden when closed on mobile - move it completely off-screen */
+    aside.sidebar-closed.fixed {
+      right: -100vw !important;
+      transform: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      opacity: 0 !important;
+      overflow: hidden !important;
+    }
+    
+    /* When open on mobile - ensure it's visible */
+    aside.sidebar-open.fixed {
+      right: 0 !important;
+      transform: translateX(0) !important;
+      visibility: visible !important;
+      pointer-events: auto !important;
+      opacity: 1 !important;
+    }
+  }
+  
+  /* Desktop: sidebar always visible */
+  @media (min-width: 1024px) {
+    aside {
+      visibility: visible !important;
+      pointer-events: auto !important;
+    }
   }
   
   /* Sidebar menu hover state */

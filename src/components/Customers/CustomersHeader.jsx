@@ -22,3 +22,6 @@ const CustomersHeader = ({ displayedCount, totalCount, isRTL, t }) => {
 export default CustomersHeader;
 
 
+
+
+

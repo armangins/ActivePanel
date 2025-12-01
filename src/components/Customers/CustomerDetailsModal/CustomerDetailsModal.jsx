@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { customersAPI } from '../../../services/woocommerce';
+import { useCustomer } from '../../../hooks/useCustomers';
 import CustomerDetailsHeader from './CustomerDetailsHeader';
 import CustomerDetailsAccount from './CustomerDetailsAccount';
 import CustomerDetailsBilling from './CustomerDetailsBilling';
 import CustomerDetailsShipping from './CustomerDetailsShipping';
 import CustomerDetailsFooter from './CustomerDetailsFooter';
 import CustomerDetailsLoading from './CustomerDetailsLoading';
+import CustomerDetailsOrders from './CustomerDetailsOrders';
 
 /**
  * CustomerDetailsModal Component
@@ -17,30 +19,18 @@ import CustomerDetailsLoading from './CustomerDetailsLoading';
  * @param {Function} onClose - Callback to close the modal
  * @param {Boolean} isRTL - Whether the layout is right-to-left
  * @param {Function} t - Translation function
+ * @param {Function} formatCurrency - Function to format currency
  */
-const CustomerDetailsModal = ({ customer, onClose, isRTL, t }) => {
+const CustomerDetailsModal = ({ customer, onClose, isRTL, t, formatCurrency }) => {
   const [fullCustomer, setFullCustomer] = useState(customer);
-  const [loading, setLoading] = useState(false);
+  // Use useCustomer hook for data fetching with caching
+  const { data: fullCustomerData, isLoading: loading } = useCustomer(customer?.id);
 
-  // Load full customer details when modal opens
   useEffect(() => {
-    const loadFullCustomer = async () => {
-      if (!customer?.id) return;
-      
-      try {
-        setLoading(true);
-        const fullCustomerData = await customersAPI.getById(customer.id);
-        setFullCustomer(fullCustomerData);
-      } catch (error) {
-        // Failed to load full customer details
-        // Fall back to the customer passed as prop
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadFullCustomer();
-  }, [customer?.id]);
+    if (fullCustomerData) {
+      setFullCustomer(fullCustomerData);
+    }
+  }, [fullCustomerData]);
 
   if (!customer) return null;
 
@@ -48,12 +38,12 @@ const CustomerDetailsModal = ({ customer, onClose, isRTL, t }) => {
   const displayCustomer = fullCustomer || customer;
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-0 sm:p-4"
       onClick={onClose}
     >
-      <div 
-        className="bg-gray-50 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-lg"
+      <div
+        className="bg-gray-50 sm:rounded-lg max-w-2xl w-full h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto shadow-lg"
         onClick={(e) => e.stopPropagation()}
         dir="rtl"
       >
@@ -90,6 +80,14 @@ const CustomerDetailsModal = ({ customer, onClose, isRTL, t }) => {
                 shipping={displayCustomer.shipping}
                 isRTL={isRTL}
                 t={t}
+              />
+
+              {/* Order History */}
+              <CustomerDetailsOrders
+                customer={displayCustomer}
+                isRTL={isRTL}
+                t={t}
+                formatCurrency={formatCurrency}
               />
             </>
           )}

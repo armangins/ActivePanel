@@ -24,3 +24,6 @@ const CategoryCell = ({ product }) => {
 export default CategoryCell;
 
 
+
+
+

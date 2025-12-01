@@ -36,3 +36,6 @@ const CustomerDetailsShipping = ({ shipping, isRTL, t }) => {
 export default CustomerDetailsShipping;
 
 
+
+
+

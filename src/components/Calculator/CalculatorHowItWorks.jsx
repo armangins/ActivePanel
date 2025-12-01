@@ -1,4 +1,4 @@
-import { Info } from 'lucide-react';
+import { Info } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 /**
@@ -12,7 +12,7 @@ const CalculatorHowItWorks = () => {
   return (
     <div className="card bg-blue-50 border-blue-200">
       <div className="flex items-start gap-3">
-        <Info size={24} className="text-blue-600 mt-1 flex-shrink-0" />
+        <Info className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
         <div className="text-right">
           <h3 className="text-lg font-semibold text-blue-900 mb-2">
             {t('howItWorks') || 'איך זה עובד'}
@@ -30,4 +30,7 @@ const CalculatorHowItWorks = () => {
 };
 
 export default CalculatorHowItWorks;
+
+
+
 

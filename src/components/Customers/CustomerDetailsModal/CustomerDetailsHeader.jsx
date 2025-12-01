@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { XMarkIcon as X } from '@heroicons/react/24/outline';
 
 /**
  * CustomerDetailsHeader Component
@@ -21,7 +21,7 @@ const CustomerDetailsHeader = ({ customer, onClose, isRTL, t }) => {
         className="text-gray-400 hover:text-gray-600 transition-colors"
         aria-label={t('close') || 'Close'}
       >
-        <X size={24} />
+        <X className="w-6 h-6" />
       </button>
     </div>
   );

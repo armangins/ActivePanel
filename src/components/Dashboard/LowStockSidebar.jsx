@@ -1,4 +1,4 @@
-import { X, Package, AlertTriangle } from 'lucide-react';
+import { XMarkIcon as X, CubeIcon as Package, ExclamationTriangleIcon as AlertTriangle } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 /**
@@ -16,7 +16,7 @@ const LowStockSidebar = ({ isOpen, onClose, products = [], formatCurrency }) => 
 
   const getStockStatus = (product) => {
     if (product.stock_status === 'outofstock') {
-      return { text: t('outOfStock') || 'אזל מהמלאי', color: 'text-red-600', bg: 'bg-red-50' };
+      return { text: t('outOfStock') || 'אזל מהמלאי', color: 'text-orange-600', bg: 'bg-orange-50' };
     }
     if (product.manage_stock && product.stock_quantity !== null) {
       return { text: `${product.stock_quantity} ${t('inStock') || 'במלאי'}`, color: 'text-orange-600', bg: 'bg-orange-50' };
@@ -47,7 +47,7 @@ const LowStockSidebar = ({ isOpen, onClose, products = [], formatCurrency }) => 
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-orange-50 rounded-lg">
-              <AlertTriangle className="text-orange-500" size={20} />
+              <AlertTriangle className="w-5 h-5 text-orange-500" />
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
@@ -63,15 +63,15 @@ const LowStockSidebar = ({ isOpen, onClose, products = [], formatCurrency }) => 
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             aria-label={t('close') || 'סגור'}
           >
-            <X size={20} className="text-gray-500" />
+            <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
         {/* Products List */}
         <div className="overflow-y-auto h-[calc(100vh-80px)]">
           {products.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-              <Package className="text-gray-300 mb-4" size={48} />
+            <div className="flex flex-col items-center justify-center h-full p-8 text-right">
+              <Package className="w-12 h-12 text-gray-300 mb-4" />
               <p className="text-gray-500 text-lg">
                 {t('noLowStockProducts') || 'אין מוצרים במלאי נמוך'}
               </p>

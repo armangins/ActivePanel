@@ -88,7 +88,7 @@ const MonthlyOrdersChart = ({ orders, formatCurrency, t, isRTL }) => {
         <h2 className={`text-xl font-semibold text-gray-900 mb-4 ${'text-right'}`}>
           {t('monthlyOrdersChart') || 'Monthly Orders & Revenue'}
         </h2>
-        <p className={`text-gray-500 text-center py-8 ${'text-right'}`}>
+        <p className="text-gray-500 text-right py-8">
           {t('noOrdersData') || 'No orders data available'}
         </p>
       </div>

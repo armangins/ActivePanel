@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Edit, Trash2, Copy, CheckCircle } from 'lucide-react';
+import { TrashIcon as Trash2, PencilIcon as Edit, ClipboardDocumentIcon as Copy, CheckCircleIcon as CheckCircle } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 /**
@@ -95,9 +95,9 @@ const CouponsTable = ({ coupons, onEdit, onDelete, formatCurrency, isRTL, t }) =
                     title={t('copyCode') || 'Copy code'}
                   >
                     {copiedCode === coupon.code ? (
-                      <CheckCircle size={16} className="text-green-500" />
+                      <CheckCircle className="w-4 h-4 text-green-500" />
                     ) : (
-                      <Copy size={16} />
+                      <Copy className="w-4 h-4" />
                     )}
                   </button>
                 </div>
@@ -124,14 +124,14 @@ const CouponsTable = ({ coupons, onEdit, onDelete, formatCurrency, isRTL, t }) =
                     className="p-2 text-primary-500 hover:bg-primary-50 rounded-lg transition-colors"
                     title={t('editCoupon') || 'Edit coupon'}
                   >
-                    <Edit size={18} />
+                    <Edit className="w-[18px] h-[18px]" />
                   </button>
                   <button
                     onClick={() => onDelete(coupon.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                     title={t('deleteCoupon') || 'Delete coupon'}
                   >
-                    <Trash2 size={18} />
+                    <Trash2 className="w-[18px] h-[18px]" />
                   </button>
                 </div>
               </td>

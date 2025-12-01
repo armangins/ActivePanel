@@ -1,31 +1,30 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  Users, 
-  Settings,
-  Ticket,
-  Calculator,
-  X,
-  ChevronLeft,
-  ChevronRight
-} from 'lucide-react';
+import {
+  Squares2X2Icon as LayoutDashboard,
+  CubeIcon as Package,
+  ShoppingCartIcon as ShoppingCart,
+  UsersIcon as Users,
+  Cog6ToothIcon as Settings,
+  TicketIcon as Ticket,
+  FolderIcon as Folder,
+  CalculatorIcon as Calculator,
+  ArrowUpTrayIcon as Upload,
+  XMarkIcon as X,
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight
+} from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
+import useNewOrdersCount from '../../hooks/useNewOrdersCount';
 
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
   const { t, isRTL } = useLanguage();
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    const saved = localStorage.getItem('sidebarCollapsed');
-    return saved ? JSON.parse(saved) : false;
-  });
+  const { newOrdersCount, resetCount, isLoading, hasError } = useNewOrdersCount();
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
-  useEffect(() => {
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(isCollapsed));
-  }, [isCollapsed]);
+  // Don't auto-reset when navigating to orders page - keep notifications until manually cleared
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
@@ -49,10 +48,19 @@ const Sidebar = ({ isOpen, onClose }) => {
   const menuItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: t('dashboard') },
     { path: '/products', icon: Package, label: t('products') },
-    { path: '/orders', icon: ShoppingCart, label: t('orders') },
+    {
+      path: '/orders',
+      icon: ShoppingCart,
+      label: t('orders'),
+      badge: (!hasError && !isLoading) ? newOrdersCount : null,
+      isLoading: isLoading,
+      hasError: hasError
+    },
     { path: '/customers', icon: Users, label: t('customers') },
     { path: '/coupons', icon: Ticket, label: t('coupons') },
+    { path: '/categories', icon: Folder, label: t('categories') || 'Categories' },
     { path: '/calculator', icon: Calculator, label: t('calculator') || 'מחשבון' },
+    { path: '/imports', icon: Upload, label: t('imports') || 'ייבוא' },
     { path: '/settings', icon: Settings, label: t('settings') },
   ];
 
@@ -60,29 +68,29 @@ const Sidebar = ({ isOpen, onClose }) => {
     <>
       {/* Mobile overlay */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
           onClick={onClose}
         />
       )}
-      
+
       {/* Sidebar */}
       <aside
         className={`
-          fixed lg:static inset-y-0 right-0 z-30
+          fixed lg:static inset-y-0 right-0 z-40
           ${isExpanded ? 'w-64' : 'w-20'} bg-white border-l border-gray-200
           transform transition-all duration-300 ease-in-out
-          ${isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
-          flex flex-col
+          ${isOpen ? 'translate-x-0 sidebar-open' : 'translate-x-full lg:translate-x-0 sidebar-closed'}
+          flex flex-col lg:z-auto
         `}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         <div className={`flex items-center ${isExpanded ? 'justify-between' : 'justify-center'} p-6 border-b border-gray-200 flex-row-reverse`}>
           <div className="flex items-center justify-end w-full flex-row-reverse">
-            <img 
-              src="/logo.svg" 
-              alt="ActivePanel" 
+            <img
+              src="/logo.svg"
+              alt="ActivePanel"
               className="w-full h-auto object-contain"
             />
           </div>
@@ -92,22 +100,23 @@ const Sidebar = ({ isOpen, onClose }) => {
               className="hidden lg:flex text-gray-500 hover:text-primary-500 p-1 rounded hover:bg-gray-100 transition-colors"
               title={isCollapsed ? t('expandSidebar') || 'Expand Sidebar' : t('collapseSidebar') || 'Collapse Sidebar'}
             >
-              {isCollapsed ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+              {isCollapsed ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
             </button>
             <button
               className="lg:hidden text-gray-500 hover:text-primary-500"
               onClick={onClose}
             >
-              <X size={24} />
+              <X className="w-6 h-6" />
             </button>
           </div>
         </div>
-        
+
         <nav className="flex-1 p-4 space-y-2 text-right">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
-            
+            const hasBadge = item.badge !== undefined && item.badge > 0;
+
             return (
               <Link
                 key={item.path}
@@ -120,22 +129,35 @@ const Sidebar = ({ isOpen, onClose }) => {
                 }}
                 className={`
                   sidebar-menu-item flex items-center ${isExpanded ? '' : 'justify-center'} gap-3 px-4 py-3 rounded-lg
-                  transition-colors duration-200
-                  ${isActive 
-                    ? 'text-primary-500 font-medium active' 
+                  transition-colors duration-200 relative font-regular
+                  ${isActive
+                    ? 'text-primary-500 active'
                     : 'text-gray-700'
                   }
                 `}
                 style={isActive ? { backgroundColor: '#EBF3FF' } : {}}
                 title={!isExpanded ? item.label : ''}
               >
-                <Icon 
-                  size={20} 
-                  style={isActive ? { color: '#4560FF' } : {}}
-                />
+                <div className="relative flex-shrink-0">
+                  <Icon
+                    className="w-5 h-5"
+                    style={isActive ? { color: '#4560FF' } : {}}
+                  />
+                  {item.isLoading && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                  )}
+                  {item.hasError && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full"></span>
+                  )}
+                  {hasBadge && (
+                    <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center z-10">
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </span>
+                  )}
+                </div>
                 {isExpanded && (
-                  <span 
-                    className="text-right transition-opacity duration-300 opacity-100"
+                  <span
+                    className="text-right transition-opacity duration-300 opacity-100 flex-1 mr-2 font-regular"
                     style={isActive ? { color: '#4560FF' } : {}}
                   >
                     {item.label}
@@ -145,7 +167,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             );
           })}
         </nav>
-        
+
         {isExpanded && (
           <div className="p-4 border-t border-gray-200 transition-opacity duration-300 opacity-100">
             <div className="text-sm text-gray-500 text-right">

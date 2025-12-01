@@ -1,4 +1,4 @@
-import { Package } from 'lucide-react';
+import { CubeIcon as Package } from '@heroicons/react/24/outline';
 
 /**
  * ProductDetailsImage Component
@@ -22,7 +22,7 @@ const ProductDetailsImage = ({ product }) => {
             className="w-full h-full object-cover"
           />
         ) : (
-          <Package className="text-gray-300" size={64} />
+          <Package className="w-16 h-16 text-gray-300" />
         )}
       </div>
     </div>

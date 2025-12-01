@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
+import { CheckCircleIcon, DocumentDuplicateIcon as Copy, CheckIcon as Check } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 /**
@@ -10,9 +11,12 @@ import { useLanguage } from '../../contexts/LanguageContext';
  * @param {string} desiredMargin - Selected margin percentage
  * @param {Array} customCosts - Array of custom costs
  * @param {Function} formatCurrency - Function to format currency values
+ * @param {Function} onResultChange - Optional callback when result changes
+ * @param {Function} onUsePrice - Optional callback when "use this price" is clicked
  */
-const RealtimeResults = ({ costs, desiredMargin, customCosts, formatCurrency }) => {
+const RealtimeResults = ({ costs, desiredMargin, customCosts, formatCurrency, onResultChange, onUsePrice }) => {
   const { t } = useLanguage();
+  const [copied, setCopied] = useState(false);
 
   const result = useMemo(() => {
     // Parse all costs
@@ -57,10 +61,26 @@ const RealtimeResults = ({ costs, desiredMargin, customCosts, formatCurrency }) 
     };
   }, [costs, desiredMargin, customCosts]);
 
+  // Emit event when price is calculated and notify parent
+  useEffect(() => {
+    if (result && result.sellingPrice) {
+      window.dispatchEvent(new CustomEvent('calculatorPriceUpdate', {
+        detail: { sellingPrice: result.sellingPrice }
+      }));
+      if (onResultChange) {
+        onResultChange(result);
+      }
+    } else {
+      if (onResultChange) {
+        onResultChange(null);
+      }
+    }
+  }, [result, onResultChange]);
+
   if (!result) {
     return (
-      <div className="card bg-gray-50 border-gray-200">
-        <div className="text-center py-8">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+        <div className="text-right py-4">
           <p className="text-gray-500 text-sm text-right">
             {t('enterDataToSeeResults') || 'הזן נתונים כדי לראות תוצאות'}
           </p>
@@ -70,7 +90,7 @@ const RealtimeResults = ({ costs, desiredMargin, customCosts, formatCurrency }) 
   }
 
   return (
-    <div className="card bg-gradient-to-l from-primary-50 to-primary-100 border-primary-200">
+    <div className="bg-gradient-to-l from-primary-50 to-primary-100 border border-primary-200 rounded-lg p-6">
       <h3 className="text-lg font-semibold text-primary-900 mb-4 text-right">
         {t('realtimeResults') || 'תוצאות בזמן אמת'}
       </h3>
@@ -87,9 +107,36 @@ const RealtimeResults = ({ costs, desiredMargin, customCosts, formatCurrency }) 
           <span className="text-base font-semibold text-primary-900 text-right">
             {t('recommendedSellingPrice') || 'מחיר מכירה מומלץ'}
           </span>
-          <span className="text-3xl font-bold text-primary-600">
-            {formatCurrency(result.sellingPrice)}
-          </span>
+          <div className="flex items-center gap-2 flex-row-reverse">
+            <span className="text-3xl font-bold text-primary-600">
+              {formatCurrency(result.sellingPrice)}
+            </span>
+            <button
+              type="button"
+              onClick={async () => {
+                const priceText = result.sellingPrice.toFixed(2);
+                try {
+                  await navigator.clipboard.writeText(priceText);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                } catch (err) {
+                  // Fallback for older browsers
+                  const textArea = document.createElement('textarea');
+                  textArea.value = priceText;
+                  document.body.appendChild(textArea);
+                  textArea.select();
+                  document.execCommand('copy');
+                  document.body.removeChild(textArea);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }
+              }}
+              className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+              title={t('copy') || 'העתק'}
+            >
+              {copied ? <Check className="w-[18px] h-[18px] text-green-600" /> : <Copy className="w-[18px] h-[18px]" />}
+            </button>
+          </div>
         </div>
         
         {/* Margin and Profit */}
@@ -102,21 +149,6 @@ const RealtimeResults = ({ costs, desiredMargin, customCosts, formatCurrency }) 
             <span className="text-sm text-gray-600 text-right">{t('profit') || 'רווח'}</span>
             <span className="text-lg font-semibold text-green-600">{formatCurrency(result.profit)}</span>
           </div>
-        </div>
-
-        {/* Profit per unit */}
-        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-green-800 text-right">
-              {t('profitPerUnit') || 'רווח ליחידה'}
-            </span>
-            <span className="text-xl font-bold text-green-700">
-              {formatCurrency(result.profit)}
-            </span>
-          </div>
-          <p className="text-xs text-green-700 mt-1 text-right">
-            {t('actualMargin') || 'שולי רווח בפועל'}: {result.actualMargin.toFixed(2)}%
-          </p>
         </div>
       </div>
     </div>

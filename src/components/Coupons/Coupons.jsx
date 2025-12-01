@@ -1,96 +1,46 @@
 import { useState, useEffect, useCallback } from 'react';
+import { TagIcon as Tag } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { couponsAPI } from '../../services/woocommerce';
+import { useCoupons } from '../../hooks/useCoupons';
 import CouponModal from './CouponModal';
 import CouponsHeader from './CouponsHeader';
 import CouponsTable from './CouponsTable';
-import EmptyState from './EmptyState';
-import LoadingState from './LoadingState';
-import ErrorState from './ErrorState';
-import LoadingMoreIndicator from './LoadingMoreIndicator';
+import Pagination from '../ui/Pagination';
+import { EmptyState, LoadingState, ErrorState, LoadingMoreIndicator } from '../ui';
+import { PAGINATION_DEFAULTS } from '../../shared/constants';
 
-const PER_PAGE = 50;
+const PER_PAGE = PAGINATION_DEFAULTS.COUPONS_PER_PAGE;
 
 const Coupons = () => {
   const { t, formatCurrency, isRTL } = useLanguage();
-  const [allCoupons, setAllCoupons] = useState([]); // All loaded coupons (no filter)
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCoupon, setSelectedCoupon] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
-  const [totalCoupons, setTotalCoupons] = useState(0);
 
-  // Load all coupons without filters (for client-side filtering)
-  const loadCoupons = useCallback(async (pageToLoad = 1, reset = false) => {
-    try {
-      reset ? setLoading(true) : setLoadingMore(true);
-      setError(null);
-      
-      const { data, total, totalPages } = await couponsAPI.list({
-        page: pageToLoad,
-        per_page: PER_PAGE,
-        orderby: 'date',
-        order: 'desc',
-      });
-      
-      setTotalCoupons(total);
-      setHasMore(pageToLoad < totalPages);
-      setPage(pageToLoad);
-      
-      if (reset) {
-        setAllCoupons(data);
-      } else {
-        // Avoid duplicates
-        setAllCoupons((prev) => {
-          const existingIds = new Set(prev.map(c => c.id));
-          const newCoupons = data.filter(c => !existingIds.has(c.id));
-          return [...prev, ...newCoupons];
-        });
-      }
-    } catch (err) {
-      setError(err.message || t('error'));
-    } finally {
-      reset ? setLoading(false) : setLoadingMore(false);
-    }
-  }, [t]);
+  // Use useCoupons hook for data fetching with caching
+  const {
+    data: couponsData,
+    isLoading: loading,
+    error,
+    refetch
+  } = useCoupons({
+    page,
+    per_page: PER_PAGE,
+    search: searchQuery,
+    orderby: 'date',
+    order: 'desc'
+  });
 
-  useEffect(() => {
-    loadCoupons(1, true);
-  }, [loadCoupons]);
+  const allCoupons = couponsData?.data || [];
+  const totalCoupons = couponsData?.total || 0;
+  const totalPages = couponsData?.totalPages || 1;
+
+
 
   // Infinite scroll effect - only when no search query
-  useEffect(() => {
-    if (searchQuery) return; // Don't load more when searching (we filter client-side)
-    
-    let ticking = false;
-    const handleScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      
-      requestAnimationFrame(() => {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const windowHeight = window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
 
-        if (scrollTop + windowHeight >= documentHeight - 200) {
-          if (hasMore && !loading && !loadingMore) {
-            loadCoupons(page + 1, false);
-          }
-        }
-        ticking = false;
-      });
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [hasMore, loading, loadingMore, page, searchQuery, loadCoupons]);
 
   const handleDelete = async (id) => {
     if (!window.confirm(t('deleteCoupon') || 'Are you sure you want to delete this coupon?')) {
@@ -103,33 +53,23 @@ const Coupons = () => {
     }
 
     try {
-      // Optimistically update UI first for instant feedback
-      setAllCoupons((prev) => prev.filter((c) => c.id !== id));
-      setTotalCoupons((prev) => Math.max(prev - 1, 0));
-      
       await couponsAPI.delete(id);
+      refetch();
     } catch (err) {
       alert(t('error') + ': ' + err.message);
-      loadCoupons(1, true);
+      refetch();
     }
   };
 
   // Client-side filtering - instant!
-  const filteredCoupons = allCoupons.filter(coupon => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      coupon.code?.toLowerCase().includes(query) ||
-      coupon.description?.toLowerCase().includes(query)
-    );
-  });
+  const filteredCoupons = allCoupons; // Search is handled by the hook
 
-  if (loading) {
-    return <LoadingState t={t} />;
+  if (loading && !allCoupons.length) {
+    return <LoadingState message={t('loading') || 'Loading...'} />;
   }
 
   if (error && !allCoupons.length) {
-    return <ErrorState error={error} onRetry={() => loadCoupons(1, true)} t={t} />;
+    return <ErrorState error={error.message || t('error')} onRetry={() => refetch()} fullPage />;
   }
 
   return (
@@ -148,7 +88,7 @@ const Coupons = () => {
       />
 
       {filteredCoupons.length === 0 ? (
-        <EmptyState isRTL={isRTL} t={t} />
+        <EmptyState message={t('noCoupons') || 'No coupons found'} description={t('noCouponsDesc') || 'Get started by creating your first coupon'} isRTL={isRTL} icon={Tag} />
       ) : (
         <>
           <CouponsTable
@@ -162,7 +102,21 @@ const Coupons = () => {
             isRTL={isRTL}
             t={t}
           />
-          {loadingMore && <LoadingMoreIndicator isRTL={isRTL} />}
+          {/* Pagination */}
+          <div className="mt-6">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={(newPage) => {
+                setPage(newPage);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              totalItems={totalCoupons}
+              itemsPerPage={PER_PAGE}
+              isRTL={isRTL}
+              t={t}
+            />
+          </div>
         </>
       )}
 
@@ -176,7 +130,7 @@ const Coupons = () => {
           onSave={() => {
             setIsModalOpen(false);
             setSelectedCoupon(null);
-            loadCoupons(page, true);
+            refetch();
           }}
           formatCurrency={formatCurrency}
           isRTL={isRTL}

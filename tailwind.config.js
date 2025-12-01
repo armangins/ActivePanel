@@ -25,10 +25,12 @@ export default {
         secondary: '#EBF3FF',
       },
       fontFamily: {
-        // Default font - Polin (local font)
-        sans: ['Polin', 'Arial Hebrew', 'sans-serif'],
-        // Custom Hebrew font
-        hebrew: ['Polin', 'Arial Hebrew', 'sans-serif'],
+        // Default font - Polin Light (Thin)
+        sans: ['Polin Light', 'Polin', 'Arial Hebrew', 'sans-serif'],
+        // Regular font for subtitles
+        regular: ['Polin', 'Arial Hebrew', 'sans-serif'],
+        // Bold font for titles
+        title: ['Polin Bold', 'Polin', 'Arial Hebrew', 'sans-serif'],
       },
     },
   },

@@ -11,7 +11,7 @@
  */
 export const sanitizeInput = (input) => {
   if (typeof input !== 'string') return input;
-  
+
   // Remove potentially dangerous characters
   return input
     .replace(/[<>]/g, '') // Remove < and >
@@ -38,104 +38,34 @@ export const isValidEmail = (email) => {
  */
 export const validatePassword = (password) => {
   const errors = [];
-  
+
   if (!password || password.length < 8) {
     errors.push('Password must be at least 8 characters long');
   }
-  
+
   if (!/[A-Z]/.test(password)) {
     errors.push('Password must contain at least one uppercase letter');
   }
-  
+
   if (!/[a-z]/.test(password)) {
     errors.push('Password must contain at least one lowercase letter');
   }
-  
+
   if (!/[0-9]/.test(password)) {
     errors.push('Password must contain at least one number');
   }
-  
+
   if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
     errors.push('Password must contain at least one special character');
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors,
   };
 };
 
-/**
- * Secure storage wrapper with encryption considerations
- * Note: For production, use proper encryption libraries
- */
-export const secureStorage = {
-  /**
-   * Set item in localStorage with security considerations
-   */
-  setItem: (key, value) => {
-    try {
-      // Don't store sensitive data in localStorage
-      if (key.includes('password') || key.includes('secret') || key.includes('token')) {
-        console.warn('⚠️ Security Warning: Sensitive data should not be stored in localStorage');
-        return false;
-      }
-      
-      const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
-      localStorage.setItem(key, stringValue);
-      return true;
-    } catch (error) {
-      console.error('Error storing data:', error);
-      return false;
-    }
-  },
-  
-  /**
-   * Get item from localStorage
-   */
-  getItem: (key) => {
-    try {
-      const item = localStorage.getItem(key);
-      if (!item) return null;
-      
-      // Try to parse as JSON, fallback to string
-      try {
-        return JSON.parse(item);
-      } catch {
-        return item;
-      }
-    } catch (error) {
-      console.error('Error retrieving data:', error);
-      return null;
-    }
-  },
-  
-  /**
-   * Remove item from localStorage
-   */
-  removeItem: (key) => {
-    try {
-      localStorage.removeItem(key);
-      return true;
-    } catch (error) {
-      console.error('Error removing data:', error);
-      return false;
-    }
-  },
-  
-  /**
-   * Clear all localStorage (use with caution)
-   */
-  clear: () => {
-    try {
-      localStorage.clear();
-      return true;
-    } catch (error) {
-      console.error('Error clearing storage:', error);
-      return false;
-    }
-  },
-};
+
 
 /**
  * Rate limiting helper (client-side)
@@ -146,25 +76,25 @@ const rateLimitStore = new Map();
 export const checkRateLimit = (key, maxAttempts = 5, windowMs = 15 * 60 * 1000) => {
   const now = Date.now();
   const record = rateLimitStore.get(key);
-  
+
   if (!record) {
     rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
     return { allowed: true, remaining: maxAttempts - 1 };
   }
-  
+
   if (now > record.resetTime) {
     rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
     return { allowed: true, remaining: maxAttempts - 1 };
   }
-  
+
   if (record.count >= maxAttempts) {
-    return { 
-      allowed: false, 
+    return {
+      allowed: false,
       remaining: 0,
       resetTime: record.resetTime,
     };
   }
-  
+
   record.count++;
   rateLimitStore.set(key, record);
   return { allowed: true, remaining: maxAttempts - record.count };
@@ -176,7 +106,7 @@ export const checkRateLimit = (key, maxAttempts = 5, windowMs = 15 * 60 * 1000) 
 export const clearSensitiveData = () => {
   // Clear rate limit store
   rateLimitStore.clear();
-  
+
   // Clear any sensitive variables
   // Note: In JavaScript, we can't force garbage collection,
   // but we can remove references

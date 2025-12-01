@@ -1,117 +1,144 @@
-import { Package } from 'lucide-react';
+import { memo, useMemo } from 'react';
+import { CubeIcon as Package } from '@heroicons/react/24/outline';
 
-const VariationCard = ({ 
+const VariationCard = memo(({ 
   variation, 
   formatCurrency,
   isRTL,
   t
 }) => {
-  const imageUrl = variation.image && variation.image.src ? variation.image.src : null;
+  const imageUrl = useMemo(() => 
+    variation.image && variation.image.src ? variation.image.src : null,
+    [variation.image]
+  );
   
-  const regularPrice = variation.regular_price || variation.price || null;
-  const salePrice = variation.sale_price || null;
+  const regularPrice = useMemo(() => 
+    variation.regular_price || variation.price || null,
+    [variation.regular_price, variation.price]
+  );
   
-  const displayPrice = regularPrice ? formatCurrency(parseFloat(regularPrice)) : '-';
-  const displaySalePrice = salePrice ? formatCurrency(parseFloat(salePrice)) : null;
+  const salePrice = useMemo(() => 
+    variation.sale_price || null,
+    [variation.sale_price]
+  );
   
-  const discountPercentage = regularPrice && salePrice
-    ? Math.round(((parseFloat(regularPrice) - parseFloat(salePrice)) / parseFloat(regularPrice)) * 100)
-    : 0;
+  const displayPrice = useMemo(() => 
+    regularPrice ? formatCurrency(parseFloat(regularPrice)) : '-',
+    [regularPrice, formatCurrency]
+  );
+  
+  const displaySalePrice = useMemo(() => 
+    salePrice ? formatCurrency(parseFloat(salePrice)) : null,
+    [salePrice, formatCurrency]
+  );
+  
+  const discountPercentage = useMemo(() => 
+    regularPrice && salePrice
+      ? Math.round(((parseFloat(regularPrice) - parseFloat(salePrice)) / parseFloat(regularPrice)) * 100)
+      : 0,
+    [regularPrice, salePrice]
+  );
 
-  const stockStatus = variation.stock_status || 'instock';
-  const stockStatusLabel = stockStatus === 'instock' ? t('inStock') : t('outOfStock');
+  const stockStatus = useMemo(() => 
+    variation.stock_status || 'instock',
+    [variation.stock_status]
+  );
+  
+  const stockStatusLabel = useMemo(() => 
+    stockStatus === 'instock' ? t('inStock') : t('outOfStock'),
+    [stockStatus, t]
+  );
   
   // Get variation attributes (e.g., "Size: Large, Color: Red")
-  const attributesText = variation.attributes && variation.attributes.length > 0
-    ? variation.attributes.map(attr => `${attr.name}: ${attr.option}`).join(', ')
-    : '';
+  const attributesText = useMemo(() => 
+    variation.attributes && variation.attributes.length > 0
+      ? variation.attributes.map(attr => `${attr.name}: ${attr.option}`).join(', ')
+      : '',
+    [variation.attributes]
+  );
 
+  // Get variation name (use attributes text or variation name)
+  const variationName = useMemo(() => 
+    attributesText || variation.name || `Variation #${variation.id}`,
+    [attributesText, variation.name, variation.id]
+  );
+  
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow overflow-hidden flex flex-col">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow overflow-hidden flex flex-col h-full">
       {/* Variation Image */}
-      <div className="w-full aspect-square">
+      <div className="w-full aspect-square flex-shrink-0">
         {imageUrl ? (
           <img
             src={imageUrl}
-            alt={variation.name || attributesText}
+            alt={variationName}
             className="w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-            <Package className="text-gray-400" size={32} />
+            <Package className="w-6 h-6 text-gray-400" />
           </div>
         )}
       </div>
 
       {/* Variation Info */}
-      <div className="p-3 flex flex-col flex-1">
-        {/* Attributes */}
-        {attributesText && (
-          <div className="mb-2">
-            <p className="text-xs font-medium text-gray-700 line-clamp-2 text-left">
-              {attributesText}
+      <div className="p-2 flex flex-col flex-1 min-h-0">
+        {/* Variation Name */}
+        <div className="mb-1">
+          <p className="text-xs font-semibold text-gray-900 line-clamp-1 text-right">
+            {variationName}
+          </p>
+        </div>
+
+        {/* SKU */}
+        {variation.sku && (
+          <div className="mb-1">
+            <p className="text-xs text-gray-600 text-right">
+              <span className="font-medium">{t('sku')}:</span> {variation.sku}
             </p>
           </div>
         )}
 
-        {/* SKU */}
-        {variation.sku && (
-          <p className="text-xs text-gray-500 mb-2 text-left">
-            {t('sku')}: {variation.sku}
-          </p>
-        )}
-
-        {/* Stock Status */}
-        <div className="mb-2">
-          {stockStatus === 'instock' ? (
-            <div className={`flex items-center gap-1.5 ${'flex-row-reverse'}`}>
-              <span className="text-xs font-medium text-gray-700">
-                {stockStatusLabel}
-              </span>
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
-            </div>
-          ) : (
-            <span className="px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-800">
-              {stockStatusLabel}
-            </span>
-          )}
-        </div>
-
-        {/* Prices */}
-        <div className={`flex items-center ${'flex-row-reverse'} justify-end gap-2 pt-2 border-t border-gray-200 flex-wrap`}>
-          {displaySalePrice ? (
-            <>
-              <p className="text-lg font-bold text-primary-500">
-                {displaySalePrice}
-              </p>
-              {regularPrice && (
-                <p className="text-xs text-gray-400 line-through">
-                  {displayPrice}
+        {/* Price */}
+        <div className="mb-1">
+          <div className="flex items-center flex-row-reverse justify-end gap-1">
+            {displaySalePrice ? (
+              <>
+                <p className="text-sm font-regular text-primary-500">
+                  {displaySalePrice}
                 </p>
-              )}
-              {discountPercentage > 0 && (
-                <span className="px-1.5 py-0.5 text-xs font-bold text-white bg-red-500 rounded">
-                  {discountPercentage}%
-                </span>
-              )}
-            </>
-          ) : (
-            <p className="text-lg font-bold text-gray-900">
-              {displayPrice}
-            </p>
-          )}
+                {regularPrice && (
+                  <p className="text-xs text-gray-400 line-through">
+                    {displayPrice}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-sm font-regular text-gray-900">
+                {displayPrice}
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Stock Quantity */}
-        {variation.stock_quantity !== null && variation.stock_quantity !== undefined && (
-          <p className="text-xs text-gray-500 mt-2 text-left">
-            {t('stock')}: {variation.stock_quantity}
-          </p>
-        )}
+        {/* Stock */}
+        <div className="mt-auto pt-1 border-t border-gray-200">
+          <div className="flex items-center justify-end gap-2 flex-row-reverse">
+            <span className="text-xs text-gray-600 text-right">
+              {t('stock')}: <span className="font-semibold">{variation.stock_quantity !== null && variation.stock_quantity !== undefined ? variation.stock_quantity : '-'}</span>
+            </span>
+            {stockStatus === 'instock' ? (
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0"></span>
+            ) : (
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0"></span>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
-};
+});
+
+VariationCard.displayName = 'VariationCard';
 
 export default VariationCard;
 

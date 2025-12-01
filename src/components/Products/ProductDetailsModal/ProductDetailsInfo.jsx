@@ -49,7 +49,7 @@ const ProductDetailsInfo = ({ product, formatCurrency, isRTL, t, variations = []
               <span className="w-2 h-2 rounded-full bg-green-500"></span>
             </div>
           ) : (
-            <span className="text-sm font-medium text-red-600">
+            <span className="text-sm font-medium text-orange-600">
               {t('outOfStock')}
             </span>
           )}
@@ -105,7 +105,7 @@ const ProductDetailsInfo = ({ product, formatCurrency, isRTL, t, variations = []
           {/* Error State */}
           {variationsError && (
             <div className="text-center py-4">
-              <p className="text-red-500">{variationsError}</p>
+              <p className="text-orange-500">{variationsError}</p>
             </div>
           )}
 

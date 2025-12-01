@@ -1,133 +1,71 @@
 import { useState, useEffect, useCallback } from 'react';
+import { UserIcon as User } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { customersAPI } from '../../services/woocommerce';
-import SearchInput from '../Common/SearchInput';
+import { useCustomers } from '../../hooks/useCustomers';
+import { SearchInput, EmptyState, LoadingState, ErrorState, LoadingMoreIndicator } from '../ui';
 import CustomerDetailsModal from './CustomerDetailsModal/CustomerDetailsModal';
 import CustomersHeader from './CustomersHeader';
 import CustomersGrid from './CustomersGrid';
-import EmptyState from './EmptyState';
-import LoadingState from './LoadingState';
-import ErrorState from './ErrorState';
-import LoadingMoreIndicator from './LoadingMoreIndicator';
+import Pagination from '../ui/Pagination';
+import { PAGINATION_DEFAULTS } from '../../shared/constants';
 
-const PER_PAGE = 24;
+const PER_PAGE = PAGINATION_DEFAULTS.CUSTOMERS_PER_PAGE;
 
 const Customers = () => {
-  const { t, isRTL } = useLanguage();
-  const [allCustomers, setAllCustomers] = useState([]); // All loaded customers (no filter)
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState(null);
+  const { t, isRTL, formatCurrency } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
-  const [totalCustomers, setTotalCustomers] = useState(0);
 
-  // Load all customers without filters (for client-side filtering)
-  const loadCustomers = useCallback(async (pageToLoad = 1, reset = false) => {
-    try {
-      reset ? setLoading(true) : setLoadingMore(true);
-      setError(null);
-      
-      const { data, total, totalPages } = await customersAPI.list({
-        page: pageToLoad,
-        per_page: PER_PAGE,
-      });
-      
-      setTotalCustomers(total);
-      setHasMore(pageToLoad < totalPages);
-      setPage(pageToLoad);
-      
-      if (reset) {
-        setAllCustomers(data);
-      } else {
-        // Avoid duplicates
-        setAllCustomers((prev) => {
-          const existingIds = new Set(prev.map(c => c.id));
-          const newCustomers = data.filter(c => !existingIds.has(c.id));
-          return [...prev, ...newCustomers];
-        });
-      }
-    } catch (err) {
-      setError(err.message || t('error'));
-    } finally {
-      reset ? setLoading(false) : setLoadingMore(false);
-    }
-  }, [t]);
+  // Use useCustomers hook for data fetching with caching
+  const {
+    data: customersData,
+    isLoading: loading,
+    error
+  } = useCustomers({
+    page,
+    per_page: PER_PAGE,
+    search: searchQuery,
+    _fields: ['id', 'first_name', 'last_name', 'username', 'email', 'avatar_url', 'billing', 'shipping', 'date_created', 'orders_count', 'total_spent']
+  });
 
-  useEffect(() => {
-    loadCustomers(1, true);
-  }, [loadCustomers]);
+  const allCustomers = customersData?.data || [];
+  const totalCustomers = customersData?.total || 0;
+  const totalPages = customersData?.totalPages || 1;
+  const hasMore = page < totalPages;
 
   // Infinite scroll effect - only when no search query
-  useEffect(() => {
-    if (searchQuery) {
-      return; // Don't load more when searching (we filter client-side)
-    }
+  // Note: With useQuery, we might want to use useInfiniteQuery for true infinite scroll,
+  // but for now we'll stick to the existing pattern or simple pagination.
+  // Given the existing code uses a "load more" style with infinite scroll, 
+  // let's adapt it to simple pagination for consistency with Products/Orders 
+  // OR keep it if we want to maintain that UX.
+  // However, the previous implementation was mixing client-side filtering with server-side pagination which is tricky.
+  // Let's simplify to server-side pagination/filtering like Products/Orders for better performance and consistency.
 
-    let ticking = false;
-    const handleScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      
-      requestAnimationFrame(() => {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const windowHeight = window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
-
-        if (scrollTop + windowHeight >= documentHeight - 200) {
-          if (hasMore && !loading && !loadingMore && !searchQuery) {
-            loadCustomers(page + 1, false);
-          }
-        }
-        ticking = false;
-      });
-    };
-
-    const checkInitialLoad = () => {
-      setTimeout(() => {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const windowHeight = window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
-        
-        if (documentHeight <= windowHeight + 100 && hasMore && !loading && !loadingMore) {
-          loadCustomers(page + 1, false);
-        }
-      }, 100);
-    };
-
-    if (!loading && allCustomers.length > 0) {
-      checkInitialLoad();
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', checkInitialLoad, { passive: true });
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', checkInitialLoad);
-    };
-  }, [hasMore, loading, loadingMore, page, searchQuery, loadCustomers, allCustomers.length]);
+  /* 
+  // Previous loadCustomers logic removed
+  */
 
   // Client-side filtering - instant!
-  const filteredCustomers = allCustomers.filter(customer => {
-    if (!searchQuery) return true;
-    
-    const query = searchQuery.toLowerCase();
-    return (
-      customer.first_name?.toLowerCase().includes(query) ||
-      customer.last_name?.toLowerCase().includes(query) ||
-      customer.email?.toLowerCase().includes(query) ||
-      customer.username?.toLowerCase().includes(query)
-    );
-  });
+  // Note: With server-side pagination, client-side filtering only works for the current page.
+  // Ideally, we should use server-side search.
+  // The useCustomers hook already handles search via the 'search' prop.
+
+  const filteredCustomers = allCustomers; // Search is handled by the hook
 
   const displayedCount = filteredCustomers.length;
 
   if (loading) {
-    return <LoadingState isRTL={isRTL} t={t} />;
+    return <LoadingState message={t('loading') || 'Loading customers...'} />;
   }
+
+  if (error && !filteredCustomers.length) {
+    return <ErrorState error={error.message || t('error')} fullPage />;
+  }
+
+
 
   return (
     <div className="space-y-6" dir="rtl">
@@ -149,12 +87,11 @@ const Customers = () => {
         />
       </div>
 
-      {/* Error State */}
-      {error && <ErrorState error={error} isRTL={isRTL} />}
+
 
       {/* Customers Grid */}
       {filteredCustomers.length === 0 ? (
-        <EmptyState isRTL={isRTL} t={t} />
+        <EmptyState message={t('noCustomers')} isRTL={isRTL} icon={User} />
       ) : (
         <>
           <CustomersGrid
@@ -162,8 +99,23 @@ const Customers = () => {
             onCustomerClick={setSelectedCustomer}
             isRTL={isRTL}
             t={t}
+            formatCurrency={formatCurrency}
           />
-          {loadingMore && <LoadingMoreIndicator isRTL={isRTL} />}
+          {/* Pagination */}
+          <div className="mt-6">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={(newPage) => {
+                setPage(newPage);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              totalItems={totalCustomers}
+              itemsPerPage={PER_PAGE}
+              isRTL={isRTL}
+              t={t}
+            />
+          </div>
         </>
       )}
 
@@ -174,6 +126,7 @@ const Customers = () => {
           onClose={() => setSelectedCustomer(null)}
           isRTL={isRTL}
           t={t}
+          formatCurrency={formatCurrency}
         />
       )}
     </div>

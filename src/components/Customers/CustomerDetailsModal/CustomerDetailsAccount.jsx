@@ -50,3 +50,6 @@ const CustomerDetailsAccount = ({ customer, isRTL, t }) => {
 export default CustomerDetailsAccount;
 
 
+
+
+

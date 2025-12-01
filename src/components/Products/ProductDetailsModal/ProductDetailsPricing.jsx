@@ -28,7 +28,7 @@ const ProductDetailsPricing = ({ product, formatCurrency, isRTL, t }) => {
           {/* Regular Price */}
           <div>
             <label className={`block text-sm font-medium text-gray-700 mb-1 ${'text-right'}`}>
-              {t('price')} <span className="text-red-500">*</span>
+              {t('price')} <span className="text-orange-500">*</span>
             </label>
             <input
               type="text"
@@ -66,7 +66,7 @@ const ProductDetailsPricing = ({ product, formatCurrency, isRTL, t }) => {
                 <span className="w-2 h-2 rounded-full bg-green-500"></span>
               </div>
             ) : (
-              <span className="text-sm font-medium text-red-600">
+              <span className="text-sm font-medium text-orange-600">
                 {t('outOfStock')}
               </span>
             )}

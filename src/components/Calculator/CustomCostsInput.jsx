@@ -1,6 +1,6 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { TrashIcon as Trash2, PlusIcon as Plus } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
-import CostInputField from './CostInputField';
+import { Input } from '../ui/inputs';
 
 /**
  * CustomCostsInput Component
@@ -48,7 +48,7 @@ const CustomCostsInput = ({
     <div>
       <div className="flex items-center justify-between mb-2">
         <label className="block text-sm font-medium text-gray-700 text-right flex items-center gap-2">
-          <Plus size={18} className="text-gray-500" />
+          <Plus className="w-[18px] h-[18px] text-gray-500" />
           {t('additionalCustomCosts') || 'עלויות נוספות/מותאמות אישית (אופציונלי)'}
         </label>
         <button
@@ -56,7 +56,7 @@ const CustomCostsInput = ({
           onClick={onAdd}
           className="btn-secondary text-xs py-1 px-2 flex items-center gap-1"
         >
-          <Plus size={14} />
+          <Plus className="w-3.5 h-3.5" />
           <span>{t('addCost') || 'הוסף עלות'}</span>
         </button>
       </div>
@@ -65,7 +65,7 @@ const CustomCostsInput = ({
           <div key={cost.id} className="space-y-1">
             <div className="flex gap-2 flex-row-reverse">
               <div className="flex-1">
-                <input
+                <Input
                   id={`custom-cost-amount-${cost.id}`}
                   name={`customCostAmount_${cost.id}`}
                   type="text"
@@ -73,34 +73,34 @@ const CustomCostsInput = ({
                   value={cost.amount}
                   onChange={(e) => handleAmountChange(cost.id, e.target.value)}
                   onBlur={(e) => handleAmountBlur(cost.id, e.target.value)}
-                  className="input-field w-full text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   placeholder={t('amount') || 'סכום'}
+                  prefix="₪"
+                  error={validationErrors[`customCost_${cost.id}`]}
+                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   autoComplete="off"
                 />
-                {validationErrors[`customCost_${cost.id}`] && (
-                  <p className="text-xs text-gray-500 mt-1 text-right">{validationErrors[`customCost_${cost.id}`]}</p>
-                )}
               </div>
-              <input
-                id={`custom-cost-name-${cost.id}`}
-                name={`customCostName_${cost.id}`}
-                type="text"
-                value={cost.name}
-                onChange={(e) => onUpdate(cost.id, 'name', e.target.value)}
-                className="input-field flex-1 text-right"
-                placeholder={t('costName') || 'שם העלות'}
-                autoComplete="off"
-              />
+              <div className="flex-1">
+                <Input
+                  id={`custom-cost-name-${cost.id}`}
+                  name={`customCostName_${cost.id}`}
+                  type="text"
+                  value={cost.name}
+                  onChange={(e) => onUpdate(cost.id, 'name', e.target.value)}
+                  placeholder={t('costName') || 'שם העלות'}
+                  autoComplete="off"
+                />
+              </div>
               {customCosts.length > 1 && (
                 <button
                   type="button"
                   id={`remove-custom-cost-${cost.id}`}
                   aria-label={`${t('remove') || 'הסר'} ${cost.name || t('costName') || 'עלות'}`}
                   onClick={() => onRemove(cost.id)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                   title={t('remove') || 'הסר'}
                 >
-                  <Trash2 size={18} />
+                  <Trash2 className="w-[18px] h-[18px]" />
                 </button>
               )}
             </div>

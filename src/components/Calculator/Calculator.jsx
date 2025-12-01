@@ -1,21 +1,25 @@
 import { useState } from 'react';
-import { Calculator as CalculatorIcon } from 'lucide-react';
-import { Package, Truck, CreditCard } from 'lucide-react';
+import { CalculatorIcon as CalculatorIcon } from '@heroicons/react/24/outline';
+import { CubeIcon as Package, TruckIcon as Truck, CreditCardIcon as CreditCard } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CalculatorHeader from './CalculatorHeader';
 import CostInputField from './CostInputField';
 import MarginSelector from './MarginSelector';
 import CustomCostsInput from './CustomCostsInput';
 import RealtimeResults from './RealtimeResults';
-import { useCostInput } from './useCostInput';
+import DetailedResults from './DetailedResults';
+import { useCostInput } from '../../hooks';
 
 /**
  * Smart Pricing Calculator Component
  * 
  * A smart pricing tool that helps you set accurate selling prices based on 
  * your real costs and your desired profit margin.
+ * 
+ * @param {Function} onUsePrice - Optional callback when "use this price" is clicked (for modal mode)
+ * @param {boolean} isModalMode - Whether calculator is used in modal mode
  */
-const Calculator = () => {
+const Calculator = ({ onUsePrice, isModalMode = false }) => {
   const { t, formatCurrency } = useLanguage();
   
   // Cost inputs using custom hook
@@ -27,6 +31,7 @@ const Calculator = () => {
   const [customCosts, setCustomCosts] = useState([{ id: 1, name: '', amount: '' }]);
   const [desiredMargin, setDesiredMargin] = useState('');
   const [result, setResult] = useState(null);
+  const [realtimeResult, setRealtimeResult] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
   const [formErrors, setFormErrors] = useState({});
 
@@ -145,120 +150,222 @@ const Calculator = () => {
     setCustomCosts([{ id: 1, name: '', amount: '' }]);
     setDesiredMargin('');
     setResult(null);
+    setRealtimeResult(null);
     setValidationErrors({});
     setFormErrors({});
   };
 
   return (
-    <div className="flex items-start justify-center min-h-screen py-8">
-      <div className="w-full max-w-2xl space-y-6">
-        <CalculatorHeader />
-
-        {/* Realtime Results */}
-        <RealtimeResults
-          costs={{
-            supplierCost: supplierCost.value,
-            shippingCost: shippingCost.value,
-            packagingCost: packagingCost.value,
-            platformFees: platformFees.value,
-          }}
-          desiredMargin={desiredMargin}
-          customCosts={customCosts}
-          formatCurrency={formatCurrency}
-        />
-
-        {/* Calculator Form */}
-        <div className="card">
-          <form id="calculator-form" name="calculatorForm" onSubmit={handleCalculate} className="space-y-6">
-            <MarginSelector 
-              value={desiredMargin} 
-              onChange={handleMarginChange}
-              error={formErrors.desiredMargin}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <CostInputField
-                id="supplier-cost"
-                name="supplierCost"
-                label={t('supplierCost') || 'עלות ספק'}
-                Icon={Package}
-                value={supplierCost.value}
-                onChange={(e) => {
-                  supplierCost.handleChange(e);
-                  if (formErrors.supplierCost) {
-                    setFormErrors(prev => ({ ...prev, supplierCost: '' }));
-                  }
-                }}
-                onBlur={supplierCost.handleBlur}
-                error={supplierCost.error || formErrors.supplierCost}
-                required
-              />
-
-              <CostInputField
-                id="shipping-cost"
-                name="shippingCost"
-                label={t('shippingCost') || 'עלות משלוח'}
-                Icon={Truck}
-                value={shippingCost.value}
-                onChange={shippingCost.handleChange}
-                onBlur={shippingCost.handleBlur}
-                error={shippingCost.error}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <CostInputField
-                id="packaging-cost"
-                name="packagingCost"
-                label={t('packagingCost') || 'עלות אריזה'}
-                Icon={Package}
-                value={packagingCost.value}
-                onChange={packagingCost.handleChange}
-                onBlur={packagingCost.handleBlur}
-                error={packagingCost.error}
-              />
-
-              <CostInputField
-                id="platform-fees"
-                name="platformFees"
-                label={t('platformOrTransactionFees') || 'עמלות פלטפורמה או עסקאות'}
-                Icon={CreditCard}
-                value={platformFees.value}
-                onChange={platformFees.handleChange}
-                onBlur={platformFees.handleBlur}
-                error={platformFees.error}
-              />
-            </div>
-
-            <CustomCostsInput
-              customCosts={customCosts}
-              onAdd={addCustomCost}
-              onRemove={removeCustomCost}
-              onUpdate={updateCustomCost}
-              validationErrors={validationErrors}
-              setValidationErrors={setValidationErrors}
-            />
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 flex-row-reverse">
-              <button
-                type="submit"
-                className="btn-primary flex items-center gap-2 flex-row-reverse"
-              >
-                <CalculatorIcon size={18} />
-                <span>{t('calculate') || 'חשב'}</span>
-              </button>
-              <button
-                type="button"
-                onClick={resetCalculator}
-                className="btn-secondary"
-              >
-                {t('reset') || 'איפוס'}
-              </button>
-            </div>
-          </form>
+    <div className={isModalMode ? "w-full" : "w-full py-6"}>
+      {!isModalMode && (
+        <div className="mb-6">
+          <CalculatorHeader />
         </div>
-      </div>
+      )}
+      
+      {isModalMode ? (
+        // Modal Mode: Single column layout
+        <div className="w-full space-y-6">
+          {/* Realtime Results */}
+          <RealtimeResults
+            costs={{
+              supplierCost: supplierCost.value,
+              shippingCost: shippingCost.value,
+              packagingCost: packagingCost.value,
+              platformFees: platformFees.value,
+            }}
+            desiredMargin={desiredMargin}
+            customCosts={customCosts}
+            formatCurrency={formatCurrency}
+            onResultChange={setRealtimeResult}
+            onUsePrice={onUsePrice}
+          />
+
+          {/* Calculator Form */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <form id="calculator-form" name="calculatorForm" onSubmit={handleCalculate} className="space-y-6">
+              <MarginSelector 
+                value={desiredMargin} 
+                onChange={handleMarginChange}
+                error={formErrors.desiredMargin}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <CostInputField
+                  id="supplier-cost"
+                  name="supplierCost"
+                  label={t('supplierCost') || 'עלות ספק'}
+                  Icon={Package}
+                  value={supplierCost.value}
+                  onChange={(e) => {
+                    supplierCost.handleChange(e);
+                    if (formErrors.supplierCost) {
+                      setFormErrors(prev => ({ ...prev, supplierCost: '' }));
+                    }
+                  }}
+                  onBlur={supplierCost.handleBlur}
+                  error={supplierCost.error || formErrors.supplierCost}
+                  required
+                />
+
+                <CostInputField
+                  id="shipping-cost"
+                  name="shippingCost"
+                  label={t('shippingCost') || 'עלות משלוח'}
+                  Icon={Truck}
+                  value={shippingCost.value}
+                  onChange={shippingCost.handleChange}
+                  onBlur={shippingCost.handleBlur}
+                  error={shippingCost.error}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <CostInputField
+                  id="packaging-cost"
+                  name="packagingCost"
+                  label={t('packagingCost') || 'עלות אריזה'}
+                  Icon={Package}
+                  value={packagingCost.value}
+                  onChange={packagingCost.handleChange}
+                  onBlur={packagingCost.handleBlur}
+                  error={packagingCost.error}
+                />
+
+                <CostInputField
+                  id="platform-fees"
+                  name="platformFees"
+                  label={t('platformOrTransactionFees') || 'עמלות פלטפורמה או עסקאות'}
+                  Icon={CreditCard}
+                  value={platformFees.value}
+                  onChange={platformFees.handleChange}
+                  onBlur={platformFees.handleBlur}
+                  error={platformFees.error}
+                />
+              </div>
+
+              <CustomCostsInput
+                customCosts={customCosts}
+                onAdd={addCustomCost}
+                onRemove={removeCustomCost}
+                onUpdate={updateCustomCost}
+                validationErrors={validationErrors}
+                setValidationErrors={setValidationErrors}
+              />
+            </form>
+          </div>
+        </div>
+      ) : (
+        // Page Mode: Two-column layout
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-full h-full">
+          {/* Left Column: Calculator Form */}
+          <div className="card flex flex-col max-h-[calc(100vh-12rem)] overflow-hidden">
+            <form id="calculator-form" name="calculatorForm" onSubmit={handleCalculate} className="space-y-6 flex-1 overflow-y-auto">
+              <MarginSelector 
+                value={desiredMargin} 
+                onChange={handleMarginChange}
+                error={formErrors.desiredMargin}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <CostInputField
+                  id="supplier-cost"
+                  name="supplierCost"
+                  label={t('supplierCost') || 'עלות ספק'}
+                  Icon={Package}
+                  value={supplierCost.value}
+                  onChange={(e) => {
+                    supplierCost.handleChange(e);
+                    if (formErrors.supplierCost) {
+                      setFormErrors(prev => ({ ...prev, supplierCost: '' }));
+                    }
+                  }}
+                  onBlur={supplierCost.handleBlur}
+                  error={supplierCost.error || formErrors.supplierCost}
+                  required
+                />
+
+                <CostInputField
+                  id="shipping-cost"
+                  name="shippingCost"
+                  label={t('shippingCost') || 'עלות משלוח'}
+                  Icon={Truck}
+                  value={shippingCost.value}
+                  onChange={shippingCost.handleChange}
+                  onBlur={shippingCost.handleBlur}
+                  error={shippingCost.error}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <CostInputField
+                  id="packaging-cost"
+                  name="packagingCost"
+                  label={t('packagingCost') || 'עלות אריזה'}
+                  Icon={Package}
+                  value={packagingCost.value}
+                  onChange={packagingCost.handleChange}
+                  onBlur={packagingCost.handleBlur}
+                  error={packagingCost.error}
+                />
+
+                <CostInputField
+                  id="platform-fees"
+                  name="platformFees"
+                  label={t('platformOrTransactionFees') || 'עמלות פלטפורמה או עסקאות'}
+                  Icon={CreditCard}
+                  value={platformFees.value}
+                  onChange={platformFees.handleChange}
+                  onBlur={platformFees.handleBlur}
+                  error={platformFees.error}
+                />
+              </div>
+
+              <CustomCostsInput
+                customCosts={customCosts}
+                onAdd={addCustomCost}
+                onRemove={removeCustomCost}
+                onUpdate={updateCustomCost}
+                validationErrors={validationErrors}
+                setValidationErrors={setValidationErrors}
+              />
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 flex-row">
+                <button
+                  type="submit"
+                  className="btn-primary flex items-center gap-2 flex-row-reverse"
+                >
+                  <CalculatorIcon className="w-[18px] h-[18px]" />
+                  <span>{t('calculate') || 'חשב'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={resetCalculator}
+                  className="btn-secondary"
+                >
+                  {t('reset') || 'איפוס'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Right Column: Detailed Results */}
+          <div className="lg:sticky lg:top-24 lg:self-start flex flex-col max-h-[calc(100vh-12rem)]">
+            <DetailedResults
+              costs={{
+                supplierCost: supplierCost.value,
+                shippingCost: shippingCost.value,
+                packagingCost: packagingCost.value,
+                platformFees: platformFees.value,
+              }}
+              desiredMargin={desiredMargin}
+              customCosts={customCosts}
+              formatCurrency={formatCurrency}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

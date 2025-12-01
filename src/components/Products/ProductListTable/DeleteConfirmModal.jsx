@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { XMarkIcon as X } from '@heroicons/react/24/outline';
 
 /**
  * DeleteConfirmModal Component
@@ -25,12 +25,12 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, productName, isRTL, t 
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-50"
+        className="fixed inset-0 bg-black bg-opacity-50 z-[100]"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4">
         <div
           className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
           onClick={(e) => e.stopPropagation()}
@@ -46,7 +46,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, productName, isRTL, t 
               className="text-gray-400 hover:text-gray-600 transition-colors"
               aria-label={t('close') || 'Close'}
             >
-              <X size={20} />
+              <X className="w-5 h-5" />
             </button>
           </div>
 

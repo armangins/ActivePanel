@@ -30,7 +30,7 @@ const CustomerDetailsBilling = ({ billing, isRTL, t }) => {
         {billing.country && <p>{billing.country}</p>}
         {billing.phone && (
           <p className="mt-2">
-            {t('phone') || 'Phone'}: {billing.phone}
+            {t('phone') || 'טלפון'}: {billing.phone}
           </p>
         )}
       </div>

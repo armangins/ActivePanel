@@ -30,3 +30,6 @@ const ProductDetailsCategories = ({ categories, isRTL, t }) => {
 export default ProductDetailsCategories;
 
 
+
+
+

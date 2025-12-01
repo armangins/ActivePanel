@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react';
+
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { registerUser } from '../../services/auth';
 import { authAPI } from '../../services/api';
 import { validatePassword, checkRateLimit } from '../../utils/security';
-import { Mail, Lock, User, Loader, Eye, EyeOff } from 'lucide-react';
+import {
+  EnvelopeIcon as Mail,
+  LockClosedIcon as Lock,
+  UserIcon as UserIcon,
+  ArrowPathIcon as Loader
+} from '@heroicons/react/24/outline';
+import { Input } from '../ui/inputs';
 
 const USE_BACKEND_API = import.meta.env.VITE_API_URL;
 
@@ -19,8 +26,6 @@ const SignUp = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -86,23 +91,26 @@ const SignUp = () => {
       );
 
       const userData = JSON.parse(jsonPayload);
-      
+
       // Check if user already exists, if not create account
       const user = {
         id: userData.sub,
         email: userData.email,
-        name: userData.name || `${userData.given_name || ''} ${userData.family_name || ''}`.trim(),
+        name: userData.name || `${userData.given_name || ''} ${userData.family_name || ''} `.trim(),
         picture: userData.picture,
         given_name: userData.given_name,
         family_name: userData.family_name,
         provider: 'google',
       };
 
-      // Save user to local storage (for demo purposes)
       // In production, this should be handled by backend
-      const users = JSON.parse(localStorage.getItem('activepanel_users') || '[]');
+      // For demo, we just log the user in
+
+      /* 
+      // Previous localStorage logic removed
+      const users = storage.get('activepanel_users', []);
       const existingUser = users.find(u => u.email === userData.email);
-      
+
       if (!existingUser) {
         users.push({
           id: userData.sub,
@@ -112,8 +120,9 @@ const SignUp = () => {
           role: 'user',
           provider: 'google',
         });
-        localStorage.setItem('activepanel_users', JSON.stringify(users));
+        storage.set('activepanel_users', users);
       }
+      */
 
       login(user);
       navigate('/dashboard');
@@ -190,9 +199,9 @@ const SignUp = () => {
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="mb-8">
-            <img 
-              src="/logo.svg" 
-              alt="ActivePanel" 
+            <img
+              src="/logo.svg"
+              alt="ActivePanel"
               className="h-12 mb-6"
             />
           </div>
@@ -201,7 +210,7 @@ const SignUp = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {t('signUp') || 'הירשם'}
           </h1>
-          
+
           <p className="text-gray-600 mb-8">
             {t('alreadyHaveAccount') || 'כבר יש לך חשבון?'}{' '}
             <Link to="/login" className="text-primary-500 hover:text-primary-600 font-medium">
@@ -211,7 +220,7 @@ const SignUp = () => {
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 mb-6 text-sm text-right">
+            <div className="bg-orange-50 border border-orange-200 text-orange-800 rounded-lg p-4 mb-6 text-sm text-right">
               {error}
             </div>
           )}
@@ -219,114 +228,70 @@ const SignUp = () => {
           {/* Sign Up Form */}
           <form id="signup-form" name="signupForm" onSubmit={handleEmailSignUp} className="space-y-6">
             {/* Name Field */}
-            <div>
-              <label htmlFor="signup-name" className="block text-sm font-medium text-gray-700 mb-2 text-right">
-                {t('fullName') || 'שם מלא'} *
-              </label>
-              <div className="relative">
-                <User className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  id="signup-name"
-                  name="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={t('enterFullName') || 'הכנס שם מלא'}
-                  className="input-field pl-10 text-right placeholder:pr-2"
-                  dir="rtl"
-                  required
-                  disabled={loading}
-                  autoComplete="name"
-                />
-              </div>
-            </div>
+            <Input
+              id="signup-name"
+              name="name"
+              type="text"
+              label={t('fullName') || 'שם מלא'}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t('enterFullName') || 'הכנס שם מלא'}
+              leftIcon={UserIcon}
+              required
+              disabled={loading}
+              autoComplete="name"
+              dir="rtl"
+            />
 
             {/* Email Field */}
-            <div>
-              <label htmlFor="signup-email" className="block text-sm font-medium text-gray-700 mb-2 text-right">
-                {t('emailAddress') || 'כתובת אימייל'} *
-              </label>
-              <div className="relative">
-                <Mail className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  id="signup-email"
-                  name="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t('enterEmail') || 'הכנס אימייל'}
-                  className="input-field pl-10 text-right placeholder:pr-2"
-                  dir="ltr"
-                  required
-                  disabled={loading}
-                  autoComplete="email"
-                />
-              </div>
-            </div>
+            <Input
+              id="signup-email"
+              name="email"
+              type="email"
+              label={t('emailAddress') || 'כתובת אימייל'}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={t('enterEmail') || 'הכנס אימייל'}
+              leftIcon={Mail}
+              required
+              disabled={loading}
+              autoComplete="email"
+              dir="ltr"
+            />
 
             {/* Password Field */}
-            <div>
-              <label htmlFor="signup-password" className="block text-sm font-medium text-gray-700 mb-2 text-right">
-                {t('password') || 'סיסמה'} *
-              </label>
-              <div className="relative">
-                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  id="signup-password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t('enterPassword') || 'הכנס סיסמה'}
-                  className="input-field pl-10 text-right placeholder:pr-2"
-                  dir="rtl"
-                  required
-                  disabled={loading}
-                  autoComplete="new-password"
-                  minLength={6}
-                />
-                <button
-                  type="button"
-                  aria-label={showPassword ? 'הסתר סיסמה' : 'הצג סיסמה'}
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
+            <Input
+              id="signup-password"
+              name="password"
+              type="password"
+              label={t('password') || 'סיסמה'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={t('enterPassword') || 'הכנס סיסמה'}
+              leftIcon={Lock}
+              required
+              disabled={loading}
+              autoComplete="new-password"
+              minLength={6}
+              dir="rtl"
+            />
 
             {/* Confirm Password Field */}
-            <div>
-              <label htmlFor="signup-confirm-password" className="block text-sm font-medium text-gray-700 mb-2 text-right">
-                {t('confirmPassword') || 'אימות סיסמה'} *
-              </label>
-              <div className="relative">
-                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  id="signup-confirm-password"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder={t('confirmPassword') || 'אימות סיסמה'}
-                  className="input-field pl-10 text-right placeholder:pr-2"
-                  dir="rtl"
-                  required
-                  disabled={loading}
-                  autoComplete="new-password"
-                  minLength={6}
-                />
-                <button
-                  type="button"
-                  aria-label={showConfirmPassword ? 'הסתר סיסמה' : 'הצג סיסמה'}
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
+            <Input
+              id="signup-confirm-password"
+              name="confirmPassword"
+              type="password"
+              label={t('confirmPassword') || 'אימות סיסמה'}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder={t('confirmPassword') || 'אימות סיסמה'}
+              leftIcon={Lock}
+              required
+              disabled={loading}
+              autoComplete="new-password"
+              minLength={6}
+              dir="rtl"
+            />
 
             {/* Sign Up Button */}
             <button
@@ -336,7 +301,7 @@ const SignUp = () => {
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <Loader size={18} className="animate-spin" />
+                  <Loader className="w-[18px] h-[18px] animate-spin" />
                   {t('signingUp') || 'נרשם...'}
                 </span>
               ) : (
@@ -359,7 +324,7 @@ const SignUp = () => {
           <div className="mt-6">
             <div id="google-signup-button" className="w-full flex justify-center"></div>
             {!import.meta.env.VITE_GOOGLE_CLIENT_ID && (
-              <p className="text-xs text-gray-500 mt-2 text-center">
+              <p className="text-xs text-gray-500 mt-2 text-right">
                 {t('googleClientIdMissing') || 'Google Sign-Up לא מוגדר. אנא הגדר VITE_GOOGLE_CLIENT_ID ב-.env'}
               </p>
             )}
@@ -386,11 +351,11 @@ const SignUp = () => {
           <h2 className="text-4xl font-bold mb-6">
             {t('welcomeToCommunity') || 'ברוכים הבאים לקהילה שלנו'}
           </h2>
-          
+
           <p className="text-lg text-gray-300 mb-12 leading-relaxed">
             {t('welcomeDescription') || 'ActivePanel עוזרת לבעלי עסקים וחנויות אינטרנטיות לנהל את הפעילות שלהם בצורה חכמה, מסודרת ויעילה — עם לוחות בקרה, מודולים ברורים וממשק נעים, מבוסס AI ומונחה נתונים (Data-driven) שמסדר את כל המידע בעסק.'}
           </p>
-          
+
           <p className="text-lg text-gray-300 mb-12 leading-relaxed">
             {t('welcomeDescription2') || 'הצטרף אלינו והתחל לנהל את העסק שלך בצורה פשוטה וחכמה יותר כבר היום.'}
           </p>

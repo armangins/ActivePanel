@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../../contexts/LanguageContext';
 
 /**
@@ -44,7 +44,7 @@ const ProductModalFooter = ({
             className={`btn-secondary flex items-center flex-row-reverse space-x-2`}
             disabled={saving}
           >
-            {isRTL ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+            {isRTL ? <ChevronRight className="w-[18px] h-[18px]" /> : <ChevronLeft className="w-[18px] h-[18px]" />}
             <span>{t('previous')}</span>
           </button>
         )}
@@ -56,7 +56,7 @@ const ProductModalFooter = ({
             disabled={saving || !isCurrentStepValid}
           >
             <span>{t('next')}</span>
-            {isRTL ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+            {isRTL ? <ChevronLeft className="w-[18px] h-[18px]" /> : <ChevronRight className="w-[18px] h-[18px]" />}
           </button>
         ) : (
           <button
@@ -78,4 +78,7 @@ const ProductModalFooter = ({
 };
 
 export default ProductModalFooter;
+
+
+
 

@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { Plus, Grid3x3, List, SlidersHorizontal } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { PlusIcon as Plus, Squares2X2Icon as Grid3x3, ListBulletIcon as List, AdjustmentsHorizontalIcon as SlidersHorizontal, ChevronDownIcon as ChevronDown } from '@heroicons/react/24/outline';
 import FiltersModal from './FiltersModal';
 
 const ProductsHeader = ({ 
@@ -7,7 +8,9 @@ const ProductsHeader = ({
   totalCount, 
   onCreateProduct, 
   viewMode, 
-  onViewModeChange, 
+  onViewModeChange,
+  gridColumns,
+  onGridColumnsChange,
   isRTL, 
   t, 
   onToggleFilters, 
@@ -28,6 +31,8 @@ const ProductsHeader = ({
 }) => {
   const buttonRef = useRef(null);
   const modalRef = useRef(null);
+  const [showColumnsMenu, setShowColumnsMenu] = useState(false);
+  const columnsMenuRef = useRef(null);
 
   // Close modal when clicking outside
   useEffect(() => {
@@ -41,16 +46,23 @@ const ProductsHeader = ({
       ) {
         onToggleFilters();
       }
+      if (
+        showColumnsMenu &&
+        columnsMenuRef.current &&
+        !columnsMenuRef.current.contains(event.target)
+      ) {
+        setShowColumnsMenu(false);
+      }
     };
 
-    if (showFilters) {
+    if (showFilters || showColumnsMenu) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showFilters, onToggleFilters]);
+  }, [showFilters, showColumnsMenu, onToggleFilters]);
 
   return (
     <div className={`flex items-center ${'flex-row-reverse'} justify-between`}>
@@ -66,7 +78,7 @@ const ProductsHeader = ({
             }`}
             title={t('gridView')}
           >
-            <Grid3x3 size={20} />
+            <Grid3x3 className="w-5 h-5" />
           </button>
           <button
             onClick={() => onViewModeChange('list')}
@@ -77,9 +89,72 @@ const ProductsHeader = ({
             }`}
             title={t('listView')}
           >
-            <List size={20} />
+            <List className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Grid Columns Selector - Only show when grid view is active */}
+        {viewMode === 'grid' && (
+          <div className="relative" ref={columnsMenuRef}>
+            <button
+              onClick={() => setShowColumnsMenu(!showColumnsMenu)}
+              className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 px-3 py-2 text-sm text-gray-700 hover:text-primary-500 rounded-lg border border-gray-300 hover:border-primary-300 hover:bg-primary-50 transition-colors`}
+            >
+              <span>
+                {t('columns') || 'עמודות'}:{' '}
+                {/* On mobile, show effective columns (1 or 2) if desktop value is selected */}
+                <span className="md:hidden">
+                  {[1, 2].includes(gridColumns) ? gridColumns : 1}
+                </span>
+                <span className="hidden md:inline">{gridColumns}</span>
+              </span>
+              <ChevronDown className={`w-4 h-4 ${showColumnsMenu ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {showColumnsMenu && (
+              <>
+                {/* Mobile options: 1 or 2 columns */}
+                <div className={`md:hidden absolute ${isRTL ? 'right-0' : 'left-0'} top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 min-w-[120px]`}>
+                  {[1, 2].map((cols) => (
+                    <button
+                      key={cols}
+                      onClick={() => {
+                        onGridColumnsChange(cols);
+                        setShowColumnsMenu(false);
+                      }}
+                      className={`w-full text-right px-4 py-2 text-sm transition-colors ${
+                        gridColumns === cols
+                          ? 'bg-primary-50 text-primary-600 font-medium'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      } ${isRTL ? 'text-right' : 'text-left'}`}
+                    >
+                      {cols} {t('columns') || 'עמודות'}
+                    </button>
+                  ))}
+                </div>
+                {/* Desktop options: 4, 5, 6 columns */}
+                <div className={`hidden md:block absolute ${isRTL ? 'right-0' : 'left-0'} top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 min-w-[120px]`}>
+                  {[4, 5, 6].map((cols) => (
+                    <button
+                      key={cols}
+                      onClick={() => {
+                        onGridColumnsChange(cols);
+                        setShowColumnsMenu(false);
+                      }}
+                      className={`w-full text-right px-4 py-2 text-sm transition-colors ${
+                        gridColumns === cols
+                          ? 'bg-primary-50 text-primary-600 font-medium'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      } ${isRTL ? 'text-right' : 'text-left'}`}
+                    >
+                      {cols} {t('columns') || 'עמודות'}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
         
         {/* Filters Button with Modal */}
         <div className="relative">
@@ -88,7 +163,7 @@ const ProductsHeader = ({
             onClick={onToggleFilters}
             className={`flex items-center ${'flex-row-reverse'} gap-2 text-gray-700 hover:text-primary-500 px-4 py-2 rounded-lg border border-gray-300 hover:border-primary-300 hover:bg-primary-50 transition-colors`}
           >
-            <SlidersHorizontal size={18} />
+            <SlidersHorizontal className="w-[18px] h-[18px]" />
             <span>{t('filters')}</span>
             {hasActiveFilters && (
               <span className="bg-primary-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -135,11 +210,17 @@ const ProductsHeader = ({
         
         {/* Create Product Button */}
         <button
-          onClick={onCreateProduct}
-          className={`btn-primary flex items-center ${'flex-row-reverse'} gap-2`}
+          onClick={() => {
+            if (onCreateProduct) {
+              onCreateProduct();
+            } else {
+              navigate('/products/add');
+            }
+          }}
+          className={`btn-primary flex items-center justify-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 md:gap-2 px-3 md:px-4 py-2`}
         >
-          <Plus size={20} />
-          <span>{t('createProduct')}</span>
+          <Plus className="w-4 h-4 md:w-5 md:h-5" />
+          <span className="hidden md:inline">{t('createProduct')}</span>
         </button>
       </div>
       <div>

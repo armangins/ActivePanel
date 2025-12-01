@@ -39,7 +39,7 @@ const ProductDetailsVariations = ({
       {/* Error State */}
       {variationsError && (
         <div className="text-center py-8">
-          <p className="text-red-500">{variationsError}</p>
+          <p className="text-orange-500">{variationsError}</p>
         </div>
       )}
 
@@ -69,5 +69,8 @@ const ProductDetailsVariations = ({
 };
 
 export default ProductDetailsVariations;
+
+
+
 
 

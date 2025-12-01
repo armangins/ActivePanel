@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { XMarkIcon as X } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 /**
@@ -53,7 +53,7 @@ const DashboardSidebar = ({
           <div className="flex items-center gap-3">
             {Icon && (
               <div className="p-2 bg-primary-50 rounded-lg">
-                <Icon className="text-primary-500" size={20} />
+                <Icon className="w-5 h-5 text-primary-500" />
               </div>
             )}
             <div>
@@ -72,7 +72,7 @@ const DashboardSidebar = ({
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             aria-label={t('close') || 'סגור'}
           >
-            <X size={20} className="text-gray-500" />
+            <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
@@ -80,7 +80,7 @@ const DashboardSidebar = ({
         <div className="overflow-y-auto h-[calc(100vh-80px)]">
           {items.length === 0 ? (
             emptyState || (
-              <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+              <div className="flex flex-col items-center justify-center h-full p-8 text-right">
                 <p className="text-gray-500 text-lg">
                   {t('noData') || 'אין נתונים להצגה'}
                 </p>

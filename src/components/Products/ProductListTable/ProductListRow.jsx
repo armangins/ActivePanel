@@ -12,9 +12,7 @@ import ActionsCell from './ActionsCell';
  * Handles row click to view product details.
  * 
  * @param {Object} product - Product object
- * @param {Boolean} isSelected - Whether this product is selected
  * @param {Boolean} isActionMenuOpen - Whether the action menu is open for this product
- * @param {Function} onSelect - Callback when checkbox is toggled
  * @param {Function} onView - Callback when row is clicked
  * @param {Function} onEdit - Callback when edit action is triggered
  * @param {Function} onDelete - Callback when delete action is triggered
@@ -25,9 +23,7 @@ import ActionsCell from './ActionsCell';
  */
 const ProductListRow = ({
   product,
-  isSelected,
   isActionMenuOpen,
-  onSelect,
   onView,
   onEdit,
   onDelete,
@@ -41,17 +37,6 @@ const ProductListRow = ({
       className="hover:bg-gray-50 transition-colors cursor-pointer"
       onClick={() => onView && onView(product)}
     >
-      {/* Checkbox Cell */}
-      <td className="py-3 px-4 w-12" onClick={(e) => e.stopPropagation()}>
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={onSelect}
-          className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
-          aria-label={`Select ${product.name || 'product'}`}
-        />
-      </td>
-
       {/* Product Cell (Image + Name) */}
       <ProductCell product={product} isRTL={isRTL} t={t} />
 

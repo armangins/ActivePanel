@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useContext, useEffect, useMemo, useCallback } from 'react';
 import heTranslations from '../translations/he';
 
 const LanguageContext = createContext();
@@ -12,28 +12,28 @@ export const useLanguage = () => {
 };
 
 export const LanguageProvider = ({ children }) => {
-  const t = (key) => {
+  const t = useCallback((key) => {
     return heTranslations[key] || key;
-  };
+  }, []);
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = useCallback((amount) => {
     return new Intl.NumberFormat('he-IL', {
       style: 'currency',
       currency: 'ILS',
       minimumFractionDigits: 2,
     }).format(amount);
-  };
+  }, []);
 
   useEffect(() => {
     document.documentElement.dir = 'rtl';
     document.documentElement.lang = 'he';
   }, []);
 
-  const value = {
+  const value = useMemo(() => ({
     t,
     formatCurrency,
     isRTL: true,
-  };
+  }), [t, formatCurrency]);
 
   return (
     <LanguageContext.Provider value={value}>

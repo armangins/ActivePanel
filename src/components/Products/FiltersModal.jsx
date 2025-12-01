@@ -1,6 +1,6 @@
-import { X } from 'lucide-react';
+import { XMarkIcon as X } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
-import SearchInput from '../Common/SearchInput';
+import { SearchInput } from '../ui';
 
 /**
  * FiltersModal Component
@@ -107,7 +107,7 @@ const FiltersModal = ({
           className="text-gray-400 hover:text-gray-600 transition-colors"
           aria-label={t('close') || 'Close'}
         >
-          <X size={20} />
+          <X className="w-5 h-5" />
         </button>
       </div>
 

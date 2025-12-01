@@ -1,4 +1,4 @@
-import { X, Package } from 'lucide-react';
+import { XMarkIcon as X, CubeIcon as Package } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../../contexts/LanguageContext';
 
 /**
@@ -13,7 +13,7 @@ const ProductModalHeader = ({ steps, currentStep, onClose, goToStep }) => {
     <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <Package size={24} className="text-primary-500" />
+          <Package className="w-6 h-6 text-primary-500" />
           <h2 className="text-xl font-semibold text-gray-900 text-right">
             {t('step')} {currentStep + 1} {t('of')} {steps.length}: {steps[currentStep].label}
           </h2>
@@ -22,7 +22,7 @@ const ProductModalHeader = ({ steps, currentStep, onClose, goToStep }) => {
           onClick={onClose}
           className="text-gray-400 hover:text-gray-600 transition-colors"
         >
-          <X size={24} />
+          <X className="w-6 h-6" />
         </button>
       </div>
 

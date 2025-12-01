@@ -1,11 +1,11 @@
-import { format } from 'date-fns';
-import { Eye } from 'lucide-react';
+import { memo } from 'react';
 import OrderRow from './OrderRow';
 
 /**
  * OrdersTable Component
  * 
- * Table displaying orders with columns for order info, date, customer, status, total, and actions.
+ * Table displaying orders with columns matching the design:
+ * Product, Order ID, Price, Quantity, Payment, Status, Tracking
  * 
  * @param {Array} orders - Array of order objects
  * @param {Function} onViewDetails - Callback when viewing order details
@@ -14,64 +14,45 @@ import OrderRow from './OrderRow';
  * @param {Boolean} isRTL - Whether the layout is right-to-left
  * @param {Function} t - Translation function
  */
-const OrdersTable = ({ orders, onViewDetails, onStatusUpdate, formatCurrency, isRTL, t }) => {
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'processing':
-        return 'text-primary-500';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'on-hold':
-        return 'bg-orange-100 text-orange-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      case 'refunded':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
+const OrdersTable = memo(({ orders, onViewDetails, onStatusUpdate, formatCurrency, isRTL, t }) => {
   return (
-    <div className="card">
+    <div className="card overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-200">
-              <th className={`py-3 px-4 text-sm font-medium text-gray-700 ${'text-right'}`}>
-                {t('order')}
+            <tr className="border-b border-gray-200 bg-gray-50">
+              <th className={`py-4 px-6 text-sm font-semibold text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t('product') || 'מוצר'}
               </th>
-              <th className={`py-3 px-4 text-sm font-medium text-gray-700 ${'text-right'}`}>
-                {t('date')}
+              <th className={`py-4 px-6 text-sm font-semibold text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t('orderId') || 'מספר הזמנה'}
               </th>
-              <th className={`py-3 px-4 text-sm font-medium text-gray-700 ${'text-right'}`}>
-                {t('customer')}
+              <th className={`py-4 px-6 text-sm font-semibold text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t('price') || 'מחיר'}
               </th>
-              <th className={`py-3 px-4 text-sm font-medium text-gray-700 ${'text-right'}`}>
-                {t('status')}
+              <th className={`py-4 px-6 text-sm font-semibold text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t('quantity') || 'כמות'}
               </th>
-              <th className={`py-3 px-4 text-sm font-medium text-gray-700 ${'text-right'}`}>
-                {t('paymentStatus') || 'Payment'}
+              <th className={`py-4 px-6 text-sm font-semibold text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t('payment') || 'תשלום'}
               </th>
-              <th className={`py-3 px-4 text-sm font-medium text-gray-700 ${'text-right'}`}>
-                {t('total')}
+              <th className={`py-4 px-6 text-sm font-semibold text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t('status') || 'סטטוס'}
               </th>
-              <th className={`py-3 px-4 text-sm font-medium text-gray-700 ${'text-right'}`}>
-                {t('actions')}
+              <th className={`py-4 px-6 text-sm font-semibold text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t('tracking') || 'מעקב'}
               </th>
             </tr>
           </thead>
-          <tbody>
-            {orders.map((order) => (
+          <tbody className="divide-y divide-gray-100">
+            {orders.map((order, index) => (
               <OrderRow
                 key={order.id}
                 order={order}
+                index={index}
                 onViewDetails={onViewDetails}
                 onStatusUpdate={onStatusUpdate}
                 formatCurrency={formatCurrency}
-                getStatusColor={getStatusColor}
                 isRTL={isRTL}
                 t={t}
               />
@@ -81,7 +62,8 @@ const OrdersTable = ({ orders, onViewDetails, onStatusUpdate, formatCurrency, is
       </div>
     </div>
   );
-};
+});
+
+OrdersTable.displayName = 'OrdersTable';
 
 export default OrdersTable;
-

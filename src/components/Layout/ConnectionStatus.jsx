@@ -1,36 +1,19 @@
-import { useState, useEffect } from 'react';
-import { Wifi, WifiOff, AlertCircle } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  SignalIcon as Wifi,
+  SignalSlashIcon as WifiOff,
+  ExclamationCircleIcon as AlertCircle
+} from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { testConnection } from '../../services/woocommerce';
+import { testConnection, hasWooCommerceConfig } from '../../services/woocommerce';
 
 const ConnectionStatus = () => {
-  const { t, isRTL } = useLanguage();
+  const { t } = useLanguage();
   const [status, setStatus] = useState('checking'); // 'connected', 'disconnected', 'checking', 'error'
   const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    checkConnection();
-    // Check connection every 30 seconds
-    const interval = setInterval(checkConnection, 30000);
-    
-    // Listen for settings updates
-    const handleSettingsUpdate = () => {
-      checkConnection();
-    };
-    window.addEventListener('settingsUpdated', handleSettingsUpdate);
-    
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('settingsUpdated', handleSettingsUpdate);
-    };
-  }, []);
-
-  const checkConnection = async () => {
-    const url = localStorage.getItem('woocommerce_url');
-    const key = localStorage.getItem('consumer_key');
-    const secret = localStorage.getItem('consumer_secret');
-
-    if (!url || !key || !secret) {
+  const checkConnection = useCallback(async () => {
+    if (!hasWooCommerceConfig()) {
       setStatus('disconnected');
       setMessage(t('notConfigured'));
       return;
@@ -45,7 +28,24 @@ const ConnectionStatus = () => {
       setStatus('error');
       setMessage(t('connectionFailed'));
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    checkConnection();
+    // Check connection every 30 seconds
+    const interval = setInterval(checkConnection, 30000);
+
+    // Listen for settings updates
+    const handleSettingsUpdate = () => {
+      checkConnection();
+    };
+    window.addEventListener('settingsUpdated', handleSettingsUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate);
+    };
+  }, [checkConnection]);
 
   const getStatusColor = () => {
     switch (status) {
@@ -54,7 +54,7 @@ const ConnectionStatus = () => {
       case 'disconnected':
         return 'text-gray-600 bg-gray-50';
       case 'error':
-        return 'text-red-600 bg-red-50';
+        return 'text-orange-600 bg-orange-50';
       default:
         return 'text-yellow-600 bg-yellow-50';
     }
@@ -63,12 +63,12 @@ const ConnectionStatus = () => {
   const getIcon = () => {
     switch (status) {
       case 'connected':
-        return <Wifi size={16} />;
+        return <Wifi className="w-4 h-4" />;
       case 'disconnected':
       case 'error':
-        return <WifiOff size={16} />;
+        return <WifiOff className="w-4 h-4" />;
       default:
-        return <AlertCircle size={16} className="animate-pulse" />;
+        return <AlertCircle className="w-4 h-4 animate-pulse" />;
     }
   };
 

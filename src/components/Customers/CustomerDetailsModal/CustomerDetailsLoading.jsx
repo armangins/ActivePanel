@@ -14,3 +14,6 @@ const CustomerDetailsLoading = () => {
 export default CustomerDetailsLoading;
 
 
+
+
+

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Edit, Trash2, MoreVertical } from 'lucide-react';
+import { TrashIcon as Trash2, PencilIcon as Edit, EllipsisVerticalIcon } from '@heroicons/react/24/outline';
 import DeleteConfirmModal from './DeleteConfirmModal';
 
 /**
@@ -74,7 +74,7 @@ const ActionsCell = ({
           className="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors"
           aria-label={t('actions')}
         >
-          <MoreVertical size={18} />
+          <EllipsisVerticalIcon className="w-[18px] h-[18px]" />
         </button>
 
         {/* Action Menu Dropdown */}
@@ -89,14 +89,14 @@ const ActionsCell = ({
                 onClick={handleEdit}
                 className={`w-full ${'text-right'} px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 ${'flex-row-reverse'}`}
               >
-                <Edit size={16} />
+                <Edit className="w-4 h-4" />
                 {t('editProduct')}
               </button>
               <button
                 onClick={handleDeleteClick}
-                className={`w-full ${'text-right'} px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 ${'flex-row-reverse'}`}
+                className={`w-full ${'text-right'} px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 flex items-center gap-2 ${'flex-row-reverse'}`}
               >
-                <Trash2 size={16} />
+                <Trash2 className="w-4 h-4" />
                 {t('removeProduct') || t('deleteProduct')}
               </button>
             </div>

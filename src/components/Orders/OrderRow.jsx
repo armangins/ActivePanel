@@ -1,99 +1,160 @@
-import { format } from 'date-fns';
-import { Eye } from 'lucide-react';
+import { memo } from 'react';
+import { CubeIcon as Package, MagnifyingGlassIcon as Search } from '@heroicons/react/24/outline';
+import { OptimizedImage } from '../ui';
 
 /**
  * OrderRow Component
  * 
- * Individual row in the orders table displaying order information.
+ * Individual row in the orders table matching the design:
+ * Product (with image), Order ID, Price, Quantity, Payment, Status, Tracking
  * 
  * @param {Object} order - Order object
+ * @param {Number} index - Row index for alternating background
  * @param {Function} onViewDetails - Callback when viewing order details
  * @param {Function} onStatusUpdate - Callback when order status is updated
  * @param {Function} formatCurrency - Function to format currency values
- * @param {Function} getStatusColor - Function to get status color classes
  * @param {Boolean} isRTL - Whether the layout is right-to-left
  * @param {Function} t - Translation function
  */
-const OrderRow = ({ order, onViewDetails, onStatusUpdate, formatCurrency, getStatusColor, isRTL, t }) => {
+const OrderRow = memo(({ order, index, onViewDetails, onStatusUpdate, formatCurrency, isRTL, t }) => {
+  // Get first product image from line items
+  const firstItem = order.line_items?.[0];
+  const productImage = firstItem?.image?.src || null;
+  const productName = firstItem?.name || t('product') || 'מוצר';
+
+  // Get customer name
+  const customerName = order.billing?.first_name && order.billing?.last_name
+    ? `${order.billing.first_name} ${order.billing.last_name}`
+    : order.billing?.first_name || order.billing?.last_name || order.billing?.email || t('customer') || 'לקוח';
+
+  // Calculate total quantity
+  const totalQuantity = order.line_items?.reduce((sum, item) => sum + (parseInt(item.quantity || 0, 10)), 0) || 0;
+
+  // Get order number
+  const orderNumber = order.number || `#${order.id}`;
+
+  // Status badge styling
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-50 text-green-700 border border-green-200';
+      case 'pending':
+        return 'bg-gray-100 text-gray-700 border border-gray-200';
+      case 'processing':
+        return 'bg-blue-50 text-blue-700 border border-blue-200';
+      case 'cancelled':
+        return 'bg-orange-50 text-orange-700 border border-orange-200';
+      case 'on-hold':
+        return 'bg-yellow-50 text-yellow-700 border border-yellow-200';
+      case 'refunded':
+        return 'bg-orange-50 text-orange-700 border border-orange-200';
+      default:
+        return 'bg-gray-100 text-gray-700 border border-gray-200';
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'completed':
+        return t('success') || 'Success' || 'הצלחה';
+      case 'pending':
+        return t('pending') || 'Pending' || 'ממתין';
+      case 'processing':
+        return t('processing') || 'Processing' || 'מעבד';
+      case 'cancelled':
+        return t('cancel') || 'Cancel' || 'בוטל';
+      case 'on-hold':
+        return t('onHold') || 'On Hold' || 'מושהה';
+      case 'refunded':
+        return t('refunded') || 'Refunded' || 'הוחזר';
+      default:
+        return status;
+    }
+  };
+
+  // Payment method/status
+  const paymentMethod = order.payment_method_title || order.payment_method || t('payment') || 'תשלום';
+  const paymentStatus = order.payment_status || 'pending';
+
+  // Alternating row background
+  const rowBgClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+
   return (
-    <tr className="border-b border-gray-100 hover:bg-gray-50">
-      <td className="py-3 px-4">
-        <div>
-          <p className="text-sm font-medium text-gray-900">#{order.id}</p>
-          <p className="text-xs text-gray-500">
-            {order.line_items?.length || 0} {t('items')}
-          </p>
+    <tr className={`${rowBgClass} hover:bg-gray-100 transition-colors cursor-pointer`} onClick={() => onViewDetails(order)}>
+      {/* Product Column */}
+      <td className="py-4 px-6">
+        <div className="flex items-center gap-3 flex-row">
+          <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center relative">
+            {productImage ? (
+              <OptimizedImage
+                src={productImage}
+                alt={productName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <Package className="w-5 h-5 text-gray-400" />
+            )}
+          </div>
+          <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {customerName}
+            </p>
+            <p className="text-xs text-gray-500 truncate">
+              {productName}
+            </p>
+          </div>
         </div>
       </td>
-      <td className={`py-3 px-4 text-sm text-gray-700 ${'text-right'}`}>
-        {format(new Date(order.date_created), 'MMM dd, yyyy HH:mm')}
+
+      {/* Order ID Column */}
+      <td className={`py-4 px-6 text-sm text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+        {orderNumber}
       </td>
-      <td className="py-3 px-4">
-        <div>
-          <p className="text-sm text-gray-900">
-            {order.billing?.first_name} {order.billing?.last_name}
-          </p>
-          <p className="text-xs text-gray-500">{order.billing?.email}</p>
-        </div>
-      </td>
-      <td className="py-3 px-4">
-        <select
-          value={order.status}
-          onChange={(e) => onStatusUpdate(order.id, e.target.value)}
-          className={`text-xs font-medium rounded-full px-3 py-1 border-0 ${getStatusColor(order.status)} cursor-pointer`}
-          style={order.status === 'processing' ? { backgroundColor: '#EBF3FF' } : {}}
-          dir="rtl"
-        >
-          <option value="pending">{t('pending')}</option>
-          <option value="processing">{t('processing')}</option>
-          <option value="on-hold">{t('onHold')}</option>
-          <option value="completed">{t('completed')}</option>
-          <option value="cancelled">{t('cancelled')}</option>
-          <option value="refunded">{t('refunded')}</option>
-        </select>
-      </td>
-      <td className="py-3 px-4">
-        <span
-          className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${
-            order.payment_status === 'paid' || order.payment_status === 'completed'
-              ? 'text-primary-500'
-              : order.payment_status === 'pending'
-              ? 'bg-yellow-100 text-yellow-800'
-              : order.payment_status === 'failed'
-              ? 'bg-red-100 text-red-800'
-              : 'bg-gray-100 text-gray-800'
-          }`}
-          style={
-            order.payment_status === 'paid' || order.payment_status === 'completed'
-              ? { backgroundColor: '#EBF3FF' }
-              : {}
-          }
-        >
-          {order.payment_method_title || 
-           (order.payment_status === 'paid' || order.payment_status === 'completed' 
-             ? t('paid') || 'Paid' 
-             : order.payment_status === 'pending' 
-             ? t('pendingPayment') || 'Pending'
-             : order.payment_status === 'failed'
-             ? t('failed') || 'Failed'
-             : t('unpaid') || 'Unpaid')}
-        </span>
-      </td>
-      <td className={`py-3 px-4 text-sm font-medium text-gray-900 ${'text-right'}`}>
+
+      {/* Price Column */}
+      <td className={`py-4 px-6 text-sm font-medium text-gray-900 ${isRTL ? 'text-right' : 'text-left'}`}>
         {formatCurrency(parseFloat(order.total || 0))}
       </td>
-      <td className={`py-3 px-4 ${'text-right'}`}>
+
+      {/* Quantity Column */}
+      <td className={`py-4 px-6 text-sm text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+        {totalQuantity.toLocaleString()}
+      </td>
+
+      {/* Payment Column */}
+      <td className={`py-4 px-6 text-sm text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${paymentStatus === 'paid' || paymentStatus === 'completed'
+          ? 'bg-blue-50 text-blue-700'
+          : 'bg-gray-100 text-gray-700'
+          }`}>
+          {paymentMethod}
+        </span>
+      </td>
+
+      {/* Status Column */}
+      <td className={`py-4 px-6 ${isRTL ? 'text-right' : 'text-left'}`}>
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(order.status)}`}>
+          {getStatusLabel(order.status)}
+        </span>
+      </td>
+
+      {/* Tracking Column */}
+      <td className={`py-4 px-6 ${isRTL ? 'text-right' : 'text-left'}`}>
         <button
-          onClick={() => onViewDetails(order)}
-          className="p-2 text-primary-500 hover:bg-primary-50 rounded-lg transition-colors"
-          title={t('viewDetails')}
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewDetails(order);
+          }}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
         >
-          <Eye size={18} />
+          <Search className="w-4 h-4" />
+          <span>{t('viewDetails') || 'צפה בפרטים'}</span>
         </button>
       </td>
     </tr>
   );
-};
+});
+
+OrderRow.displayName = 'OrderRow';
 
 export default OrderRow;
-

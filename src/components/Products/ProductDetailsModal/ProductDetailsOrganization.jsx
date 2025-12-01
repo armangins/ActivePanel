@@ -1,4 +1,4 @@
-import { Package } from 'lucide-react';
+import { CubeIcon as Package } from '@heroicons/react/24/outline';
 
 /**
  * ProductDetailsOrganization Component
@@ -31,7 +31,7 @@ const ProductDetailsOrganization = ({ product, isRTL, t, formatCurrency, variati
         {/* Error State */}
         {variationsError && (
           <div className="text-center py-4">
-            <p className="text-red-500">{variationsError}</p>
+            <p className="text-orange-500">{variationsError}</p>
           </div>
         )}
 
@@ -69,7 +69,7 @@ const ProductDetailsOrganization = ({ product, isRTL, t, formatCurrency, variati
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <Package className="text-gray-400" size={24} />
+                      <Package className="w-6 h-6 text-gray-400" />
                     )}
                   </div>
 
@@ -105,7 +105,7 @@ const ProductDetailsOrganization = ({ product, isRTL, t, formatCurrency, variati
                           <span className="w-2 h-2 rounded-full bg-green-500"></span>
                         </div>
                       ) : (
-                        <span className="text-xs font-medium text-red-600">
+                        <span className="text-xs font-medium text-orange-600">
                           {t('outOfStock')}
                         </span>
                       )}

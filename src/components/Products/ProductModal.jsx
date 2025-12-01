@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Package, Image as ImageIcon, Upload, Trash, Plus, X, Check, ChevronLeft, ChevronRight } from 'lucide-react';
-import UploadIcon from '../Common/UploadIcon';
+import { CubeIcon as Package, Image as ImageIcon, ArrowUpTrayIcon, TrashIcon, PlusIcon as Plus, XMarkIcon as X, CheckIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { UploadIcon } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { productsAPI, categoriesAPI, attributesAPI, mediaAPI } from '../../services/woocommerce';
 import ProductModalHeader from './ProductModal/ProductModalHeader';
@@ -320,11 +320,11 @@ const ProductModal = ({ product, onClose, onSave }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-0 sm:p-4"
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-white sm:rounded-lg max-w-4xl w-full h-full sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <ProductModalHeader 
@@ -388,10 +388,10 @@ const ProductModal = ({ product, onClose, onSave }) => {
                         setValidationErrors({ ...validationErrors, name: null });
                       }
                     }}
-                    className={`input-field ${validationErrors.name ? 'border-red-500' : ''}`}
+                    className={`input-field ${validationErrors.name ? 'border-orange-500' : ''}`}
                   />
                   {validationErrors.name && (
-                    <p className={`text-red-500 text-xs mt-1 ${'text-right'}`}>
+                    <p className={`text-orange-500 text-xs mt-1 ${'text-right'}`}>
                       {validationErrors.name}
                     </p>
                   )}
@@ -437,10 +437,10 @@ const ProductModal = ({ product, onClose, onSave }) => {
                           setValidationErrors({ ...validationErrors, regular_price: null });
                         }
                       }}
-                      className={`input-field ${validationErrors.regular_price ? 'border-red-500' : ''}`}
+                      className={`input-field ${validationErrors.regular_price ? 'border-orange-500' : ''}`}
                     />
                     {validationErrors.regular_price && (
-                      <p className={`text-red-500 text-xs mt-1 ${'text-right'}`}>
+                      <p className={`text-orange-500 text-xs mt-1 ${'text-right'}`}>
                         {validationErrors.regular_price}
                       </p>
                     )}
@@ -529,7 +529,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                   </label>
                   <input
                     type="text"
-                    placeholder={t('addTags')}
+                    placeholder={t('addTagIcon as Tags')}
                     value={formData.tags.map(t => t.name).join(', ')}
                     onChange={(e) => {
                       const tagNames = e.target.value.split(',').map(t => t.trim()).filter(Boolean);
@@ -558,7 +558,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                     </label>
                     <div className={`border-2 border-dashed rounded-lg p-6 text-center ${
                       uploadError 
-                        ? 'border-red-300 bg-red-50' 
+                        ? 'border-orange-300 bg-orange-50' 
                         : uploadingImage 
                         ? 'border-primary-300 bg-primary-50' 
                         : 'border-gray-300'
@@ -579,17 +579,17 @@ const ProductModal = ({ product, onClose, onSave }) => {
                           </div>
                         ) : (
                           <div className="flex flex-col items-center">
-                            <UploadIcon size={32} className="text-gray-400 mb-2" />
+                            <UploadIcon className="w-8 h-8 text-gray-400 mb-2" />
                             <span className="text-sm text-gray-600">{t('addImage')}</span>
                             <span className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 10MB</span>
                           </div>
                         )}
                       </label>
                       {uploadError && (
-                        <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded-lg">
-                          <p className="text-sm text-red-800 text-left">{uploadError}</p>
+                        <div className="mt-3 p-3 bg-orange-100 border border-orange-300 rounded-lg">
+                          <p className="text-sm text-orange-800 text-left">{uploadError}</p>
                           {uploadError.includes('Application Password') && (
-                            <p className="text-xs text-red-600 mt-2 text-left">
+                            <p className="text-xs text-orange-600 mt-2 text-left">
                               {t('goToSettings') || 'Go to Settings → WordPress Application Password to configure.'}
                             </p>
                           )}
@@ -619,15 +619,15 @@ const ProductModal = ({ product, onClose, onSave }) => {
                               className="opacity-0 group-hover:opacity-100 bg-primary-500 text-white p-2 rounded"
                               title={t('setFeaturedImage')}
                             >
-                              <ImageIcon size={16} />
+                              <ImageIcon className="w-4 h-4" />
                             </button>
                             <button
                               type="button"
                               onClick={() => removeImage(image.id)}
-                              className="opacity-0 group-hover:opacity-100 text-white bg-red-600 p-2 rounded"
+                              className="opacity-0 group-hover:opacity-100 text-white bg-orange-600 p-2 rounded"
                               title={t('removeImage')}
                             >
-                              <Trash size={16} />
+                              <Trash className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
@@ -652,7 +652,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                       onClick={addAttribute}
                       className="btn-secondary flex items-center space-x-2"
                     >
-                      <Plus size={18} />
+                      <Plus className="w-[18px] h-[18px]" />
                       <span>{t('addAttribute')}</span>
                     </button>
                   </div>
@@ -721,9 +721,9 @@ const ProductModal = ({ product, onClose, onSave }) => {
                             <button
                               type="button"
                               onClick={() => removeAttribute(index)}
-                              className="text-red-600 hover:text-red-700 p-2"
+                              className="text-orange-600 hover:text-orange-700 p-2"
                             >
-                              <Trash size={18} />
+                              <Trash className="w-[18px] h-[18px]" />
                             </button>
                           </div>
                         </div>
@@ -742,9 +742,9 @@ const ProductModal = ({ product, onClose, onSave }) => {
                                 <button
                                   type="button"
                                   onClick={() => removeAttributeOption(index, optIndex)}
-                                  className="ml-2 text-red-600 hover:text-red-700"
+                                  className="ml-2 text-orange-600 hover:text-orange-700"
                                 >
-                                  <X size={14} />
+                                  <X className="w-3.5 h-3.5" />
                                 </button>
                               </span>
                             ))}
@@ -833,7 +833,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                   className={`btn-secondary flex items-center ${'flex-row-reverse'} space-x-2`}
                   disabled={saving}
                 >
-                  {isRTL ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+                  {isRTL ? <ChevronRight className="w-[18px] h-[18px]" /> : <ChevronLeft className="w-[18px] h-[18px]" />}
                   <span>{t('previous')}</span>
                 </button>
               )}
@@ -845,7 +845,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                   disabled={saving || !isCurrentStepValid}
                 >
                   <span>{t('next')}</span>
-                  {isRTL ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+                  {isRTL ? <ChevronLeft className="w-[18px] h-[18px]" /> : <ChevronRight className="w-[18px] h-[18px]" />}
                 </button>
               ) : (
                 <button

@@ -40,10 +40,10 @@ const ProductModalGeneralStep = ({ formData, setFormData, validationErrors, setV
               setValidationErrors({ ...validationErrors, name: null });
             }
           }}
-          className={`input-field ${validationErrors.name ? 'border-red-500' : ''}`}
+          className={`input-field ${validationErrors.name ? 'border-orange-500' : ''}`}
         />
         {validationErrors.name && (
-          <p className={`text-red-500 text-xs mt-1 text-right`}>
+          <p className={`text-orange-500 text-xs mt-1 text-right`}>
             {validationErrors.name}
           </p>
         )}
@@ -89,10 +89,10 @@ const ProductModalGeneralStep = ({ formData, setFormData, validationErrors, setV
                 setValidationErrors({ ...validationErrors, regular_price: null });
               }
             }}
-            className={`input-field ${validationErrors.regular_price ? 'border-red-500' : ''}`}
+            className={`input-field ${validationErrors.regular_price ? 'border-orange-500' : ''}`}
           />
           {validationErrors.regular_price && (
-            <p className={`text-red-500 text-xs mt-1 text-right`}>
+            <p className={`text-orange-500 text-xs mt-1 text-right`}>
               {validationErrors.regular_price}
             </p>
           )}

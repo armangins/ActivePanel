@@ -1,5 +1,5 @@
-import { Plus, Search } from 'lucide-react';
-import SearchInput from '../Common/SearchInput';
+import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { SearchInput } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 /**
@@ -47,7 +47,7 @@ const CouponsHeader = ({
           onClick={onCreateCoupon}
           className={`btn-primary flex items-center ${'flex-row-reverse space-x-reverse'} justify-center`}
         >
-          <Plus size={18} />
+          <PlusIcon className="w-[18px] h-[18px]" />
           <span>{t('createCoupon') || 'Create Coupon'}</span>
         </button>
       </div>

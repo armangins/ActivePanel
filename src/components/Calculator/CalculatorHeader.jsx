@@ -1,4 +1,4 @@
-import { Calculator as CalculatorIcon } from 'lucide-react';
+import { CalculatorIcon as CalculatorIcon } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 /**
@@ -13,14 +13,14 @@ const CalculatorHeader = () => {
     <div className="flex items-center justify-between">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 text-right">
-          {t('smartPricingCalculator') || 'מחשבון מחירים חכם'}
+          {t('smartPricingCalculator') || 'מחשבון מחיר חכם'}
         </h1>
         <p className="text-sm text-gray-600 mt-1 text-right">
           {t('pricingCalculatorDesc') || 'קבע מחירי מכירה מדויקים על בסיס עלויות אמיתיות ושולי רווח רצויים'}
         </p>
       </div>
       <div className="bg-primary-100 p-4 rounded-lg">
-        <CalculatorIcon size={32} className="text-primary-600" />
+        <CalculatorIcon className="w-8 h-8 text-primary-600" />
       </div>
     </div>
   );

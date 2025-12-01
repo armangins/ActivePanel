@@ -1,5 +1,5 @@
-import { ImageIcon, Trash } from 'lucide-react';
-import UploadIcon from '../../Common/UploadIcon';
+import { ImageIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { UploadIcon } from '../../ui';
 import { useLanguage } from '../../../contexts/LanguageContext';
 
 /**
@@ -28,9 +28,9 @@ const ProductModalImagesStep = ({
           <label className={`block text-sm font-medium text-gray-700 mb-2 text-right`}>
             {t('addImage')}
           </label>
-          <div className={`border-2 border-dashed rounded-lg p-6 text-center ${
+          <div className={`border-2 border-dashed rounded-lg p-6 text-right ${
             uploadError 
-              ? 'border-red-300 bg-red-50' 
+              ? 'border-orange-300 bg-orange-50' 
               : uploadingImage 
               ? 'border-primary-300 bg-primary-50' 
               : 'border-gray-300'
@@ -51,17 +51,17 @@ const ProductModalImagesStep = ({
                 </div>
               ) : (
                 <div className="flex flex-col items-center">
-                  <UploadIcon size={32} className="text-gray-400 mb-2" />
+                  <UploadIcon className="w-8 h-8 text-gray-400 mb-2" />
                   <span className="text-sm text-gray-600">{t('addImage')}</span>
                   <span className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 10MB</span>
                 </div>
               )}
             </label>
             {uploadError && (
-              <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded-lg">
-                <p className="text-sm text-red-800 text-left">{uploadError}</p>
+              <div className="mt-3 p-3 bg-orange-100 border border-orange-300 rounded-lg">
+                <p className="text-sm text-orange-800 text-right">{uploadError}</p>
                 {uploadError.includes('Application Password') && (
-                  <p className="text-xs text-red-600 mt-2 text-left">
+                  <p className="text-xs text-orange-600 mt-2 text-right">
                     {t('goToSettings') || 'Go to Settings → WordPress Application Password to configure.'}
                   </p>
                 )}
@@ -91,15 +91,15 @@ const ProductModalImagesStep = ({
                     className="opacity-0 group-hover:opacity-100 bg-primary-500 text-white p-2 rounded"
                     title={t('setFeaturedImage')}
                   >
-                    <ImageIcon size={16} />
+                    <ImageIcon className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
                     onClick={() => removeImage(image.id)}
-                    className="opacity-0 group-hover:opacity-100 text-white bg-red-600 p-2 rounded"
+                    className="opacity-0 group-hover:opacity-100 text-white bg-orange-600 p-2 rounded"
                     title={t('removeImage')}
                   >
-                    <Trash size={16} />
+                    <Trash className="w-4 h-4" />
                   </button>
                 </div>
               </div>

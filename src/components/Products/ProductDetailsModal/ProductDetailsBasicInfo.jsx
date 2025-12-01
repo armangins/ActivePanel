@@ -21,7 +21,7 @@ const ProductDetailsBasicInfo = ({ product, isRTL, t }) => {
         <div className="space-y-3">
           <div>
             <label className={`block text-sm font-medium text-gray-700 mb-1 ${'text-right'}`}>
-              {t('productName')} <span className="text-red-500">*</span>
+              {t('productName')} <span className="text-orange-500">*</span>
             </label>
             <input
               type="text"

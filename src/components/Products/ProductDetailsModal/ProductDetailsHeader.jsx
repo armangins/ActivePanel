@@ -1,4 +1,3 @@
-import { X } from 'lucide-react';
 
 /**
  * ProductDetailsHeader Component

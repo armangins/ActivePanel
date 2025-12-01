@@ -180,6 +180,11 @@ router.post(
 
       const userData = JSON.parse(jsonPayload);
 
+      // Validate Google picture URL
+      const googlePicture = userData.picture && typeof userData.picture === 'string' && userData.picture.trim().length > 0
+        ? userData.picture.trim()
+        : null;
+
       // Find or create user
       let user = await User.findByEmail(userData.email);
       
@@ -188,10 +193,18 @@ router.post(
           email: userData.email,
           password: crypto.randomBytes(32).toString('hex'), // Random password for OAuth users
           name: userData.name || `${userData.given_name || ''} ${userData.family_name || ''}`.trim(),
-          picture: userData.picture,
+          picture: googlePicture, // Use Google picture if available
           role: 'user',
           provider: 'google',
         });
+      } else {
+        // Update existing user with fresh Google picture if available
+        if (googlePicture) {
+          user = await User.update(user.id, {
+            picture: googlePicture,
+            name: userData.name || user.name,
+          });
+        }
       }
 
       const token = generateToken(user);

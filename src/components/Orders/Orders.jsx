@@ -1,79 +1,69 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Eye } from 'lucide-react';
+import { CubeIcon as Package } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { ordersAPI } from '../../services/woocommerce';
-import SearchInput from '../Common/SearchInput';
+import { useOrders } from '../../hooks/useOrders';
+import { SearchInput, EmptyState, LoadingState, ErrorState } from '../ui';
+import Pagination from '../ui/Pagination';
 import OrderDetailsModal from './OrderDetailsModal/OrderDetailsModal';
 import OrdersHeader from './OrdersHeader';
 import OrdersTable from './OrdersTable';
 import OrderStatusCards from './OrderStatusCards';
-import EmptyState from './EmptyState';
-import LoadingState from './LoadingState';
-import ErrorState from './ErrorState';
-import LoadingMoreIndicator from './LoadingMoreIndicator';
+import { PAGINATION_DEFAULTS } from '../../shared/constants';
 
-const PER_PAGE = 50;
+const PER_PAGE = 10; // Use 10 items per page as requested for Products
 
 const Orders = () => {
   const { t, formatCurrency, isRTL } = useLanguage();
-  const [allOrders, setAllOrders] = useState([]); // All loaded orders (no filter)
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
-  const [totalOrders, setTotalOrders] = useState(0);
   const [statusCounts, setStatusCounts] = useState({});
 
-  // Load orders without status filter (load all orders)
-  const loadOrders = useCallback(async (pageToLoad = 1, reset = false) => {
-    try {
-      reset ? setLoading(true) : setLoadingMore(true);
-      setError(null);
-      
-      const params = {
-        page: pageToLoad,
-        per_page: PER_PAGE,
-        orderby: 'date',
-        order: 'desc'
-      };
+  // Debounce search query
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1); // Reset to first page on search
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-      // Don't apply status filter - load all orders
-      const { data, total, totalPages } = await ordersAPI.list(params);
-      
-      setTotalOrders(total);
-      setHasMore(pageToLoad < totalPages);
-      setPage(pageToLoad);
-      
-      if (reset) {
-        setAllOrders(data);
-      } else {
-        // Avoid duplicates
-        setAllOrders((prev) => {
-          const existingIds = new Set(prev.map(o => o.id));
-          const newOrders = data.filter(o => !existingIds.has(o.id));
-          return [...prev, ...newOrders];
-        });
-      }
-    } catch (err) {
-      setError(err.message || t('error'));
-    } finally {
-      reset ? setLoading(false) : setLoadingMore(false);
-    }
-  }, [t]);
+  // Reset page when status filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter]);
+
+  // Use useOrders hook for data fetching with caching
+  const {
+    data: ordersData,
+    isLoading: loading,
+    error,
+    refetch
+  } = useOrders({
+    page,
+    per_page: PER_PAGE,
+    search: debouncedSearch,
+    status: statusFilter !== 'all' ? statusFilter : undefined,
+    orderby: 'date',
+    order: 'desc'
+  });
+
+  const orders = ordersData?.data || [];
+  const totalOrders = ordersData?.total || 0;
+  const totalPages = ordersData?.totalPages || 1;
 
   const loadStatusCounts = useCallback(async () => {
     try {
       const statuses = ['pending', 'processing', 'on-hold', 'completed', 'cancelled', 'refunded'];
       const counts = {};
-      
+
       // Get total count for all orders
       const allOrdersData = await ordersAPI.list({ per_page: 1 });
       counts.all = allOrdersData.total || 0;
-      
+
       // Get count for each status
       await Promise.all(
         statuses.map(async (status) => {
@@ -85,7 +75,7 @@ const Orders = () => {
           }
         })
       );
-      
+
       setStatusCounts(counts);
     } catch (err) {
       // Failed to load status counts
@@ -97,75 +87,23 @@ const Orders = () => {
     loadStatusCounts();
   }, [loadStatusCounts]);
 
-  useEffect(() => {
-    loadOrders(1, true);
-  }, [loadOrders]); // Load all orders once on mount
-
-  // Infinite scroll effect
-  useEffect(() => {
-    // Only enable infinite scroll when there's no search query
-    if (searchQuery) {
-      return;
-    }
-
-    let ticking = false;
-    const handleScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      
-      requestAnimationFrame(() => {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const windowHeight = window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
-
-        if (scrollTop + windowHeight >= documentHeight - 200) {
-          if (hasMore && !loading && !loadingMore && !searchQuery && statusFilter === 'all') {
-            loadOrders(page + 1, false);
-          }
-        }
-        ticking = false;
-      });
-    };
-
-    const checkInitialLoad = () => {
-      setTimeout(() => {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const windowHeight = window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
-        
-        if (documentHeight <= windowHeight + 100 && hasMore && !loading && !loadingMore && statusFilter === 'all') {
-          loadOrders(page + 1, false);
-        }
-      }, 100);
-    };
-
-    if (!loading && allOrders.length > 0) {
-      checkInitialLoad();
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', checkInitialLoad, { passive: true });
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', checkInitialLoad);
-    };
-  }, [hasMore, loading, loadingMore, page, searchQuery, statusFilter, loadOrders, allOrders.length]);
-
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
-      const order = allOrders.find(o => o.id === orderId);
+      const order = orders.find(o => o.id === orderId);
       const oldStatus = order?.status;
-      
+
       await ordersAPI.update(orderId, { status: newStatus });
-      setAllOrders(allOrders.map(order => 
+
+      // Update local state
+      setOrders(orders.map(order =>
         order.id === orderId ? { ...order, status: newStatus } : order
       ));
+
       if (selectedOrder?.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
       }
-      
-      // Update status counts
+
+      // Update status counts locally to avoid refetching
       if (oldStatus && oldStatus !== newStatus) {
         setStatusCounts(prev => ({
           ...prev,
@@ -173,43 +111,30 @@ const Orders = () => {
           [newStatus]: (prev[newStatus] || 0) + 1,
         }));
       }
+
+      // If we are filtering by status, we might need to remove the order from the list
+      // But for better UX, we keep it until refresh or page change
     } catch (err) {
       alert(t('error') + ': ' + err.message);
     }
   };
 
-  // Filter orders by status and search query (client-side filtering - instant!)
-  const filteredOrders = allOrders.filter(order => {
-    // Apply status filter
-    if (statusFilter !== 'all' && order.status !== statusFilter) {
-      return false;
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    
-    // Apply search query filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        order.id.toString().includes(query) ||
-        order.billing?.first_name?.toLowerCase().includes(query) ||
-        order.billing?.last_name?.toLowerCase().includes(query) ||
-        order.billing?.email?.toLowerCase().includes(query)
-      );
-    }
-    
-    return true;
-  });
+  };
 
-  const displayedCount = filteredOrders.length;
-
-  if (loading) {
-    return <LoadingState isRTL={isRTL} t={t} />;
+  if (error && !orders.length) {
+    return <ErrorState error={error.message || t('error')} onRetry={() => refetch()} fullPage />;
   }
 
   return (
     <div className="space-y-6" dir="rtl">
       {/* Header */}
       <OrdersHeader
-        displayedCount={displayedCount}
+        displayedCount={orders.length}
         totalCount={totalOrders}
         isRTL={isRTL}
         t={t}
@@ -248,23 +173,36 @@ const Orders = () => {
         </div>
       </div>
 
-      {/* Error State */}
-      {error && <ErrorState error={error} isRTL={isRTL} />}
+
 
       {/* Orders Table */}
-      {filteredOrders.length === 0 ? (
-        <EmptyState isRTL={isRTL} t={t} />
+      {loading ? (
+        <LoadingState message={t('loading') || 'Loading orders...'} />
+      ) : orders.length === 0 ? (
+        <EmptyState message={t('noOrdersFound') || t('noOrders')} isRTL={isRTL} icon={Package} />
       ) : (
         <>
           <OrdersTable
-            orders={filteredOrders}
+            orders={orders}
             onViewDetails={setSelectedOrder}
             onStatusUpdate={handleStatusUpdate}
             formatCurrency={formatCurrency}
             isRTL={isRTL}
             t={t}
           />
-          {loadingMore && <LoadingMoreIndicator isRTL={isRTL} />}
+
+          {/* Pagination */}
+          <div className="mt-6">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              totalItems={totalOrders}
+              itemsPerPage={PER_PAGE}
+              isRTL={isRTL}
+              t={t}
+            />
+          </div>
         </>
       )}
 
@@ -284,6 +222,3 @@ const Orders = () => {
 };
 
 export default Orders;
-
-
-

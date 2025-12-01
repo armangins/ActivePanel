@@ -1,4 +1,4 @@
-import { Plus, Trash, X } from 'lucide-react';
+import { PlusIcon as Plus, TrashIcon, XMarkIcon as X } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../../contexts/LanguageContext';
 
 /**
@@ -31,7 +31,7 @@ const ProductModalAttributesStep = ({
             onClick={addAttribute}
             className="btn-secondary flex items-center space-x-2"
           >
-            <Plus size={18} />
+            <Plus className="w-[18px] h-[18px]" />
             <span>{t('addAttribute')}</span>
           </button>
         </div>
@@ -100,9 +100,9 @@ const ProductModalAttributesStep = ({
                   <button
                     type="button"
                     onClick={() => removeAttribute(index)}
-                    className="text-red-600 hover:text-red-700 p-2"
+                    className="text-orange-600 hover:text-orange-700 p-2"
                   >
-                    <Trash size={18} />
+                    <Trash className="w-[18px] h-[18px]" />
                   </button>
                 </div>
               </div>
@@ -121,9 +121,9 @@ const ProductModalAttributesStep = ({
                       <button
                         type="button"
                         onClick={() => removeAttributeOption(index, optIndex)}
-                        className="ml-2 text-red-600 hover:text-red-700"
+                        className="ml-2 text-orange-600 hover:text-orange-700"
                       >
-                        <X size={14} />
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     </span>
                   ))}

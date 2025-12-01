@@ -32,3 +32,6 @@ const ProductDetailsAttributes = ({ attributes, isRTL, t }) => {
 export default ProductDetailsAttributes;
 
 
+
+
+

@@ -1,10 +1,9 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { secureStorage, sanitizeInput } from '../utils/security';
+import { sanitizeInput } from '../utils/security';
 import { authAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
-const USER_STORAGE_KEY = 'activepanel_user_session';
 const USE_BACKEND_API = import.meta.env.VITE_API_URL; // Use backend if API_URL is set
 
 export const AuthProvider = ({ children }) => {
@@ -14,58 +13,67 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Check if user is logged in on mount
     const checkAuth = async () => {
-      if (USE_BACKEND_API) {
-        // Try to get user from backend
-        try {
-          const currentUser = await authAPI.getCurrentUser();
-          setUser(currentUser);
-        } catch (error) {
-          // Not authenticated or backend not available
+      try {
+        if (USE_BACKEND_API) {
+          // Try to get user from backend
+          try {
+            const currentUser = await authAPI.getCurrentUser();
+            setUser(currentUser);
+          } catch (error) {
+            // Not authenticated or backend not available
+            setUser(null);
+          }
+        } else {
+          // No backend configured, and we removed localStorage fallback.
+          // User starts as not logged in.
           setUser(null);
         }
-      } else {
-        // Fallback to localStorage (demo mode)
-        const savedUser = secureStorage.getItem(USER_STORAGE_KEY);
-        if (savedUser) {
-          try {
-            const sanitizedUser = {
-              ...savedUser,
-              email: sanitizeInput(savedUser.email || ''),
-              name: sanitizeInput(savedUser.name || ''),
-            };
-            delete sanitizedUser.password;
-            setUser(sanitizedUser);
-          } catch (error) {
-            secureStorage.removeItem(USER_STORAGE_KEY);
-          }
-        }
+      } catch (error) {
+        // Ensure user is set to null on any unexpected error
+        setUser(null);
+      } finally {
+        // Always set loading to false, even if there's an error
+        setLoading(false);
       }
-      setLoading(false);
     };
-    
-    checkAuth();
+
+    // Add a timeout fallback to ensure loading never stays true forever
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 5000); // 5 second timeout
+
+    checkAuth().finally(() => {
+      clearTimeout(timeoutId);
+    });
   }, []);
 
   const login = async (userData) => {
+    // Validate and sanitize picture URL
+    let pictureUrl = null;
+    if (userData.picture && typeof userData.picture === 'string') {
+      const trimmedPicture = userData.picture.trim();
+      // Only accept valid HTTP(S) URLs
+      if (trimmedPicture.length > 0 && (trimmedPicture.startsWith('http://') || trimmedPicture.startsWith('https://'))) {
+        pictureUrl = trimmedPicture;
+      }
+    }
+
     // Sanitize and secure user data before storing
     const sanitizedUserData = {
       id: userData.id,
       email: sanitizeInput(userData.email || ''),
       name: sanitizeInput(userData.name || ''),
-      picture: userData.picture || null,
+      picture: pictureUrl, // Use validated picture URL or null
       role: userData.role || 'user',
       provider: userData.provider || 'email',
     };
-    
+
     // NEVER store password or sensitive data
     delete sanitizedUserData.password;
     delete sanitizedUserData.token;
     delete sanitizedUserData.secret;
-    
+
     setUser(sanitizedUserData);
-    
-    // Store in localStorage as backup (for demo mode or if backend unavailable)
-    secureStorage.setItem(USER_STORAGE_KEY, sanitizedUserData);
   };
 
   const logout = async () => {
@@ -77,9 +85,8 @@ export const AuthProvider = ({ children }) => {
         // Continue even if logout fails
       }
     }
-    
+
     setUser(null);
-    secureStorage.removeItem(USER_STORAGE_KEY);
   };
 
   const value = {

@@ -1,36 +1,93 @@
-import { Menu, Bell, User, LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { 
+  Bars3Icon as Menu, 
+  BellIcon as Bell, 
+  ArrowPathIcon as RefreshCw
+} from '@heroicons/react/24/outline';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import ConnectionStatus from './ConnectionStatus';
-import SearchInput from '../Common/SearchInput';
+import NotificationDropdown from './NotificationDropdown';
+import UserMenuDropdown from './UserMenuDropdown';
+import { SearchInput, UserAvatar } from '../ui';
+import { refreshAllData } from '../../utils/refreshHelpers';
+import useNewOrdersCount from '../../hooks/useNewOrdersCount';
+import OrderDetailsModal from '../Orders/OrderDetailsModal/OrderDetailsModal';
 
 const Header = ({ onMenuClick }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const { t, isRTL } = useLanguage();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const { t, formatCurrency, isRTL } = useLanguage();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { newOrdersCount, newOrders, removeOrder, clearAllNotifications, markAsRead, markAsUnread, markAllAsRead, isLoading, hasError } = useNewOrdersCount();
 
-  const handleLogout = () => {
+  // Handlers
+  const handleLogout = useCallback(() => {
     logout();
     navigate('/login');
     setShowUserMenu(false);
-  };
+  }, [logout, navigate]);
+
+  const handleMenuToggle = useCallback(() => {
+    setShowUserMenu(prev => !prev);
+  }, []);
+
+  const handleBackdropClick = useCallback(() => {
+    setShowUserMenu(false);
+    setShowNotifications(false);
+  }, []);
+
+  const handleNotificationClick = useCallback(() => {
+    setShowNotifications(prev => !prev);
+  }, []);
+
+  const handleOrderClick = useCallback((orderId) => {
+    const latestOrder = newOrders.find(o => o.id === orderId);
+    if (!latestOrder) return;
+    setSelectedOrder(latestOrder);
+    setShowNotifications(false);
+  }, [newOrders]);
+
+  const handleStatusUpdate = useCallback(() => {
+    setSelectedOrder(null);
+  }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshAllData();
+    } catch (error) {
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  const handleModalClose = useCallback(() => {
+    const currentOrder = newOrders.find(o => o.id === selectedOrder?.id);
+    if (currentOrder && !currentOrder.read) {
+      markAsRead(selectedOrder.id);
+    }
+    setSelectedOrder(null);
+  }, [newOrders, selectedOrder, markAsRead]);
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center flex-row-reverse justify-between">
-        <div className="flex items-center space-x-4 flex-1 flex-row-reverse">
+    <header className="bg-white border-b border-gray-200 px-3 sm:px-4 md:px-6 py-3 md:py-4 sticky top-0 z-40">
+      <div className="flex items-center flex-row-reverse justify-between gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 flex-1 flex-row-reverse min-w-0">
           <button
             onClick={onMenuClick}
-            className="lg:hidden text-gray-600 hover:text-primary-500"
+            className="lg:hidden text-gray-600 hover:text-primary-500 p-2 -m-2 touch-manipulation"
+            aria-label={t('menu') || 'תפריט'}
           >
-            <Menu size={24} />
+            <Menu className="w-6 h-6" />
           </button>
           
-          <div className="flex-1 max-w-md">
+          {/* Search - Hidden on mobile, shown on tablet+ */}
+          <div className="hidden sm:flex flex-1 max-w-md">
             <SearchInput
               value={searchQuery}
               onChange={setSearchQuery}
@@ -40,61 +97,96 @@ const Header = ({ onMenuClick }) => {
           </div>
         </div>
         
-        <div className="flex items-center space-x-4 flex-row-reverse">
-          <ConnectionStatus />
+        <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-row-reverse flex-shrink-0">
+          {/* Connection Status - Hidden on mobile */}
+          <div className="hidden md:block">
+            <ConnectionStatus />
+          </div>
           
-          <button className="relative p-2 text-gray-600 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors">
-            <Bell size={20} />
-            <span className="absolute top-1 left-1 w-2 h-2 bg-red-500 rounded-full"></span>
+          {/* Refresh - Smaller on mobile */}
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="p-2 text-gray-600 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+            title={t('refresh') || 'רענון'}
+            aria-label={t('refresh') || 'רענון'}
+          >
+            <RefreshCw className={`w-5 h-5 sm:w-6 sm:h-6 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
           
+          {/* Notifications */}
+          <div className="relative">
+            <button 
+              onClick={handleNotificationClick}
+              className="relative p-2 text-gray-600 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors touch-manipulation"
+              aria-label={t('notifications') || 'התראות'}
+            >
+              <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
+              {newOrdersCount > 0 && (
+                <span className="absolute top-0 left-0 bg-orange-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {newOrdersCount > 99 ? '99+' : newOrdersCount}
+                </span>
+              )}
+            </button>
+            <NotificationDropdown
+              isOpen={showNotifications}
+              onClose={handleBackdropClick}
+              orders={newOrders}
+              isLoading={isLoading}
+              hasError={hasError}
+              onOrderClick={handleOrderClick}
+              onMarkAsRead={markAsRead}
+              onMarkAsUnread={markAsUnread}
+              onRemoveOrder={removeOrder}
+              onMarkAllAsRead={markAllAsRead}
+              onClearAll={clearAllNotifications}
+              formatCurrency={formatCurrency}
+            />
+          </div>
+          
+          {/* User Menu - Compact on mobile */}
           <div className="relative">
             <button
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center space-x-3 pr-4 pl-0 border-r border-gray-200 hover:bg-gray-50 rounded-lg p-2 transition-colors"
+              onClick={handleMenuToggle}
+              className="flex items-center gap-2 sm:gap-3 pr-2 sm:pr-4 pl-0 border-r border-gray-200 hover:bg-gray-50 rounded-lg p-2 transition-colors touch-manipulation"
+              aria-label={t('userMenu') || 'תפריט משתמש'}
             >
-              {user?.picture ? (
-                <img
-                  src={user.picture}
-                  alt={user.name}
-                  className="w-8 h-8 rounded-full"
-                />
-              ) : (
-                <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                  <User size={18} className="text-primary-500" />
-                </div>
-              )}
-              <div className="hidden md:block text-right">
-                <p className="text-sm font-medium text-gray-900">{user?.name || t('adminUser')}</p>
-                <p className="text-xs text-gray-500">{user?.email || 'admin@example.com'}</p>
+              <UserAvatar 
+                src={user?.picture} 
+                alt={user?.name || 'User'}
+                name={user?.name}
+                size="md"
+              />
+              <div className="hidden lg:block text-right">
+                <p className="text-sm font-medium text-gray-900">
+                  {user?.name || t('adminUser')}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {user?.email || 'admin@example.com'}
+                </p>
               </div>
             </button>
-
-            {showUserMenu && (
-              <>
-                {/* Backdrop to close menu when clicking outside */}
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setShowUserMenu(false)}
-                ></div>
-                <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                  <div className="px-4 py-3 border-b border-gray-200">
-                    <p className="text-sm font-medium text-gray-900 text-right">{user?.name || t('adminUser')}</p>
-                    <p className="text-xs text-gray-500 text-right">{user?.email || 'admin@mail.com'}</p>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors flex-row-reverse"
-                  >
-                    <LogOut size={16} />
-                    <span className="font-medium">{t('logout') || 'התנתק'}</span>
-                  </button>
-                </div>
-              </>
-            )}
+            <UserMenuDropdown
+              isOpen={showUserMenu}
+              onClose={handleBackdropClick}
+              user={user}
+              onLogout={handleLogout}
+            />
           </div>
         </div>
       </div>
+
+      {/* Order Details Modal */}
+      {selectedOrder && (
+        <OrderDetailsModal
+          order={selectedOrder}
+          onClose={handleModalClose}
+          onStatusUpdate={handleStatusUpdate}
+          formatCurrency={formatCurrency}
+          isRTL={isRTL}
+          t={t}
+        />
+      )}
     </header>
   );
 };

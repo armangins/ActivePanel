@@ -1,180 +1,90 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { productsAPI, categoriesAPI } from '../../services/woocommerce';
-import ProductModal from './ProductModal';
+import { categoriesAPI } from '../../services/woocommerce';
+import { useProducts } from '../../hooks/useProducts';
+import { useCategories } from '../../hooks/useCategories';
 import ProductDetailsModal from './ProductDetailsModal/ProductDetailsModal';
 import ProductsHeader from './ProductsHeader';
 import ProductFilters from './ProductFilters';
 import ProductGrid from './ProductGrid';
 import ProductList from './ProductList';
-import EmptyState from './EmptyState';
-import LoadingState from './LoadingState';
-import ErrorState from './ErrorState';
-import LoadingMoreIndicator from './LoadingMoreIndicator';
-import LoadMoreButton from './LoadMoreButton';
-import EndOfResults from './EndOfResults';
+import { EmptyState, LoadingState, ErrorState } from '../ui';
+import Pagination from '../ui/Pagination';
+import { PAGINATION_DEFAULTS } from '../../shared/constants';
 
-const PER_PAGE = 24;
+const PER_PAGE = PAGINATION_DEFAULTS.PRODUCTS_PER_PAGE;
 
 const Products = () => {
+  const navigate = useNavigate();
   const { t, formatCurrency, isRTL } = useLanguage();
-  const [allProducts, setAllProducts] = useState([]); // All loaded products (no filter)
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [totalProducts, setTotalProducts] = useState(0);
-  
+
   // Filter states
-  const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false); // edit/create modal
   const [isDetailsOpen, setIsDetailsOpen] = useState(false); // view-only details
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [sortField, setSortField] = useState(null); // 'name' or 'price'
   const [sortDirection, setSortDirection] = useState('asc'); // 'asc' or 'desc'
+  const [gridColumns, setGridColumns] = useState(4);
 
-  const loadCategories = async () => {
-    try {
-      const data = await categoriesAPI.getAll();
-      setCategories(data);
-      } catch (err) {
-        // Failed to load categories
-      }
-  };
+  // Use the useProducts hook for data fetching with caching
+  const {
+    data: productsData,
+    isLoading: loading,
+    error,
+    refetch
+  } = useProducts({
+    page,
+    per_page: PER_PAGE,
+    _fields: ['id', 'name', 'slug', 'permalink', 'date_created', 'status', 'stock_status', 'stock_quantity', 'price', 'regular_price', 'sale_price', 'images', 'categories', 'sku']
+  });
 
-  // Load all products without filters (for client-side filtering)
-  const loadProducts = useCallback(async (pageToLoad = 1, reset = false) => {
-    try {
-      reset ? setLoading(true) : setLoadingMore(true);
-      setError(null);
-      const { data, total, totalPages } = await productsAPI.list({
-        page: pageToLoad,
-        per_page: PER_PAGE,
-      });
+  const allProducts = productsData?.data || [];
+  const totalProducts = productsData?.total || 0;
+  const totalPages = productsData?.totalPages || 1;
 
-      setTotalProducts(total);
-      setHasMore(pageToLoad < totalPages);
-      setPage(pageToLoad);
-      
-      if (reset) {
-        setAllProducts(data);
-      } else {
-        // Avoid duplicates by checking if product already exists
-        setAllProducts((prev) => {
-          const existingIds = new Set(prev.map(p => p.id));
-          const newProducts = data.filter(p => !existingIds.has(p.id));
-          return [...prev, ...newProducts];
-        });
-      }
-    } catch (err) {
-      setError(err.message || t('error'));
-    } finally {
-      reset ? setLoading(false) : setLoadingMore(false);
-    }
-  }, [t]);
-
-  useEffect(() => {
-    loadProducts(1, true);
-    loadCategories();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Infinite scroll effect - only when no filters are active
-  useEffect(() => {
-    const activeFilters = selectedCategory || minPrice || maxPrice || searchQuery;
-    
-    // Don't set up scroll listener if filters are active (we already have all data)
-    if (activeFilters) {
-      return;
-    }
-
-    let ticking = false;
-    const handleScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      
-      requestAnimationFrame(() => {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const windowHeight = window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
-
-        if (scrollTop + windowHeight >= documentHeight - 200) {
-          const stillActiveFilters = selectedCategory || minPrice || maxPrice || searchQuery;
-          if (hasMore && !loading && !loadingMore && !stillActiveFilters) {
-            loadProducts(page + 1, false);
-          }
-        }
-        ticking = false;
-      });
-    };
-
-    const checkInitialLoad = () => {
-      setTimeout(() => {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const windowHeight = window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
-        
-        if (documentHeight <= windowHeight + 100 && hasMore && !loading && !loadingMore) {
-          loadProducts(page + 1, false);
-        }
-      }, 100);
-    };
-
-    if (!loading && allProducts.length > 0) {
-      checkInitialLoad();
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', checkInitialLoad, { passive: true });
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', checkInitialLoad);
-    };
-  }, [hasMore, loading, loadingMore, page, selectedCategory, minPrice, maxPrice, searchQuery, loadProducts, allProducts.length]);
+  // Use useCategories hook for data fetching with caching
+  const { data: categories = [] } = useCategories();
 
   const refreshProducts = () => {
-    loadProducts(1, true);
+    refetch();
   };
 
 
   const handleDelete = async (id) => {
     // Close any open modals for this product
     if (selectedProduct?.id === id) {
-      setIsModalOpen(false);
       setIsDetailsOpen(false);
       setSelectedProduct(null);
     }
 
     try {
       // Optimistically update UI first for instant feedback
-      setAllProducts((prev) => prev.filter((p) => p.id !== id));
-      setTotalProducts((prev) => Math.max(prev - 1, 0));
-      
+      // Note: With React Query, we should ideally use mutation's onMutate, 
+      // but for now we'll just refetch after delete
+
       // Then delete from API
       await productsAPI.delete(id);
+      refetch();
     } catch (err) {
-      // Revert optimistic update on error
       alert(t('error') + ': ' + err.message);
-      // Reload products to sync with server
-      loadProducts(1, true);
+      refetch();
     }
   };
 
   // Client-side filtering - instant!
   const filteredProducts = allProducts.filter(product => {
     // Search filter
-    const matchesSearch = 
+    const matchesSearch =
       product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.sku?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     if (!matchesSearch) return false;
 
     // Category filter
@@ -240,12 +150,16 @@ const Products = () => {
     setSearchQuery('');
   };
 
+  const handleGridColumnsChange = (columns) => {
+    setGridColumns(columns);
+  };
+
   if (loading) {
-    return <LoadingState t={t} />;
+    return <LoadingState message={t('loadingProducts')} />;
   }
 
   if (error && !allProducts.length) {
-    return <ErrorState error={error} onRetry={() => loadProducts(1, true)} t={t} />;
+    return <ErrorState error={error.message || t('error')} onRetry={() => refetch()} fullPage />;
   }
 
   const activeFilterCount = [selectedCategory, minPrice, maxPrice, searchQuery].filter(Boolean).length;
@@ -256,11 +170,13 @@ const Products = () => {
         displayedCount={displayedCount}
         totalCount={totalCount}
         onCreateProduct={() => {
-          setSelectedProduct(null);
-          setIsModalOpen(true);
+          // Navigate to the new Add Product view
+          navigate('/products/add');
         }}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        gridColumns={gridColumns}
+        onGridColumnsChange={handleGridColumnsChange}
         isRTL={isRTL}
         t={t}
         onToggleFilters={() => setShowFilters(!showFilters)}
@@ -287,33 +203,28 @@ const Products = () => {
       />
 
       {error && (
-        <div className="card bg-red-50 border-red-200">
-          <p className="text-red-600">{error}</p>
+        <div className="card bg-orange-50 border-orange-200">
+          <p className="text-orange-600">{error}</p>
         </div>
       )}
 
       {sortedProducts.length === 0 ? (
-        <EmptyState searchQuery={searchQuery} isRTL={isRTL} t={t} />
+        <EmptyState
+          message={t('noProducts')}
+          description={searchQuery ? t('trySearch') : t('getStarted')}
+          isRTL={isRTL}
+        />
       ) : viewMode === 'grid' ? (
         <ProductGrid
           products={sortedProducts}
+          columns={gridColumns}
           onView={(product) => {
             setSelectedProduct(product);
             setIsDetailsOpen(true);
           }}
           onEdit={(product) => {
-            // Open modal immediately with existing product data
-            setSelectedProduct(product);
-            setIsModalOpen(true);
-            // Load full product details in background
-            productsAPI.getById(product.id)
-              .then(fullProduct => {
-                setSelectedProduct(fullProduct);
-              })
-              .catch(err => {
-                // Failed to load full product details
-                // Don't show error - modal already open with partial data
-              });
+            // Navigate to edit view
+            navigate(`/products/edit/${product.id}`);
           }}
           onDelete={handleDelete}
           formatCurrency={formatCurrency}
@@ -328,18 +239,8 @@ const Products = () => {
             setIsDetailsOpen(true);
           }}
           onEdit={(product) => {
-            // Open modal immediately with existing product data
-            setSelectedProduct(product);
-            setIsModalOpen(true);
-            // Load full product details in background
-            productsAPI.getById(product.id)
-              .then(fullProduct => {
-                setSelectedProduct(fullProduct);
-              })
-              .catch(err => {
-                // Failed to load full product details
-                // Don't show error - modal already open with partial data
-              });
+            // Navigate to edit view
+            navigate(`/products/edit/${product.id}`);
           }}
           onDelete={handleDelete}
           formatCurrency={formatCurrency}
@@ -351,14 +252,19 @@ const Products = () => {
         />
       )}
 
-      {loadingMore && !hasActiveFilters && <LoadingMoreIndicator t={t} />}
-
-      {hasMore && !loading && !loadingMore && !hasActiveFilters && (
-        <LoadMoreButton onLoadMore={() => loadProducts(page + 1, false)} t={t} />
-      )}
-
-      {!hasMore && allProducts.length > 0 && !hasActiveFilters && (
-        <EndOfResults displayedCount={allProducts.length} totalCount={totalProducts} t={t} />
+      {!hasActiveFilters && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          totalItems={totalProducts}
+          itemsPerPage={PER_PAGE}
+          isRTL={isRTL}
+          t={t}
+        />
       )}
 
       {/* Product Details Modal (view-only) */}
@@ -373,21 +279,6 @@ const Products = () => {
         />
       )}
 
-      {/* Product Modal (edit/create) */}
-      {isModalOpen && (
-        <ProductModal
-          product={selectedProduct}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedProduct(null);
-          }}
-          onSave={() => {
-            setIsModalOpen(false);
-            setSelectedProduct(null);
-            refreshProducts();
-          }}
-        />
-      )}
     </div>
   );
 };
