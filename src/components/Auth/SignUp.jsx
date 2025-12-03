@@ -33,105 +33,7 @@ const SignUp = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  useEffect(() => {
-    // Load Google Identity Services script
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
 
-    script.onload = () => {
-      setTimeout(() => {
-        if (window.google && window.google.accounts) {
-          const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-          if (!clientId) {
-            return;
-          }
-
-          window.google.accounts.id.initialize({
-            client_id: clientId,
-            callback: handleGoogleSignUp,
-          });
-
-          const buttonElement = document.getElementById('google-signup-button');
-          if (buttonElement) {
-            window.google.accounts.id.renderButton(buttonElement, {
-              theme: 'outline',
-              size: 'large',
-              text: 'signup_with',
-              locale: 'he',
-              width: '100%',
-            });
-          }
-        }
-      }, 100);
-    };
-
-    return () => {
-      const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
-      if (existingScript && existingScript.parentNode) {
-        existingScript.parentNode.removeChild(existingScript);
-      }
-    };
-  }, []);
-
-  const handleGoogleSignUp = async (response) => {
-    try {
-      setLoading(true);
-      setError('');
-
-      const base64Url = response.credential.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-
-      const userData = JSON.parse(jsonPayload);
-
-      // Check if user already exists, if not create account
-      const user = {
-        id: userData.sub,
-        email: userData.email,
-        name: userData.name || `${userData.given_name || ''} ${userData.family_name || ''} `.trim(),
-        picture: userData.picture,
-        given_name: userData.given_name,
-        family_name: userData.family_name,
-        provider: 'google',
-      };
-
-      // In production, this should be handled by backend
-      // For demo, we just log the user in
-
-      /* 
-      // Previous localStorage logic removed
-      const users = storage.get('activepanel_users', []);
-      const existingUser = users.find(u => u.email === userData.email);
-
-      if (!existingUser) {
-        users.push({
-          id: userData.sub,
-          email: userData.email,
-          name: user.name,
-          picture: userData.picture,
-          role: 'user',
-          provider: 'google',
-        });
-        storage.set('activepanel_users', users);
-      }
-      */
-
-      login(user);
-      navigate('/dashboard');
-    } catch (error) {
-      setError('שגיאה בהרשמה. אנא נסה שוב.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleEmailSignUp = async (e) => {
     e.preventDefault();
@@ -174,17 +76,10 @@ const SignUp = () => {
         // Allow but could warn user
       }
 
-      if (USE_BACKEND_API) {
-        // Use backend API
-        const result = await authAPI.register(email, password, name);
-        login(result.user);
-        navigate('/dashboard');
-      } else {
-        // Fallback to localStorage (demo mode)
-        const user = await registerUser(email, password, name);
-        login(user);
-        navigate('/dashboard');
-      }
+      // Use backend API
+      const result = await authAPI.register(email, password, name);
+      login(result.user);
+      navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'שגיאה בהרשמה. אנא נסה שוב.');
     } finally {
@@ -322,12 +217,13 @@ const SignUp = () => {
 
           {/* Google Sign Up Button */}
           <div className="mt-6">
-            <div id="google-signup-button" className="w-full flex justify-center"></div>
-            {!import.meta.env.VITE_GOOGLE_CLIENT_ID && (
-              <p className="text-xs text-gray-500 mt-2 text-right">
-                {t('googleClientIdMissing') || 'Google Sign-Up לא מוגדר. אנא הגדר VITE_GOOGLE_CLIENT_ID ב-.env'}
-              </p>
-            )}
+            <button
+              onClick={() => window.location.href = 'http://localhost:3000/auth/google'}
+              className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-sm"
+            >
+              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
+              {t('signUpWithGoogle') || 'הירשם עם Google'}
+            </button>
           </div>
         </div>
       </div>

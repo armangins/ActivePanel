@@ -34,3 +34,5 @@ const CategoriesHeader = ({ searchQuery, onSearchChange, onAddClick, displayedCo
 export default CategoriesHeader;
 
 
+
+

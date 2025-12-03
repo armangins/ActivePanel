@@ -8,7 +8,7 @@ import { useDashboardSidebar } from './hooks/useDashboardSidebar';
 
 // These are loaded immediately as they are above the fold or essential for the initial view
 import DashboardHeader from './DashboardHeader';
-import DashboardStats from '././DashboardStats';
+import DashboardStats from './DashboardStats';
 
 
 // These are loaded only when needed to improve initial load time
@@ -76,7 +76,7 @@ const Dashboard = () => {
   // Shown if critical data fetching fails
   if (error) {
     // Generic secure error message
-    const errorMessage = 'אירעה שגיאה בטעינת הנתונים. אנא נסה שוב מאוחר יותר.';
+    const errorMessage = 'אופס, נראה שעדיין אין מידע להציג';
 
     return (
       <ErrorState

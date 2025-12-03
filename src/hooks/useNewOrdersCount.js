@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ordersAPI, hasWooCommerceConfig } from '../services/woocommerce';
+import { ordersAPI } from '../services/woocommerce';
 
 /**
  * Hook to track new orders in real-time
@@ -17,14 +17,6 @@ const useNewOrdersCount = () => {
   const intervalRef = useRef(null);
 
   useEffect(() => {
-    // Check if API credentials are configured before starting
-    if (!hasWooCommerceConfig()) {
-      // Don't start checking if credentials are not configured
-      setIsLoading(false);
-      setHasError(true);
-      return;
-    }
-
     // Initial check - get the latest order date
     const initialize = async () => {
       try {
@@ -58,16 +50,6 @@ const useNewOrdersCount = () => {
 
     // Check for new orders every 30 seconds
     const checkNewOrders = async () => {
-      // Check credentials again before each check
-      if (!hasWooCommerceConfig()) {
-        // Stop checking if credentials are removed
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
-        return;
-      }
-
       try {
         setHasError(false);
 

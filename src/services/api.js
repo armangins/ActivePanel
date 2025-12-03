@@ -6,7 +6,7 @@
 
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // In-memory token storage
 let authToken = null;
@@ -71,32 +71,39 @@ const createApiClient = () => {
         document.cookie = `csrf-token=${csrfToken}; path=/; SameSite=Strict`;
       }
 
+      // 2. The "First Time User" (Setup Required)
+      // 2. The "First Time User" (Setup Required)
+      if (response.data && response.data.code === 'SETUP_REQUIRED') {
+        // window.location.href = '/onboarding'; // DISABLED: User requested to remove onboarding for now
+        return response;
+      }
+
+      // 1. The "Happy Path" (Success)
       return response;
     },
     async (error) => {
-      // Handle 401 - token expired
+      // 3. The "Not Logged In" (Unauthorized)
       if (error.response?.status === 401) {
-        // Try to refresh token
-        try {
-          const refreshResponse = await axios.post(
-            `${API_URL}/auth/refresh`,
-            {},
-            { withCredentials: true }
-          );
-
-          // Retry original request
-          const originalRequest = error.config;
-          if (refreshResponse.data.token) {
-            setAuthToken(refreshResponse.data.token);
-            originalRequest.headers.Authorization = `Bearer ${refreshResponse.data.token}`;
-            return instance(originalRequest);
-          }
-        } catch (refreshError) {
-          // Refresh failed - logout user
-          setAuthToken(null);
-          window.location.href = '/login';
+        // Don't redirect for auth check, let the app handle it (e.g. show login page)
+        if (error.config.url.includes('/auth/me')) {
+          return Promise.reject(error);
         }
+
+        // Redirect to Google Login URL for other unauthorized requests
+        // window.location.href = 'http://localhost:3000/auth/google'; // REMOVED: This causes loops
+        return Promise.reject(error);
       }
+
+      // 4. The "Real Error" (Server Error)
+      // Show a friendly error message (toast)
+      // Note: We don't have a global toast service imported here yet. 
+      // We can dispatch a custom event or console error for now.
+      console.error('API Error:', error.response?.data?.message || error.message);
+
+      // You might want to dispatch an event that your UI listens to
+      window.dispatchEvent(new CustomEvent('api-error', {
+        detail: { message: 'Something went wrong, please try again.' }
+      }));
 
       return Promise.reject(error);
     }
@@ -169,9 +176,15 @@ export const authAPI = {
    */
   logout: async () => {
     try {
-      await api.post('/auth/logout');
+      // User confirmed logout is a GET request
+      const response = await api.get('/auth/logout');
+      return response.data;
     } catch (error) {
-      // Continue even if logout fails
+      if (error.response && error.response.status === 404) {
+        console.warn('Logout endpoint not found, clearing local session only.');
+        return { success: true, localOnly: true };
+      }
+      throw error;
     } finally {
       setAuthToken(null);
     }
@@ -210,17 +223,36 @@ export const settingsAPI = {
    */
   get: async () => {
     const response = await api.get('/settings');
-    return response.data.settings;
+    // Backend returns { settings: { storeUrl: '...', hasSettings: true } } or similar
+    return response.data.settings || response.data;
   },
 
   /**
    * Update user settings
    */
   update: async (settings) => {
-    const response = await api.put('/settings', {
+    // Map frontend camelCase to backend expected format if needed
+    // User specified: storeUrl, consumerKey, consumerSecret
+    const payload = {
+      storeUrl: settings.woocommerceUrl || settings.storeUrl,
+      consumerKey: settings.consumerKey,
+      consumerSecret: settings.consumerSecret,
+      // Include other settings if they exist
       ...settings,
+      // Ensure storeUrl takes precedence if both exist (or overwrite woocommerceUrl if backend doesn't want it)
+    };
+
+    // Remove woocommerceUrl from payload if backend strictly validates unknown fields, 
+    // but usually extra fields are ignored. 
+    // However, to be clean and match the requested JSON format:
+    const cleanPayload = {
+      storeUrl: settings.woocommerceUrl,
+      consumerKey: settings.consumerKey,
+      consumerSecret: settings.consumerSecret,
       _csrf: getCSRFToken(),
-    });
+    };
+
+    const response = await api.post('/settings', cleanPayload);
     return response.data.settings;
   },
 };

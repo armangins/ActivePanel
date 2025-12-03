@@ -4,7 +4,7 @@ import { authAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
-const USE_BACKEND_API = import.meta.env.VITE_API_URL; // Use backend if API_URL is set
+
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -14,18 +14,12 @@ export const AuthProvider = ({ children }) => {
     // Check if user is logged in on mount
     const checkAuth = async () => {
       try {
-        if (USE_BACKEND_API) {
-          // Try to get user from backend
-          try {
-            const currentUser = await authAPI.getCurrentUser();
-            setUser(currentUser);
-          } catch (error) {
-            // Not authenticated or backend not available
-            setUser(null);
-          }
-        } else {
-          // No backend configured, and we removed localStorage fallback.
-          // User starts as not logged in.
+        // Try to get user from backend
+        try {
+          const currentUser = await authAPI.getCurrentUser();
+          setUser(currentUser);
+        } catch (error) {
+          // Not authenticated or backend not available
           setUser(null);
         }
       } catch (error) {
@@ -77,13 +71,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    // Call backend logout if using backend API
-    if (USE_BACKEND_API) {
-      try {
-        await authAPI.logout();
-      } catch (error) {
-        // Continue even if logout fails
-      }
+    // Call backend logout
+    try {
+      const response = await authAPI.logout();
+    } catch (error) {
+      // Continue even if logout fails
     }
 
     setUser(null);

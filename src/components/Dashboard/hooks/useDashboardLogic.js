@@ -2,9 +2,9 @@ import { useMemo, useCallback } from 'react';
 import { calculatePercentageChange } from '../../../shared/utils';
 import {
     useDashboardStats,
-    useRecentOrders,
+    // useRecentOrders,
     useDashboardProducts,
-    useDashboardOrders,
+    // useDashboardOrders,
     useDashboardCustomers,
     useTopSellers,
     useDashboardLowStock,
@@ -17,21 +17,23 @@ import {
     useGA4Revenue,
 } from '../../../hooks/useDashboard';
 
+const EMPTY_ARRAY = [];
+
 export const useDashboardLogic = () => {
     // Fetch data using React Query hooks
     const { data: dashboardStatsData, isLoading: loadingStats, error: statsError } = useDashboardStats();
-    const { data: recentOrders = [], isLoading: loadingRecentOrders } = useRecentOrders();
-    const { data: allProducts = [], isLoading: loadingProducts } = useDashboardProducts();
-    const { data: allOrders = [], isLoading: loadingOrders } = useDashboardOrders();
-    const { data: topSellersData = [], isLoading: loadingTopSellers } = useTopSellers();
-    const { data: lowStockProducts = [], isLoading: loadingLowStock } = useDashboardLowStock();
+    // const { data: recentOrders = EMPTY_ARRAY, isLoading: loadingRecentOrders } = useRecentOrders(); // REMOVED: Redundant, derived from stats
+    const { data: allProducts = EMPTY_ARRAY, isLoading: loadingProducts } = useDashboardProducts();
+    // const { data: allOrders = [], isLoading: loadingOrders } = useDashboardOrders(); // REMOVED: Redundant
+    const { data: topSellersData = EMPTY_ARRAY, isLoading: loadingTopSellers } = useTopSellers();
+    const { data: lowStockProducts = EMPTY_ARRAY, isLoading: loadingLowStock } = useDashboardLowStock();
     const { data: ga4TrafficData } = useGA4Traffic();
     const { data: ga4PurchaseData } = useGA4Purchase();
     const { data: ga4AddToCartData } = useGA4AddToCart();
     const { data: ga4RevenueData } = useGA4Revenue();
 
     // Load customers only when sidebar is opened (lazy loading)
-    const { data: allCustomers = [], refetch: refetchCustomers } = useDashboardCustomers();
+    const { data: allCustomers = EMPTY_ARRAY, refetch: refetchCustomers } = useDashboardCustomers();
 
     // Compute derived data using useMemo
     const stats = useMemo(() => dashboardStatsData?.stats || {
@@ -48,7 +50,10 @@ export const useDashboardLogic = () => {
         totalProducts: 0,
     }, [dashboardStatsData]);
 
-    const allOrdersFromStats = useMemo(() => dashboardStatsData?.allOrders || [], [dashboardStatsData]);
+    const allOrdersFromStats = useMemo(() => dashboardStatsData?.allOrders || EMPTY_ARRAY, [dashboardStatsData]);
+
+    // Derive recent orders from the full list (first 5)
+    const recentOrders = useMemo(() => allOrdersFromStats.slice(0, 5), [allOrdersFromStats]);
 
     // Use computed hooks for product lists
     const mostSoldProducts = useMostSoldProducts(allProducts);

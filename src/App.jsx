@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import { LoadingState } from './components/ui';
@@ -24,6 +25,8 @@ const Settings = lazy(() => import('./components/Settings/Settings'));
 const AddProductView = lazy(() => import('./components/Products/AddProductView'));
 const ChatAssistant = lazy(() => import('./components/AI/ChatAssistant'));
 const EditVariationView = lazy(() => import('./components/Products/EditVariationView'));
+const Onboarding = lazy(() => import('./components/Onboarding/Onboarding'));
+
 
 function App() {
   // Sidebar closed by default on mobile, open on desktop
@@ -46,7 +49,7 @@ function App() {
 
     // Initial check
     handleResize();
-    
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -55,16 +58,24 @@ function App() {
     <ErrorBoundary>
       <LanguageProvider>
         <AuthProvider>
-          <Router>
-            <Suspense fallback={<LoadingState />}>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<SignUp />} />
-                <Route
-                  path="/*"
-                  element={
-                    <ProtectedRoute>
-                      <>
+          <SettingsProvider>
+            <Router>
+              <Suspense fallback={<LoadingState />}>
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<SignUp />} />
+                  <Route
+                    path="/onboarding"
+                    element={
+                      <ProtectedRoute>
+                        <Onboarding />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/*"
+                    element={
+                      <ProtectedRoute>
                         <div className="flex h-screen bg-gray-50 overflow-hidden relative">
                           <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
                           <div className={`flex-1 flex flex-col overflow-hidden min-w-0 w-full transition-all duration-300 ${sidebarOpen ? 'lg:mr-0' : 'mr-0'}`}>
@@ -96,13 +107,13 @@ function App() {
                         <Suspense fallback={null}>
                           <ChatAssistant />
                         </Suspense>
-                      </>
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-            </Suspense>
-          </Router>
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </Suspense>
+            </Router>
+          </SettingsProvider>
         </AuthProvider>
       </LanguageProvider>
     </ErrorBoundary>
@@ -110,4 +121,7 @@ function App() {
 }
 
 export default App;
+
+// Force rebuild
+
 

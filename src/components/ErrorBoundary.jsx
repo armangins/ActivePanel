@@ -1,4 +1,5 @@
 import React from 'react';
+import StatusMessage from './ui/states/StatusMessage';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -22,29 +23,36 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
-          <div className="card max-w-md w-full">
-            <h2 className="text-2xl font-bold text-orange-600 mb-4">Something went wrong</h2>
-            <p className="text-gray-600 mb-2">
-              {this.state.error?.message || 'An unexpected error occurred'}
-            </p>
-            {this.state.errorInfo && import.meta.env.DEV && (
-              <details className="mt-4 text-xs text-gray-500">
-                <summary className="cursor-pointer mb-2">Error Details (Dev Only)</summary>
-                <pre className="overflow-auto bg-gray-100 p-2 rounded">
-                  {this.state.errorInfo.componentStack}
-                </pre>
-              </details>
-            )}
-            <button
-              onClick={() => {
-                this.setState({ hasError: false, error: null, errorInfo: null });
-                window.location.reload();
-              }}
-              className="btn-primary mt-4"
-            >
-              Reload Page
-            </button>
+        <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
+          <div className="w-full max-w-md">
+            <StatusMessage
+              type="error"
+              title="Something went wrong"
+              message={
+                <>
+                  <span className="block mb-2">{this.state.error?.message || 'An unexpected error occurred'}</span>
+                  {this.state.errorInfo && import.meta.env.DEV && (
+                    <details className="mt-4 text-xs text-gray-500 text-left">
+                      <summary className="cursor-pointer mb-2">Error Details (Dev Only)</summary>
+                      <pre className="overflow-auto bg-gray-100 p-2 rounded max-h-40">
+                        {this.state.errorInfo.componentStack}
+                      </pre>
+                    </details>
+                  )}
+                </>
+              }
+              action={
+                <button
+                  onClick={() => {
+                    this.setState({ hasError: false, error: null, errorInfo: null });
+                    window.location.reload();
+                  }}
+                  className="btn-primary mt-4"
+                >
+                  Reload Page
+                </button>
+              }
+            />
           </div>
         </div>
       );

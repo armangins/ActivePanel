@@ -1,6 +1,6 @@
-import { 
-  Bars3Icon as Menu, 
-  BellIcon as Bell, 
+import {
+  Bars3Icon as Menu,
+  BellIcon as Bell,
   ArrowPathIcon as RefreshCw
 } from '@heroicons/react/24/outline';
 import { useState, useCallback } from 'react';
@@ -27,8 +27,8 @@ const Header = ({ onMenuClick }) => {
   const { newOrdersCount, newOrders, removeOrder, clearAllNotifications, markAsRead, markAsUnread, markAllAsRead, isLoading, hasError } = useNewOrdersCount();
 
   // Handlers
-  const handleLogout = useCallback(() => {
-    logout();
+  const handleLogout = useCallback(async () => {
+    await logout();
     navigate('/login');
     setShowUserMenu(false);
   }, [logout, navigate]);
@@ -85,7 +85,7 @@ const Header = ({ onMenuClick }) => {
           >
             <Menu className="w-6 h-6" />
           </button>
-          
+
           {/* Search - Hidden on mobile, shown on tablet+ */}
           <div className="hidden sm:flex flex-1 max-w-md">
             <SearchInput
@@ -96,13 +96,13 @@ const Header = ({ onMenuClick }) => {
             />
           </div>
         </div>
-        
+
         <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-row-reverse flex-shrink-0">
           {/* Connection Status - Hidden on mobile */}
           <div className="hidden md:block">
             <ConnectionStatus />
           </div>
-          
+
           {/* Refresh - Smaller on mobile */}
           <button
             onClick={handleRefresh}
@@ -113,10 +113,10 @@ const Header = ({ onMenuClick }) => {
           >
             <RefreshCw className={`w-5 h-5 sm:w-6 sm:h-6 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
-          
+
           {/* Notifications */}
           <div className="relative">
-            <button 
+            <button
               onClick={handleNotificationClick}
               className="relative p-2 text-gray-600 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors touch-manipulation"
               aria-label={t('notifications') || 'התראות'}
@@ -143,7 +143,7 @@ const Header = ({ onMenuClick }) => {
               formatCurrency={formatCurrency}
             />
           </div>
-          
+
           {/* User Menu - Compact on mobile */}
           <div className="relative">
             <button
@@ -151,8 +151,8 @@ const Header = ({ onMenuClick }) => {
               className="flex items-center gap-2 sm:gap-3 pr-2 sm:pr-4 pl-0 border-r border-gray-200 hover:bg-gray-50 rounded-lg p-2 transition-colors touch-manipulation"
               aria-label={t('userMenu') || 'תפריט משתמש'}
             >
-              <UserAvatar 
-                src={user?.picture} 
+              <UserAvatar
+                src={user?.picture}
                 alt={user?.name || 'User'}
                 name={user?.name}
                 size="md"

@@ -73,7 +73,7 @@ const WooCommerceSettings = ({ settings, onSettingsChange, onTestConnection, tes
                     ) : (
                         <>
                             <CheckCircle className="w-[18px] h-[18px]" />
-                            <span>{t('testConnection')}</span>
+                            <span>{t('checkAndSave') || 'Check and Save'}</span>
                         </>
                     )}
                 </button>

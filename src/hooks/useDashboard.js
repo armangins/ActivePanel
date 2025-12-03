@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { productsAPI, ordersAPI, customersAPI, reportsAPI, batchRequest } from '../services/woocommerce';
+import { productsAPI, ordersAPI, customersAPI, reportsAPI } from '../services/woocommerce';
 import { getTrafficData, getPurchaseEvents, getAddToCartEvents, getRevenueData } from '../services/ga4';
 import { useMemo } from 'react';
 
@@ -24,43 +24,26 @@ export const useDashboardStats = () => {
   return useQuery({
     queryKey: dashboardKeys.stats(),
     queryFn: async () => {
-      let totalProducts, totalOrders, totalCustomers, allOrdersResponse;
-
-      try {
-        // Try batch request first
-        const responses = await batchRequest([
-          { path: '/wc/v3/products?per_page=1' },
-          { path: '/wc/v3/orders?per_page=1' },
-          { path: '/wc/v3/customers?per_page=1' },
-          { path: '/wc/v3/orders?per_page=100&orderby=date&order=desc' }
-        ]);
-
-        if (responses && responses.length === 4) {
-          // Helper to get header value case-insensitively
-          const getHeader = (headers, key) => {
-            if (!headers) return 0;
-            const lowerKey = key.toLowerCase();
-            const headerKey = Object.keys(headers).find(k => k.toLowerCase() === lowerKey);
-            return headers[headerKey];
-          };
-
-          totalProducts = parseInt(getHeader(responses[0].headers, 'x-wp-total') || 0, 10);
-          totalOrders = parseInt(getHeader(responses[1].headers, 'x-wp-total') || 0, 10);
-          totalCustomers = parseInt(getHeader(responses[2].headers, 'x-wp-total') || 0, 10);
-          allOrdersResponse = responses[3].body;
-        } else {
-          throw new Error('Invalid batch response');
-        }
-      } catch (err) {
-        // Fallback to parallel requests
-        console.warn('Batch request failed, falling back to parallel requests', err);
-        [totalProducts, totalOrders, totalCustomers, allOrdersResponse] = await Promise.all([
-          productsAPI.getTotalCount(),
-          ordersAPI.getTotalCount(),
-          customersAPI.getTotalCount(),
-          ordersAPI.getAll({ per_page: 100, orderby: 'date', order: 'desc' }),
-        ]);
-      }
+      // Use parallel requests to fetch dashboard stats
+      // We catch individual errors to prevent the entire dashboard from failing if one endpoint is missing
+      const [totalProducts, totalOrders, totalCustomers, allOrdersResponse] = await Promise.all([
+        productsAPI.getTotalCount().catch(err => {
+          console.warn('Failed to fetch product count:', err);
+          return 0;
+        }),
+        ordersAPI.getTotalCount().catch(err => {
+          console.warn('Failed to fetch order count:', err);
+          return 0;
+        }),
+        customersAPI.getTotalCount().catch(err => {
+          console.warn('Failed to fetch customer count:', err);
+          return 0;
+        }),
+        ordersAPI.getAll({ per_page: 100, orderby: 'date', order: 'desc' }).catch(err => {
+          console.warn('Failed to fetch orders:', err);
+          return [];
+        }),
+      ]);
 
       // Calculate revenue from completed orders
       const allCompletedOrders = (allOrdersResponse || []).filter(
@@ -115,20 +98,7 @@ export const useDashboardStats = () => {
   });
 };
 
-// Fetch recent orders
-export const useRecentOrders = () => {
-  return useQuery({
-    queryKey: dashboardKeys.recentOrders(),
-    queryFn: () => ordersAPI.getAll({
-      per_page: 10,
-      orderby: 'date',
-      order: 'desc',
-      _fields: 'id,number,status,total,date_created,billing,currency,line_items'
-    }),
-    staleTime: 15 * 60 * 1000,
-    select: (data) => data?.slice(0, 5) || [],
-  });
-};
+
 
 // Fetch all products for dashboard
 export const useDashboardProducts = () => {
@@ -136,25 +106,15 @@ export const useDashboardProducts = () => {
     queryKey: dashboardKeys.allProducts(),
     queryFn: () => productsAPI.getAll({
       per_page: 100,
+      orderby: 'total_sales', // Prioritize top selling products
+      order: 'desc',
       _fields: 'id,name,total_sales,stock_status,stock_quantity,images,price,regular_price,sale_price,status'
     }),
     staleTime: 15 * 60 * 1000,
   });
 };
 
-// Fetch all orders for dashboard
-export const useDashboardOrders = () => {
-  return useQuery({
-    queryKey: dashboardKeys.allOrders(),
-    queryFn: () => ordersAPI.getAll({
-      per_page: 100,
-      orderby: 'date',
-      order: 'desc',
-      _fields: 'id,status,total,date_created,line_items'
-    }),
-    staleTime: 15 * 60 * 1000,
-  });
-};
+
 
 // Fetch all customers for dashboard
 export const useDashboardCustomers = () => {

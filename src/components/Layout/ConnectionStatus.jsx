@@ -5,7 +5,7 @@ import {
   ExclamationCircleIcon as AlertCircle
 } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { testConnection, hasWooCommerceConfig } from '../../services/woocommerce';
+import { testConnection } from '../../services/woocommerce';
 
 const ConnectionStatus = () => {
   const { t } = useLanguage();
@@ -13,12 +13,6 @@ const ConnectionStatus = () => {
   const [message, setMessage] = useState('');
 
   const checkConnection = useCallback(async () => {
-    if (!hasWooCommerceConfig()) {
-      setStatus('disconnected');
-      setMessage(t('notConfigured'));
-      return;
-    }
-
     try {
       setStatus('checking');
       await testConnection();

@@ -33,19 +33,7 @@ export const validateLoginForm = (email, password) => {
  * @returns {Object} { allowed: boolean, error: string|null }
  */
 export const checkLoginRateLimit = (email) => {
-  if (USE_BACKEND_API) {
-    // Rate limiting handled by backend
-    return { allowed: true, error: null };
-  }
-
-  const rateLimit = checkRateLimit(`login_${email}`, 5, 15 * 60 * 1000);
-  if (!rateLimit.allowed) {
-    const minutesRemaining = Math.ceil((rateLimit.resetTime - Date.now()) / 60000);
-    return {
-      allowed: false,
-      error: `יותר מדי ניסיונות התחברות. אנא נסה שוב בעוד ${minutesRemaining} דקות.`,
-    };
-  }
+  // Rate limiting is handled by the backend
   return { allowed: true, error: null };
 };
 
@@ -56,15 +44,11 @@ export const checkLoginRateLimit = (email) => {
  * @returns {Promise<Object>} User object
  */
 export const authenticateUser = async (email, password) => {
-  if (USE_BACKEND_API) {
-    // Use backend API
-    const result = await authAPI.login(email, password);
-    return result.user;
-  } else {
-    // Fallback to localStorage (demo mode)
-    return await authenticateWithEmail(email, password);
-  }
+  const result = await authAPI.login(email, password);
+  return result.user;
 };
+
+
 
 
 

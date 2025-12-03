@@ -34,7 +34,7 @@ const UserMenuDropdown = ({
         </div>
         <button
           onClick={onLogout}
-          className="w-full flex items-center justify-start gap-2 px-4 py-3 text-sm text-orange-600 hover:bg-orange-50 transition-colors flex-row-reverse text-right"
+          className="w-full flex items-center justify-start gap-2 px-4 py-3 text-sm text-orange-600 hover:bg-orange-50 transition-colors text-right"
         >
           <LogOut className="w-4 h-4" />
           <span className="font-medium">{t('logout') || 'התנתק'}</span>

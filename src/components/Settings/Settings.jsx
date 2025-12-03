@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useState, useMemo, useCallback, lazy, Suspense, useEffect } from 'react';
 import {
   GlobeAltIcon as Globe,
   KeyIcon as Key,
@@ -12,7 +12,8 @@ import {
   XCircleIcon as XCircle
 } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { testConnection } from '../../services/woocommerce';
+import { testConnection, productsAPI } from '../../services/woocommerce';
+import { settingsAPI } from '../../services/api';
 import { LoadingState } from '../ui';
 
 
@@ -47,6 +48,32 @@ const Settings = () => {
     lowStockThreshold: 2,
   });
 
+  // Fetch settings on mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        setLoading(true);
+        const savedSettings = await settingsAPI.get();
+        if (savedSettings) {
+          setSettings(prev => ({
+            ...prev,
+            woocommerceUrl: savedSettings.storeUrl || savedSettings.woocommerceUrl || prev.woocommerceUrl,
+            // Keys are not returned for security. User must re-enter to update.
+            // We can add a flag to UI to show "Configured" status if needed.
+            ...savedSettings
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+        setMessage({ type: 'error', text: 'Failed to load settings from server.' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
   const tabs = useMemo(() => [
     { id: 'woocommerce', label: t('woocommerceSettings') || 'WooCommerce API', icon: Globe },
     { id: 'wordpress', label: t('wordpressIntegration') || 'WordPress', icon: Key },
@@ -68,35 +95,22 @@ const Settings = () => {
     setMessage(null);
 
     try {
-      // Temporarily save credentials to test
-      const originalUrl = localStorage.getItem('woocommerce_url');
-      const originalKey = localStorage.getItem('consumer_key');
-      const originalSecret = localStorage.getItem('consumer_secret');
+      // 1. Pass data to backend as requested
+      await settingsAPI.update(settings);
 
-      localStorage.setItem('woocommerce_url', settings.woocommerceUrl);
-      localStorage.setItem('consumer_key', settings.consumerKey);
-      localStorage.setItem('consumer_secret', settings.consumerSecret);
+      // 2. Test the connection (via backend proxy)
+      await testConnection();
 
-      try {
-        await testConnection();
-        setConnectionStatus('success');
-        setMessage({ type: 'success', text: 'Connection successful! Your API credentials are working correctly.' });
-      } catch (error) {
-        setConnectionStatus('error');
-        setMessage({ type: 'error', text: error.message || 'Connection failed. Please check your credentials.' });
-      } finally {
-        // Restore original credentials
-        if (originalUrl) localStorage.setItem('woocommerce_url', originalUrl);
-        if (originalKey) localStorage.setItem('consumer_key', originalKey);
-        if (originalSecret) localStorage.setItem('consumer_secret', originalSecret);
-      }
+      setConnectionStatus('success');
+      setMessage({ type: 'success', text: t('connectionSuccessful') || 'החיבור הצליח! ההגדרות נשמרו ואומתו.' });
+
     } catch (error) {
       setConnectionStatus('error');
-      setMessage({ type: 'error', text: error.message || 'Failed to test connection.' });
+      setMessage({ type: 'error', text: error.message || 'Connection failed. Please check your credentials.' });
     } finally {
       setTesting(false);
     }
-  }, [settings.woocommerceUrl, settings.consumerKey, settings.consumerSecret, setMessage, setTesting, setConnectionStatus]);
+  }, [settings, setMessage, setTesting, setConnectionStatus]);
 
   const handleClearCache = useCallback(() => {
     if (window.confirm(t('clearCacheConfirm') || 'Are you sure you want to clear all cached data? This will force the app to reload all data from the server.')) {
@@ -110,11 +124,8 @@ const Settings = () => {
     setMessage(null);
 
     try {
-      // Settings are updated in state - no need to save to localStorage
-      // In a real app with backend, we would call an API here
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Save settings to backend
+      await settingsAPI.update(settings);
 
       setMessage({ type: 'success', text: t('settingsSaved') });
 
@@ -219,7 +230,7 @@ const Settings = () => {
 
       {/* Global Message */}
       {message && (
-        <div className={`p-4 rounded-lg flex items-start flex-row-reverse space-x-reverse space-x-3 ${message.type === 'success'
+        <div className={`p-4 rounded-lg flex items-start gap-3 ${message.type === 'success'
           ? 'bg-green-50 text-green-800 border border-green-200'
           : 'bg-orange-50 text-orange-800 border border-orange-200'
           }`}>

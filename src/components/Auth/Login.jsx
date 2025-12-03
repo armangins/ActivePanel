@@ -2,22 +2,25 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { useGoogleSignIn } from '../../hooks/useGoogleSignIn';
+
 import { validateLoginForm, checkLoginRateLimit, authenticateUser } from '../../utils/loginHelpers';
-import { 
-  EnvelopeIcon as Mail, 
-  LockClosedIcon as Lock, 
+import {
+  EnvelopeIcon as Mail,
+  LockClosedIcon as Lock,
   ArrowPathIcon as Loader
 } from '@heroicons/react/24/outline';
 import { Input } from '../ui/inputs';
 import LoginWelcomePanel from './LoginWelcomePanel';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const GOOGLE_LOGIN_URL = `${API_URL}/api/auth/google`;
+
 const Login = () => {
   const { login, isAuthenticated } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('admin@mail.com');
-  const [password, setPassword] = useState('admin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,24 +32,11 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Handle Google Sign-In success
-  const handleGoogleSignInSuccess = useCallback((user) => {
-    setLoading(true);
-    setError('');
-    login(user);
-    navigate('/dashboard');
-  }, [login, navigate]);
-
-  // Handle Google Sign-In error
-  const handleGoogleSignInError = useCallback((errorMessage) => {
-    setError(errorMessage);
-    setLoading(false);
+  const handleGoogleLogin = useCallback(() => {
+    window.location.href = GOOGLE_LOGIN_URL;
   }, []);
 
-  // Initialize Google Sign-In
-  useGoogleSignIn(handleGoogleSignInSuccess, handleGoogleSignInError);
-
-  const handleEmailLogin = async (e) => {
+  const handleEmailLogin = useCallback(async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -77,7 +67,7 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [email, password, login, navigate]);
 
   return (
     <div className="min-h-screen flex" dir="rtl">
@@ -86,9 +76,9 @@ const Login = () => {
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="mb-8">
-            <img 
-              src="/logo.svg" 
-              alt="ActivePanel" 
+            <img
+              src="/logo.svg"
+              alt="ActivePanel"
               className="h-12 mb-6"
             />
           </div>
@@ -97,7 +87,7 @@ const Login = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {t('signIn') || 'התחבר'}
           </h1>
-          
+
           <p className="text-gray-600 mb-8">
             {t('dontHaveAccount') || 'אין לך חשבון?'}{' '}
             <Link to="/signup" className="text-primary-500 hover:text-primary-600 font-medium">
@@ -198,14 +188,15 @@ const Login = () => {
             </div>
           </form>
 
-          {/* Google Login Button - Outside form */}
+          {/* Google Login Button */}
           <div className="mt-6">
-            <div id="google-signin-button" className="w-full flex justify-center"></div>
-            {!import.meta.env.VITE_GOOGLE_CLIENT_ID && (
-              <p className="text-xs text-gray-500 mt-2 text-center">
-                {t('googleClientIdMissing') || 'Google Sign-In לא מוגדר. אנא הגדר VITE_GOOGLE_CLIENT_ID ב-.env'}
-              </p>
-            )}
+            <button
+              onClick={handleGoogleLogin}
+              className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-sm"
+            >
+              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
+              {t('signInWithGoogle') || 'התחבר עם Google'}
+            </button>
           </div>
         </div>
       </div>
