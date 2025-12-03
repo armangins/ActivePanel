@@ -108,7 +108,7 @@ const ProductsHeader = memo(({
               {/* Modal */}
               <div
                 ref={modalRef}
-                className={`absolute ${isRTL ? 'left-0' : 'right-0'} top-full mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 p-6`}
+                className={`absolute left-0 top-full mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 p-6`}
                 dir={isRTL ? 'rtl' : 'ltr'}
                 onClick={(e) => e.stopPropagation()}
               >
