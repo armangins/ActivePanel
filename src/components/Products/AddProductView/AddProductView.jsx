@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { DocumentArrowDownIcon as Save, PlusIcon as Plus, CalculatorIcon as Calculator, ArrowPathIcon as Loader } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../../contexts/LanguageContext';
@@ -148,7 +148,10 @@ const AddProductView = () => {
   /**
    * Handle image upload - wrapper using useProductImages hook
    */
-  const handleImageUpload = async (fileList) => {
+  /**
+   * Handle image upload - wrapper using useProductImages hook
+   */
+  const handleImageUpload = useCallback(async (fileList) => {
     const result = await handleImageUploadBase(fileList, formData.images || [], (updatedImages) => {
       updateField('images', updatedImages);
       clearErrors();
@@ -157,21 +160,21 @@ const AddProductView = () => {
     if (!result.success && result.error) {
       setErrors(prev => ({ ...prev, images: result.error }));
     }
-  };
+  }, [handleImageUploadBase, formData.images, updateField, clearErrors, setErrors]);
 
   /**
    * Remove image - wrapper using useProductImages hook
    */
-  const removeImage = (imageId) => {
+  const removeImage = useCallback((imageId) => {
     removeImageBase(imageId, formData.images || [], (updatedImages) => {
       updateField('images', updatedImages);
     });
-  };
+  }, [removeImageBase, formData.images, updateField]);
 
   /**
    * Handle create variation - wrapper using useVariations hook
    */
-  const handleCreateVariation = async () => {
+  const handleCreateVariation = useCallback(async () => {
     await createVariation({
       isEditMode,
       productId: id,
@@ -180,12 +183,12 @@ const AddProductView = () => {
       attributeTerms,
       t
     });
-  };
+  }, [createVariation, isEditMode, id, formData, attributes, attributeTerms, t]);
 
   /**
    * Handle edit variation - loads variation data into form
    */
-  const handleEditVariation = async (variation) => {
+  const handleEditVariation = useCallback(async (variation) => {
     setEditingVariationId(variation.id);
 
     // Initialize attributes from variation
@@ -213,12 +216,12 @@ const AddProductView = () => {
     });
 
     setShowEditVariationModal(true);
-  };
+  }, [setEditingVariationId, loadAttributeTerms, setVariationFormData, setShowEditVariationModal]);
 
   /**
    * Handle update variation - wrapper using useVariations hook
    */
-  const handleUpdateVariation = async () => {
+  const handleUpdateVariation = useCallback(async () => {
     await updateVariation({
       productId: id,
       editingVariationId,
@@ -227,12 +230,12 @@ const AddProductView = () => {
       attributeTerms,
       t
     });
-  };
+  }, [updateVariation, id, editingVariationId, formData, attributes, attributeTerms, t]);
 
   /**
    * Handle product type change - wrapper using hooks
    */
-  const handleProductTypeChange = async (newType) => {
+  const handleProductTypeChange = useCallback(async (newType) => {
     // Prevent changing if already the same type
     if (productType === newType) {
       return;
@@ -284,7 +287,71 @@ const AddProductView = () => {
       // If error occurs, revert to previous type
       setProductType(previousType);
     }
-  };
+  }, [productType, saving, clearVariations, clearAttributes, loadAttributes, isEditMode, id, originalProductAttributes, setSelectedAttributeIds, loadAttributeTerms, setSelectedAttributeTerms, loadVariations, setVariations]);
+
+  const handleDiscountSelect = useCallback((discount) => {
+    setSelectedDiscount(discount);
+    if (formData.regular_price) {
+      const regularPrice = parseFloat(formData.regular_price);
+      if (!isNaN(regularPrice) && regularPrice > 0) {
+        const discountPercent = parseFloat(discount);
+        const salePrice = regularPrice * (1 - discountPercent / 100);
+        setFormData(prev => ({ ...prev, sale_price: salePrice.toFixed(2) }));
+      }
+    }
+  }, [formData.regular_price, setFormData]);
+
+  const handleDiscountClear = useCallback(() => {
+    setSelectedDiscount('');
+    setFormData(prev => ({ ...prev, sale_price: '' }));
+  }, [setFormData]);
+
+  const handleGenerateSKU = useCallback(async () => {
+    setGeneratingSKU(true);
+    try {
+      const generatedSKU = await generateSKU(formData.name);
+      setFormData(prev => ({ ...prev, sku: generatedSKU }));
+    } catch (error) {
+      const fallbackSKU = `PRD-${Date.now().toString(36).toUpperCase().substring(7)}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      setFormData(prev => ({ ...prev, sku: fallbackSKU }));
+    } finally {
+      setGeneratingSKU(false);
+    }
+  }, [formData.name, setFormData]);
+
+  const handleImproveShortDescription = useCallback(async () => {
+    if (!formData.short_description?.trim()) return;
+    setImprovingShortDescription(true);
+    try {
+      const improved = await improveText(formData.short_description, 'short_description', formData.name);
+      const cleaned = improved
+        .replace(/<[^>]*>/g, '')
+        .replace(/&[a-zA-Z0-9#]+;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      setFormData(prev => ({ ...prev, short_description: cleaned }));
+    } catch (error) {
+      secureLog.error('Error improving short description', error);
+    } finally {
+      setImprovingShortDescription(false);
+    }
+  }, [formData.short_description, formData.name, setFormData]);
+
+  const handleImproveDescription = useCallback(async () => {
+    if (!formData.description?.trim()) return;
+    setImprovingDescription(true);
+    try {
+      const improved = await improveText(formData.description, 'description', formData.name);
+      const cleaned = improved.replace(/<[^>]*>/g, '').trim();
+      const words = cleaned.split(/\s+/).filter(word => word.length > 0);
+      const limitedWords = words.slice(0, 400).join(' ');
+      setFormData(prev => ({ ...prev, description: limitedWords }));
+    } catch (error) {
+      secureLog.error('Error improving description', error);
+    } finally {
+      setImprovingDescription(false);
+    }
+  }, [formData.description, formData.name, setFormData]);
 
   /**
    * Validate form - wrapper using utility
@@ -413,68 +480,14 @@ const AddProductView = () => {
           onProductTypeChange={handleProductTypeChange}
           categories={categories}
           selectedDiscount={selectedDiscount}
-          onDiscountSelect={(discount) => {
-            setSelectedDiscount(discount);
-            if (formData.regular_price) {
-              const regularPrice = parseFloat(formData.regular_price);
-              if (!isNaN(regularPrice) && regularPrice > 0) {
-                const discountPercent = parseFloat(discount);
-                const salePrice = regularPrice * (1 - discountPercent / 100);
-                setFormData(prev => ({ ...prev, sale_price: salePrice.toFixed(2) }));
-              }
-            }
-          }}
-          onDiscountClear={() => {
-            setSelectedDiscount('');
-            setFormData(prev => ({ ...prev, sale_price: '' }));
-          }}
+          onDiscountSelect={handleDiscountSelect}
+          onDiscountClear={handleDiscountClear}
           generatingSKU={generatingSKU}
-          onGenerateSKU={async () => {
-            setGeneratingSKU(true);
-            try {
-              const generatedSKU = await generateSKU(formData.name);
-              setFormData(prev => ({ ...prev, sku: generatedSKU }));
-            } catch (error) {
-              const fallbackSKU = `PRD-${Date.now().toString(36).toUpperCase().substring(7)}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-              setFormData(prev => ({ ...prev, sku: fallbackSKU }));
-            } finally {
-              setGeneratingSKU(false);
-            }
-          }}
+          onGenerateSKU={handleGenerateSKU}
           improvingShortDescription={improvingShortDescription}
-          onImproveShortDescription={async () => {
-            if (!formData.short_description.trim()) return;
-            setImprovingShortDescription(true);
-            try {
-              const improved = await improveText(formData.short_description, 'short_description', formData.name);
-              const cleaned = improved
-                .replace(/<[^>]*>/g, '')
-                .replace(/&[a-zA-Z0-9#]+;/g, ' ')
-                .replace(/\s+/g, ' ')
-                .trim();
-              setFormData(prev => ({ ...prev, short_description: cleaned }));
-            } catch (error) {
-              secureLog.error('Error improving short description', error);
-            } finally {
-              setImprovingShortDescription(false);
-            }
-          }}
+          onImproveShortDescription={handleImproveShortDescription}
           improvingDescription={improvingDescription}
-          onImproveDescription={async () => {
-            if (!formData.description.trim()) return;
-            setImprovingDescription(true);
-            try {
-              const improved = await improveText(formData.description, 'description', formData.name);
-              const cleaned = improved.replace(/<[^>]*>/g, '').trim();
-              const words = cleaned.split(/\s+/).filter(word => word.length > 0);
-              const limitedWords = words.slice(0, 400).join(' ');
-              setFormData(prev => ({ ...prev, description: limitedWords }));
-            } catch (error) {
-              secureLog.error('Error improving description', error);
-            } finally {
-              setImprovingDescription(false);
-            }
-          }}
+          onImproveDescription={handleImproveDescription}
           onCalculatorClick={() => setShowCalculatorModal(true)}
           onScheduleClick={() => {
             setScheduleDates({
