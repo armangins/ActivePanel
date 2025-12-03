@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusIcon as Plus, Squares2X2Icon as Grid3x3, ListBulletIcon as List, AdjustmentsHorizontalIcon as SlidersHorizontal, ChevronDownIcon as ChevronDown } from '@heroicons/react/24/outline';
+import { PlusIcon as Plus, AdjustmentsHorizontalIcon as SlidersHorizontal, ChevronDownIcon as ChevronDown } from '@heroicons/react/24/outline';
 import FiltersModal from './FiltersModal';
+import ViewModeToggle from './ViewModeToggle';
 
 const ProductsHeader = memo(({
   displayedCount,
@@ -69,28 +70,11 @@ const ProductsHeader = memo(({
     <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} justify-between`}>
       <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-3`}>
         {/* View Mode Toggle */}
-        <div className="flex items-center bg-gray-100 rounded-lg p-1">
-          <button
-            onClick={() => onViewModeChange('grid')}
-            className={`p-2 rounded transition-colors ${viewMode === 'grid'
-                ? 'bg-white text-primary-500 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-              }`}
-            title={t('gridView')}
-          >
-            <Grid3x3 className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => onViewModeChange('list')}
-            className={`p-2 rounded transition-colors ${viewMode === 'list'
-                ? 'bg-white text-primary-500 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-              }`}
-            title={t('listView')}
-          >
-            <List className="w-5 h-5" />
-          </button>
-        </div>
+        <ViewModeToggle
+          viewMode={viewMode}
+          onViewModeChange={onViewModeChange}
+          t={t}
+        />
 
         {/* Grid Columns Selector - Only show when grid view is active */}
         {viewMode === 'grid' && (
@@ -122,8 +106,8 @@ const ProductsHeader = memo(({
                         setShowColumnsMenu(false);
                       }}
                       className={`w-full text-right px-4 py-2 text-sm transition-colors ${gridColumns === cols
-                          ? 'bg-primary-50 text-primary-600 font-medium'
-                          : 'text-gray-700 hover:bg-gray-50'
+                        ? 'bg-primary-50 text-primary-600 font-medium'
+                        : 'text-gray-700 hover:bg-gray-50'
                         } ${isRTL ? 'text-right' : 'text-left'}`}
                     >
                       {cols} {t('columns') || 'עמודות'}
@@ -140,8 +124,8 @@ const ProductsHeader = memo(({
                         setShowColumnsMenu(false);
                       }}
                       className={`w-full text-right px-4 py-2 text-sm transition-colors ${gridColumns === cols
-                          ? 'bg-primary-50 text-primary-600 font-medium'
-                          : 'text-gray-700 hover:bg-gray-50'
+                        ? 'bg-primary-50 text-primary-600 font-medium'
+                        : 'text-gray-700 hover:bg-gray-50'
                         } ${isRTL ? 'text-right' : 'text-left'}`}
                     >
                       {cols} {t('columns') || 'עמודות'}
