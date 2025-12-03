@@ -44,7 +44,7 @@ const ProductModalFooter = ({
             className={`btn-secondary flex items-center flex-row-reverse space-x-2`}
             disabled={saving}
           >
-            {isRTL ? <ChevronRight className="w-[18px] h-[18px]" /> : <ChevronLeft className="w-[18px] h-[18px]" />}
+            {isRTL ? <ChevronRightIcon className="w-[18px] h-[18px]" /> : <ChevronLeftIcon className="w-[18px] h-[18px]" />}
             <span>{t('previous')}</span>
           </button>
         )}
@@ -56,7 +56,7 @@ const ProductModalFooter = ({
             disabled={saving || !isCurrentStepValid}
           >
             <span>{t('next')}</span>
-            {isRTL ? <ChevronLeft className="w-[18px] h-[18px]" /> : <ChevronRight className="w-[18px] h-[18px]" />}
+            {isRTL ? <ChevronLeftIcon className="w-[18px] h-[18px]" /> : <ChevronRightIcon className="w-[18px] h-[18px]" />}
           </button>
         ) : (
           <button

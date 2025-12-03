@@ -7,14 +7,14 @@ import { useLanguage } from '../../../contexts/LanguageContext';
  * 
  * Second step of the product modal - product images
  */
-const ProductModalImagesStep = ({ 
-  formData, 
-  setFormData, 
-  uploadingImage, 
-  uploadError, 
-  handleImageUpload, 
-  setFeaturedImage, 
-  removeImage 
+const ProductModalImagesStep = ({
+  formData,
+  setFormData,
+  uploadingImage,
+  uploadError,
+  handleImageUpload,
+  setFeaturedImage,
+  removeImage
 }) => {
   const { t } = useLanguage();
 
@@ -28,13 +28,12 @@ const ProductModalImagesStep = ({
           <label className={`block text-sm font-medium text-gray-700 mb-2 text-right`}>
             {t('addImage')}
           </label>
-          <div className={`border-2 border-dashed rounded-lg p-6 text-right ${
-            uploadError 
-              ? 'border-orange-300 bg-orange-50' 
-              : uploadingImage 
-              ? 'border-primary-300 bg-primary-50' 
-              : 'border-gray-300'
-          }`}>
+          <div className={`border-2 border-dashed rounded-lg p-6 text-right ${uploadError
+              ? 'border-orange-300 bg-orange-50'
+              : uploadingImage
+                ? 'border-primary-300 bg-primary-50'
+                : 'border-gray-300'
+            }`}>
             <input
               type="file"
               accept="image/*"
@@ -99,7 +98,7 @@ const ProductModalImagesStep = ({
                     className="opacity-0 group-hover:opacity-100 text-white bg-orange-600 p-2 rounded"
                     title={t('removeImage')}
                   >
-                    <Trash className="w-4 h-4" />
+                    <TrashIcon className="w-4 h-4" />
                   </button>
                 </div>
               </div>

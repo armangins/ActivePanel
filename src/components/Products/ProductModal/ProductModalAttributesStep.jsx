@@ -102,7 +102,7 @@ const ProductModalAttributesStep = ({
                     onClick={() => removeAttribute(index)}
                     className="text-orange-600 hover:text-orange-700 p-2"
                   >
-                    <Trash className="w-[18px] h-[18px]" />
+                    <TrashIcon className="w-[18px] h-[18px]" />
                   </button>
                 </div>
               </div>
@@ -159,14 +159,14 @@ const ProductModalAttributesStep = ({
         {formData.type === 'variable' ? (
           <div>
             <p className="text-gray-600 mb-4">
-              {isRTL 
+              {isRTL
                 ? 'וריאציות יווצרו אוטומטית על בסיס התכונות שהוגדרו. שמור את המוצר כדי ליצור וריאציות.'
                 : 'Variations will be created automatically based on defined attributes. Save the product to generate variations.'}
             </p>
             {formData.attributes.filter(attr => attr.variation).length === 0 && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <p className="text-yellow-800 text-sm">
-                  {isRTL 
+                  {isRTL
                     ? 'אנא הגדר תכונות עם אפשרות "שימוש בוריאציות" בשלב התכונות כדי ליצור וריאציות.'
                     : 'Please define attributes with "Used for Variations" enabled in the Attributes step to create variations.'}
                 </p>
@@ -176,7 +176,7 @@ const ProductModalAttributesStep = ({
         ) : (
           <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
             <p className="text-primary-800">
-              {isRTL 
+              {isRTL
                 ? 'וריאציות זמינות רק עבור מוצרים משתנים. שנה את סוג המוצר ל"משתנה" בשלב הכללי כדי להשתמש בוריאציות.'
                 : 'Variations are only available for variable products. Change the product type to "Variable" in the General step to use variations.'}
             </p>
