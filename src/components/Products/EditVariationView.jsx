@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowRightIcon, DocumentArrowDownIcon as FloppyDiskIcon, XMarkIcon as X } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { variationsAPI, attributesAPI, productsAPI } from '../../services/woocommerce';
-import { Card, Breadcrumbs } from '../ui';
+import { Card, Breadcrumbs, Button } from '../ui';
+import { Input } from '../ui/inputs';
 
 const EditVariationView = () => {
   const { t, isRTL, formatCurrency } = useLanguage();
@@ -22,7 +23,7 @@ const EditVariationView = () => {
     attributes: {}, // { attributeId: termId }
   });
   const [errors, setErrors] = useState({});
-  
+
   // Attributes state
   const [attributes, setAttributes] = useState([]);
   const [attributeTerms, setAttributeTerms] = useState({}); // { attributeId: terms[] }
@@ -50,7 +51,7 @@ const EditVariationView = () => {
   const loadAttributeTerms = async (attributeId) => {
     // Only load terms if not already loaded
     if (attributeTerms[attributeId] !== undefined) return;
-    
+
     try {
       const terms = await attributesAPI.getTerms(attributeId);
       setAttributeTerms(prev => ({
@@ -70,7 +71,7 @@ const EditVariationView = () => {
     try {
       const variationData = await variationsAPI.getById(productId, varId);
       setVariation(variationData);
-      
+
       // Initialize attributes from variation
       const attributesMap = {};
       if (variationData.attributes && variationData.attributes.length > 0) {
@@ -84,11 +85,11 @@ const EditVariationView = () => {
             attributesMap[attr.id] = matchingTerm.id;
           }
         });
-        
+
         // Wait for all terms to load
         await Promise.all(termPromises);
       }
-      
+
       setFormData({
         regular_price: variationData.regular_price || '',
         sale_price: variationData.sale_price || '',
@@ -115,7 +116,7 @@ const EditVariationView = () => {
           const attribute = attributes.find(attr => attr.id === parseInt(attributeId));
           const termId = formData.attributes[attributeId];
           const term = attributeTerms[attributeId]?.find(t => t.id === termId);
-          
+
           return {
             id: parseInt(attributeId),
             name: attribute.name,
@@ -146,19 +147,6 @@ const EditVariationView = () => {
     }
   };
 
-  const toggleAttribute = async (attributeId) => {
-    // Load terms when attribute is selected
-    await loadAttributeTerms(attributeId);
-    
-    setFormData(prev => ({
-      ...prev,
-      attributes: {
-        ...prev.attributes,
-        [attributeId]: prev.attributes[attributeId] ? null : null // Will be set when term is selected
-      }
-    }));
-  };
-
   const toggleAttributeTerm = (attributeId, termId) => {
     setFormData(prev => ({
       ...prev,
@@ -169,9 +157,7 @@ const EditVariationView = () => {
     }));
   };
 
-  const isAttributeSelected = (attributeId) => {
-    return formData.attributes[attributeId] !== undefined && formData.attributes[attributeId] !== null;
-  };
+
 
   const isTermSelected = (attributeId, termId) => {
     return formData.attributes[attributeId] === termId;
@@ -222,13 +208,14 @@ const EditVariationView = () => {
             <p className="text-sm text-gray-600 mt-1 text-right">{attributesText}</p>
           )}
         </div>
-        <button
+        <Button
+          variant="ghost"
           onClick={() => navigate(`/products/edit/${id}`)}
-          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors flex-row-reverse"
+          className="flex items-center gap-2 text-gray-700 hover:text-primary-600 hover:bg-gray-100 flex-row-reverse"
         >
-          <ArrowRight className={`w-[18px] h-[18px] ${isRTL ? 'rotate-180' : ''}`} />
+          <ArrowRightIcon className={`w-[18px] h-[18px] ${isRTL ? 'rotate-180' : ''}`} />
           <span>{t('back') || 'חזור'}</span>
-        </button>
+        </Button>
       </div>
 
       <div className="max-w-2xl mx-auto">
@@ -251,53 +238,39 @@ const EditVariationView = () => {
             )}
 
             {/* Regular Price */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 text-right">
-                {t('regularPrice')} <span className="text-orange-500">*</span>
-              </label>
-              <input
-                type="number"
-                value={formData.regular_price}
-                onChange={(e) => setFormData(prev => ({ ...prev, regular_price: e.target.value }))}
-                placeholder="0.00"
-                className="input-field text-right w-full"
-                step="0.01"
-                min="0"
-                dir="rtl"
-              />
-            </div>
+            <Input
+              label={t('regularPrice')}
+              required
+              type="number"
+              value={formData.regular_price}
+              onChange={(e) => setFormData(prev => ({ ...prev, regular_price: e.target.value }))}
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+              className="text-right"
+            />
 
             {/* Sale Price */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 text-right">
-                {t('salePrice')}
-              </label>
-              <input
-                type="number"
-                value={formData.sale_price}
-                onChange={(e) => setFormData(prev => ({ ...prev, sale_price: e.target.value }))}
-                placeholder="0.00"
-                className="input-field text-right w-full"
-                step="0.01"
-                min="0"
-                dir="rtl"
-              />
-            </div>
+            <Input
+              label={t('salePrice')}
+              type="number"
+              value={formData.sale_price}
+              onChange={(e) => setFormData(prev => ({ ...prev, sale_price: e.target.value }))}
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+              className="text-right"
+            />
 
             {/* SKU */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 text-right">
-                {t('sku')}
-              </label>
-              <input
-                type="text"
-                value={formData.sku}
-                onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
-                placeholder={t('sku') || 'SKU'}
-                className="input-field text-right w-full"
-                dir="rtl"
-              />
-            </div>
+            <Input
+              label={t('sku')}
+              type="text"
+              value={formData.sku}
+              onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
+              placeholder={t('sku') || 'SKU'}
+              className="text-right"
+            />
 
             {/* Stock Status */}
             <div>
@@ -317,27 +290,22 @@ const EditVariationView = () => {
             </div>
 
             {/* Stock Quantity */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 text-right">
-                {t('stockQuantity')}
-              </label>
-              <input
-                type="number"
-                value={formData.stock_quantity}
-                onChange={(e) => setFormData(prev => ({ ...prev, stock_quantity: e.target.value }))}
-                placeholder="0"
-                className="input-field text-right w-full"
-                min="0"
-                dir="rtl"
-              />
-            </div>
+            <Input
+              label={t('stockQuantity')}
+              type="number"
+              value={formData.stock_quantity}
+              onChange={(e) => setFormData(prev => ({ ...prev, stock_quantity: e.target.value }))}
+              placeholder="0"
+              min="0"
+              className="text-right"
+            />
 
             {/* Attributes Section */}
             <div className="border-t border-gray-200 pt-6">
               <label className="block text-sm font-medium text-gray-700 mb-4 text-right">
                 {t('attributes') || 'תכונות'}
               </label>
-              
+
               {loadingAttributes ? (
                 <div className="text-right py-4">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500 inline-block"></div>
@@ -352,7 +320,7 @@ const EditVariationView = () => {
                     const terms = attributeTerms[attribute.id];
                     const isLoadingTerms = terms === undefined;
                     const selectedTermId = formData.attributes[attribute.id];
-                    
+
                     return (
                       <div key={attribute.id} className="border-b border-gray-200 pb-4 last:border-0">
                         <label className="block text-sm font-medium text-gray-700 mb-3 text-right">
@@ -374,11 +342,10 @@ const EditVariationView = () => {
                                 key={term.id}
                                 type="button"
                                 onClick={() => toggleAttributeTerm(attribute.id, term.id)}
-                                className={`px-4 py-2 rounded-lg transition-colors text-sm text-center ${
-                                  isTermSelected(attribute.id, term.id)
+                                className={`px-4 py-2 rounded-lg transition-colors text-sm text-center ${isTermSelected(attribute.id, term.id)
                                     ? 'bg-primary-500 text-white hover:bg-primary-600'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
+                                  }`}
                               >
                                 {term.name}
                                 {isTermSelected(attribute.id, term.id) && (
@@ -404,20 +371,23 @@ const EditVariationView = () => {
 
             {/* Action Buttons */}
             <div className="flex gap-3 flex-row-reverse pt-4">
-              <button
+              <Button
+                variant="primary"
                 onClick={handleSave}
                 disabled={saving}
-                className="btn-primary flex items-center justify-center gap-2 px-6 py-2"
+                isLoading={saving}
+                className="px-6"
+                icon={FloppyDiskIcon}
               >
-                <Save className="w-5 h-5" />
                 {t('save')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => navigate(`/products/edit/${id}`)}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center"
+                className="px-6"
               >
                 {t('cancel') || 'ביטול'}
-              </button>
+              </Button>
             </div>
           </div>
         </Card>
