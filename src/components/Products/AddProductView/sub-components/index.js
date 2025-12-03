@@ -23,4 +23,4 @@ export { default as VariationForm } from './VariationForm';
 export { default as CreateVariationModal } from './CreateVariationModal';
 export { default as EditVariationModal } from './EditVariationModal';
 export { default as ProductDetailsPanel } from './ProductDetailsPanel';
-
+export { default as ProductSidePanel } from './ProductSidePanel';
