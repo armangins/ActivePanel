@@ -62,14 +62,16 @@ const CreateVariationModal = ({
             <h3 className="text-xl font-semibold text-gray-800 text-right">
               {t('addVariation') || 'הוסף וריאציה'}
             </h3>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => !creating && onClose()}
               className="text-gray-400 hover:text-gray-600"
               disabled={creating}
               aria-label={t('close') || 'סגור'}
             >
               <X className="w-6 h-6" />
-            </button>
+            </Button>
           </div>
 
           <VariationForm

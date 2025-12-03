@@ -60,14 +60,16 @@ const EditVariationModal = ({
             <h3 className="text-xl font-semibold text-gray-800 text-right">
               {t('editVariation') || 'ערוך וריאציה'}
             </h3>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => !updating && onClose()}
               className="text-gray-400 hover:text-gray-600"
               disabled={updating}
               aria-label={t('close') || 'סגור'}
             >
               <X className="w-6 h-6" />
-            </button>
+            </Button>
           </div>
 
           <VariationForm

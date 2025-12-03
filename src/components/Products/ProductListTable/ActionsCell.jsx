@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { TrashIcon as Trash2, PencilIcon as Edit, EllipsisVerticalIcon } from '@heroicons/react/24/outline';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import { Button } from '../../ui';
 
 /**
  * ActionsCell Component
@@ -66,16 +67,18 @@ const ActionsCell = ({
   return (
     <div className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
       <div className="relative flex justify-center" ref={menuRef}>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={(e) => {
             e.stopPropagation();
             onActionMenuToggle(product.id);
           }}
-          className="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors"
+          className="text-gray-400 hover:text-gray-600 h-8 w-8"
           aria-label={t('actions')}
         >
           <EllipsisVerticalIcon className="w-[18px] h-[18px]" />
-        </button>
+        </Button>
 
         {/* Action Menu Dropdown */}
         {isActionMenuOpen && (
@@ -85,20 +88,22 @@ const ActionsCell = ({
               onClick={() => onActionMenuToggle(product.id)}
             />
             <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
-              <button
+              <Button
+                variant="ghost"
                 onClick={handleEdit}
-                className={`w-full ${'text-right'} px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 ${'flex-row-reverse'}`}
+                className={`w-full justify-end px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 flex-row-reverse h-auto rounded-none first:rounded-t-lg`}
               >
                 <Edit className="w-4 h-4" />
                 {t('editProduct')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={handleDeleteClick}
-                className={`w-full ${'text-right'} px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 flex items-center gap-2 ${'flex-row-reverse'}`}
+                className={`w-full justify-end px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 flex items-center gap-2 flex-row-reverse h-auto rounded-none last:rounded-b-lg`}
               >
                 <Trash2 className="w-4 h-4" />
                 {t('removeProduct') || t('deleteProduct')}
-              </button>
+              </Button>
             </div>
           </>
         )}

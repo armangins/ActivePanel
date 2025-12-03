@@ -1,4 +1,5 @@
 import { XMarkIcon as X } from '@heroicons/react/24/outline';
+import { Button } from '../../ui';
 
 /**
  * DeleteConfirmModal Component
@@ -41,13 +42,15 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, productName, isRTL, t 
             <h3 className="text-lg font-semibold text-gray-900">
               {t('confirmDelete') || 'Confirm Delete'}
             </h3>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600"
               aria-label={t('close') || 'Close'}
             >
               <X className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
 
           {/* Content */}
@@ -64,21 +67,18 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, productName, isRTL, t 
 
           {/* Actions */}
           <div className={`flex gap-3 ${'flex-row-reverse'} justify-end`}>
-            <button
+            <Button
+              variant="secondary"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
             >
               {t('cancel') || 'Cancel'}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               onClick={handleConfirm}
-              className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
-              style={{ backgroundColor: '#4560FF' }}
-              onMouseEnter={(e) => e.target.style.opacity = '0.9'}
-              onMouseLeave={(e) => e.target.style.opacity = '1'}
             >
               {t('yes') || 'Yes'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

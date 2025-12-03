@@ -1,4 +1,5 @@
 import { ChevronUpIcon as ChevronUp, ChevronDownIcon as ChevronDown, ArrowsUpDownIcon as ArrowUpDown } from '@heroicons/react/24/outline';
+import { Button } from '../../ui';
 
 /**
  * ProductListHeader Component
@@ -17,7 +18,7 @@ const ProductListHeader = ({ products, isRTL, t, sortField, sortDirection, onSor
     if (sortField !== field) {
       return <ArrowUpDown className="w-4 h-4 text-gray-400" />;
     }
-    return sortDirection === 'asc' 
+    return sortDirection === 'asc'
       ? <ChevronUp className="w-4 h-4 text-primary-500" />
       : <ChevronDown className="w-4 h-4 text-primary-500" />;
   };
@@ -27,15 +28,15 @@ const ProductListHeader = ({ products, isRTL, t, sortField, sortDirection, onSor
       <tr>
         {/* Products Column */}
         <th className="py-3 px-4 text-sm font-medium text-gray-700 text-right">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => onSort && onSort('name')}
-            className={`flex items-center justify-end gap-2 flex-row-reverse w-full hover:text-primary-500 transition-colors cursor-pointer ${
-              sortField === 'name' ? 'text-primary-500' : ''
-            }`}
+            className={`flex items-center justify-end gap-2 flex-row-reverse w-full hover:text-primary-500 transition-colors cursor-pointer p-0 h-auto hover:bg-transparent ${sortField === 'name' ? 'text-primary-500' : ''
+              }`}
           >
             {t('products')}
             {getSortIcon('name')}
-          </button>
+          </Button>
         </th>
 
         {/* Category Column */}
@@ -47,15 +48,15 @@ const ProductListHeader = ({ products, isRTL, t, sortField, sortDirection, onSor
 
         {/* Price Column */}
         <th className="py-3 px-4 text-sm font-medium text-gray-700 text-right">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => onSort && onSort('price')}
-            className={`flex items-center justify-end gap-2 flex-row-reverse w-full hover:text-primary-500 transition-colors cursor-pointer ${
-              sortField === 'price' ? 'text-primary-500' : ''
-            }`}
+            className={`flex items-center justify-end gap-2 flex-row-reverse w-full hover:text-primary-500 transition-colors cursor-pointer p-0 h-auto hover:bg-transparent ${sortField === 'price' ? 'text-primary-500' : ''
+              }`}
           >
             {t('price')}
             {getSortIcon('price')}
-          </button>
+          </Button>
         </th>
 
         {/* Sale Price Column */}

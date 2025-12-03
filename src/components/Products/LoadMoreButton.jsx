@@ -1,9 +1,11 @@
+import { Button } from '../ui';
+
 const LoadMoreButton = ({ onLoadMore, t }) => {
   return (
     <div className="flex justify-center py-8">
-      <button onClick={onLoadMore} className="btn-secondary">
+      <Button onClick={onLoadMore} variant="secondary">
         {t('loadMore')}
-      </button>
+      </Button>
     </div>
   );
 };

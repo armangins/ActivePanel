@@ -1,5 +1,6 @@
 import { CalculatorIcon as Calculator, CalendarIcon as Calendar } from '@heroicons/react/24/outline';
 import { Input } from '../../../ui/inputs';
+import { Button } from '../../../ui';
 import { useLanguage } from '../../../../contexts/LanguageContext';
 
 /**
@@ -34,18 +35,19 @@ const PriceFields = ({
               min="0"
               className="mr-4 pr-7"
               required
-               suffix="₪"
+              suffix="₪"
             />
           </div>
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onCalculatorClick}
-            className={`px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 whitespace-nowrap ${isRTL ? 'flex-row-reverse' : 'flex-row'} self-end`}
+            className={`flex items-center justify-center gap-2 whitespace-nowrap ${isRTL ? 'flex-row-reverse' : 'flex-row'} self-end`}
             title={t('smartPricing') || 'מחיר חכם'}
           >
             <Calculator className="w-[18px] h-[18px]" />
             <span className="hidden sm:inline text-center">{t('smartPricing') || 'מחיר חכם'}</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -65,15 +67,16 @@ const PriceFields = ({
               suffix="₪"
             />
           </div>
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onScheduleClick}
-            className={`px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 whitespace-nowrap ${isRTL ? 'flex-row-reverse' : 'flex-row'} self-end`}
+            className={`flex items-center justify-center gap-2 whitespace-nowrap ${isRTL ? 'flex-row-reverse' : 'flex-row'} self-end`}
             title={t('schedule')}
           >
             <Calendar className="w-[18px] h-[18px]" />
             <span className="hidden sm:inline text-center">{t('schedule')}</span>
-          </button>
+          </Button>
         </div>
       </div>
     </div>

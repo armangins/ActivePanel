@@ -1,4 +1,5 @@
 import { useLanguage } from '../../../../contexts/LanguageContext';
+import { Button } from '../../../ui';
 
 /**
  * DiscountSelector Component
@@ -17,27 +18,25 @@ const DiscountSelector = ({ selectedDiscount, regularPrice, onDiscountSelect, on
       </label>
       <div className="flex gap-2 flex-wrap flex-row">
         {discountOptions.map((discount) => (
-          <button
+          <Button
             key={discount}
             type="button"
             onClick={() => onDiscountSelect(discount.toString())}
-            className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
-              selectedDiscount === discount.toString()
-                ? 'bg-primary-500 text-white hover:bg-primary-600'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            variant={selectedDiscount === discount.toString() ? 'primary' : 'secondary'}
+            className="px-4 py-2"
           >
             {discount}%
-          </button>
+          </Button>
         ))}
         {selectedDiscount && (
-          <button
+          <Button
             type="button"
             onClick={onClear}
-            className="px-4 py-2 rounded-lg transition-colors text-sm font-medium bg-orange-100 text-orange-700 hover:bg-orange-200"
+            variant="ghost"
+            className="bg-orange-100 text-orange-700 hover:bg-orange-200"
           >
             {t('clear') || 'נקה'}
-          </button>
+          </Button>
         )}
       </div>
     </div>

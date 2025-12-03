@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { XMarkIcon as X, ArrowPathIcon as Loader, SparklesIcon as Sparkles } from '@heroicons/react/24/outline';
 import { Input } from '../../../ui/inputs';
+import { Button } from '../../../ui';
 import { ImageUpload } from './';
 import { useLanguage } from '../../../../contexts/LanguageContext';
 
@@ -62,9 +63,9 @@ const VariationForm = ({
             {selectedAttributeIds.map(attributeId => {
               const attribute = attributes.find(attr => attr.id === attributeId);
               const terms = attributeTerms[attributeId];
-              
+
               if (!attribute || !terms || terms.length === 0) return null;
-              
+
               return (
                 <div key={attributeId}>
                   <label className="block text-sm font-medium text-gray-700 mb-2 text-right">
@@ -141,15 +142,17 @@ const VariationForm = ({
               containerClassName="flex-1"
               disabled={disabled}
             />
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="icon"
               onClick={() => onGenerateSKU?.()}
               disabled={disabled || generatingSKU}
-              className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 w-auto"
               title={t('createWithAI') || 'צור בעזרת AI'}
             >
               {generatingSKU ? <Loader className="w-[18px] h-[18px] animate-spin" /> : <Sparkles className="w-[18px] h-[18px]" />}
-            </button>
+            </Button>
           </div>
         </div>
         <div>
