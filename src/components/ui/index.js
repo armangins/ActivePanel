@@ -34,3 +34,6 @@ export { default as UserAvatar } from './common/UserAvatar';
 export { default as UploadIcon } from './common/UploadIcon';
 export { default as Breadcrumbs } from './common/Breadcrumbs';
 
+// Buttons
+export { default as Button } from './buttons/Button';
+

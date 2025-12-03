@@ -4,7 +4,7 @@ import { DocumentArrowDownIcon as Save, PlusIcon as Plus, CalculatorIcon as Calc
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { productsAPI, variationsAPI } from '../../../services/woocommerce';
 import { generateSKU, improveText } from '../../../services/gemini';
-import { Breadcrumbs } from '../../ui';
+import { Breadcrumbs, Button } from '../../ui';
 import { PageTitle } from './sub-components';
 import CalculatorModal from '../CalculatorModal';
 import { secureLog } from '../../../utils/logger';
@@ -28,10 +28,10 @@ const AddProductView = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  
+
   // Dynamically determine if we're in edit mode based on URL parameter
   const isEditMode = Boolean(id);
-  
+
   // UI State (modals, etc.)
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduleDates, setScheduleDates] = useState({
@@ -47,16 +47,16 @@ const AddProductView = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Form State Management Hook
-  const { 
-    formData, 
-    errors, 
-    saving, 
-    setFormData, 
-    updateFormData, 
-    updateField, 
-    setErrors, 
-    clearErrors, 
-    setSaving 
+  const {
+    formData,
+    errors,
+    saving,
+    setFormData,
+    updateFormData,
+    updateField,
+    setErrors,
+    clearErrors,
+    setSaving
   } = useProductForm();
 
   // Attributes Hook
@@ -153,7 +153,7 @@ const AddProductView = () => {
       updateField('images', updatedImages);
       clearErrors();
     });
-    
+
     if (!result.success && result.error) {
       setErrors(prev => ({ ...prev, images: result.error }));
     }
@@ -187,7 +187,7 @@ const AddProductView = () => {
    */
   const handleEditVariation = async (variation) => {
     setEditingVariationId(variation.id);
-    
+
     // Initialize attributes from variation
     const attributesMap = {};
     if (variation.attributes && variation.attributes.length > 0) {
@@ -202,7 +202,7 @@ const AddProductView = () => {
         }
       }
     }
-    
+
     setVariationFormData({
       attributes: attributesMap,
       regular_price: variation.regular_price || '',
@@ -211,7 +211,7 @@ const AddProductView = () => {
       stock_quantity: variation.stock_quantity?.toString() || '',
       image: variation.image || null,
     });
-    
+
     setShowEditVariationModal(true);
   };
 
@@ -237,16 +237,16 @@ const AddProductView = () => {
     if (productType === newType) {
       return;
     }
-    
+
     // Prevent changing during save
     if (saving) {
       return;
     }
-    
+
     // Update product type immediately for instant UI feedback
     const previousType = productType;
     setProductType(newType);
-    
+
     try {
       if (newType === 'simple') {
         // Clear variations and attributes when switching to simple
@@ -255,12 +255,12 @@ const AddProductView = () => {
       } else if (newType === 'variable') {
         // Load attributes when switching to variable
         await loadAttributes(newType);
-        
+
         // If in edit mode and product had attributes, restore them
         if (isEditMode && id && originalProductAttributes.length > 0) {
           const selectedIds = originalProductAttributes.map(attr => attr.id);
           setSelectedAttributeIds(selectedIds);
-          
+
           // Load terms and map them
           const termsMap = await mapProductAttributesToTerms(
             originalProductAttributes,
@@ -271,7 +271,7 @@ const AddProductView = () => {
           );
           setSelectedAttributeTerms(termsMap);
         }
-        
+
         // Load variations if in edit mode and product exists
         if (isEditMode && id) {
           loadVariations(id);
@@ -320,7 +320,7 @@ const AddProductView = () => {
       const productData = buildProductDataForSave(status);
 
       let createdProductId = id;
-      
+
       // Dynamically choose create or update based on edit mode
       if (isEditMode && id) {
         await productsAPI.update(id, productData);
@@ -329,43 +329,43 @@ const AddProductView = () => {
         const newProduct = await productsAPI.create(productData);
         createdProductId = newProduct.id;
       }
-      
+
       // If there are pending variations, create them now
       if (pendingVariations.length > 0 && createdProductId && productType === 'variable') {
         try {
           // Small delay to ensure product is fully saved in WooCommerce
           await new Promise(resolve => setTimeout(resolve, 500));
-          
+
           // Create all pending variations
           const variationPromises = pendingVariations.map(async (pendingVariation) => {
             const cleanedData = cleanVariationData(pendingVariation);
             return await variationsAPI.create(createdProductId, cleanedData);
           });
-          
+
           await Promise.all(variationPromises);
-          
+
           // Clear pending variations
           clearPendingVariations();
-          
+
           // Reload variations to show them in the UI
           await loadVariations(createdProductId);
         } catch (variationError) {
           secureLog.error('Error creating variations', variationError);
-          const errorMessage = variationError.response?.data?.message || 
-                              variationError.response?.data?.data?.message ||
-                              variationError.message || 
-                              t('failedToCreateVariations') || 
-                              'נכשל ביצירת וריאציות';
-          
-          setErrors(prev => ({ 
-            ...prev, 
+          const errorMessage = variationError.response?.data?.message ||
+            variationError.response?.data?.data?.message ||
+            variationError.message ||
+            t('failedToCreateVariations') ||
+            'נכשל ביצירת וריאציות';
+
+          setErrors(prev => ({
+            ...prev,
             variations: errorMessage
           }));
-          
+
           alert(t('error') + ': ' + errorMessage);
         }
       }
-      
+
       // Show success modal
       setShowSuccessModal(true);
     } catch (error) {
@@ -392,13 +392,14 @@ const AddProductView = () => {
       <PageTitle
         title={isEditMode ? t('editProduct') : t('addProduct')}
         actions={
-          <button
+          <Button
+            variant="ghost"
             onClick={() => navigate('/calculator')}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors flex-row-reverse"
+            className="flex items-center gap-2 text-gray-700 hover:text-primary-600 hover:bg-gray-100"
+            icon={Calculator}
           >
-            <Calculator className="w-[18px] h-[18px]" />
-            <span>{t('calculator') || 'מחשבון'}</span>
-          </button>
+            {t('calculator') || 'מחשבון'}
+          </Button>
         }
       />
 
@@ -571,29 +572,16 @@ const AddProductView = () => {
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3">
-            <button
+            <Button
+              variant="primary"
               onClick={() => handleSave('publish')}
               disabled={saving || loadingProduct}
-              className="btn-primary w-full flex items-center justify-center gap-2 text-center disabled:opacity-50 disabled:cursor-not-allowed"
+              isLoading={saving}
+              className="w-full"
+              icon={isEditMode ? Save : Plus}
             >
-              {saving ? (
-                <Loader className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  {isEditMode ? (
-                    <>
-                      <Save className="w-5 h-5" />
-                      {t('updateProduct')}
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-5 h-5" />
-                      {t('addProduct')}
-                    </>
-                  )}
-                </>
-              )}
-            </button>
+              {isEditMode ? t('updateProduct') : t('addProduct')}
+            </Button>
           </div>
 
           {errors.submit && (

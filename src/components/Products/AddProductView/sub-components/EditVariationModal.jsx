@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { XMarkIcon as X, DocumentArrowDownIcon as Save, ArrowPathIcon as Loader } from '@heroicons/react/24/outline';
-import { Card } from '../../../ui';
+import { Card, Button } from '../../../ui';
 import VariationForm from './VariationForm';
 import { useLanguage } from '../../../../contexts/LanguageContext';
 
@@ -52,7 +52,7 @@ const EditVariationModal = ({
         className="fixed inset-0 bg-black bg-opacity-50 z-[100]"
         onClick={() => !updating && onClose()}
       />
-      
+
       {/* Modal */}
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4" dir={isRTL ? 'rtl' : 'ltr'}>
         <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
@@ -84,27 +84,24 @@ const EditVariationModal = ({
 
           {/* Action Buttons */}
           <div className={`flex gap-3 pt-4 border-t border-gray-200 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
-            <button
+            <Button
+              variant="primary"
               onClick={handleSubmit}
               disabled={updating}
-              className="btn-primary flex items-center justify-center gap-2 px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              isLoading={updating}
+              icon={Save}
+              className="px-6"
             >
-              {updating ? (
-                <Loader className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  <Save className="w-5 h-5" />
-                  {t('save')}
-                </>
-              )}
-            </button>
-            <button
+              {t('save')}
+            </Button>
+            <Button
+              variant="secondary"
               onClick={onClose}
               disabled={updating}
-              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6"
             >
               {t('cancel') || 'ביטול'}
-            </button>
+            </Button>
           </div>
         </Card>
       </div>

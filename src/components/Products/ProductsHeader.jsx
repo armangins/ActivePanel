@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PlusIcon as Plus, AdjustmentsHorizontalIcon as SlidersHorizontal } from '@heroicons/react/24/outline';
+import { Button } from '../ui';
 import FiltersModal from './FiltersModal';
 import ViewModeToggle from './ViewModeToggle';
 import GridColumnSelector from './GridColumnSelector/GridColumnSelector';
@@ -80,10 +81,11 @@ const ProductsHeader = memo(({
 
         {/* Filters Button with Modal */}
         <div className="relative">
-          <button
+          <Button
             ref={buttonRef}
+            variant="secondary"
             onClick={onToggleFilters}
-            className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 text-gray-700 hover:text-primary-500 px-4 py-2 rounded-lg border border-gray-300 hover:border-primary-300 hover:bg-primary-50 transition-colors`}
+            className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2`}
           >
             <SlidersHorizontal className="w-[18px] h-[18px]" />
             <span>{t('filters')}</span>
@@ -92,7 +94,7 @@ const ProductsHeader = memo(({
                 {activeFilterCount}
               </span>
             )}
-          </button>
+          </Button>
 
           {/* Filters Modal */}
           {showFilters && (
@@ -131,7 +133,8 @@ const ProductsHeader = memo(({
         </div>
 
         {/* Create Product Button */}
-        <button
+        <Button
+          variant="primary"
           onClick={() => {
             if (onCreateProduct) {
               onCreateProduct();
@@ -139,11 +142,11 @@ const ProductsHeader = memo(({
               navigate('/products/add');
             }
           }}
-          className={`btn-primary flex items-center justify-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 md:gap-2 px-3 md:px-4 py-2`}
+          className={`flex items-center justify-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 md:gap-2 px-3 md:px-4 py-2`}
         >
           <Plus className="w-4 h-4 md:w-5 md:h-5" />
           <span className="hidden md:inline">{t('createProduct')}</span>
-        </button>
+        </Button>
       </div>
       <div>
         <h1 className="text-3xl font-bold text-gray-900">{t('products')}</h1>
