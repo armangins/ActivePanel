@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusIcon as Plus, AdjustmentsHorizontalIcon as SlidersHorizontal, ChevronDownIcon as ChevronDown } from '@heroicons/react/24/outline';
+import { PlusIcon as Plus, AdjustmentsHorizontalIcon as SlidersHorizontal } from '@heroicons/react/24/outline';
 import FiltersModal from './FiltersModal';
 import ViewModeToggle from './ViewModeToggle';
+import GridColumnSelector from './GridColumnSelector/GridColumnSelector';
 
 const ProductsHeader = memo(({
   displayedCount,
@@ -33,8 +34,6 @@ const ProductsHeader = memo(({
   const navigate = useNavigate();
   const buttonRef = useRef(null);
   const modalRef = useRef(null);
-  const [showColumnsMenu, setShowColumnsMenu] = useState(false);
-  const columnsMenuRef = useRef(null);
 
   // Close modal when clicking outside
   useEffect(() => {
@@ -48,23 +47,16 @@ const ProductsHeader = memo(({
       ) {
         onToggleFilters();
       }
-      if (
-        showColumnsMenu &&
-        columnsMenuRef.current &&
-        !columnsMenuRef.current.contains(event.target)
-      ) {
-        setShowColumnsMenu(false);
-      }
     };
 
-    if (showFilters || showColumnsMenu) {
+    if (showFilters) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showFilters, showColumnsMenu, onToggleFilters]);
+  }, [showFilters, onToggleFilters]);
 
   return (
     <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} justify-between`}>
@@ -78,63 +70,12 @@ const ProductsHeader = memo(({
 
         {/* Grid Columns Selector - Only show when grid view is active */}
         {viewMode === 'grid' && (
-          <div className="relative" ref={columnsMenuRef}>
-            <button
-              onClick={() => setShowColumnsMenu(!showColumnsMenu)}
-              className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 px-3 py-2 text-sm text-gray-700 hover:text-primary-500 rounded-lg border border-gray-300 hover:border-primary-300 hover:bg-primary-50 transition-colors`}
-            >
-              <span>
-                {t('columns') || 'עמודות'}:{' '}
-                {/* On mobile, show effective columns (1 or 2) if desktop value is selected */}
-                <span className="md:hidden">
-                  {[1, 2].includes(gridColumns) ? gridColumns : 1}
-                </span>
-                <span className="hidden md:inline">{gridColumns}</span>
-              </span>
-              <ChevronDown className={`w-4 h-4 ${showColumnsMenu ? 'rotate-180' : ''}`} />
-            </button>
-
-            {showColumnsMenu && (
-              <>
-                {/* Mobile options: 1 or 2 columns */}
-                <div className={`md:hidden absolute ${isRTL ? 'right-0' : 'left-0'} top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 min-w-[120px]`}>
-                  {[1, 2].map((cols) => (
-                    <button
-                      key={cols}
-                      onClick={() => {
-                        onGridColumnsChange(cols);
-                        setShowColumnsMenu(false);
-                      }}
-                      className={`w-full text-right px-4 py-2 text-sm transition-colors ${gridColumns === cols
-                        ? 'bg-primary-50 text-primary-600 font-medium'
-                        : 'text-gray-700 hover:bg-gray-50'
-                        } ${isRTL ? 'text-right' : 'text-left'}`}
-                    >
-                      {cols} {t('columns') || 'עמודות'}
-                    </button>
-                  ))}
-                </div>
-                {/* Desktop options: 4, 5, 6 columns */}
-                <div className={`hidden md:block absolute ${isRTL ? 'right-0' : 'left-0'} top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 min-w-[120px]`}>
-                  {[4, 5, 6].map((cols) => (
-                    <button
-                      key={cols}
-                      onClick={() => {
-                        onGridColumnsChange(cols);
-                        setShowColumnsMenu(false);
-                      }}
-                      className={`w-full text-right px-4 py-2 text-sm transition-colors ${gridColumns === cols
-                        ? 'bg-primary-50 text-primary-600 font-medium'
-                        : 'text-gray-700 hover:bg-gray-50'
-                        } ${isRTL ? 'text-right' : 'text-left'}`}
-                    >
-                      {cols} {t('columns') || 'עמודות'}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          <GridColumnSelector
+            gridColumns={gridColumns}
+            onGridColumnsChange={onGridColumnsChange}
+            isRTL={isRTL}
+            t={t}
+          />
         )}
 
         {/* Filters Button with Modal */}
