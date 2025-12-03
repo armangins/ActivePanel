@@ -1,3 +1,5 @@
+import { Button } from '../ui';
+
 const ProductFilters = ({
   hasActiveFilters,
   onClearFilters,
@@ -9,12 +11,13 @@ const ProductFilters = ({
       {/* Clear Filters Button */}
       {hasActiveFilters && (
         <div className={`flex items-center ${'justify-start'} mb-2`}>
-          <button
+          <Button
+            variant="ghost"
             onClick={onClearFilters}
-            className="text-sm text-primary-500 hover:text-primary-600 font-medium"
+            className="text-sm text-primary-500 hover:text-primary-600 font-medium p-0 h-auto hover:bg-transparent"
           >
             {t('clearFilters')}
-          </button>
+          </Button>
         </div>
       )}
     </div>
