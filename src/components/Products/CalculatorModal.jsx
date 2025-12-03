@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { XMarkIcon as X, CalculatorIcon as CalculatorIcon } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 import Calculator from '../Calculator/Calculator';
+import { Button } from '../ui';
 
 /**
  * CalculatorModal Component
@@ -31,11 +32,11 @@ const CalculatorModal = ({ onClose, onSetPrice }) => {
   return (
     <div className="fixed inset-0 z-[100] overflow-y-auto">
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="flex items-center justify-center p-0 sm:p-4">
         <div className="relative bg-white sm:rounded-lg shadow-xl w-full h-full sm:h-auto sm:max-h-[90vh] max-w-4xl overflow-y-auto">
@@ -47,31 +48,34 @@ const CalculatorModal = ({ onClose, onSetPrice }) => {
                 {t('smartPricing') || 'מחיר חכם'}
               </h2>
               {calculatedPrice && (
-                <button
+                <Button
                   type="button"
                   onClick={() => {
                     if (calculatedPrice) {
                       onSetPrice(calculatedPrice.toFixed(2));
                     }
                   }}
-                  className="text-sm text-primary-600 bg-primary-50 hover:bg-primary-100 px-4 py-2 rounded-md transition-colors font-medium"
+                  variant="ghost"
+                  className="text-sm text-primary-600 bg-primary-50 hover:bg-primary-100 font-medium h-auto py-2"
                 >
                   {t('useThisPrice') || 'השתמש במחיר זה'}
-                </button>
+                </Button>
               )}
             </div>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="text-gray-400 hover:text-gray-600 hover:bg-gray-100"
               aria-label={t('close') || 'סגור'}
             >
               <X className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
 
           {/* Content */}
           <div className="p-6">
-            <Calculator 
+            <Calculator
               ref={calculatorRef}
               isModalMode={true}
               onUsePrice={(price) => {
