@@ -3,7 +3,8 @@ import {
     CurrencyDollarIcon as DollarSign,
     ShoppingCartIcon as ShoppingCart,
     UsersIcon as Users,
-    CubeIcon as Package
+    CubeIcon as Package,
+    ExclamationTriangleIcon as AlertTriangle
 } from '@heroicons/react/24/outline';
 
 export const getSidebarTitle = (type, t, monthData) => {
@@ -15,11 +16,12 @@ export const getSidebarTitle = (type, t, monthData) => {
         products: t('totalProducts') || 'סה"כ מוצרים',
         recentOrders: t('recentOrders') || 'הזמנות אחרונות',
         chartOrders: monthData ? `${t('orders') || 'הזמנות'} - ${monthData.monthName}` : t('orders') || 'הזמנות',
+        lowStock: t('lowStockProducts') || 'מוצרים במלאי נמוך',
     };
     return titles[type] || '';
 };
 
-export const getSidebarSubtitle = (type, t, stats, allOrders, allProducts, allCustomers, mostViewedProducts, mostOrderedProducts, mostSoldProducts, filteredOrders) => {
+export const getSidebarSubtitle = (type, t, stats, allOrders, allProducts, allCustomers, mostViewedProducts, mostOrderedProducts, mostSoldProducts, filteredOrders, lowStockProducts) => {
     if (!type) return '';
     const subtitles = {
         revenue: `${allOrders.filter(o => o.status === 'completed').length} ${t('completedOrders') || 'הזמנות הושלמו'}`,
@@ -28,6 +30,7 @@ export const getSidebarSubtitle = (type, t, stats, allOrders, allProducts, allCu
         products: `${allProducts.length} ${t('products') || 'מוצרים'}`,
         recentOrders: `${allOrders.length} ${t('totalOrders') || 'הזמנות'}`,
         chartOrders: `${filteredOrders?.length || 0} ${t('orders') || 'הזמנות'}`,
+        lowStock: `${lowStockProducts?.length || 0} ${t('products') || 'מוצרים'}`,
     };
     return subtitles[type] || '';
 };
@@ -41,11 +44,12 @@ export const getSidebarIcon = (type) => {
         products: Package,
         recentOrders: ShoppingCart,
         chartOrders: ShoppingCart,
+        lowStock: AlertTriangle,
     };
     return icons[type] || null;
 };
 
-export const getSidebarItems = (type, allOrders, allProducts, allCustomers, mostViewedProducts, mostOrderedProducts, mostSoldProducts, filteredOrders) => {
+export const getSidebarItems = (type, allOrders, allProducts, allCustomers, mostViewedProducts, mostOrderedProducts, mostSoldProducts, filteredOrders, lowStockProducts) => {
     if (!type) return [];
     switch (type) {
         case 'revenue':
@@ -60,6 +64,8 @@ export const getSidebarItems = (type, allOrders, allProducts, allCustomers, most
             return allOrders.slice(0, 50).sort((a, b) => new Date(b.date_created) - new Date(a.date_created));
         case 'chartOrders':
             return filteredOrders || [];
+        case 'lowStock':
+            return lowStockProducts || [];
         default:
             return [];
     }
@@ -67,6 +73,18 @@ export const getSidebarItems = (type, allOrders, allProducts, allCustomers, most
 
 export const getSidebarRenderItem = (type, t) => {
     if (!type) return () => null;
+
+    // Helper for low stock status
+    const getStockStatus = (product) => {
+        if (product.stock_status === 'outofstock') {
+            return { text: t('outOfStock') || 'אזל מהמלאי', color: 'text-orange-600', bg: 'bg-orange-50' };
+        }
+        if (product.manage_stock && product.stock_quantity !== null) {
+            return { text: `${product.stock_quantity} ${t('inStock') || 'במלאי'}`, color: 'text-orange-600', bg: 'bg-orange-50' };
+        }
+        return { text: t('lowStock') || 'מלאי נמוך', color: 'text-orange-600', bg: 'bg-orange-50' };
+    };
+
     return (item, formatCurrency) => {
         switch (type) {
             case 'revenue':
@@ -135,9 +153,13 @@ export const getSidebarRenderItem = (type, t) => {
             case 'topSellers':
             case 'mostOrdered':
             case 'mostSold':
+            case 'lowStock':
                 const imageUrl = item.images && item.images.length > 0
                     ? item.images[0].src
                     : '/placeholder-product.png';
+
+                const stockStatus = type === 'lowStock' ? getStockStatus(item) : null;
+
                 return (
                     <div className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                         <div className="flex-shrink-0">
@@ -155,15 +177,23 @@ export const getSidebarRenderItem = (type, t) => {
                                 {item.name}
                             </h3>
                             <div className="flex items-center gap-2 mb-2">
-                                {item.sold_quantity !== undefined && (
-                                    <span className="text-xs text-gray-500">
-                                        {t('sold') || 'נמכר'}: {item.sold_quantity}
+                                {stockStatus ? (
+                                    <span className={`text-xs px-2 py-1 rounded-full ${stockStatus.bg} ${stockStatus.color} font-medium`}>
+                                        {stockStatus.text}
                                     </span>
-                                )}
-                                {item.order_count !== undefined && (
-                                    <span className="text-xs text-gray-500">
-                                        {t('orders') || 'הזמנות'}: {item.order_count}
-                                    </span>
+                                ) : (
+                                    <>
+                                        {item.sold_quantity !== undefined && (
+                                            <span className="text-xs text-gray-500">
+                                                {t('sold') || 'נמכר'}: {item.sold_quantity}
+                                            </span>
+                                        )}
+                                        {item.order_count !== undefined && (
+                                            <span className="text-xs text-gray-500">
+                                                {t('orders') || 'הזמנות'}: {item.order_count}
+                                            </span>
+                                        )}
+                                    </>
                                 )}
                                 {item.sku && (
                                     <span className="text-xs text-gray-500">

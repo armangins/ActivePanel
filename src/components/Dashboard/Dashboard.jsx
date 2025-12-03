@@ -16,7 +16,6 @@ const RecentOrdersTable = lazy(() => import('./RecentOrder/RecentOrdersTable'));
 const EarningsWidget = lazy(() => import('./EarningsWidget'));
 
 // Lazy Load Sidebars (Hidden by default)
-const LowStockSidebar = lazy(() => import('./LowStockSidebar'));
 const DashboardSidebar = lazy(() => import('./DashboardSidebar'));
 
 // Placeholder UI shown while lazy-loaded components are being fetched
@@ -48,7 +47,6 @@ const Dashboard = () => {
     changes,
     recentOrders,
     allOrdersFromStats,
-    lowStockProducts,
     lowStockCount,
     loading,
     loadingSecondary,
@@ -59,8 +57,6 @@ const Dashboard = () => {
   // Manages the state and interactions for the various sidebars (Low Stock, etc.)
   // Handles click events on dashboard cards to open relevant sidebars
   const {
-    isLowStockSidebarOpen,
-    setIsLowStockSidebarOpen,
     handleCardClick,
     handleLowStockClick,
     handleBarClick,
@@ -158,19 +154,6 @@ const Dashboard = () => {
           )}
         </div>
       </div>
-
-      {/* Sidebar: Low Stock Products */}
-      {/* Conditionally rendered sidebar that slides in when triggered */}
-      {isLowStockSidebarOpen && (
-        <Suspense fallback={null}>
-          <LowStockSidebar
-            isOpen={isLowStockSidebarOpen}
-            onClose={() => setIsLowStockSidebarOpen(false)}
-            products={lowStockProducts}
-            formatCurrency={formatCurrency}
-          />
-        </Suspense>
-      )}
 
       {/* Sidebar: Generic Dashboard Sidebar */}
       {sidebarProps.isOpen && (

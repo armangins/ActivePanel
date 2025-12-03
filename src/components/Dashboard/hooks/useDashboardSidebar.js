@@ -16,10 +16,10 @@ export const useDashboardSidebar = (data, t, formatCurrency) => {
         mostViewedProducts,
         mostOrderedProducts,
         mostSoldProducts,
+        lowStockProducts,
         refetchCustomers
     } = data;
 
-    const [isLowStockSidebarOpen, setIsLowStockSidebarOpen] = useState(false);
     const [sidebarState, setSidebarState] = useState({
         type: null,
         isOpen: false,
@@ -37,7 +37,7 @@ export const useDashboardSidebar = (data, t, formatCurrency) => {
     }, [refetchCustomers]);
 
     const handleLowStockClick = useCallback(() => {
-        setIsLowStockSidebarOpen(true);
+        setSidebarState({ type: 'lowStock', isOpen: true });
     }, []);
 
     const handleBarClick = useCallback((monthData) => {
@@ -79,7 +79,8 @@ export const useDashboardSidebar = (data, t, formatCurrency) => {
             mostViewedProducts,
             mostOrderedProducts,
             mostSoldProducts,
-            sidebarState.filteredOrders
+            sidebarState.filteredOrders,
+            lowStockProducts
         ),
         icon: getSidebarIcon(sidebarState.type),
         items: getSidebarItems(
@@ -90,15 +91,14 @@ export const useDashboardSidebar = (data, t, formatCurrency) => {
             mostViewedProducts,
             mostOrderedProducts,
             mostSoldProducts,
-            sidebarState.filteredOrders
+            sidebarState.filteredOrders,
+            lowStockProducts
         ),
         renderItem: getSidebarRenderItem(sidebarState.type, t),
         formatCurrency
     };
 
     return {
-        isLowStockSidebarOpen,
-        setIsLowStockSidebarOpen,
         sidebarState,
         handleCardClick,
         handleLowStockClick,

@@ -1,77 +1,40 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 import { CubeIcon as Package } from '@heroicons/react/24/outline';
+import { OptimizedImage } from '../ui';
 
-const VariationCard = memo(({ 
-  variation, 
+const VariationCard = memo(({
+  variation,
   formatCurrency,
   isRTL,
   t
 }) => {
-  const imageUrl = useMemo(() => 
-    variation.image && variation.image.src ? variation.image.src : null,
-    [variation.image]
-  );
-  
-  const regularPrice = useMemo(() => 
-    variation.regular_price || variation.price || null,
-    [variation.regular_price, variation.price]
-  );
-  
-  const salePrice = useMemo(() => 
-    variation.sale_price || null,
-    [variation.sale_price]
-  );
-  
-  const displayPrice = useMemo(() => 
-    regularPrice ? formatCurrency(parseFloat(regularPrice)) : '-',
-    [regularPrice, formatCurrency]
-  );
-  
-  const displaySalePrice = useMemo(() => 
-    salePrice ? formatCurrency(parseFloat(salePrice)) : null,
-    [salePrice, formatCurrency]
-  );
-  
-  const discountPercentage = useMemo(() => 
-    regularPrice && salePrice
-      ? Math.round(((parseFloat(regularPrice) - parseFloat(salePrice)) / parseFloat(regularPrice)) * 100)
-      : 0,
-    [regularPrice, salePrice]
-  );
+  // Direct property access is faster than useMemo for simple values
+  const imageUrl = variation.image?.src || null;
+  const regularPrice = variation.regular_price || variation.price || null;
+  const salePrice = variation.sale_price || null;
 
-  const stockStatus = useMemo(() => 
-    variation.stock_status || 'instock',
-    [variation.stock_status]
-  );
-  
-  const stockStatusLabel = useMemo(() => 
-    stockStatus === 'instock' ? t('inStock') : t('outOfStock'),
-    [stockStatus, t]
-  );
-  
+  const displayPrice = regularPrice ? formatCurrency(parseFloat(regularPrice)) : '-';
+  const displaySalePrice = salePrice ? formatCurrency(parseFloat(salePrice)) : null;
+
+  const stockStatus = variation.stock_status || 'instock';
+
   // Get variation attributes (e.g., "Size: Large, Color: Red")
-  const attributesText = useMemo(() => 
-    variation.attributes && variation.attributes.length > 0
-      ? variation.attributes.map(attr => `${attr.name}: ${attr.option}`).join(', ')
-      : '',
-    [variation.attributes]
-  );
+  const attributesText = variation.attributes?.length > 0
+    ? variation.attributes.map(attr => `${attr.name}: ${attr.option}`).join(', ')
+    : '';
 
   // Get variation name (use attributes text or variation name)
-  const variationName = useMemo(() => 
-    attributesText || variation.name || `Variation #${variation.id}`,
-    [attributesText, variation.name, variation.id]
-  );
-  
+  const variationName = attributesText || variation.name || `Variation #${variation.id}`;
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow overflow-hidden flex flex-col h-full">
       {/* Variation Image */}
-      <div className="w-full aspect-square flex-shrink-0">
+      <div className="w-full aspect-square flex-shrink-0 relative">
         {imageUrl ? (
-          <img
+          <OptimizedImage
             src={imageUrl}
             alt={variationName}
-            className="w-full h-full object-cover"
+            className="w-full h-full"
           />
         ) : (
           <div className="w-full h-full bg-gray-100 flex items-center justify-center">
@@ -84,7 +47,7 @@ const VariationCard = memo(({
       <div className="p-2 flex flex-col flex-1 min-h-0">
         {/* Variation Name */}
         <div className="mb-1">
-          <p className="text-xs font-semibold text-gray-900 line-clamp-1 text-right">
+          <p className="text-xs font-semibold text-gray-900 line-clamp-1 text-right" title={variationName}>
             {variationName}
           </p>
         </div>
@@ -92,7 +55,7 @@ const VariationCard = memo(({
         {/* SKU */}
         {variation.sku && (
           <div className="mb-1">
-            <p className="text-xs text-gray-600 text-right">
+            <p className="text-xs text-gray-600 text-right truncate">
               <span className="font-medium">{t('sku')}:</span> {variation.sku}
             </p>
           </div>
@@ -124,13 +87,12 @@ const VariationCard = memo(({
         <div className="mt-auto pt-1 border-t border-gray-200">
           <div className="flex items-center justify-end gap-2 flex-row-reverse">
             <span className="text-xs text-gray-600 text-right">
-              {t('stock')}: <span className="font-semibold">{variation.stock_quantity !== null && variation.stock_quantity !== undefined ? variation.stock_quantity : '-'}</span>
+              {t('stock')}: <span className="font-semibold">{variation.stock_quantity ?? '-'}</span>
             </span>
-            {stockStatus === 'instock' ? (
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0"></span>
-            ) : (
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0"></span>
-            )}
+            <span
+              className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${stockStatus === 'instock' ? 'bg-green-500' : 'bg-orange-500'}`}
+              title={stockStatus === 'instock' ? t('inStock') : t('outOfStock')}
+            />
           </div>
         </div>
       </div>

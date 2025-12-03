@@ -40,7 +40,7 @@ const EarningsWidget = ({ orders, formatCurrency, t, isRTL, onBarClick }) => {
     // Process orders and aggregate by month - ONLY completed orders
     (orders || []).forEach(order => {
       if (order.status !== 'completed') return;
-      
+
       const orderDate = new Date(order.date_created);
       const orderYear = orderDate.getFullYear();
       const orderMonth = orderDate.getMonth() + 1;
@@ -48,7 +48,7 @@ const EarningsWidget = ({ orders, formatCurrency, t, isRTL, onBarClick }) => {
       // Only process orders from current year
       if (orderYear === currentYear) {
         const monthKey = `${orderYear}-${String(orderMonth).padStart(2, '0')}`;
-        
+
         if (monthlyData[monthKey]) {
           monthlyData[monthKey].earnings += parseFloat(order.total || 0);
         }
@@ -64,10 +64,10 @@ const EarningsWidget = ({ orders, formatCurrency, t, isRTL, onBarClick }) => {
   // Calculate KPIs
   const firstHalfEarnings = monthlyData.slice(0, 6).reduce((sum, m) => sum + m.earnings, 0);
   const secondHalfEarnings = monthlyData.slice(6, 12).reduce((sum, m) => sum + m.earnings, 0);
-  
+
   // Find top gross month
-  const topGrossMonth = monthlyData.reduce((max, m) => 
-    m.earnings > max.earnings ? m : max, 
+  const topGrossMonth = monthlyData.reduce((max, m) =>
+    m.earnings > max.earnings ? m : max,
     { earnings: 0, monthName: '', month: 0 }
   );
 
@@ -76,45 +76,45 @@ const EarningsWidget = ({ orders, formatCurrency, t, isRTL, onBarClick }) => {
     const now = new Date();
     const currentYear = now.getFullYear();
     let total = 0;
-    
+
     (orders || []).forEach(order => {
       if (order.status !== 'completed') return;
       const orderDate = new Date(order.date_created);
       const orderYear = orderDate.getFullYear();
       const orderMonth = orderDate.getMonth() + 1;
-      
+
       // Check if order is from previous year's same period
       if (orderYear === currentYear - 1 && orderMonth >= startMonth && orderMonth <= endMonth) {
         total += parseFloat(order.total || 0);
       }
     });
-    
+
     return total;
   };
 
   const previousFirstHalf = calculatePreviousPeriod(1, 6);
   const previousSecondHalf = calculatePreviousPeriod(7, 12);
-  
+
   // Calculate previous year's same month for top gross comparison
   const calculatePreviousMonth = (month) => {
     const now = new Date();
     const currentYear = now.getFullYear();
     let total = 0;
-    
+
     (orders || []).forEach(order => {
       if (order.status !== 'completed') return;
       const orderDate = new Date(order.date_created);
       const orderYear = orderDate.getFullYear();
       const orderMonth = orderDate.getMonth() + 1;
-      
+
       if (orderYear === currentYear - 1 && orderMonth === month) {
         total += parseFloat(order.total || 0);
       }
     });
-    
+
     return total;
   };
-  
+
   const previousTopGross = calculatePreviousMonth(topGrossMonth.month);
 
   // Use shared utility for percentage calculation
@@ -124,8 +124,8 @@ const EarningsWidget = ({ orders, formatCurrency, t, isRTL, onBarClick }) => {
   const secondHalfChange = calculateChange(secondHalfEarnings, previousSecondHalf);
   const topGrossChange = calculateChange(topGrossMonth.earnings, previousTopGross);
 
-  // Find the month index for highlighting (May = 5)
-  const highlightMonth = 5;
+  // Highlight the top grossing month
+  const highlightMonth = topGrossMonth.month;
 
   // Custom tooltip formatter
   const customTooltip = ({ active, payload }) => {
@@ -255,27 +255,27 @@ const EarningsWidget = ({ orders, formatCurrency, t, isRTL, onBarClick }) => {
             }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis 
-              dataKey="monthName" 
+            <XAxis
+              dataKey="monthName"
               stroke="#6b7280"
               tick={{ fill: '#6b7280', fontSize: 12 }}
               angle={0}
               textAnchor="end"
               height={60}
             />
-            <YAxis 
+            <YAxis
               stroke="#6b7280"
               tick={{ fill: '#6b7280', fontSize: 12 }}
             />
             <Tooltip content={customTooltip} />
-            <Bar 
-              dataKey="earnings" 
+            <Bar
+              dataKey="earnings"
               name={t('earnings') || 'Earnings'}
               radius={[4, 4, 0, 0]}
               fill="#a78bfa"
             >
               {monthlyData.map((entry, index) => (
-                <Cell 
+                <Cell
                   key={`cell-${index}`}
                   fill={entry.month === highlightMonth ? '#7c3aed' : '#a78bfa'}
                 />
