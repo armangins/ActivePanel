@@ -1,5 +1,6 @@
 import { PlusIcon as Plus } from '@heroicons/react/24/outline';
 import { SearchInput } from '../ui/inputs';
+import { Button } from '../ui';
 
 const CategoriesHeader = ({ searchQuery, onSearchChange, onAddClick, displayedCount, totalCount, isRTL, t }) => {
   return (
@@ -12,20 +13,21 @@ const CategoriesHeader = ({ searchQuery, onSearchChange, onAddClick, displayedCo
           isRTL={isRTL}
         />
       </div>
-      
+
       <div className="flex items-center gap-4 w-full sm:w-auto">
         <div className={`text-sm text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
           {displayedCount} {displayedCount === 1 ? (t('category') || 'category') : (t('categories') || 'categories')}
           {searchQuery && ` / ${totalCount} ${t('total') || 'total'}`}
         </div>
-        
-        <button
+
+        <Button
           onClick={onAddClick}
-          className={`btn-primary flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2`}
+          variant="primary"
+          className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2`}
         >
           <Plus className="w-5 h-5" />
           <span>{t('addCategory') || 'Add Category'}</span>
-        </button>
+        </Button>
       </div>
     </div>
   );
