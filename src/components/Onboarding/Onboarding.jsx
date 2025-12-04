@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { settingsAPI } from '../../services/api';
 import { ArrowRightOnRectangleIcon as LogOut } from '@heroicons/react/24/outline';
+import { Button } from '../ui';
 import WelcomeStep from './Steps/WelcomeStep';
 import StoreDetailsStep from './Steps/StoreDetailsStep';
 import ApiConnectionStep from './Steps/ApiConnectionStep';
@@ -79,14 +80,15 @@ const Onboarding = () => {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative" dir="rtl">
             {/* Logout Button */}
-            <button
+            <Button
                 onClick={logout}
-                className="absolute top-4 left-4 flex items-center gap-2 text-gray-500 hover:text-red-600 transition-colors"
+                variant="ghost"
+                className="absolute top-4 left-4 flex items-center gap-2 text-gray-500 hover:text-red-600 hover:bg-red-50"
                 title={t('logout') || 'התנתק'}
             >
                 <LogOut className="w-6 h-6" />
                 <span className="text-sm font-medium hidden sm:inline">{t('logout') || 'התנתק'}</span>
-            </button>
+            </Button>
 
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 {/* Progress Bar */}

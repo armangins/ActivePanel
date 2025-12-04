@@ -1,4 +1,5 @@
 import { ArrowRightOnRectangleIcon as LogOut } from '@heroicons/react/24/outline';
+import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 /**
@@ -32,13 +33,14 @@ const UserMenuDropdown = ({
             {user?.email || 'admin@mail.com'}
           </p>
         </div>
-        <button
+        <Button
           onClick={onLogout}
-          className="w-full flex items-center justify-start gap-2 px-4 py-3 text-sm text-orange-600 hover:bg-orange-50 transition-colors text-right"
+          variant="ghost"
+          className="w-full flex items-center justify-start gap-2 px-4 py-3 text-sm text-orange-600 hover:bg-orange-50 hover:text-orange-700 transition-colors text-right rounded-none rounded-b-lg h-auto"
         >
           <LogOut className="w-4 h-4" />
           <span className="font-medium">{t('logout') || 'התנתק'}</span>
-        </button>
+        </Button>
       </div>
     </>
   );

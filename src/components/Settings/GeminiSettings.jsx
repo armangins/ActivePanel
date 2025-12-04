@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SparklesIcon as Sparkles, ArrowPathIcon as Loader, CheckCircleIcon as CheckCircle, XCircleIcon as XCircle } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Input } from '../ui/inputs';
+import { Button } from '../ui';
 import { testGeminiConnection, setGeminiApiKey } from '../../services/gemini';
 
 const GeminiSettings = ({ settings, onSettingsChange }) => {
@@ -84,10 +85,11 @@ const GeminiSettings = ({ settings, onSettingsChange }) => {
             )}
 
             <div className="pt-4 border-t border-gray-200 flex gap-3 flex-row-reverse">
-                <button
+                <Button
                     onClick={handleTestConnection}
                     disabled={testingGemini || !settings.geminiApiKey}
-                    className={`btn-secondary flex items-center ${'flex-row-reverse space-x-reverse'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    variant="secondary"
+                    className={`flex items-center ${'flex-row-reverse space-x-reverse'}`}
                 >
                     {testingGemini ? (
                         <>
@@ -100,7 +102,7 @@ const GeminiSettings = ({ settings, onSettingsChange }) => {
                             <span>{t('testGeminiConnection') || 'בדוק חיבור Gemini'}</span>
                         </>
                     )}
-                </button>
+                </Button>
             </div>
         </div>
     );

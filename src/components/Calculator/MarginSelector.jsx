@@ -1,4 +1,5 @@
 import { useLanguage } from '../../contexts/LanguageContext';
+import { Button } from '../ui';
 
 /**
  * MarginSelector Component
@@ -19,24 +20,24 @@ const MarginSelector = ({ value, onChange, error }) => {
       </label>
       <div className="grid grid-cols-4 gap-3" role="group" aria-labelledby="desired-margin">
         {margins.map((margin) => (
-          <button
+          <Button
             key={margin}
             id={`margin-${margin}`}
             name="desiredMargin"
             type="button"
             value={margin}
             onClick={() => onChange(margin.toString())}
-            className={`p-4 border-2 rounded-lg transition-all flex items-center justify-center ${
-              value === margin.toString()
-                ? 'border-primary-500 bg-primary-50 text-primary-700 font-semibold'
+            variant="ghost"
+            className={`p-4 border-2 rounded-lg transition-all flex items-center justify-center h-auto ${value === margin.toString()
+                ? 'border-primary-500 bg-primary-50 text-primary-700 font-semibold hover:bg-primary-100'
                 : error
-                ? 'border-orange-300 hover:border-orange-400 text-gray-700'
-                : 'border-gray-200 hover:border-gray-300 text-gray-700'
-            }`}
+                  ? 'border-orange-300 hover:border-orange-400 text-gray-700 bg-white'
+                  : 'border-gray-200 hover:border-gray-300 text-gray-700 bg-white'
+              }`}
             aria-pressed={value === margin.toString()}
           >
             <span>{margin}%</span>
-          </button>
+          </Button>
         ))}
       </div>
       {error && (

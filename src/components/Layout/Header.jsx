@@ -10,13 +10,12 @@ import { useAuth } from '../../contexts/AuthContext';
 import ConnectionStatus from './ConnectionStatus';
 import NotificationDropdown from './NotificationDropdown';
 import UserMenuDropdown from './UserMenuDropdown';
-import { SearchInput, UserAvatar } from '../ui';
+import { UserAvatar, Button } from '../ui';
 import { refreshAllData } from '../../utils/refreshHelpers';
 import useNewOrdersCount from '../../hooks/useNewOrdersCount';
 import OrderDetailsModal from '../Orders/OrderDetailsModal/OrderDetailsModal';
 
 const Header = ({ onMenuClick }) => {
-  const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -78,23 +77,18 @@ const Header = ({ onMenuClick }) => {
     <header className="bg-white border-b border-gray-200 px-3 sm:px-4 md:px-6 py-3 md:py-4 sticky top-0 z-40">
       <div className="flex items-center flex-row-reverse justify-between gap-2 sm:gap-4">
         <div className="flex items-center gap-2 sm:gap-4 flex-1 flex-row-reverse min-w-0">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onMenuClick}
-            className="lg:hidden text-gray-600 hover:text-primary-500 p-2 -m-2 touch-manipulation"
+            className="lg:hidden text-gray-600 hover:text-primary-500 -m-2"
             aria-label={t('menu') || 'תפריט'}
           >
             <Menu className="w-6 h-6" />
-          </button>
+          </Button>
 
-          {/* Search - Hidden on mobile, shown on tablet+ */}
-          <div className="hidden sm:flex flex-1 max-w-md">
-            <SearchInput
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder={t('search')}
-              isRTL={true}
-            />
-          </div>
+          {/* Spacer to keep layout consistent if needed, or just remove search */}
+          <div className="hidden sm:flex flex-1 max-w-md"></div>
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-row-reverse flex-shrink-0">
@@ -104,21 +98,25 @@ const Header = ({ onMenuClick }) => {
           </div>
 
           {/* Refresh - Smaller on mobile */}
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="p-2 text-gray-600 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+            className="text-gray-600 hover:text-primary-500 hover:bg-primary-50"
             title={t('refresh') || 'רענון'}
             aria-label={t('refresh') || 'רענון'}
           >
             <RefreshCw className={`w-5 h-5 sm:w-6 sm:h-6 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </button>
+          </Button>
 
           {/* Notifications */}
           <div className="relative">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handleNotificationClick}
-              className="relative p-2 text-gray-600 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors touch-manipulation"
+              className="relative text-gray-600 hover:text-primary-500 hover:bg-primary-50"
               aria-label={t('notifications') || 'התראות'}
             >
               <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -127,7 +125,7 @@ const Header = ({ onMenuClick }) => {
                   {newOrdersCount > 99 ? '99+' : newOrdersCount}
                 </span>
               )}
-            </button>
+            </Button>
             <NotificationDropdown
               isOpen={showNotifications}
               onClose={handleBackdropClick}
@@ -146,9 +144,10 @@ const Header = ({ onMenuClick }) => {
 
           {/* User Menu - Compact on mobile */}
           <div className="relative">
-            <button
+            <Button
+              variant="ghost"
               onClick={handleMenuToggle}
-              className="flex items-center gap-2 sm:gap-3 pr-2 sm:pr-4 pl-0 border-r border-gray-200 hover:bg-gray-50 rounded-lg p-2 transition-colors touch-manipulation"
+              className="flex items-center gap-2 sm:gap-3 pr-2 sm:pr-4 pl-0 border-r border-gray-200 hover:bg-gray-50 rounded-lg p-2 h-auto"
               aria-label={t('userMenu') || 'תפריט משתמש'}
             >
               <UserAvatar
@@ -165,7 +164,7 @@ const Header = ({ onMenuClick }) => {
                   {user?.email || 'admin@example.com'}
                 </p>
               </div>
-            </button>
+            </Button>
             <UserMenuDropdown
               isOpen={showUserMenu}
               onClose={handleBackdropClick}

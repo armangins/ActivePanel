@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { TrashIcon as Trash2, XMarkIcon as X } from '@heroicons/react/24/outline';
+import { TrashIcon as Trash2, XMarkIcon as X, PhotoIcon as ImageIcon, FloppyDiskIcon as Save, PlusIcon as Plus } from '@heroicons/react/24/outline';
+import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { productsAPI } from '../../services/woocommerce';
 
@@ -191,13 +192,14 @@ const ProductBuilder = ({ onValidation, onProductsGenerated }) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-row-reverse">
-        <button
+        <Button
           onClick={addProduct}
-          className="btn-primary flex items-center gap-2 flex-row-reverse"
+          variant="primary"
+          className="flex items-center gap-2 flex-row-reverse"
         >
           <Plus className="w-[18px] h-[18px]" />
           {t('addProduct') || 'הוסף מוצר'}
-        </button>
+        </Button>
       </div>
 
       {products.map((product, index) => (
@@ -207,12 +209,14 @@ const ProductBuilder = ({ onValidation, onProductsGenerated }) => {
               {t('product')} {index + 1}
             </h3>
             {products.length > 1 && (
-              <button
+              <Button
                 onClick={() => removeProduct(index)}
-                className="text-orange-600 hover:text-orange-700"
+                variant="ghost"
+                size="icon"
+                className="text-orange-600 hover:bg-orange-50"
               >
                 <Trash2 className="w-[18px] h-[18px]" />
-              </button>
+              </Button>
             )}
           </div>
 
@@ -333,14 +337,16 @@ const ProductBuilder = ({ onValidation, onProductsGenerated }) => {
                 <label className="block text-sm font-medium text-gray-700">
                   {t('images') || 'תמונות'}
                 </label>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => addImage(index)}
-                  className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1 flex-row-reverse"
+                  className="text-primary-600 hover:text-primary-700 flex items-center gap-1 flex-row-reverse"
                 >
                   <ImageIcon className="w-4 h-4" />
                   {t('addImage') || 'הוסף תמונה'}
-                </button>
+                </Button>
               </div>
               {product.images?.map((img, imgIndex) => (
                 <div key={imgIndex} className="flex gap-2 mb-2 flex-row-reverse">
@@ -355,17 +361,19 @@ const ProductBuilder = ({ onValidation, onProductsGenerated }) => {
                     className="input-field flex-1"
                     placeholder="https://example.com/image.jpg"
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => {
                       const updated = [...products];
                       updated[index].images = updated[index].images.filter((_, i) => i !== imgIndex);
                       setProducts(updated);
                     }}
-                    className="text-orange-600"
+                    className="text-orange-600 hover:bg-orange-50"
                   >
                     <X className="w-[18px] h-[18px]" />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -376,13 +384,15 @@ const ProductBuilder = ({ onValidation, onProductsGenerated }) => {
                 <label className="block text-sm font-medium text-gray-700">
                   {t('attributes') || 'תכונות'}
                 </label>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => addAttribute(index)}
-                  className="text-sm text-primary-600 hover:text-primary-700"
+                  className="text-primary-600 hover:text-primary-700"
                 >
                   {t('addAttribute') || 'הוסף תכונה'}
-                </button>
+                </Button>
               </div>
               {product.attributes?.map((attr, attrIndex) => (
                 <div key={attrIndex} className="border border-gray-200 rounded-lg p-3 mb-2">
@@ -398,17 +408,19 @@ const ProductBuilder = ({ onValidation, onProductsGenerated }) => {
                       className="input-field flex-1"
                       placeholder={t('attributeName') || 'שם תכונה (למשל: צבע)'}
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => {
                         const updated = [...products];
                         updated[index].attributes = updated[index].attributes.filter((_, i) => i !== attrIndex);
                         setProducts(updated);
                       }}
-                      className="text-orange-600"
+                      className="text-orange-600 hover:bg-orange-50"
                     >
                       <X className="w-[18px] h-[18px]" />
-                    </button>
+                    </Button>
                   </div>
                   <input
                     type="text"
@@ -431,13 +443,15 @@ const ProductBuilder = ({ onValidation, onProductsGenerated }) => {
                 <label className="block text-sm font-medium text-gray-700">
                   {t('customFields') || 'שדות מותאמים אישית'}
                 </label>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => addMetaData(index)}
-                  className="text-sm text-primary-600 hover:text-primary-700"
+                  className="text-primary-600 hover:text-primary-700"
                 >
                   {t('addField') || 'הוסף שדה'}
-                </button>
+                </Button>
               </div>
               {product.meta_data?.map((meta, metaIndex) => (
                 <div key={metaIndex} className="flex gap-2 mb-2 flex-row-reverse">
@@ -463,17 +477,19 @@ const ProductBuilder = ({ onValidation, onProductsGenerated }) => {
                     className="input-field flex-1"
                     placeholder={t('fieldValue') || 'ערך'}
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => {
                       const updated = [...products];
                       updated[index].meta_data = updated[index].meta_data.filter((_, i) => i !== metaIndex);
                       setProducts(updated);
                     }}
-                    className="text-orange-600"
+                    className="text-orange-600 hover:bg-orange-50"
                   >
                     <X className="w-[18px] h-[18px]" />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -482,14 +498,15 @@ const ProductBuilder = ({ onValidation, onProductsGenerated }) => {
       ))}
 
       <div className="flex justify-end gap-3 flex-row-reverse">
-        <button
+        <Button
           onClick={handleSave}
           disabled={saving}
-          className="btn-primary flex items-center gap-2 flex-row-reverse"
+          variant="primary"
+          className="flex items-center gap-2 flex-row-reverse"
         >
           <Save className="w-[18px] h-[18px]" />
           {saving ? (t('saving') || 'שומר...') : (t('saveProducts') || 'שמור מוצרים')}
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { CubeIcon as Package, MagnifyingGlassIcon as Search } from '@heroicons/react/24/outline';
-import { OptimizedImage } from '../ui';
+import { OptimizedImage, Button } from '../ui';
 
 /**
  * OrderRow Component
@@ -140,16 +140,17 @@ const OrderRow = memo(({ order, index, onViewDetails, onStatusUpdate, formatCurr
 
       {/* Tracking Column */}
       <td className={`py-4 px-6 ${isRTL ? 'text-right' : 'text-left'}`}>
-        <button
+        <Button
           onClick={(e) => {
             e.stopPropagation();
             onViewDetails(order);
           }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
+          variant="primary"
+          className="flex items-center gap-2"
         >
           <Search className="w-4 h-4" />
           <span>{t('viewDetails') || 'צפה בפרטים'}</span>
-        </button>
+        </Button>
       </td>
     </tr>
   );

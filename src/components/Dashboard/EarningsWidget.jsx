@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { format } from 'date-fns';
 import { he as heLocale } from 'date-fns/locale';
@@ -160,24 +161,26 @@ const EarningsWidget = ({ orders, formatCurrency, t, isRTL, onBarClick }) => {
           {t('earnings') || 'Earnings'}
         </h2>
         <div className="relative">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setShowDropdown(!showDropdown)}
             className={`flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}
           >
             {t('viewAll') || 'View All'}
             <ChevronDown className={`w-4 h-4 ${showDropdown ? 'rotate-180' : ''}`} />
-          </button>
+          </Button>
           {showDropdown && (
             <div className={`absolute ${isRTL ? 'left-0' : 'right-0'} top-full mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10`}>
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => {
                   setShowDropdown(false);
                   // Navigate to orders page or show detailed earnings
                 }}
-                className="w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors justify-start"
               >
                 {t('viewAllEarnings') || 'View All Earnings'}
-              </button>
+              </Button>
             </div>
           )}
         </div>

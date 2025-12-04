@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { Input } from '../../ui/inputs';
+import { Button } from '../../ui';
 import { BuildingStorefrontIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 
 const StoreDetailsStep = ({ onNext, onSkip, initialData }) => {
@@ -61,20 +62,22 @@ const StoreDetailsStep = ({ onNext, onSkip, initialData }) => {
                     type="url"
                 />
 
-                <button
+                <Button
                     type="submit"
-                    className="w-full py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors shadow-lg shadow-primary-500/30"
+                    variant="primary"
+                    className="w-full py-3 shadow-lg shadow-primary-500/30"
                 >
                     {t('next') || 'המשך'}
-                </button>
+                </Button>
 
-                <button
+                <Button
                     type="button"
                     onClick={onSkip}
-                    className="w-full py-3 text-gray-500 font-medium hover:text-gray-700 transition-colors"
+                    variant="ghost"
+                    className="w-full py-3 text-gray-500 hover:text-gray-700 hover:bg-transparent"
                 >
                     {t('setupLater') || 'הגדר מאוחר יותר'}
-                </button>
+                </Button>
             </form>
         </div>
     );

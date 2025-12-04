@@ -1,36 +1,76 @@
 import { api } from './api';
 
-// Helper function to handle API errors
-const handleError = (error) => {
-  if (error.response) {
-    const status = error.response.status;
-    const data = error.response.data;
-
-    // Handle specific error cases
-    if (status === 401) {
-      throw new Error('Authentication failed. Please check your API credentials in Settings.');
-    } else if (status === 403) {
-      throw new Error('Access forbidden. Please check your API key permissions.');
-    } else if (status === 404) {
-      throw new Error('Resource not found.');
-    } else if (status === 500) {
-      throw new Error('Server error. Please check your WooCommerce store.');
-    } else if (data?.message) {
-      throw new Error(data.message);
-    } else if (data?.code) {
-      throw new Error(`API Error: ${data.code}`);
-    }
-    throw new Error(`API request failed with status ${status}`);
-  } else if (error.request) {
-    throw new Error('Unable to connect to the server. Please check your internet connection.');
-  }
-
-  throw new Error(error.message || 'Network error');
+const ERROR_MESSAGES = {
+  401: {
+    code: 'AUTH_FAILED',
+    message: 'Authentication failed. Please check your API credentials in Settings.',
+  },
+  403: {
+    code: 'ACCESS_FORBIDDEN',
+    message: 'Access forbidden. Please check your API key permissions.',
+  },
+  404: {
+    code: 'NOT_FOUND',
+    message: 'Resource not found.',
+  },
+  500: {
+    code: 'SERVER_ERROR',
+    message: 'Server error. Please check your WooCommerce store.',
+  },
+  502: {
+    code: 'BAD_GATEWAY',
+    message: 'Bad gateway. The server is temporarily unavailable.',
+  },
+  503: {
+    code: 'SERVICE_UNAVAILABLE',
+    message: 'Service unavailable. Please try again later.',
+  },
 };
 
-// Helper for collection endpoints to expose pagination metadata
+const handleError = (error) => {
+  if (error.request && !error.response) {
+    const networkError = new Error('Unable to connect to the server. Please check your internet connection.');
+    networkError.code = 'NETWORK_ERROR';
+    throw networkError;
+  }
+
+  if (error.response) {
+    const { status, data } = error.response;
+
+    const errorConfig = ERROR_MESSAGES[status];
+    if (errorConfig) {
+      const err = new Error(errorConfig.message);
+      err.code = errorConfig.code;
+      err.status = status;
+      throw err;
+    }
+
+    if (data?.message) {
+      const err = new Error(data.message);
+      err.code = data.code || 'API_ERROR';
+      err.status = status;
+      throw err;
+    }
+
+    if (data?.code) {
+      const err = new Error(`API Error: ${data.code}`);
+      err.code = data.code;
+      err.status = status;
+      throw err;
+    }
+
+    const err = new Error(`API request failed with status ${status}`);
+    err.code = 'HTTP_ERROR';
+    err.status = status;
+    throw err;
+  }
+
+  const err = new Error(error.message || 'Network error');
+  err.code = 'UNKNOWN_ERROR';
+  throw err;
+};
+
 const fetchCollection = async (endpoint, params = {}) => {
-  // Handle _fields parameter
   const requestParams = { ...params };
   if (requestParams._fields && Array.isArray(requestParams._fields)) {
     requestParams._fields = requestParams._fields.join(',');
@@ -44,34 +84,22 @@ const fetchCollection = async (endpoint, params = {}) => {
       return Number.isNaN(parsed) ? fallback : parsed;
     };
 
+    // Backend returns { products: [...], total: X, totalPages: Y }
+    const totalPages = response.data.totalPages || parseHeaderNumber(response.headers['x-wp-totalpages'], 1);
+    const total = response.data.total || parseHeaderNumber(response.headers['x-wp-total']);
+
+    // If backend sends total: 0 but has totalPages, calculate approximate total
+    const calculatedTotal = total === 0 && totalPages > 0
+      ? (totalPages - 1) * (params.per_page || 25) + (response.data.products?.length || 0)
+      : total;
+
     const result = {
-      data: response.data,
-      total: parseHeaderNumber(response.headers['x-wp-total']),
-      totalPages: parseHeaderNumber(response.headers['x-wp-totalpages'], 1),
+      data: response.data.products || response.data, // Try products first, fallback to data
+      total: calculatedTotal,
+      totalPages: totalPages,
     };
 
     return result;
-  } catch (error) {
-    handleError(error);
-  }
-};
-
-// Generic Batch API
-export const batchRequest = async (requests) => {
-  try {
-    // The backend should expose a batch endpoint, or we map this to the backend's batch handler
-    // Assuming backend exposes /batch or /products/batch
-    // For now, let's assume the backend proxies /batch/v1
-    const response = await api.post('/batch/v1', {
-      requests: requests.map(req => ({
-        method: req.method || 'GET',
-        path: req.path,
-        body: req.body,
-        headers: req.headers || {},
-      })),
-    });
-
-    return response.data.responses ? response.data.responses : response.data;
   } catch (error) {
     handleError(error);
   }
@@ -91,26 +119,7 @@ export const testConnection = async () => {
 
 // Products API
 export const productsAPI = {
-  getAll: async (params = {}) => {
-    try {
-      const { data } = await fetchCollection('/products', {
-        per_page: 50,
-        page: 1,
-        ...params,
-      });
-      return data;
-    } catch (error) {
-      // Error is already handled in fetchCollection but re-throwing for consistency if needed
-      // fetchCollection calls handleError which throws.
-      // So we don't need to catch here unless we want to add context.
-      // But existing code catches and calls handleError again? 
-      // fetchCollection catches, calls handleError (throws).
-      // So this catch block catches the thrown error.
-      // Calling handleError AGAIN on an error that is already processed might be redundant but safe.
-      throw error;
-    }
-  },
-
+  // Fetch products with pagination metadata
   list: async (params = {}) => {
     return await fetchCollection('/products', {
       per_page: 24,
@@ -119,82 +128,61 @@ export const productsAPI = {
     });
   },
 
+  // Get total product count
   getTotalCount: async () => {
     const { total } = await fetchCollection('/products', { per_page: 1, page: 1 });
     return total;
   },
 
+  // Get low stock products
   getLowStockProducts: async (lowStockThreshold = 2) => {
-    try {
-      // We can pass the threshold to the backend if it supports filtering,
-      // or fetch all and filter here. 
-      // Ideally backend should handle this: /api/products/low-stock?threshold=2
-      // But to preserve existing logic with new backend proxy:
+    const { data } = await fetchCollection('/products', {
+      per_page: 100,
+      status: 'publish',
+    });
 
-      const { data } = await fetchCollection('/products', {
-        per_page: 100,
-        status: 'publish',
-      });
-
-      const lowStockProducts = data.filter(product => {
-        if (product.stock_status === 'outofstock') return true;
-        if (product.manage_stock && product.stock_quantity !== null) {
-          return parseFloat(product.stock_quantity) <= lowStockThreshold;
-        }
-        return false;
-      });
-
-      return lowStockProducts;
-    } catch (error) {
-      handleError(error);
-    }
+    return data.filter(product => {
+      if (product.stock_status === 'outofstock') return true;
+      if (product.manage_stock && product.stock_quantity !== null) {
+        return parseFloat(product.stock_quantity) <= lowStockThreshold;
+      }
+      return false;
+    });
   },
 
+  // Get single product by ID
   getById: async (id) => {
-    try {
-      const response = await api.get(`/products/${id}`);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.get(`/products/${id}`);
+    return response.data;
   },
 
+  // Create new product
   create: async (productData) => {
-    try {
-      const response = await api.post('/products', productData);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.post('/products', productData);
+    return response.data;
   },
 
+  // Update existing product
   update: async (id, productData) => {
-    try {
-      const response = await api.put(`/products/${id}`, productData);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.put(`/products/${id}`, productData);
+    return response.data;
   },
 
+  // Delete product permanently
   delete: async (id) => {
-    try {
-      const response = await api.delete(`/products/${id}`, { params: { force: true } });
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.delete(`/products/${id}`, { params: { force: true } });
+    return response.data;
   },
 
+  // Batch operations (create, update, delete multiple products)
   batch: async (data) => {
-    try {
-      const response = await api.post('/products/batch', data);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.post('/products/batch', data);
+    return response.data;
   },
 };
+
+// Alias for compatibility with hooks
+productsAPI.get = productsAPI.getById;
 
 // Orders API
 export const ordersAPI = {
@@ -316,15 +304,6 @@ export const reportsAPI = {
   getSales: async (period = 'month') => {
     try {
       const response = await api.get('/reports/sales', { params: { period } });
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
-  },
-
-  getTopSellers: async () => {
-    try {
-      const response = await api.get('/reports/top_sellers');
       return response.data;
     } catch (error) {
       handleError(error);

@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { XMarkIcon as X, PaperAirplaneIcon as Send, SparklesIcon as Sparkles, ArrowPathIcon as Loader } from '@heroicons/react/24/outline';
+import { Button } from '../ui';
+import { Input } from '../ui/inputs';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getWorkingModelName, getGeminiAPIKey } from '../../services/gemini';
@@ -134,14 +136,14 @@ ${conversationContext}
   return (
     <>
       {/* Chat Icon Button - Position above mobile nav on mobile */}
-      <button
+      <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 lg:bottom-6 right-4 sm:right-6 z-40 bg-primary-500 text-white p-4 rounded-full shadow-lg hover:bg-primary-600 transition-colors flex items-center justify-center touch-manipulation"
+        className="fixed bottom-24 lg:bottom-6 right-4 sm:right-6 z-40 bg-primary-500 text-white p-4 rounded-full shadow-lg hover:bg-primary-600 h-14 w-14 flex items-center justify-center"
         title={t('aiAssistant') || 'עוזר AI'}
         aria-label={t('aiAssistant') || 'עוזר AI'}
       >
         <Sparkles className="w-6 h-6" />
-      </button>
+      </Button>
 
       {/* Chat Modal */}
       {isOpen && (
@@ -164,13 +166,15 @@ ${conversationContext}
                 <Sparkles className="w-5 h-5" />
                 <h3 className="font-semibold">{t('aiAssistant') || 'עוזר AI'}</h3>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsOpen(false)}
-                className="p-1 hover:bg-primary-600 rounded transition-colors"
+                className="text-white hover:bg-primary-600 hover:text-white"
                 aria-label={t('close') || 'סגור'}
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Messages */}
@@ -203,21 +207,24 @@ ${conversationContext}
             {/* Input */}
             <div className="p-4 border-t border-gray-200">
               <div className="flex gap-2">
-                <input
+                <Input
                   ref={inputRef}
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder={t('typeMessage') || 'הקלד הודעה...'}
-                  className="flex-1 input-field text-right"
+                  className="text-right"
                   dir="rtl"
                   disabled={loading}
+                  containerClassName="flex-1"
                 />
-                <button
+                <Button
                   onClick={handleSend}
                   disabled={!input.trim() || loading}
-                  className="bg-primary-500 text-white p-2 rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  variant="primary"
+                  size="icon"
+                  className="flex items-center justify-center"
                   aria-label={t('send') || 'שלח'}
                 >
                   {loading ? (
@@ -225,7 +232,7 @@ ${conversationContext}
                   ) : (
                     <Send className="w-[18px] h-[18px]" />
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           </div>

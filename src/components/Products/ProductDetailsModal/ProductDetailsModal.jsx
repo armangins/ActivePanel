@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { variationsAPI } from '../../../services/woocommerce';
+import { Button } from '../../ui';
 import ProductDetailsHeader from './ProductDetailsHeader';
 import ProductDetailsBasicInfo from './ProductDetailsBasicInfo';
 import ProductDetailsPricing from './ProductDetailsPricing';
@@ -31,7 +32,7 @@ const ProductDetailsModal = ({ product, onClose, formatCurrency }) => {
   useEffect(() => {
     const loadVariations = async () => {
       if (!isVariableProduct || !product?.id) return;
-      
+
       try {
         setLoadingVariations(true);
         setVariationsError(null);
@@ -51,11 +52,11 @@ const ProductDetailsModal = ({ product, onClose, formatCurrency }) => {
   if (!product) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-0 sm:p-4"
       onClick={onClose}
     >
-      <div 
+      <div
         className="bg-gray-50 sm:rounded-lg max-w-5xl w-full h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
@@ -70,26 +71,26 @@ const ProductDetailsModal = ({ product, onClose, formatCurrency }) => {
         {/* Tabs */}
         <div className="border-b border-gray-200 bg-white">
           <div className={`flex ${'flex-row-reverse'} justify-end`}>
-            <button
+            <Button
               onClick={() => setActiveTab('description')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'description'
-                  ? 'border-primary-500 text-primary-500'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              variant="ghost"
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors rounded-none h-auto ${activeTab === 'description'
+                  ? 'border-primary-500 text-primary-500 bg-transparent'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 bg-transparent'
+                }`}
             >
               {t('description') || 'Description'}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setActiveTab('general')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'general'
-                  ? 'border-primary-500 text-primary-500'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              variant="ghost"
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors rounded-none h-auto ${activeTab === 'general'
+                  ? 'border-primary-500 text-primary-500 bg-transparent'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 bg-transparent'
+                }`}
             >
               {t('general') || 'General'}
-            </button>
+            </Button>
           </div>
         </div>
 

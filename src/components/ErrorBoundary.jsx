@@ -1,5 +1,6 @@
 import React from 'react';
 import StatusMessage from './ui/states/StatusMessage';
+import { Button } from './ui';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -42,15 +43,16 @@ class ErrorBoundary extends React.Component {
                 </>
               }
               action={
-                <button
+                <Button
                   onClick={() => {
                     this.setState({ hasError: false, error: null, errorInfo: null });
                     window.location.reload();
                   }}
-                  className="btn-primary mt-4"
+                  variant="primary"
+                  className="mt-4"
                 >
                   Reload Page
-                </button>
+                </Button>
               }
             />
           </div>

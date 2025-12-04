@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const ColumnMapper = ({ headers, sampleRows, mode, onMappingComplete }) => {
   const { t } = useLanguage();
-  
+
   // WooCommerce required/optional fields
   const wooCommerceFields = [
     { key: 'name', label: t('productName') || 'שם מוצר', required: true },
@@ -26,15 +27,15 @@ const ColumnMapper = ({ headers, sampleRows, mode, onMappingComplete }) => {
   useEffect(() => {
     // Auto-detect column mappings
     const autoMapping = {};
-    
+
     headers.forEach((header, index) => {
       const headerLower = header.toLowerCase().trim();
-      
+
       // Try to match common patterns
       wooCommerceFields.forEach(field => {
         const fieldLower = field.key.toLowerCase();
         const fieldLabelLower = field.label.toLowerCase();
-        
+
         if (
           headerLower.includes(fieldLower) ||
           headerLower === fieldLabelLower ||
@@ -48,7 +49,7 @@ const ColumnMapper = ({ headers, sampleRows, mode, onMappingComplete }) => {
         }
       });
     });
-    
+
     setMapping(autoMapping);
     setAutoDetected(true);
   }, [headers]);
@@ -61,12 +62,12 @@ const ColumnMapper = ({ headers, sampleRows, mode, onMappingComplete }) => {
     // Validate required fields
     const requiredFields = wooCommerceFields.filter(f => f.required);
     const missingFields = requiredFields.filter(f => mapping[f.key] === undefined);
-    
+
     if (missingFields.length > 0) {
       alert(t('missingRequiredFields') || 'חסרים שדות חובה: ' + missingFields.map(f => f.label).join(', '));
       return;
     }
-    
+
     onMappingComplete(mapping);
   };
 
@@ -113,7 +114,7 @@ const ColumnMapper = ({ headers, sampleRows, mode, onMappingComplete }) => {
         {wooCommerceFields.map((field) => {
           const mappedColumn = mapping[field.key];
           const isRequired = field.required;
-          
+
           return (
             <div key={field.key} className="flex items-center gap-4 flex-row-reverse">
               <div className="flex-1 text-right">
@@ -141,7 +142,7 @@ const ColumnMapper = ({ headers, sampleRows, mode, onMappingComplete }) => {
                   <CheckCircle className="w-[18px] h-[18px] text-green-500" />
                 )}
                 {isRequired && mappedColumn === undefined && (
-                  <AlertCircle className="w-[18px] h-[18px] text-orange-500" />
+                  <ExclamationCircleIcon className="w-[18px] h-[18px] text-orange-500" />
                 )}
               </div>
             </div>
@@ -150,12 +151,12 @@ const ColumnMapper = ({ headers, sampleRows, mode, onMappingComplete }) => {
       </div>
 
       <div className="mt-6 flex justify-end flex-row-reverse">
-        <button
+        <Button
           onClick={handleComplete}
-          className="btn-primary"
+          variant="primary"
         >
           {t('continue') || 'המשך'}
-        </button>
+        </Button>
       </div>
     </div>
   );

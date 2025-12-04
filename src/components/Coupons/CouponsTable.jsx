@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { TrashIcon as Trash2, PencilIcon as Edit, ClipboardDocumentIcon as Copy, CheckCircleIcon as CheckCircle } from '@heroicons/react/24/outline';
+import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 /**
@@ -39,11 +40,10 @@ const CouponsTable = ({ coupons, onEdit, onDelete, formatCurrency, isRTL, t }) =
   const getStatusBadge = (status) => {
     const isActive = status === 'publish';
     return (
-      <span className={`px-2 py-1 text-xs font-medium rounded ${
-        isActive 
-          ? 'bg-green-100 text-green-800' 
+      <span className={`px-2 py-1 text-xs font-medium rounded ${isActive
+          ? 'bg-green-100 text-green-800'
           : 'bg-gray-100 text-gray-800'
-      }`}>
+        }`}>
         {isActive ? t('active') || 'Active' : t('inactive') || 'Inactive'}
       </span>
     );
@@ -89,9 +89,11 @@ const CouponsTable = ({ coupons, onEdit, onDelete, formatCurrency, isRTL, t }) =
                   <code className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
                     {coupon.code}
                   </code>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => handleCopyCode(coupon.code)}
-                    className="text-gray-400 hover:text-primary-500 transition-colors"
+                    className="text-gray-400 hover:text-primary-500"
                     title={t('copyCode') || 'Copy code'}
                   >
                     {copiedCode === coupon.code ? (
@@ -99,7 +101,7 @@ const CouponsTable = ({ coupons, onEdit, onDelete, formatCurrency, isRTL, t }) =
                     ) : (
                       <Copy className="w-4 h-4" />
                     )}
-                  </button>
+                  </Button>
                 </div>
               </td>
               <td className={`py-3 px-4 text-sm ${'text-right'}`}>
@@ -119,20 +121,24 @@ const CouponsTable = ({ coupons, onEdit, onDelete, formatCurrency, isRTL, t }) =
               </td>
               <td className="py-3 px-4">
                 <div className={`flex items-center gap-2 ${'flex-row-reverse'}`}>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => onEdit(coupon)}
-                    className="p-2 text-primary-500 hover:bg-primary-50 rounded-lg transition-colors"
+                    className="text-primary-500 hover:bg-primary-50"
                     title={t('editCoupon') || 'Edit coupon'}
                   >
                     <Edit className="w-[18px] h-[18px]" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => onDelete(coupon.id)}
-                    className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                    className="text-orange-600 hover:bg-orange-50"
                     title={t('deleteCoupon') || 'Delete coupon'}
                   >
                     <Trash2 className="w-[18px] h-[18px]" />
-                  </button>
+                  </Button>
                 </div>
               </td>
             </tr>

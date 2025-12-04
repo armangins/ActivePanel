@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowUpTrayIcon, TableCellsIcon as FileSpreadsheet, CheckCircleIcon, ExclamationCircleIcon, ArrowDownTrayIcon as Download, PlusIcon as Plus, ArrowPathIcon as RefreshCw } from '@heroicons/react/24/outline';
+import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 import ProductBuilder from './ProductBuilder';
 import CSVImporter from './CSVImporter';
@@ -46,21 +47,21 @@ const Imports = () => {
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
-              <button
+              <Button
                 key={tab.id}
+                variant="ghost"
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors
-                  ${
-                    activeTab === tab.id
-                      ? 'border-primary-500 text-primary-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors rounded-none hover:bg-transparent
+                  ${activeTab === tab.id
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }
                 `}
               >
                 <Icon className="w-[18px] h-[18px]" />
                 {tab.label}
-              </button>
+              </Button>
             );
           })}
         </nav>

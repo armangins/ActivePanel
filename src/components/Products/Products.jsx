@@ -1,16 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { categoriesAPI } from '../../services/woocommerce';
-import { useProducts } from '../../hooks/useProducts';
+import { useInfiniteProducts } from '../../hooks/useProducts';
 import { useCategories } from '../../hooks/useCategories';
+import { productsAPI } from '../../services/woocommerce';
 import ProductDetailsModal from './ProductDetailsModal/ProductDetailsModal';
 import ProductsHeader from './ProductsHeader';
 import ProductFilters from './ProductFilters';
 import ProductGrid from './ProductGrid';
 import ProductList from './ProductList';
 import { EmptyState, LoadingState, ErrorState } from '../ui';
-import Pagination from '../ui/Pagination';
 import { PAGINATION_DEFAULTS } from '../../shared/constants';
 
 const PER_PAGE = PAGINATION_DEFAULTS.PRODUCTS_PER_PAGE;
@@ -19,57 +18,71 @@ const Products = () => {
   const navigate = useNavigate();
   const { t, formatCurrency, isRTL } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
-  const [page, setPage] = useState(1);
-
-  // Filter states
   const [selectedCategory, setSelectedCategory] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false); // view-only details
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
-  const [sortField, setSortField] = useState(null); // 'name' or 'price'
-  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' or 'desc'
+  const [viewMode, setViewMode] = useState('grid');
+  const [sortField, setSortField] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc');
   const [gridColumns, setGridColumns] = useState(4);
 
-  // Use the useProducts hook for data fetching with caching
   const {
-    data: productsData,
+    data,
     isLoading: loading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
     error,
     refetch
-  } = useProducts({
-    page,
+  } = useInfiniteProducts({
     per_page: PER_PAGE,
-    _fields: ['id', 'name', 'slug', 'permalink', 'date_created', 'status', 'stock_status', 'stock_quantity', 'price', 'regular_price', 'sale_price', 'images', 'categories', 'sku']
+    _fields: ['id', 'name', 'slug',
+      'permalink', 'date_created', 'status',
+      'stock_status', 'stock_quantity', 'price',
+      'regular_price', 'sale_price', 'images',
+      'categories', 'sku']
   });
 
-  const allProducts = productsData?.data || [];
-  const totalProducts = productsData?.total || 0;
-  const totalPages = productsData?.totalPages || 1;
+  // Flatten the pages into a single array of products
+  const allProducts = useMemo(() => {
+    return data?.pages.flatMap(page => page.data) || [];
+  }, [data]);
 
-  // Use useCategories hook for data fetching with caching
+  const totalProducts = data?.pages[0]?.total || 0;
+
   const { data: categories = [] } = useCategories();
 
-  const refreshProducts = () => {
-    refetch();
+  const handleLoadMore = () => {
+    if (!isFetchingNextPage && hasNextPage) {
+      fetchNextPage();
+    }
   };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const bottomPosition = document.documentElement.scrollHeight - 300;
+
+      if (scrollPosition >= bottomPosition && hasNextPage && !isFetchingNextPage && !loading) {
+        handleLoadMore();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasNextPage, isFetchingNextPage, loading]);
 
 
   const handleDelete = async (id) => {
-    // Close any open modals for this product
     if (selectedProduct?.id === id) {
       setIsDetailsOpen(false);
       setSelectedProduct(null);
     }
 
     try {
-      // Optimistically update UI first for instant feedback
-      // Note: With React Query, we should ideally use mutation's onMutate, 
-      // but for now we'll just refetch after delete
-
-      // Then delete from API
       await productsAPI.delete(id);
       refetch();
     } catch (err) {
@@ -78,22 +91,18 @@ const Products = () => {
     }
   };
 
-  // Client-side filtering - instant!
   const filteredProducts = allProducts.filter(product => {
-    // Search filter
     const matchesSearch =
       product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.sku?.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (!matchesSearch) return false;
 
-    // Category filter
     if (selectedCategory) {
       const productCategories = product.categories?.map(cat => cat.id.toString()) || [];
       if (!productCategories.includes(selectedCategory)) return false;
     }
 
-    // Price range filter
     const price = parseFloat(product.price || 0);
     if (minPrice && price < parseFloat(minPrice)) return false;
     if (maxPrice && price > parseFloat(maxPrice)) return false;
@@ -252,22 +261,43 @@ const Products = () => {
         />
       )}
 
-      {!hasActiveFilters && (
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          onPageChange={(newPage) => {
-            setPage(newPage);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          totalItems={totalProducts}
-          itemsPerPage={PER_PAGE}
-          isRTL={isRTL}
-          t={t}
-        />
+      {hasNextPage && (
+        <div className="mt-8 flex flex-col items-center gap-3">
+          {isFetchingNextPage ? (
+            <div className="flex items-center gap-2 text-gray-600">
+              <svg className="animate-spin h-5 w-5 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="text-sm">{t('loadingMore') || 'Loading more products...'}</span>
+            </div>
+          ) : (
+            <button
+              onClick={handleLoadMore}
+              className="px-6 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors shadow-sm"
+            >
+              {t('loadMore') || 'Load More Products'}
+            </button>
+          )}
+          <div className="text-xs text-gray-500">
+            {t('showing')} {allProducts.length} {t('of')} {totalProducts}
+          </div>
+        </div>
       )}
 
-      {/* Product Details Modal (view-only) */}
+      {!hasNextPage && allProducts.length > 0 && (
+        <div className="mt-8 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span className="text-sm font-medium">
+              {t('allProductsLoaded') || 'All products loaded'} ({totalProducts})
+            </span>
+          </div>
+        </div>
+      )}
+
       {isDetailsOpen && selectedProduct && (
         <ProductDetailsModal
           product={selectedProduct}

@@ -14,7 +14,7 @@ import {
 import { useLanguage } from '../../contexts/LanguageContext';
 import { testConnection, productsAPI } from '../../services/woocommerce';
 import { settingsAPI } from '../../services/api';
-import { LoadingState } from '../ui';
+import { LoadingState, Button } from '../ui';
 
 
 // Lazy load tab components
@@ -218,14 +218,15 @@ const Settings = () => {
           <p className="text-gray-600 mt-1">{t('configureAPI')}</p>
         </div>
 
-        <button
+        <Button
           onClick={handleSave}
           disabled={loading || !settings.woocommerceUrl || !settings.consumerKey || !settings.consumerSecret}
-          className={`btn-primary flex items-center ${'flex-row-reverse space-x-reverse'} disabled:opacity-50 disabled:cursor-not-allowed`}
+          variant="primary"
+          className={`flex items-center ${'flex-row-reverse space-x-reverse'}`}
         >
           <Save className="w-[18px] h-[18px]" />
           <span>{loading ? t('saving') : t('saveSettings')}</span>
-        </button>
+        </Button>
       </div>
 
       {/* Global Message */}
@@ -249,17 +250,18 @@ const Settings = () => {
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
-                  <button
+                  <Button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-right transition-colors ${activeTab === tab.id
+                    variant="ghost"
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-right transition-colors justify-start h-auto ${activeTab === tab.id
                       ? 'bg-primary-50 text-primary-700 font-medium border-r-2 border-primary-500'
                       : 'text-gray-700 hover:bg-gray-50'
                       }`}
                   >
                     <Icon className="w-[18px] h-[18px] flex-shrink-0" />
                     <span className="flex-1">{tab.label}</span>
-                  </button>
+                  </Button>
                 );
               })}
             </nav>

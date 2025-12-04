@@ -1,6 +1,7 @@
 import { TrashIcon as Trash2, PlusIcon as Plus } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Input } from '../ui/inputs';
+import { Button } from '../ui';
 
 /**
  * CustomCostsInput Component
@@ -14,13 +15,13 @@ import { Input } from '../ui/inputs';
  * @param {Object} validationErrors - Validation errors object
  * @param {Function} setValidationErrors - Function to set validation errors
  */
-const CustomCostsInput = ({ 
-  customCosts, 
-  onAdd, 
-  onRemove, 
-  onUpdate, 
-  validationErrors, 
-  setValidationErrors 
+const CustomCostsInput = ({
+  customCosts,
+  onAdd,
+  onRemove,
+  onUpdate,
+  validationErrors,
+  setValidationErrors
 }) => {
   const { t } = useLanguage();
 
@@ -51,14 +52,16 @@ const CustomCostsInput = ({
           <Plus className="w-[18px] h-[18px] text-gray-500" />
           {t('additionalCustomCosts') || 'עלויות נוספות/מותאמות אישית (אופציונלי)'}
         </label>
-        <button
+        <Button
           type="button"
           onClick={onAdd}
-          className="btn-secondary text-xs py-1 px-2 flex items-center gap-1"
+          variant="secondary"
+          size="sm"
+          className="flex items-center gap-1"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>{t('addCost') || 'הוסף עלות'}</span>
-        </button>
+        </Button>
       </div>
       <div className="space-y-2">
         {customCosts.map((cost, index) => (
@@ -92,16 +95,18 @@ const CustomCostsInput = ({
                 />
               </div>
               {customCosts.length > 1 && (
-                <button
+                <Button
                   type="button"
                   id={`remove-custom-cost-${cost.id}`}
                   aria-label={`${t('remove') || 'הסר'} ${cost.name || t('costName') || 'עלות'}`}
                   onClick={() => onRemove(cost.id)}
-                  className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                  variant="ghost"
+                  size="icon"
+                  className="text-orange-600 hover:bg-orange-50"
                   title={t('remove') || 'הסר'}
                 >
                   <Trash2 className="w-[18px] h-[18px]" />
-                </button>
+                </Button>
               )}
             </div>
           </div>

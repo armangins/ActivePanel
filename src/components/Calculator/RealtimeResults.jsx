@@ -1,5 +1,6 @@
 import { useMemo, useEffect, useState } from 'react';
 import { CheckCircleIcon, DocumentDuplicateIcon as Copy, CheckIcon as Check } from '@heroicons/react/24/outline';
+import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 /**
@@ -24,7 +25,7 @@ const RealtimeResults = ({ costs, desiredMargin, customCosts, formatCurrency, on
     const shipping = parseFloat(costs.shippingCost) || 0;
     const packaging = parseFloat(costs.packagingCost) || 0;
     const platform = parseFloat(costs.platformFees) || 0;
-    
+
     // Calculate custom costs total
     const customTotal = customCosts.reduce((sum, cost) => {
       return sum + (parseFloat(cost.amount) || 0);
@@ -38,17 +39,17 @@ const RealtimeResults = ({ costs, desiredMargin, customCosts, formatCurrency, on
     }
 
     const margin = parseFloat(desiredMargin) || 0;
-    
+
     if (margin <= 0 || margin >= 100) {
       return null;
     }
 
     // Calculate selling price using margin formula: Selling Price = Cost / (1 - Margin/100)
     const sellingPrice = totalCost / (1 - margin / 100);
-    
+
     // Calculate profit
     const profit = sellingPrice - totalCost;
-    
+
     // Calculate actual margin percentage (for verification)
     const actualMargin = (profit / sellingPrice) * 100;
 
@@ -94,7 +95,7 @@ const RealtimeResults = ({ costs, desiredMargin, customCosts, formatCurrency, on
       <h3 className="text-lg font-semibold text-primary-900 mb-4 text-right">
         {t('realtimeResults') || 'תוצאות בזמן אמת'}
       </h3>
-      
+
       <div className="space-y-3">
         {/* Total Cost */}
         <div className="flex justify-between items-center p-3 bg-white rounded-lg">
@@ -111,7 +112,7 @@ const RealtimeResults = ({ costs, desiredMargin, customCosts, formatCurrency, on
             <span className="text-3xl font-bold text-primary-600">
               {formatCurrency(result.sellingPrice)}
             </span>
-            <button
+            <Button
               type="button"
               onClick={async () => {
                 const priceText = result.sellingPrice.toFixed(2);
@@ -131,14 +132,16 @@ const RealtimeResults = ({ costs, desiredMargin, customCosts, formatCurrency, on
                   setTimeout(() => setCopied(false), 2000);
                 }
               }}
+              variant="ghost"
+              size="icon"
               className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
               title={t('copy') || 'העתק'}
             >
               {copied ? <Check className="w-[18px] h-[18px] text-green-600" /> : <Copy className="w-[18px] h-[18px]" />}
-            </button>
+            </Button>
           </div>
         </div>
-        
+
         {/* Margin and Profit */}
         <div className="grid grid-cols-2 gap-3">
           <div className="flex justify-between items-center p-3 bg-white rounded-lg">

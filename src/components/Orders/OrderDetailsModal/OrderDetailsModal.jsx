@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { XMarkIcon as X } from '@heroicons/react/24/outline';
 import { ordersAPI } from '../../../services/woocommerce';
 import { useOrder } from '../../../hooks/useOrders';
 import { CubeIcon } from '@heroicons/react/24/outline';
+import { Button } from '../../ui';
 
 /**
  * OrderDetailsModal Component
@@ -61,9 +63,9 @@ const OrderDetailsModal = ({ order, onClose, onStatusUpdate, formatCurrency, isR
 
   // Get shipping address
   const shippingAddress = displayOrder.shipping
-    ? `${displayOrder.shipping.address_1 || ''} ${displayOrder.shipping.address_2 || ''} ${displayOrder.shipping.city || ''}, ${displayOrder.shipping.state || ''} ${displayOrder.shipping.postcode || ''} ${displayOrder.shipping.country || ''}`.trim()
+    ? `${displayOrder.shipping.address_1 || ''} ${displayOrder.shipping.address_2 || ''} ${displayOrder.shipping.city || ''}, ${displayOrder.shipping.state || ''} ${displayOrder.shipping.postcode || ''} ${displayOrder.shipping.country || ''} `.trim()
     : displayOrder.billing
-      ? `${displayOrder.billing.address_1 || ''} ${displayOrder.billing.address_2 || ''} ${displayOrder.billing.city || ''}, ${displayOrder.billing.state || ''} ${displayOrder.billing.postcode || ''} ${displayOrder.billing.country || ''}`.trim()
+      ? `${displayOrder.billing.address_1 || ''} ${displayOrder.billing.address_2 || ''} ${displayOrder.billing.city || ''}, ${displayOrder.billing.state || ''} ${displayOrder.billing.postcode || ''} ${displayOrder.billing.country || ''} `.trim()
       : t('noAddress') || 'לא צוין כתובת';
 
   // Get payment method
@@ -94,13 +96,15 @@ const OrderDetailsModal = ({ order, onClose, onStatusUpdate, formatCurrency, isR
               {t('orderDetails') || 'פרטי הזמנה'}
             </h2>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600"
             aria-label={t('close') || 'סגור'}
           >
             <X className="w-6 h-6" />
-          </button>
+          </Button>
         </div>
 
         {/* Content - Two Column Layout */}

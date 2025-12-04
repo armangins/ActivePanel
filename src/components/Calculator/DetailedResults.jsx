@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DocumentDuplicateIcon as Copy, CheckIcon as Check, PlusIcon as Plus } from '@heroicons/react/24/outline';
+import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 /**
@@ -24,7 +25,7 @@ const DetailedResults = ({ costs, desiredMargin, customCosts, formatCurrency }) 
     const shipping = parseFloat(costs.shippingCost) || 0;
     const packaging = parseFloat(costs.packagingCost) || 0;
     const platform = parseFloat(costs.platformFees) || 0;
-    
+
     // Calculate custom costs total
     const customTotal = customCosts.reduce((sum, cost) => {
       return sum + (parseFloat(cost.amount) || 0);
@@ -38,17 +39,17 @@ const DetailedResults = ({ costs, desiredMargin, customCosts, formatCurrency }) 
     }
 
     const margin = parseFloat(desiredMargin) || 0;
-    
+
     if (margin <= 0 || margin >= 100) {
       return null;
     }
 
     // Calculate selling price using margin formula: Selling Price = Cost / (1 - Margin/100)
     const sellingPrice = totalCost / (1 - margin / 100);
-    
+
     // Calculate profit
     const profit = sellingPrice - totalCost;
-    
+
     // Calculate actual margin percentage
     const actualMargin = (profit / sellingPrice) * 100;
 
@@ -104,7 +105,7 @@ const DetailedResults = ({ costs, desiredMargin, customCosts, formatCurrency }) 
       <h3 className="text-lg font-bold text-gray-900 mb-4 text-right">
         {t('detailedResults') || 'תוצאות מפורטות'}
       </h3>
-      
+
       <div className="space-y-6 flex-1 overflow-y-auto">
         {/* Cost Breakdown */}
         <div>
@@ -157,14 +158,16 @@ const DetailedResults = ({ costs, desiredMargin, customCosts, formatCurrency }) 
             <span className="text-sm font-bold text-primary-900 text-right">
               {t('recommendedSellingPrice') || 'מחיר מכירה מומלץ'}
             </span>
-            <button
+            <Button
               type="button"
               onClick={handleCopyPrice}
+              variant="ghost"
+              size="icon"
               className="p-2 text-gray-500 hover:text-primary-600 hover:bg-white rounded-lg transition-colors"
               title={t('copy') || 'העתק'}
             >
               {copied ? <Check className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5" />}
-            </button>
+            </Button>
           </div>
           <div className="text-right">
             <span className="text-3xl font-bold text-primary-600">
@@ -172,7 +175,7 @@ const DetailedResults = ({ costs, desiredMargin, customCosts, formatCurrency }) 
             </span>
           </div>
         </div>
-        
+
         {/* Profit and Margin Details */}
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -190,16 +193,17 @@ const DetailedResults = ({ costs, desiredMargin, customCosts, formatCurrency }) 
         </div>
 
         {/* Create Product Button */}
-        <button
+        <Button
           type="button"
           onClick={() => {
             navigate(`/products/add?price=${result.sellingPrice.toFixed(2)}`);
           }}
-          className="w-full btn-primary flex items-center justify-center gap-2 flex-row"
+          variant="primary"
+          className="w-full flex items-center justify-center gap-2 flex-row"
         >
           <Plus className="w-5 h-5" />
           <span>{t('createProductWithThisPrice') || 'צור מוצר עם מחיר זה'}</span>
-        </button>
+        </Button>
       </div>
     </div>
   );

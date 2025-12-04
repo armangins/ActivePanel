@@ -8,6 +8,16 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
+// Security: Validate API URL configuration
+if (!import.meta.env.VITE_API_URL && import.meta.env.PROD) {
+  console.warn('⚠️ VITE_API_URL environment variable is not set. Using default: /api');
+}
+
+// Security: Warn if not using HTTPS in production
+if (import.meta.env.PROD && API_URL.startsWith('http://')) {
+  console.warn('⚠️ API URL should use HTTPS in production for security');
+}
+
 // In-memory token storage
 let authToken = null;
 
@@ -68,7 +78,10 @@ const createApiClient = () => {
       // Update CSRF token from response header
       const csrfToken = response.headers['x-csrf-token'];
       if (csrfToken) {
-        document.cookie = `csrf-token=${csrfToken}; path=/; SameSite=Strict`;
+        // Set CSRF token with security flags
+        // Note: CSRF tokens need to be readable by JS (not HttpOnly)
+        const isSecure = window.location.protocol === 'https:' ? '; Secure' : '';
+        document.cookie = `csrf-token=${csrfToken}; path=/; SameSite=Strict${isSecure}; Max-Age=3600`;
       }
 
       // 2. The "First Time User" (Setup Required)
@@ -95,14 +108,20 @@ const createApiClient = () => {
       }
 
       // 4. The "Real Error" (Server Error)
-      // Show a friendly error message (toast)
-      // Note: We don't have a global toast service imported here yet. 
-      // We can dispatch a custom event or console error for now.
-      console.error('API Error:', error.response?.data?.message || error.message);
+      // Log detailed errors only in development
+      if (import.meta.env.DEV) {
+        console.error('API Error:', error.response?.data?.message || error.message);
+        console.error('Full error:', error.response?.data);
+      } else {
+        // Production: Log generic message only
+        console.error('An error occurred. Please try again.');
+      }
 
-      // You might want to dispatch an event that your UI listens to
+      // Dispatch user-friendly error event
       window.dispatchEvent(new CustomEvent('api-error', {
-        detail: { message: 'Something went wrong, please try again.' }
+        detail: {
+          message: error.response?.data?.message || 'Something went wrong, please try again.'
+        }
       }));
 
       return Promise.reject(error);

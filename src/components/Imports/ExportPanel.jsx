@@ -1,4 +1,5 @@
 import { ArrowDownTrayIcon as Download, TableCellsIcon as FileSpreadsheet } from '@heroicons/react/24/outline';
+import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { generateWooCommerceCSV, downloadCSV } from '../../utils/csvProcessor';
 
@@ -25,13 +26,14 @@ const ExportPanel = ({ products }) => {
             </p>
           </div>
         </div>
-        <button
+        <Button
           onClick={handleExport}
-          className="btn-primary flex items-center gap-2 flex-row-reverse"
+          variant="primary"
+          className="flex items-center gap-2 flex-row-reverse"
         >
           <Download className="w-[18px] h-[18px]" />
           {t('exportCSV') || 'ייצא CSV'}
-        </button>
+        </Button>
       </div>
       <p className="text-xs text-primary-600 mt-3 text-right">
         {t('exportDescription') || 'הקובץ יווצר בפורמט UTF-8 התואם ל-WooCommerce'}

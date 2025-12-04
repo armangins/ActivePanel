@@ -1,5 +1,6 @@
 import React from 'react';
 import { TrashIcon as Trash2 } from '@heroicons/react/24/outline';
+import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const SystemSettings = ({ onClearCache }) => {
@@ -11,13 +12,14 @@ const SystemSettings = ({ onClearCache }) => {
                 <p className={`text-sm text-gray-600 mb-4 ${'text-right'}`}>
                     {t('cacheManagementDesc') || 'נקה נתונים שמורים ב-Cache כדי לטעון מחדש מהשרת. זה יכול לעזור אם הנתונים נראים לא מעודכנים.'}
                 </p>
-                <button
+                <Button
                     onClick={onClearCache}
-                    className="btn-secondary flex items-center flex-row-reverse space-x-reverse"
+                    variant="secondary"
+                    className="flex items-center flex-row-reverse space-x-reverse"
                 >
                     <Trash2 className="w-[18px] h-[18px]" />
                     <span>{t('clearCache') || 'נקה Cache'}</span>
-                </button>
+                </Button>
             </div>
         </div>
     );

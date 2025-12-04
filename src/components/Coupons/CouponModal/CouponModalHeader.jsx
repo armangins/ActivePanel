@@ -1,5 +1,6 @@
 import React from 'react';
 import { XMarkIcon as X, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { Button } from '../../../ui';
 
 const CouponModalHeader = ({ coupon, currentStep, steps, onClose, t }) => {
     return (
@@ -14,12 +15,14 @@ const CouponModalHeader = ({ coupon, currentStep, steps, onClose, t }) => {
                         {t('step')} {currentStep + 1} {t('of')} {steps.length}
                     </p>
                 </div>
-                <button
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={onClose}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-gray-400 hover:text-gray-600"
                 >
                     <X className="w-6 h-6" />
-                </button>
+                </Button>
             </div>
 
             {/* Steps Indicator */}
@@ -34,10 +37,10 @@ const CouponModalHeader = ({ coupon, currentStep, steps, onClose, t }) => {
                             <div key={step.id} className={`flex items-center ${'flex-row-reverse'} flex-1`}>
                                 <div className={`flex items-center gap-2 ${'flex-row-reverse'}`}>
                                     <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${isActive
+                                        ? 'border-primary-500 bg-primary-500 text-white'
+                                        : isCompleted
                                             ? 'border-primary-500 bg-primary-500 text-white'
-                                            : isCompleted
-                                                ? 'border-primary-500 bg-primary-500 text-white'
-                                                : 'border-gray-300 bg-white text-gray-400'
+                                            : 'border-gray-300 bg-white text-gray-400'
                                         }`}>
                                         {isCompleted ? (
                                             <CheckCircleIcon className="w-5 h-5" />

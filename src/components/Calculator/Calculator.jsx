@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CalculatorIcon as CalculatorIcon } from '@heroicons/react/24/outline';
 import { CubeIcon as Package, TruckIcon as Truck, CreditCardIcon as CreditCard } from '@heroicons/react/24/outline';
+import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CalculatorHeader from './CalculatorHeader';
 import CostInputField from './CostInputField';
@@ -21,13 +22,13 @@ import { useCostInput } from '../../hooks';
  */
 const Calculator = ({ onUsePrice, isModalMode = false }) => {
   const { t, formatCurrency } = useLanguage();
-  
+
   // Cost inputs using custom hook
   const supplierCost = useCostInput('', () => setResult(null));
   const shippingCost = useCostInput('', () => setResult(null));
   const packagingCost = useCostInput('', () => setResult(null));
   const platformFees = useCostInput('', () => setResult(null));
-  
+
   const [customCosts, setCustomCosts] = useState([{ id: 1, name: '', amount: '' }]);
   const [desiredMargin, setDesiredMargin] = useState('');
   const [result, setResult] = useState(null);
@@ -44,7 +45,7 @@ const Calculator = ({ onUsePrice, isModalMode = false }) => {
   };
 
   const updateCustomCost = (id, field, value) => {
-    setCustomCosts(customCosts.map(cost => 
+    setCustomCosts(customCosts.map(cost =>
       cost.id === id ? { ...cost, [field]: value } : cost
     ));
   };
@@ -63,7 +64,7 @@ const Calculator = ({ onUsePrice, isModalMode = false }) => {
     const shipping = parseFloat(shippingCost.value) || 0;
     const packaging = parseFloat(packagingCost.value) || 0;
     const platform = parseFloat(platformFees.value) || 0;
-    
+
     // Calculate custom costs total
     const customTotal = customCosts.reduce((sum, cost) => {
       return sum + (parseFloat(cost.amount) || 0);
@@ -78,7 +79,7 @@ const Calculator = ({ onUsePrice, isModalMode = false }) => {
     }
 
     const margin = parseFloat(desiredMargin) || 0;
-    
+
     if (margin < 0 || margin >= 100) {
       setResult(null);
       return;
@@ -86,10 +87,10 @@ const Calculator = ({ onUsePrice, isModalMode = false }) => {
 
     // Calculate selling price using margin formula: Selling Price = Cost / (1 - Margin/100)
     const sellingPrice = totalCost / (1 - margin / 100);
-    
+
     // Calculate profit
     const profit = sellingPrice - totalCost;
-    
+
     // Calculate actual margin percentage (for verification)
     const actualMargin = (profit / sellingPrice) * 100;
 
@@ -114,31 +115,31 @@ const Calculator = ({ onUsePrice, isModalMode = false }) => {
 
   const validateForm = () => {
     const errors = {};
-    
+
     // Supplier cost is required
     if (!supplierCost.value || supplierCost.value.trim() === '' || parseFloat(supplierCost.value) <= 0) {
       errors.supplierCost = t('fieldRequired') || 'שדה זה חובה';
     }
-    
+
     // Desired margin is required
     if (!desiredMargin || desiredMargin.trim() === '') {
       errors.desiredMargin = t('fieldRequired') || 'שדה זה חובה';
     }
-    
+
     return errors;
   };
 
   const handleCalculate = (e) => {
     e.preventDefault();
-    
+
     // Validate form
     const errors = validateForm();
     setFormErrors(errors);
-    
+
     if (Object.keys(errors).length > 0) {
       return;
     }
-    
+
     calculatePricing();
   };
 
@@ -162,7 +163,7 @@ const Calculator = ({ onUsePrice, isModalMode = false }) => {
           <CalculatorHeader />
         </div>
       )}
-      
+
       {isModalMode ? (
         // Modal Mode: Single column layout
         <div className="w-full space-y-6">
@@ -184,8 +185,8 @@ const Calculator = ({ onUsePrice, isModalMode = false }) => {
           {/* Calculator Form */}
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <form id="calculator-form" name="calculatorForm" onSubmit={handleCalculate} className="space-y-6">
-              <MarginSelector 
-                value={desiredMargin} 
+              <MarginSelector
+                value={desiredMargin}
                 onChange={handleMarginChange}
                 error={formErrors.desiredMargin}
               />
@@ -261,8 +262,8 @@ const Calculator = ({ onUsePrice, isModalMode = false }) => {
           {/* Left Column: Calculator Form */}
           <div className="card flex flex-col max-h-[calc(100vh-12rem)] overflow-hidden">
             <form id="calculator-form" name="calculatorForm" onSubmit={handleCalculate} className="space-y-6 flex-1 overflow-y-auto">
-              <MarginSelector 
-                value={desiredMargin} 
+              <MarginSelector
+                value={desiredMargin}
                 onChange={handleMarginChange}
                 error={formErrors.desiredMargin}
               />
@@ -332,20 +333,21 @@ const Calculator = ({ onUsePrice, isModalMode = false }) => {
 
               {/* Action Buttons */}
               <div className="flex gap-3 flex-row">
-                <button
+                <Button
                   type="submit"
-                  className="btn-primary flex items-center gap-2 flex-row-reverse"
+                  variant="primary"
+                  className="flex items-center gap-2 flex-row-reverse"
                 >
                   <CalculatorIcon className="w-[18px] h-[18px]" />
                   <span>{t('calculate') || 'חשב'}</span>
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={resetCalculator}
-                  className="btn-secondary"
                 >
                   {t('reset') || 'איפוס'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>

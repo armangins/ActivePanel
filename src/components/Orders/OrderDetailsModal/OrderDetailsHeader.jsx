@@ -1,4 +1,5 @@
 import { XMarkIcon as X } from '@heroicons/react/24/outline';
+import { Button } from '../../ui';
 
 /**
  * OrderDetailsHeader Component
@@ -16,13 +17,15 @@ const OrderDetailsHeader = ({ order, onClose, isRTL, t }) => {
       <h2 className={`text-2xl font-bold text-gray-900 ${'text-right'}`}>
         {t('orderDetails')} #{order.id}
       </h2>
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={onClose}
-        className="text-gray-400 hover:text-gray-600 transition-colors"
+        className="text-gray-400 hover:text-gray-600"
         aria-label={t('close') || 'Close'}
       >
         <X className="w-6 h-6" />
-      </button>
+      </Button>
     </div>
   );
 };

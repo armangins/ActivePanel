@@ -1,6 +1,7 @@
 import React from 'react';
 import { CurrencyDollarIcon as DollarSign, EnvelopeIcon as Mail, XMarkIcon as X } from '@heroicons/react/24/outline';
 import SearchInput from '../../ui/inputs/SearchInput';
+import { Button, Input } from '../../ui';
 
 const UsageRestrictionsStep = ({
     formData,
@@ -24,49 +25,35 @@ const UsageRestrictionsStep = ({
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label htmlFor="minimum-amount" className={`block text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
-                        {t('minimumAmount') || 'Minimum Amount'}
-                    </label>
-                    <div className="relative">
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                            <DollarSign className="w-[18px] h-[18px] text-gray-400" />
-                        </div>
-                        <input
-                            id="minimum-amount"
-                            name="minimum_amount"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={formData.minimum_amount}
-                            onChange={(e) => setFormData({ ...formData, minimum_amount: e.target.value })}
-                            className="input-field pl-10"
-                            placeholder="0.00"
-                            autoComplete="off"
-                        />
-                    </div>
+                    <Input
+                        id="minimum-amount"
+                        name="minimum_amount"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.minimum_amount}
+                        onChange={(e) => setFormData({ ...formData, minimum_amount: e.target.value })}
+                        placeholder="0.00"
+                        autoComplete="off"
+                        label={t('minimumAmount') || 'Minimum Amount'}
+                        rightIcon={DollarSign}
+                    />
                 </div>
 
                 <div>
-                    <label htmlFor="maximum-amount" className={`block text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
-                        {t('maximumAmount') || 'Maximum Amount'}
-                    </label>
-                    <div className="relative">
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                            <DollarSign className="w-[18px] h-[18px] text-gray-400" />
-                        </div>
-                        <input
-                            id="maximum-amount"
-                            name="maximum_amount"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={formData.maximum_amount}
-                            onChange={(e) => setFormData({ ...formData, maximum_amount: e.target.value })}
-                            className="input-field pl-10"
-                            placeholder="0.00"
-                            autoComplete="off"
-                        />
-                    </div>
+                    <Input
+                        id="maximum-amount"
+                        name="maximum_amount"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.maximum_amount}
+                        onChange={(e) => setFormData({ ...formData, maximum_amount: e.target.value })}
+                        placeholder="0.00"
+                        autoComplete="off"
+                        label={t('maximumAmount') || 'Maximum Amount'}
+                        rightIcon={DollarSign}
+                    />
                 </div>
             </div>
 
@@ -252,33 +239,29 @@ const UsageRestrictionsStep = ({
 
             {/* Email Restrictions */}
             <div className="card">
-                <label className={`block text-sm font-medium text-gray-700 mb-3 ${'text-right'}`}>
-                    {t('allowedEmails') || 'Allowed Emails'}
-                </label>
-                <div className={`flex gap-2 ${'flex-row-reverse'}`}>
-                    <div className="relative flex-1">
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                            <Mail className="w-[18px] h-[18px] text-gray-400" />
-                        </div>
-                        <input
+                <div className={`flex gap-2 items-end ${'flex-row-reverse'}`}>
+                    <div className="flex-1">
+                        <Input
                             id="email-restriction-input"
                             name="emailRestriction"
                             type="email"
                             value={emailInput}
                             onChange={(e) => setEmailInput(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addEmailRestriction())}
-                            className="input-field pl-10"
                             placeholder={t('enterEmail') || 'Enter email address'}
                             autoComplete="email"
+                            label={t('allowedEmails') || 'Allowed Emails'}
+                            rightIcon={Mail}
                         />
                     </div>
-                    <button
+                    <Button
                         type="button"
                         onClick={addEmailRestriction}
-                        className="btn-secondary"
+                        variant="secondary"
+                        className="mb-[2px]" // Align with input
                     >
                         {t('add') || 'Add'}
-                    </button>
+                    </Button>
                 </div>
                 {formData.email_restrictions.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -288,13 +271,14 @@ const UsageRestrictionsStep = ({
                                 className="inline-flex items-center gap-1 px-3 py-1 bg-primary-50 text-primary-700 rounded-full text-sm"
                             >
                                 {email}
-                                <button
+                                <Button
                                     type="button"
+                                    variant="ghost"
                                     onClick={() => removeEmailRestriction(email)}
-                                    className="text-primary-700 hover:text-primary-900 transition-colors"
+                                    className="text-primary-700 hover:text-primary-900 p-0 h-auto w-auto min-w-0"
                                 >
                                     <X className="w-3.5 h-3.5" />
-                                </button>
+                                </Button>
                             </span>
                         ))}
                     </div>

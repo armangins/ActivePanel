@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { Input } from '../../ui/inputs';
+import { Button } from '../../ui';
 import { KeyIcon, LockClosedIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { settingsAPI } from '../../../services/api';
 
@@ -93,38 +94,42 @@ const ApiConnectionStep = ({ onNext, onBack, onSkip, initialData }) => {
                 />
 
                 <div className="flex gap-4">
-                    <button
+                    <Button
                         type="button"
                         onClick={onBack}
-                        className="flex-1 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                        variant="secondary"
+                        className="flex-1"
                     >
                         {t('back') || 'חזור'}
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
                         type="button"
                         onClick={handleTestConnection}
                         disabled={loading}
-                        className="flex-1 py-3 bg-blue-50 text-blue-600 font-medium rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50"
+                        variant="secondary"
+                        className="flex-1 bg-blue-50 text-blue-600 hover:bg-blue-100"
                     >
                         {loading ? (t('testing') || 'בודק...') : (t('testConnection') || 'בדוק חיבור')}
-                    </button>
+                    </Button>
                 </div>
 
-                <button
+                <Button
                     type="submit"
-                    className="w-full py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors shadow-lg shadow-primary-500/30"
+                    variant="primary"
+                    className="w-full py-3 shadow-lg shadow-primary-500/30"
                 >
                     {t('finish') || 'סיים'}
-                </button>
+                </Button>
 
-                <button
+                <Button
                     type="button"
                     onClick={onSkip}
-                    className="w-full py-3 text-gray-500 font-medium hover:text-gray-700 transition-colors"
+                    variant="ghost"
+                    className="w-full py-3 text-gray-500 hover:text-gray-700 hover:bg-transparent"
                 >
                     {t('setupLater') || 'הגדר מאוחר יותר'}
-                </button>
+                </Button>
             </form>
         </div>
     );

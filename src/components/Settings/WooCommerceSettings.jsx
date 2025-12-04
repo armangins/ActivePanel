@@ -2,6 +2,7 @@ import React from 'react';
 import { GlobeAltIcon as Globe, KeyIcon as Key, ArrowPathIcon as Loader, CheckCircleIcon as CheckCircle } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Input } from '../ui/inputs';
+import { Button } from '../ui';
 
 const WooCommerceSettings = ({ settings, onSettingsChange, onTestConnection, testing }) => {
     const { t } = useLanguage();
@@ -60,10 +61,11 @@ const WooCommerceSettings = ({ settings, onSettingsChange, onTestConnection, tes
             </div>
 
             <div className="pt-4 border-t border-gray-200 flex gap-3 flex-row-reverse">
-                <button
+                <Button
                     onClick={onTestConnection}
                     disabled={testing || !settings.woocommerceUrl || !settings.consumerKey || !settings.consumerSecret}
-                    className={`btn-secondary flex items-center ${'flex-row-reverse space-x-reverse'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    variant="secondary"
+                    className={`flex items-center ${'flex-row-reverse space-x-reverse'}`}
                 >
                     {testing ? (
                         <>
@@ -76,7 +78,7 @@ const WooCommerceSettings = ({ settings, onSettingsChange, onTestConnection, tes
                             <span>{t('checkAndSave') || 'Check and Save'}</span>
                         </>
                     )}
-                </button>
+                </Button>
             </div>
         </div>
     );

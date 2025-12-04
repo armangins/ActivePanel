@@ -3,6 +3,7 @@ import { XMarkIcon as X, ArrowPathIcon as Loader } from '@heroicons/react/24/out
 import { useLanguage } from '../../contexts/LanguageContext';
 import { categoriesAPI } from '../../services/woocommerce';
 import { Input } from '../ui/inputs';
+import { Button } from '../ui';
 import DOMPurify from 'dompurify';
 
 const CategoryModal = ({ category, onClose, isRTL, t }) => {
@@ -33,7 +34,7 @@ const CategoryModal = ({ category, onClose, isRTL, t }) => {
     try {
       const data = await categoriesAPI.getAll({ per_page: 100 });
       // Filter out the current category from parent options if editing
-      const filtered = category 
+      const filtered = category
         ? data.filter(cat => cat.id !== category.id)
         : data;
       setParentCategories(filtered);
@@ -87,11 +88,11 @@ const CategoryModal = ({ category, onClose, isRTL, t }) => {
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-0 sm:p-4"
       onClick={onClose}
     >
-      <div 
+      <div
         className="bg-white sm:rounded-lg max-w-2xl w-full h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto shadow-lg"
         onClick={(e) => e.stopPropagation()}
         dir={isRTL ? 'rtl' : 'ltr'}
@@ -101,12 +102,14 @@ const CategoryModal = ({ category, onClose, isRTL, t }) => {
           <h2 className="text-xl font-bold text-gray-900">
             {isEditMode ? (t('editCategory') || 'Edit Category') : (t('addCategory') || 'Add Category')}
           </h2>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600"
           >
             <X className="w-6 h-6" />
-          </button>
+          </Button>
         </div>
 
         {/* Form */}
@@ -183,18 +186,20 @@ const CategoryModal = ({ category, onClose, isRTL, t }) => {
 
           {/* Actions */}
           <div className={`flex gap-3 pt-4 border-t border-gray-200 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={onClose}
               disabled={saving}
-              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6"
             >
               {t('cancel') || 'Cancel'}
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              variant="primary"
               disabled={saving}
-              className="btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-2"
             >
               {saving ? (
                 <>
@@ -204,7 +209,7 @@ const CategoryModal = ({ category, onClose, isRTL, t }) => {
               ) : (
                 <span>{isEditMode ? (t('update') || 'Update') : (t('create') || 'Create')}</span>
               )}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

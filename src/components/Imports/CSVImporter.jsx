@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { ArrowUpTrayIcon, TableCellsIcon as FileSpreadsheet, CheckCircleIcon, ExclamationCircleIcon, MapIcon as Map } from '@heroicons/react/24/outline';
+import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 import ColumnMapper from './ColumnMapper';
 import { validateCSVData, transformToWooCommerce } from '../../utils/csvProcessor';
@@ -27,7 +28,7 @@ const CSVImporter = ({ mode = 'import', onValidation, onProductsGenerated }) => 
         // Parse CSV
         const text = await uploadedFile.text();
         const lines = text.split('\n').filter(line => line.trim());
-        
+
         if (lines.length === 0) {
           alert(t('emptyFile') || 'הקובץ ריק');
           return;
@@ -64,7 +65,7 @@ const CSVImporter = ({ mode = 'import', onValidation, onProductsGenerated }) => 
 
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
-      
+
       if (char === '"') {
         inQuotes = !inQuotes;
       } else if (char === ',' && !inQuotes) {
@@ -75,21 +76,21 @@ const CSVImporter = ({ mode = 'import', onValidation, onProductsGenerated }) => 
       }
     }
     result.push(current.trim());
-    
+
     return result;
   };
 
   const handleMappingComplete = (mapping) => {
     setColumnMapping(mapping);
-    
+
     // Transform data
     const transformed = transformToWooCommerce(rawData.rows, rawData.headers, mapping, mode);
     setMappedData(transformed);
-    
+
     // Validate
     const validation = validateCSVData(transformed, mode);
     onValidation(validation);
-    
+
     setStep('preview');
   };
 
@@ -190,13 +191,14 @@ const CSVImporter = ({ mode = 'import', onValidation, onProductsGenerated }) => 
               onChange={handleFileUpload}
               className="hidden"
             />
-            <button
+            <Button
               onClick={() => fileInputRef.current?.click()}
-              className="btn-primary flex items-center gap-2 mx-auto flex-row-reverse"
+              variant="primary"
+              className="flex items-center gap-2 mx-auto flex-row-reverse"
             >
-              <Upload className="w-[18px] h-[18px]" />
+              <ArrowUpTrayIcon className="w-[18px] h-[18px]" />
               {t('chooseFile') || 'בחר קובץ'}
-            </button>
+            </Button>
             {file && (
               <p className="text-sm text-gray-600 mt-4">
                 {t('selectedFile') || 'קובץ נבחר'}: {file.name}
@@ -266,18 +268,18 @@ const CSVImporter = ({ mode = 'import', onValidation, onProductsGenerated }) => 
             )}
           </div>
           <div className="mt-6 flex justify-end gap-3 flex-row-reverse">
-            <button
+            <Button
               onClick={() => setStep('mapping')}
-              className="btn-secondary"
+              variant="secondary"
             >
               {t('back') || 'חזור'}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleImport}
-              className="btn-primary"
+              variant="primary"
             >
               {mode === 'update' ? (t('updateProducts') || 'עדכן מוצרים') : (t('importProducts') || 'ייבא מוצרים')}
-            </button>
+            </Button>
           </div>
         </div>
       )}

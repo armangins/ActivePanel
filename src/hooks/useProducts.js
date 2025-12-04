@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { productsAPI } from '../services/woocommerce';
 import { PAGINATION_DEFAULTS } from '../shared/constants';
 
@@ -26,6 +26,26 @@ export const useProducts = (filters = {}) => {
       ...filters,
     }),
     staleTime: 15 * 60 * 1000, // 5 minutes
+  });
+};
+
+// Fetch products list with infinite scroll
+export const useInfiniteProducts = (filters = {}) => {
+  return useInfiniteQuery({
+    queryKey: productKeys.list({ ...filters, type: 'infinite' }),
+    queryFn: ({ pageParam = 1 }) => productsAPI.list({
+      page: pageParam,
+      per_page: filters.per_page || PER_PAGE,
+      _fields: filters._fields || 'id,name,slug,permalink,date_created,status,stock_status,stock_quantity,price,regular_price,sale_price,images,categories,sku',
+      ...filters,
+    }),
+    getNextPageParam: (lastPage, allPages) => {
+      // lastPage is the result from productsAPI.list
+      // It contains { data: [...], total: X, totalPages: Y }
+      const currentPage = allPages.length;
+      return currentPage < lastPage.totalPages ? currentPage + 1 : undefined;
+    },
+    staleTime: 15 * 60 * 1000,
   });
 };
 

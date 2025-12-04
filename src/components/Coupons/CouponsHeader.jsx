@@ -1,5 +1,5 @@
 import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { SearchInput } from '../ui';
+import { SearchInput, Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 /**
@@ -43,13 +43,14 @@ const CouponsHeader = ({
           placeholder={t('searchCoupons') || 'Search coupons by code or description...'}
           isRTL={isRTL}
         />
-        <button
+        <Button
           onClick={onCreateCoupon}
-          className={`btn-primary flex items-center ${'flex-row-reverse space-x-reverse'} justify-center`}
+          variant="primary"
+          className={`flex items-center ${'flex-row-reverse space-x-reverse'} justify-center`}
         >
           <PlusIcon className="w-[18px] h-[18px]" />
           <span>{t('createCoupon') || 'Create Coupon'}</span>
-        </button>
+        </Button>
       </div>
     </div>
   );

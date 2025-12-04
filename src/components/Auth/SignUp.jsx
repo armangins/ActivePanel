@@ -13,6 +13,7 @@ import {
   ArrowPathIcon as Loader
 } from '@heroicons/react/24/outline';
 import { Input } from '../ui/inputs';
+import { Button } from '../ui';
 
 const USE_BACKEND_API = import.meta.env.VITE_API_URL;
 
@@ -189,10 +190,11 @@ const SignUp = () => {
             />
 
             {/* Sign Up Button */}
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-500/30"
+              variant="primary"
+              className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg shadow-primary-500/30"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -202,7 +204,7 @@ const SignUp = () => {
               ) : (
                 t('signUp') || 'הירשם'
               )}
-            </button>
+            </Button>
 
             {/* Divider */}
             <div className="relative my-6">
@@ -217,13 +219,14 @@ const SignUp = () => {
 
           {/* Google Sign Up Button */}
           <div className="mt-6">
-            <button
+            <Button
               onClick={() => window.location.href = 'http://localhost:3000/auth/google'}
-              className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-sm"
+              variant="outline"
+              className="w-full flex items-center justify-center gap-3 bg-white border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
             >
               <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
               {t('signUpWithGoogle') || 'הירשם עם Google'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

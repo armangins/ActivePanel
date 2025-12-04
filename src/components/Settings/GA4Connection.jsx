@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { ChartBarIcon as BarChart3, CheckCircleIcon as CheckCircle, XCircleIcon as XCircle } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Input } from '../ui/inputs';
-import { Card } from '../ui';
+import { Input } from '../ui/inputs';
+import { Card, Button } from '../ui';
 
 const GA4Connection = ({ settings, onSettingsChange, onTestConnection }) => {
     const { t } = useLanguage();
@@ -69,11 +70,12 @@ const GA4Connection = ({ settings, onSettingsChange, onTestConnection }) => {
             </div>
 
             <div className="flex justify-end pt-4">
-                <button
+                <Button
                     type="button"
                     onClick={onTestConnection}
                     disabled={testing || !settings.ga4PropertyId}
-                    className="btn-secondary flex items-center gap-2"
+                    variant="secondary"
+                    className="flex items-center gap-2"
                 >
                     {testing ? (
                         <>
@@ -83,13 +85,13 @@ const GA4Connection = ({ settings, onSettingsChange, onTestConnection }) => {
                     ) : (
                         <span>{t('testConnection') || 'Test Connection'}</span>
                     )}
-                </button>
+                </Button>
             </div>
 
             {message && (
                 <div className={`p-4 rounded-lg flex items-start flex-row-reverse gap-3 ${message.type === 'success'
-                        ? 'bg-green-50 text-green-800 border border-green-200'
-                        : 'bg-red-50 text-red-800 border border-red-200'
+                    ? 'bg-green-50 text-green-800 border border-green-200'
+                    : 'bg-red-50 text-red-800 border border-red-200'
                     }`}>
                     {message.type === 'success' ? (
                         <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />

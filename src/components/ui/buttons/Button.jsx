@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const Button = ({
+const Button = React.forwardRef(({
     children,
     variant = 'primary',
     size = 'md',
@@ -13,7 +13,7 @@ const Button = ({
     type = 'button',
     onClick,
     ...props
-}) => {
+}, ref) => {
     const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
     const variants = {
@@ -38,6 +38,7 @@ const Button = ({
             className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
             disabled={disabled || isLoading}
             onClick={onClick}
+            ref={ref}
             {...props}
         >
             {isLoading && (
@@ -55,7 +56,9 @@ const Button = ({
             )}
         </button>
     );
-};
+});
+
+Button.displayName = 'Button';
 
 Button.propTypes = {
     variant: PropTypes.oneOf(['primary', 'secondary', 'danger', 'ghost', 'link']),

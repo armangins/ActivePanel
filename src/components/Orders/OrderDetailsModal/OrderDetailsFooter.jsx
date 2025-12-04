@@ -1,3 +1,5 @@
+import { Button } from '../../ui';
+
 /**
  * OrderDetailsFooter Component
  * 
@@ -10,9 +12,9 @@
 const OrderDetailsFooter = ({ onClose, isRTL, t }) => {
   return (
     <div className="p-6 border-t border-gray-200 flex justify-start">
-      <button onClick={onClose} className="btn-primary">
+      <Button onClick={onClose} variant="primary">
         {t('close')}
-      </button>
+      </Button>
     </div>
   );
 };

@@ -3,7 +3,7 @@ import { XMarkIcon as X, ArrowPathIcon as Loader, CheckIcon as Check, CubeIcon a
 import { useLanguage } from '../../contexts/LanguageContext';
 import { categoriesAPI, productsAPI } from '../../services/woocommerce';
 import SearchInput from '../ui/inputs/SearchInput';
-import { EmptyState, LoadingState } from '../ui';
+import { EmptyState, LoadingState, Button } from '../ui';
 
 const BulkAssignModal = ({ category, onClose, isRTL, t }) => {
   const [allProducts, setAllProducts] = useState([]);
@@ -34,11 +34,11 @@ const BulkAssignModal = ({ category, onClose, isRTL, t }) => {
   const loadExistingCategoryProducts = async () => {
     try {
       // Get products that already belong to this category
-      const { data } = await productsAPI.list({ 
+      const { data } = await productsAPI.list({
         per_page: 100,
-        category: category.id 
+        category: category.id
       });
-      
+
       // Pre-select these products
       const existingIds = new Set((data || []).map(p => p.id));
       setSelectedProductIds(existingIds);
@@ -51,7 +51,7 @@ const BulkAssignModal = ({ category, onClose, isRTL, t }) => {
   const filteredProducts = useMemo(() => {
     if (!searchQuery) return allProducts;
     const query = searchQuery.toLowerCase();
-    return allProducts.filter(product => 
+    return allProducts.filter(product =>
       product.name?.toLowerCase().includes(query) ||
       product.sku?.toLowerCase().includes(query)
     );
@@ -100,11 +100,11 @@ const BulkAssignModal = ({ category, onClose, isRTL, t }) => {
 
   if (loading) {
     return (
-      <div 
+      <div
         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4"
         onClick={onClose}
       >
-        <div 
+        <div
           className="bg-white rounded-lg p-8"
           onClick={(e) => e.stopPropagation()}
         >
@@ -115,11 +115,11 @@ const BulkAssignModal = ({ category, onClose, isRTL, t }) => {
   }
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-0 sm:p-4"
       onClick={onClose}
     >
-      <div 
+      <div
         className="bg-white sm:rounded-lg max-w-4xl w-full h-full sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col shadow-lg"
         onClick={(e) => e.stopPropagation()}
         dir={isRTL ? 'rtl' : 'ltr'}
@@ -134,12 +134,14 @@ const BulkAssignModal = ({ category, onClose, isRTL, t }) => {
               {t('assignToCategory') || 'Assign products to'}: <strong>{category.name}</strong>
             </p>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600"
           >
             <X className="w-6 h-6" />
-          </button>
+          </Button>
         </div>
 
         {/* Search */}
@@ -155,7 +157,7 @@ const BulkAssignModal = ({ category, onClose, isRTL, t }) => {
         {/* Product List */}
         <div className="flex-1 overflow-y-auto p-4">
           {filteredProducts.length === 0 ? (
-            <EmptyState 
+            <EmptyState
               message={searchQuery ? (t('noProductsFound') || 'No products found') : (t('noProducts') || 'No products')}
               isRTL={isRTL}
             />
@@ -183,19 +185,18 @@ const BulkAssignModal = ({ category, onClose, isRTL, t }) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {filteredProducts.map((product) => {
                   const isSelected = selectedProductIds.has(product.id);
-                  const imageUrl = product.images && product.images.length > 0 
-                    ? product.images[0].src 
+                  const imageUrl = product.images && product.images.length > 0
+                    ? product.images[0].src
                     : null;
-                  
+
                   return (
                     <div
                       key={product.id}
                       onClick={() => toggleProductSelection(product.id)}
-                      className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                        isSelected
-                          ? 'border-primary-500 bg-primary-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                      className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${isSelected
+                        ? 'border-primary-500 bg-primary-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                        }`}
                     >
                       {/* Product Image */}
                       <div className="w-full aspect-square mb-3 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
@@ -214,11 +215,10 @@ const BulkAssignModal = ({ category, onClose, isRTL, t }) => {
                       {/* Product Info */}
                       <div className="flex items-start gap-2">
                         <div className="flex-shrink-0 mt-1">
-                          <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
-                            isSelected
-                              ? 'border-primary-500 bg-primary-500'
-                              : 'border-gray-300'
-                          }`}>
+                          <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${isSelected
+                            ? 'border-primary-500 bg-primary-500'
+                            : 'border-gray-300'
+                            }`}>
                             {isSelected && <Check className="w-4 h-4 text-white" />}
                           </div>
                         </div>
@@ -249,17 +249,19 @@ const BulkAssignModal = ({ category, onClose, isRTL, t }) => {
             </div>
           )}
           <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse ml-auto' : 'flex-row ml-auto'}`}>
-            <button
+            <Button
+              variant="secondary"
               onClick={onClose}
               disabled={saving}
-              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6"
             >
               {t('cancel') || 'Cancel'}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               onClick={handleSubmit}
               disabled={saving || selectedProductIds.size === 0}
-              className="btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-2"
             >
               {saving ? (
                 <>
@@ -271,7 +273,7 @@ const BulkAssignModal = ({ category, onClose, isRTL, t }) => {
                   {t('assignProducts') || 'Assign Products'} ({selectedProductIds.size})
                 </span>
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

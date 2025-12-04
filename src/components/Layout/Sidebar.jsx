@@ -16,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 import useNewOrdersCount from '../../hooks/useNewOrdersCount';
+import { Button } from '../ui';
 
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
@@ -95,19 +96,23 @@ const Sidebar = ({ isOpen, onClose }) => {
             />
           </div>
           <div className="flex items-center flex-row-reverse gap-2">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggleCollapse}
-              className="hidden lg:flex text-gray-500 hover:text-primary-500 p-1 rounded hover:bg-gray-100 transition-colors"
+              className="hidden lg:flex text-gray-500 hover:text-primary-500 hover:bg-gray-100"
               title={isCollapsed ? t('expandSidebar') || 'Expand Sidebar' : t('collapseSidebar') || 'Collapse Sidebar'}
             >
               {isCollapsed ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               className="lg:hidden text-gray-500 hover:text-primary-500"
               onClick={onClose}
             >
               <X className="w-6 h-6" />
-            </button>
+            </Button>
           </div>
         </div>
 

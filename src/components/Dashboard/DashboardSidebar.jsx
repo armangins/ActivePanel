@@ -1,4 +1,5 @@
 import { XMarkIcon as X } from '@heroicons/react/24/outline';
+import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 /**
@@ -16,13 +17,13 @@ import { useLanguage } from '../../contexts/LanguageContext';
  * @param {Function} formatCurrency - Function to format currency values
  * @param {React.ReactNode} emptyState - Empty state component (optional)
  */
-const DashboardSidebar = ({ 
-  isOpen, 
-  onClose, 
-  title, 
+const DashboardSidebar = ({
+  isOpen,
+  onClose,
+  title,
   subtitle,
   icon: Icon,
-  items = [], 
+  items = [],
   renderItem,
   formatCurrency,
   emptyState
@@ -33,19 +34,17 @@ const DashboardSidebar = ({
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-black z-[100] transition-all duration-300 ease-in-out ${
-          isOpen ? 'bg-opacity-50 pointer-events-auto' : 'bg-opacity-0 pointer-events-none'
-        }`}
+        className={`fixed inset-0 bg-black z-[100] transition-all duration-300 ease-in-out ${isOpen ? 'bg-opacity-50 pointer-events-auto' : 'bg-opacity-0 pointer-events-none'
+          }`}
         onClick={onClose}
       />
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-full md:w-96 bg-white shadow-2xl z-[101] transition-all duration-300 ease-in-out ${
-          isOpen 
-            ? 'translate-x-0 opacity-100 pointer-events-auto' 
+        className={`fixed top-0 left-0 h-full w-full md:w-96 bg-white shadow-2xl z-[101] transition-all duration-300 ease-in-out ${isOpen
+            ? 'translate-x-0 opacity-100 pointer-events-auto'
             : 'translate-x-full opacity-0 pointer-events-none'
-        }`}
+          }`}
         dir="rtl"
       >
         {/* Header */}
@@ -67,13 +66,15 @@ const DashboardSidebar = ({
               )}
             </div>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="text-gray-500 hover:bg-gray-100"
             aria-label={t('close') || 'סגור'}
           >
-            <X className="w-5 h-5 text-gray-500" />
-          </button>
+            <X className="w-5 h-5" />
+          </Button>
         </div>
 
         {/* Content */}

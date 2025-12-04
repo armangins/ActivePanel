@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLanguage } from '../../../contexts/LanguageContext';
+import { Button } from '../../ui';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 
 const CompletionStep = ({ onFinish }) => {
@@ -18,12 +19,13 @@ const CompletionStep = ({ onFinish }) => {
             </div>
 
             <div className="space-y-4">
-                <button
+                <Button
                     onClick={onFinish}
-                    className="w-full sm:w-auto px-8 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors shadow-lg shadow-primary-500/30"
+                    variant="primary"
+                    className="w-full sm:w-auto px-8 py-3 shadow-lg shadow-primary-500/30"
                 >
                     {t('goToDashboard') || 'עבור ללוח הבקרה'}
-                </button>
+                </Button>
             </div>
         </div>
     );

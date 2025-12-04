@@ -1,4 +1,6 @@
 import { PencilIcon as Edit, TrashIcon as Trash, Squares2X2Icon as BulkAssign, EyeIcon as View } from '@heroicons/react/24/outline';
+import DOMPurify from 'dompurify';
+import { Button } from '../ui';
 
 const CategoriesTable = ({ categories, onEdit, onDelete, onBulkAssign, isRTL, t }) => {
   return (
@@ -34,9 +36,14 @@ const CategoriesTable = ({ categories, onEdit, onDelete, onBulkAssign, isRTL, t 
                   {category.slug}
                 </td>
                 <td className={`px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
-                  <div 
+                  <div
                     className="line-clamp-2 max-w-xs sm:max-w-md"
-                    dangerouslySetInnerHTML={{ __html: category.description || '-' }}
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(category.description || '-', {
+                        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u'],
+                        ALLOWED_ATTR: []
+                      })
+                    }}
                   />
                 </td>
                 <td className={`px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -44,34 +51,42 @@ const CategoriesTable = ({ categories, onEdit, onDelete, onBulkAssign, isRTL, t 
                 </td>
                 <td className={`px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>
                   <div className="grid grid-cols-4 gap-2 w-fit">
-                    <button
+                    <Button
+                      variant="outline"
+                      size="icon"
                       onClick={() => onBulkAssign(category)}
-                      className="w-10 h-10 flex items-center justify-center text-primary-500 hover:bg-primary-50 rounded-lg transition-colors border border-gray-200"
+                      className="w-10 h-10 text-primary-500 hover:bg-primary-50 hover:text-primary-600 border-gray-200"
                       title={t('bulkAssign') || 'הקצאה מרובת מוצרים'}
                     >
                       <BulkAssign className="w-5 h-5" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
                       onClick={() => onEdit(category)}
-                      className="w-10 h-10 flex items-center justify-center text-primary-500 hover:bg-primary-50 rounded-lg transition-colors border border-gray-200"
+                      className="w-10 h-10 text-primary-500 hover:bg-primary-50 hover:text-primary-600 border-gray-200"
                       title={t('edit') || 'ערוך'}
                     >
                       <Edit className="w-5 h-5" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
                       onClick={() => onDelete(category.id)}
-                      className="w-10 h-10 flex items-center justify-center text-orange-600 hover:bg-orange-50 rounded-lg transition-colors border border-gray-200"
+                      className="w-10 h-10 text-orange-600 hover:bg-orange-50 hover:text-orange-700 border-gray-200"
                       title={t('delete') || 'מחק'}
                     >
                       <Trash className="w-5 h-5" />
-                    </button>
-                    <button
-                      className="w-10 h-10 flex items-center justify-center text-gray-400 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200 opacity-50 cursor-not-allowed"
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="w-10 h-10 text-gray-400 hover:bg-gray-50 border-gray-200 opacity-50 cursor-not-allowed"
                       title={t('comingSoon') || 'בקרוב...'}
                       disabled
                     >
                       <View className="w-5 h-5" />
-                    </button>
+                    </Button>
                   </div>
                 </td>
               </tr>

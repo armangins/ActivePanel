@@ -338,20 +338,21 @@ const EditVariationView = () => {
                         ) : (
                           <div className="flex flex-wrap gap-2">
                             {terms.map(term => (
-                              <button
+                              <Button
                                 key={term.id}
                                 type="button"
                                 onClick={() => toggleAttributeTerm(attribute.id, term.id)}
-                                className={`px-4 py-2 rounded-lg transition-colors text-sm text-center ${isTermSelected(attribute.id, term.id)
-                                    ? 'bg-primary-500 text-white hover:bg-primary-600'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                variant={isTermSelected(attribute.id, term.id) ? 'primary' : 'secondary'}
+                                className={`px-4 py-2 rounded-lg transition-colors text-sm text-center h-auto ${isTermSelected(attribute.id, term.id)
+                                  ? 'bg-primary-500 text-white hover:bg-primary-600'
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-transparent'
                                   }`}
                               >
                                 {term.name}
                                 {isTermSelected(attribute.id, term.id) && (
                                   <X className="w-3.5 h-3.5 inline mr-1" />
                                 )}
-                              </button>
+                              </Button>
                             ))}
                           </div>
                         )}

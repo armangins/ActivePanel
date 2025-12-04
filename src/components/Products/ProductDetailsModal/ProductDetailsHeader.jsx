@@ -1,4 +1,4 @@
-
+import { Button } from '../../ui';
 /**
  * ProductDetailsHeader Component
  * 
@@ -14,29 +14,29 @@ const ProductDetailsHeader = ({ product, onClose, isRTL, t }) => {
   return (
     <div className="p-6 border-b border-gray-200 flex items-center justify-between">
       <h2
-        className={`text-2xl font-bold text-gray-900 ${
-          'text-right'
-        }`}
+        className={`text-2xl font-bold text-gray-900 ${'text-right'
+          }`}
       >
         {t('productDetails') || t('products')}
       </h2>
       <div className={`flex items-center ${'flex-row-reverse'} gap-3`}>
         {product.permalink && (
-          <a
-            href={product.permalink}
-            target="_blank"
-            rel="noopener noreferrer nofollow"
-            className="btn-secondary text-sm"
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => window.open(product.permalink, '_blank')}
           >
             {t('viewOnSite')}
-          </a>
+          </Button>
         )}
-        <button
+        <Button
           onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 text-sm"
+          variant="ghost"
+          size="sm"
+          className="text-gray-500 hover:text-gray-700"
         >
           {t('cancel')}
-        </button>
+        </Button>
       </div>
     </div>
   );

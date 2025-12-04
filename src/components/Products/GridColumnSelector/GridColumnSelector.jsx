@@ -31,7 +31,7 @@ const GridColumnSelector = memo(({
     return (
         <div className="relative" ref={menuRef}>
             <Button
-                variant="outline"
+                variant="secondary"
                 onClick={() => setIsOpen(!isOpen)}
                 className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 px-3 py-2 text-sm text-gray-700 hover:text-primary-500 border-gray-300 hover:border-primary-300 hover:bg-primary-50 transition-colors h-auto`}
             >
