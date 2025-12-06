@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChevronLeftIcon, ChevronRightIcon, DocumentArrowDownIcon as FloppyDiskIcon } from '@heroicons/react/24/outline';
-import { Button } from '../../../ui';
+import { Button } from '../../ui';
 
 const CouponModalFooter = ({ currentStep, steps, onClose, onPrevious, onNext, onSubmit, saving, coupon, t }) => {
     return (

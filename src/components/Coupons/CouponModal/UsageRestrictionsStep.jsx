@@ -1,7 +1,8 @@
 import React from 'react';
 import { CurrencyDollarIcon as DollarSign, EnvelopeIcon as Mail, XMarkIcon as X } from '@heroicons/react/24/outline';
 import SearchInput from '../../ui/inputs/SearchInput';
-import { Button, Input } from '../../ui';
+import { Button } from '../../ui';
+import { Input } from '../../ui/inputs';
 
 const UsageRestrictionsStep = ({
     formData,

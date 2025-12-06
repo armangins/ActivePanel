@@ -1,6 +1,6 @@
 import React from 'react';
 import { XMarkIcon as X, CheckCircleIcon } from '@heroicons/react/24/outline';
-import { Button } from '../../../ui';
+import { Button } from '../../ui';
 
 const CouponModalHeader = ({ coupon, currentStep, steps, onClose, t }) => {
     return (

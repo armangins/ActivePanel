@@ -1,6 +1,6 @@
 import React from 'react';
 import { TrashIcon as Trash2 } from '@heroicons/react/24/outline';
-import { Button } from '../ui';
+import { Button } from '../../ui';
 import { useLanguage } from '../../../contexts/LanguageContext';
 
 const SystemSettings = ({ onClearCache }) => {
