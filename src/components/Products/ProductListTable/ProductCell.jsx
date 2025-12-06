@@ -1,4 +1,4 @@
-import { CubeIcon as Package } from '@heroicons/react/24/outline';
+import { CubeIcon as Package, ChevronDownIcon, ChevronRightIcon, ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { OptimizedImage } from '../../ui';
 
 /**
@@ -10,10 +10,13 @@ import { OptimizedImage } from '../../ui';
  * @param {Object} product - Product object
  * @param {Boolean} isRTL - Whether the layout is right-to-left
  * @param {Function} t - Translation function
+ * @param {Boolean} isExpanded - Whether the row is expanded
+ * @param {Function} onToggleExpand - Callback to toggle expansion
  */
-const ProductCell = ({ product, isRTL, t }) => {
+const ProductCell = ({ product, isRTL, t, isExpanded, onToggleExpand }) => {
   const imageUrl = product.images && product.images.length > 0 ? product.images[0].src : null;
   const productName = product.name || t('productName');
+  const isVariable = product.type === 'variable';
 
   // Extract variation details from attributes
   const getVariationDetails = () => {
@@ -44,6 +47,23 @@ const ProductCell = ({ product, isRTL, t }) => {
   return (
     <td className="py-3 px-4 text-right">
       <div className={`flex items-start ${'justify-start'} gap-3`}>
+        {isVariable && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleExpand && onToggleExpand();
+            }}
+            className="mt-3 p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+            title={isExpanded ? t('collapse') || 'Collapse' : t('expand') || 'Expand'}
+          >
+            {isExpanded ? (
+              <ChevronDownIcon className="w-4 h-4 text-gray-500" />
+            ) : (
+              isRTL ? <ChevronLeftIcon className="w-4 h-4 text-gray-500" /> : <ChevronRightIcon className="w-4 h-4 text-gray-500" />
+            )}
+          </button>
+        )}
+
         <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 relative">
           {imageUrl ? (
             <OptimizedImage

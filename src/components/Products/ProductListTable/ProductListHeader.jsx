@@ -31,7 +31,7 @@ const ProductListHeader = ({ products, isRTL, t, sortField, sortDirection, onSor
           <Button
             variant="ghost"
             onClick={() => onSort && onSort('name')}
-            className={`flex items-center justify-end gap-2 flex-row-reverse w-full hover:text-primary-500 transition-colors cursor-pointer p-0 h-auto hover:bg-transparent ${sortField === 'name' ? 'text-primary-500' : ''
+            className={`flex items-center !justify-start text-right gap-2 w-full hover:text-primary-500 transition-colors cursor-pointer p-0 h-auto hover:bg-transparent ${sortField === 'name' ? 'text-primary-500' : ''
               }`}
           >
             {t('products')}
@@ -41,7 +41,7 @@ const ProductListHeader = ({ products, isRTL, t, sortField, sortDirection, onSor
 
         {/* Category Column */}
         <th className="py-3 px-4 text-sm font-medium text-gray-700 text-right">
-          <div className="flex items-center justify-end gap-2 flex-row-reverse">
+          <div className="flex items-center justify-start gap-2">
             {t('category')}
           </div>
         </th>
@@ -51,7 +51,7 @@ const ProductListHeader = ({ products, isRTL, t, sortField, sortDirection, onSor
           <Button
             variant="ghost"
             onClick={() => onSort && onSort('price')}
-            className={`flex items-center justify-end gap-2 flex-row-reverse w-full hover:text-primary-500 transition-colors cursor-pointer p-0 h-auto hover:bg-transparent ${sortField === 'price' ? 'text-primary-500' : ''
+            className={`flex items-center !justify-start text-right gap-2 w-full hover:text-primary-500 transition-colors cursor-pointer p-0 h-auto hover:bg-transparent ${sortField === 'price' ? 'text-primary-500' : ''
               }`}
           >
             {t('price')}
@@ -61,14 +61,16 @@ const ProductListHeader = ({ products, isRTL, t, sortField, sortDirection, onSor
 
         {/* Sale Price Column */}
         <th className="py-3 px-4 text-sm font-medium text-gray-700 text-right">
-          <div className="flex items-center justify-end gap-2 flex-row-reverse">
+          <div className="flex items-center justify-start gap-2">
             {t('salePrice') || 'Sale Price'}
           </div>
         </th>
 
         {/* Stock Status Column */}
         <th className="py-3 px-4 text-sm font-medium text-gray-700 text-right">
-          {t('stockStatus')}
+          <div className="flex items-center justify-start gap-2">
+            {t('stockStatus')}
+          </div>
         </th>
 
         {/* Actions Column */}

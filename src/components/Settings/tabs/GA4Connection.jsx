@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { ChartBarIcon as BarChart3, CheckCircleIcon as CheckCircle, XCircleIcon as XCircle } from '@heroicons/react/24/outline';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { Input } from '../ui/inputs';
-import { Input } from '../ui/inputs';
-import { Card, Button } from '../ui';
+import { useLanguage } from '../../../contexts/LanguageContext';
+import { Input } from '../../ui/inputs';
+import { Card, Button } from '../../ui';
 
 const GA4Connection = ({ settings, onSettingsChange, onTestConnection }) => {
     const { t } = useLanguage();

@@ -22,6 +22,7 @@ export { default as LoadingState } from './states/LoadingState';
 export { default as ErrorState } from './states/ErrorState';
 export { default as EmptyState } from './states/EmptyState';
 export { default as DataPlaceholder } from './states/DataPlaceholder';
+export { default as StateHandler } from './states/StateHandler';
 
 // Indicators
 export { default as LoadingMoreIndicator } from './indicators/LoadingMoreIndicator';

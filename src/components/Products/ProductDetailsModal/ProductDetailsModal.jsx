@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import { variationsAPI } from '../../../services/woocommerce';
+import { useVariations } from '../../../hooks/useVariations';
+import { useProduct } from '../../../hooks/useProducts';
 import { Button } from '../../ui';
 import ProductDetailsHeader from './ProductDetailsHeader';
 import ProductDetailsBasicInfo from './ProductDetailsBasicInfo';
@@ -15,39 +16,43 @@ import ProductDetailsDescription from './ProductDetailsDescription';
  * Main modal component for displaying product details in a read-only view.
  * Handles loading variations for variable products and coordinates all detail sections.
  * 
- * @param {Object} product - Product object to display
+ * @param {Object} initialProduct - Product object from list (partial data)
  * @param {Function} onClose - Callback to close the modal
  * @param {Function} formatCurrency - Function to format currency values
  */
-const ProductDetailsModal = ({ product, onClose, formatCurrency }) => {
+const ProductDetailsModal = ({ product: initialProduct, onClose, formatCurrency }) => {
   const { t, isRTL } = useLanguage();
-  const [variations, setVariations] = useState([]);
-  const [loadingVariations, setLoadingVariations] = useState(false);
-  const [variationsError, setVariationsError] = useState(null);
   const [activeTab, setActiveTab] = useState('general');
+
+  // Fetch full product details to get description and short_description
+  const { data: fullProduct } = useProduct(initialProduct?.id);
+
+  // Merge initial product with full product details
+  const product = { ...initialProduct, ...fullProduct };
 
   const isVariableProduct = product?.type === 'variable';
 
-  // Load variations for variable products
-  useEffect(() => {
-    const loadVariations = async () => {
-      if (!isVariableProduct || !product?.id) return;
+  // Use React Query hook to load variations (only if variable product)
+  const {
+    data: variationsData,
+    isLoading: loadingVariations,
+    error: variationsError
+  } = useVariations(product?.id, {
+    enabled: isVariableProduct && !!product?.id
+  });
 
-      try {
-        setLoadingVariations(true);
-        setVariationsError(null);
-        const data = await variationsAPI.getByProductId(product.id);
-        setVariations(data || []);
-      } catch (error) {
-        // Failed to load variations
-        setVariationsError(error.message || t('error'));
-      } finally {
-        setLoadingVariations(false);
-      }
-    };
+  const variations = variationsData?.data || [];
 
-    loadVariations();
-  }, [product?.id, isVariableProduct, t]);
+  // Debug logging - Remove after testing
+  console.log('🔍 ProductDetailsModal Debug:', {
+    productId: product?.id,
+    productType: product?.type,
+    isVariableProduct,
+    variationsData,
+    variations,
+    loadingVariations,
+    error: variationsError?.message
+  });
 
   if (!product) return null;
 
@@ -74,9 +79,9 @@ const ProductDetailsModal = ({ product, onClose, formatCurrency }) => {
             <Button
               onClick={() => setActiveTab('description')}
               variant="ghost"
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors rounded-none h-auto ${activeTab === 'description'
-                  ? 'border-primary-500 text-primary-500 bg-transparent'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 bg-transparent'
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors rounded-none h-auto focus:outline-none focus:ring-0 ${activeTab === 'description'
+                ? 'border-primary-500 text-primary-500 bg-transparent'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 bg-transparent'
                 }`}
             >
               {t('description') || 'Description'}
@@ -84,9 +89,9 @@ const ProductDetailsModal = ({ product, onClose, formatCurrency }) => {
             <Button
               onClick={() => setActiveTab('general')}
               variant="ghost"
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors rounded-none h-auto ${activeTab === 'general'
-                  ? 'border-primary-500 text-primary-500 bg-transparent'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 bg-transparent'
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors rounded-none h-auto focus:outline-none focus:ring-0 ${activeTab === 'general'
+                ? 'border-primary-500 text-primary-500 bg-transparent'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 bg-transparent'
                 }`}
             >
               {t('general') || 'General'}
@@ -141,7 +146,7 @@ const ProductDetailsModal = ({ product, onClose, formatCurrency }) => {
                     formatCurrency={formatCurrency}
                     variations={variations}
                     loadingVariations={loadingVariations}
-                    variationsError={variationsError}
+                    variationsError={variationsError?.message || null}
                   />
                 </div>
               </div>

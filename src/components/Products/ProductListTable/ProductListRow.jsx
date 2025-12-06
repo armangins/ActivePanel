@@ -30,7 +30,9 @@ const ProductListRow = ({
   onActionMenuToggle,
   formatCurrency,
   isRTL,
-  t
+  t,
+  isExpanded,
+  onToggleExpand
 }) => {
   return (
     <tr
@@ -38,7 +40,13 @@ const ProductListRow = ({
       onClick={() => onView && onView(product)}
     >
       {/* Product Cell (Image + Name) */}
-      <ProductCell product={product} isRTL={isRTL} t={t} />
+      <ProductCell
+        product={product}
+        isRTL={isRTL}
+        t={t}
+        isExpanded={isExpanded}
+        onToggleExpand={onToggleExpand}
+      />
 
       {/* Category Cell */}
       <CategoryCell product={product} />

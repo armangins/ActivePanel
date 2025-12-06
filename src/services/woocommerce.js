@@ -177,7 +177,8 @@ export const productsAPI = {
 
   // Delete product permanently
   delete: async (id) => {
-    const response = await api.delete(`/products/${id}`, { params: { force: true } });
+    // Backend handles force: true, no need to send it from frontend
+    const response = await api.delete(`/products/${id}`);
     return response.data;
   },
 
@@ -460,12 +461,90 @@ export const mediaAPI = {
 
 // Variations API
 export const variationsAPI = {
-  getByProductId: async (productId) => {
+  /**
+   * Get all variations for a product
+   * @param {number} productId - Product ID
+   * @param {object} params - Query parameters
+   * @returns {Promise<{data: Array, total: number}>}
+   */
+  list: async (productId, params = {}) => {
+    return await fetchCollection(`/products/${productId}/variations`, {
+      per_page: 100,
+      ...params,
+    });
+  },
+
+  /**
+   * Get single variation by ID
+   * @param {number} productId - Product ID
+   * @param {number} variationId - Variation ID
+   * @returns {Promise<object>}
+   */
+  getById: async (productId, variationId) => {
     try {
-      const { data } = await fetchCollection(`/products/${productId}/variations`, {
-        per_page: 100,
-      });
-      return data;
+      const response = await api.get(`/products/${productId}/variations/${variationId}`);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  /**
+   * Create new variation
+   * @param {number} productId - Product ID
+   * @param {object} variationData - Variation data
+   * @returns {Promise<object>}
+   */
+  create: async (productId, variationData) => {
+    try {
+      const response = await api.post(`/products/${productId}/variations`, variationData);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  /**
+   * Update existing variation
+   * @param {number} productId - Product ID
+   * @param {number} variationId - Variation ID
+   * @param {object} variationData - Updated variation data
+   * @returns {Promise<object>}
+   */
+  update: async (productId, variationId, variationData) => {
+    try {
+      const response = await api.put(`/products/${productId}/variations/${variationId}`, variationData);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  /**
+   * Delete variation
+   * @param {number} productId - Product ID
+   * @param {number} variationId - Variation ID
+   * @returns {Promise<object>}
+   */
+  delete: async (productId, variationId) => {
+    try {
+      const response = await api.delete(`/products/${productId}/variations/${variationId}`);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  /**
+   * Batch operations (create, update, delete multiple variations)
+   * @param {number} productId - Product ID
+   * @param {object} data - Batch data { create: [], update: [], delete: [] }
+   * @returns {Promise<object>}
+   */
+  batch: async (productId, data) => {
+    try {
+      const response = await api.post(`/products/${productId}/variations/batch`, data);
+      return response.data;
     } catch (error) {
       handleError(error);
     }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SparklesIcon as Sparkles, ArrowPathIcon as Loader, CheckCircleIcon as CheckCircle, XCircleIcon as XCircle } from '@heroicons/react/24/outline';
-import { useLanguage } from '../../contexts/LanguageContext';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { Input } from '../ui/inputs';
 import { Button } from '../ui';
 import { testGeminiConnection, setGeminiApiKey } from '../../services/gemini';

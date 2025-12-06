@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import ProductListHeader from './ProductListHeader';
 import ProductListRow from './ProductListRow';
+import ProductVariationsRow from './ProductVariationsRow';
 
 /**
  * ProductListTable Component
@@ -21,6 +22,17 @@ import ProductListRow from './ProductListRow';
  */
 const ProductListTable = ({ products, onView, onEdit, onDelete, formatCurrency, isRTL, t, sortField, sortDirection, onSort, isLoading = false }) => {
   const [actionMenuOpen, setActionMenuOpen] = useState(null);
+  const [expandedProducts, setExpandedProducts] = useState(new Set());
+
+  const toggleExpand = (productId) => {
+    const newExpanded = new Set(expandedProducts);
+    if (newExpanded.has(productId)) {
+      newExpanded.delete(productId);
+    } else {
+      newExpanded.add(productId);
+    }
+    setExpandedProducts(newExpanded);
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -36,18 +48,31 @@ const ProductListTable = ({ products, onView, onEdit, onDelete, formatCurrency, 
           />
           <tbody className={`divide-y divide-gray-200 ${isLoading ? 'opacity-50 transition-opacity duration-200' : ''}`}>
             {products.map((product) => (
-              <ProductListRow
-                key={product.id}
-                product={product}
-                isActionMenuOpen={actionMenuOpen === product.id}
-                onView={onView}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onActionMenuToggle={(productId) => setActionMenuOpen(actionMenuOpen === productId ? null : productId)}
-                formatCurrency={formatCurrency}
-                isRTL={isRTL}
-                t={t}
-              />
+              <>
+                <ProductListRow
+                  key={product.id}
+                  product={product}
+                  isActionMenuOpen={actionMenuOpen === product.id}
+                  isExpanded={expandedProducts.has(product.id)}
+                  onToggleExpand={() => toggleExpand(product.id)}
+                  onView={onView}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onActionMenuToggle={(productId) => setActionMenuOpen(actionMenuOpen === productId ? null : productId)}
+                  formatCurrency={formatCurrency}
+                  isRTL={isRTL}
+                  t={t}
+                />
+                {expandedProducts.has(product.id) && (
+                  <ProductVariationsRow
+                    key={`${product.id}-variations`}
+                    product={product}
+                    formatCurrency={formatCurrency}
+                    t={t}
+                    isRTL={isRTL}
+                  />
+                )}
+              </>
             ))}
           </tbody>
         </table>

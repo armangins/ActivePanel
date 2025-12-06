@@ -22,10 +22,10 @@ export const useProducts = (filters = {}) => {
     queryFn: () => productsAPI.list({
       page: filters.page || 1,
       per_page: filters.per_page || PER_PAGE,
-      _fields: filters._fields || 'id,name,slug,permalink,date_created,status,stock_status,stock_quantity,price,regular_price,sale_price,images,categories,sku',
+      _fields: filters._fields || 'id,name,type,status,stock_status,stock_quantity,price,regular_price,sale_price,images,categories,sku',
       ...filters,
     }),
-    staleTime: 15 * 60 * 1000, // 5 minutes
+    staleTime: 15 * 60 * 1000, // 15 minutes
   });
 };
 
@@ -36,7 +36,7 @@ export const useInfiniteProducts = (filters = {}) => {
     queryFn: ({ pageParam = 1 }) => productsAPI.list({
       page: pageParam,
       per_page: filters.per_page || PER_PAGE,
-      _fields: filters._fields || 'id,name,slug,permalink,date_created,status,stock_status,stock_quantity,price,regular_price,sale_price,images,categories,sku',
+      _fields: filters._fields || 'id,name,type,status,stock_status,stock_quantity,price,regular_price,sale_price,images,categories,sku',
       ...filters,
     }),
     getNextPageParam: (lastPage, allPages) => {

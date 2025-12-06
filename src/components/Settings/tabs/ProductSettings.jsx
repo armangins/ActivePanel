@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLanguage } from '../../contexts/LanguageContext';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { Input } from '../ui/inputs';
 
 const ProductSettings = ({ settings, onSettingsChange }) => {

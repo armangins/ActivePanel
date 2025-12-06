@@ -8,7 +8,7 @@ export default {
   settings: 'הגדרות',
 
   // Authentication
-  login: 'התחבר',
+  login: '',
   logout: 'התנתק',
   loginDescription: 'התחבר כדי לגשת לפאנל הניהול',
   googleClientIdMissing: 'נדרש להגדיר VITE_GOOGLE_CLIENT_ID בקובץ .env. ראה README.md להוראות.',
@@ -136,7 +136,8 @@ export default {
   productUpdated: 'המוצר עודכן בהצלחה',
   deleteProduct: 'מחק מוצר',
   removeProduct: 'הסר מוצר',
-  confirmDelete: 'אישור מחיקה',
+  confirmDelete: 'האם אתה בטוח שברצונך למחוק',
+  cannotUndo: 'פעולה זו לא ניתנת לביטול',
   deleteProductConfirm: 'האם אתה בטוח שברצונך למחוק מוצר זה?',
   yes: 'כן',
   close: 'סגור',
@@ -148,7 +149,9 @@ export default {
   viewOnSite: 'צפיה באתר',
   productDetails: 'פרטי מוצר',
   loadMore: 'טען עוד',
+  loadingMore: 'טוען עוד מוצרים בשבילך',
   loadingProducts: 'טוען מוצרים...',
+  allProductsLoaded: 'זה הכל, זה כל המוצרים שיש לך בחנות כרגע',
   gridView: 'תצוגת רשת',
   listView: 'תצוגת רשימה',
   productType: 'סוג מוצר',
@@ -381,6 +384,7 @@ export default {
   guest: 'אורח',
   checkSettings: 'אנא בדוק את ההגדרות שלך ונסה שוב',
   search: 'חיפוש',
+  searching: 'זה יקח רגע, מחפשים...',
   adminPanel: 'פאנל ניהול',
   version: 'גרסה',
   expandSidebar: 'הרחב תפריט צד',
@@ -391,6 +395,10 @@ export default {
   connected: 'מחובר',
   connectionFailed: 'חיבור נכשל',
   clickToCheck: 'לחץ לבדיקת חיבור',
+  warning: 'אזהרה',
+  deleteConfirmationMessage: 'האם אתה בטוח שאתה רצה למחוק את המוצר הזה?',
+  typeDeleteToConfirm: 'יש להקליד "מחק" לאישור:',
+  delete: 'מחק',
 
   // Status translations
   'pending': 'ממתין',
