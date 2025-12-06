@@ -40,7 +40,7 @@ const PriceFields = ({
           </div>
           <Button
             type="button"
-            variant="outline"
+            variant="secondary"
             onClick={onCalculatorClick}
             className={`flex items-center justify-center gap-2 whitespace-nowrap ${isRTL ? 'flex-row-reverse' : 'flex-row'} self-end`}
             title={t('smartPricing') || 'מחיר חכם'}
@@ -69,7 +69,7 @@ const PriceFields = ({
           </div>
           <Button
             type="button"
-            variant="outline"
+            variant="secondary"
             onClick={onScheduleClick}
             className={`flex items-center justify-center gap-2 whitespace-nowrap ${isRTL ? 'flex-row-reverse' : 'flex-row'} self-end`}
             title={t('schedule')}

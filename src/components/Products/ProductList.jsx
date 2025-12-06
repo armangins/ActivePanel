@@ -17,7 +17,7 @@ import ProductListTable from './ProductListTable/ProductListTable';
  * @param {String} sortDirection - Current sort direction ('asc' or 'desc')
  * @param {Function} onSort - Callback when sort is triggered
  */
-const ProductList = ({ products, onView, onEdit, onDelete, formatCurrency, isRTL, t, sortField, sortDirection, onSort }) => {
+const ProductList = ({ products, onView, onEdit, onDelete, formatCurrency, isRTL, t, sortField, sortDirection, onSort, isLoading = false }) => {
   return (
     <ProductListTable
       products={products}
@@ -30,6 +30,7 @@ const ProductList = ({ products, onView, onEdit, onDelete, formatCurrency, isRTL
       sortField={sortField}
       sortDirection={sortDirection}
       onSort={onSort}
+      isLoading={isLoading}
     />
   );
 };

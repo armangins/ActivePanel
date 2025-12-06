@@ -1,6 +1,6 @@
 import ProductCard from './ProductCard';
 
-const ProductGrid = ({ products, onView, onEdit, onDelete, formatCurrency, isRTL, t, columns = 4 }) => {
+const ProductGrid = ({ products, onView, onEdit, onDelete, formatCurrency, isRTL, t, columns = 4, isLoading = false }) => {
   // Map columns to Tailwind grid classes
   const gridColsClass = {
     1: 'grid-cols-1', // Mobile: 1 column, Desktop: 1 column
@@ -12,35 +12,35 @@ const ProductGrid = ({ products, onView, onEdit, onDelete, formatCurrency, isRTL
   };
 
   return (
-    <div className={`grid ${gridColsClass[columns] || gridColsClass[4]} gap-3 sm:gap-4 md:gap-6`}>
+    <div className={`grid ${gridColsClass[columns] || gridColsClass[4]} gap-3 sm:gap-4 md:gap-6 ${isLoading ? 'opacity-50 transition-opacity duration-200' : ''}`}>
       {products.map((product) => {
         // Calculate values for ProductCard
         const imageUrl = product.images && product.images.length > 0 ? product.images[0].src : null;
         // Gallery images (all images except the first one)
-        const galleryImages = product.images && product.images.length > 1 
+        const galleryImages = product.images && product.images.length > 1
           ? product.images.slice(1).map(img => img.src || img.url || img.source_url).filter(Boolean)
           : [];
         const productName = product.name || t('productName');
         const stockStatus = product.stock_status || 'instock';
         const stockStatusLabel = stockStatus === 'instock' ? t('inStock') : t('outOfStock');
         const sku = product.sku ? `${t('sku')}: ${product.sku}` : null;
-        
+
         // Price calculations
         const hasSalePrice = product.sale_price && parseFloat(product.sale_price) > 0;
         const regularPriceValue = parseFloat(product.regular_price || product.price || 0);
         const salePriceValue = hasSalePrice ? parseFloat(product.sale_price) : null;
-        
+
         // Calculate discount percentage
         let discountPercentage = 0;
         if (hasSalePrice && regularPriceValue > 0) {
           discountPercentage = Math.round(((regularPriceValue - salePriceValue) / regularPriceValue) * 100);
         }
-        
+
         // Format prices
         const displayPrice = formatCurrency(regularPriceValue);
         const formattedSalePrice = salePriceValue ? formatCurrency(salePriceValue) : null;
         const formattedRegularPrice = regularPriceValue > 0 ? formatCurrency(regularPriceValue) : null;
-        
+
         return (
           <ProductCard
             key={product.id}

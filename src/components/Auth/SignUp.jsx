@@ -220,7 +220,10 @@ const SignUp = () => {
           {/* Google Sign Up Button */}
           <div className="mt-6">
             <Button
-              onClick={() => window.location.href = 'http://localhost:3000/auth/google'}
+              onClick={() => {
+                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+                window.location.href = `${apiUrl}/api/auth/google`;
+              }}
               variant="outline"
               className="w-full flex items-center justify-center gap-3 bg-white border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
             >

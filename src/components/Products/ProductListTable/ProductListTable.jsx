@@ -19,7 +19,7 @@ import ProductListRow from './ProductListRow';
  * @param {String} sortDirection - Current sort direction ('asc' or 'desc')
  * @param {Function} onSort - Callback when sort is triggered
  */
-const ProductListTable = ({ products, onView, onEdit, onDelete, formatCurrency, isRTL, t, sortField, sortDirection, onSort }) => {
+const ProductListTable = ({ products, onView, onEdit, onDelete, formatCurrency, isRTL, t, sortField, sortDirection, onSort, isLoading = false }) => {
   const [actionMenuOpen, setActionMenuOpen] = useState(null);
 
   return (
@@ -34,7 +34,7 @@ const ProductListTable = ({ products, onView, onEdit, onDelete, formatCurrency, 
             sortDirection={sortDirection}
             onSort={onSort}
           />
-          <tbody className="divide-y divide-gray-200">
+          <tbody className={`divide-y divide-gray-200 ${isLoading ? 'opacity-50 transition-opacity duration-200' : ''}`}>
             {products.map((product) => (
               <ProductListRow
                 key={product.id}

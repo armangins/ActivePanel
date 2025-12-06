@@ -52,6 +52,13 @@ const handleError = (error) => {
       throw err;
     }
 
+    if (data?.error) {
+      const err = new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+      err.code = data.code || 'API_ERROR';
+      err.status = status;
+      throw err;
+    }
+
     if (data?.code) {
       const err = new Error(`API Error: ${data.code}`);
       err.code = data.code;
@@ -439,7 +446,7 @@ export const mediaAPI = {
   upload: async (formData) => {
     try {
       // Backend should handle media upload to WP
-      const response = await api.post('/wp/v2/media', formData, {
+      const response = await api.post('/media', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

@@ -144,7 +144,7 @@ const VariationForm = ({
             />
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               size="icon"
               onClick={() => onGenerateSKU?.()}
               disabled={disabled || generatingSKU}

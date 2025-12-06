@@ -7,8 +7,31 @@ import { useLanguage } from '../../../../contexts/LanguageContext';
  * 
  * Displays success message after product creation/update.
  */
-const SuccessModal = ({ isOpen, onClose, isEditMode, onConfirm }) => {
+const SuccessModal = ({ isOpen, onClose, action = 'create', onConfirm }) => {
   const { t, isRTL } = useLanguage();
+
+  const getContent = () => {
+    switch (action) {
+      case 'update':
+        return {
+          title: t('productUpdated') || 'המוצר עודכן בהצלחה',
+          message: t('productUpdatedMessage') || 'המוצר עודכן בהצלחה במערכת.'
+        };
+      case 'delete':
+        return {
+          title: t('productDeleted') || 'המוצר נמחק בהצלחה',
+          message: t('productDeletedMessage') || 'המוצר הוסר מהמערכת בהצלחה.'
+        };
+      case 'create':
+      default:
+        return {
+          title: t('productCreated') || 'המוצר נוצר בהצלחה',
+          message: t('productCreatedMessage') || 'המוצר נוצר בהצלחה במערכת.'
+        };
+    }
+  };
+
+  const { title, message } = getContent();
 
   return (
     <Modal
@@ -24,13 +47,10 @@ const SuccessModal = ({ isOpen, onClose, isEditMode, onConfirm }) => {
           </div>
         </div>
         <h2 className="text-2xl font-semibold text-gray-900 mb-3 text-center">
-          {isEditMode ? t('productUpdated') || 'המוצר עודכן בהצלחה' : t('productCreated') || 'המוצר נוצר בהצלחה'}
+          {title}
         </h2>
         <p className="text-gray-600 mb-8 text-center max-w-md">
-          {isEditMode 
-            ? t('productUpdatedMessage') || 'המוצר עודכן בהצלחה במערכת.'
-            : t('productCreatedMessage') || 'המוצר נוצר בהצלחה במערכת.'
-          }
+          {message}
         </p>
         <button
           onClick={onConfirm}

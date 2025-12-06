@@ -36,9 +36,10 @@ export const validateProductForm = (formData, t) => {
   }
 
   // Images validation
-  if (!formData.images || formData.images.length < 1) {
-    errors.images = t('min1Image') || 'At least 1 image required';
-  }
+  // Images validation - Optional now
+  // if (!formData.images || formData.images.length < 1) {
+  //   errors.images = t('min1Image') || 'At least 1 image required';
+  // }
 
   // Description word count validation
   if (formData.description) {

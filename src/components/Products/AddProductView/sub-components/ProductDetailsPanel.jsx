@@ -8,6 +8,7 @@ import {
   CategorySelector,
   PriceFields,
   DiscountSelector,
+  SkuAndStockFields,
   ShortDescriptionField,
   DescriptionField
 } from './';

@@ -268,6 +268,8 @@ export const settingsAPI = {
       storeUrl: settings.woocommerceUrl,
       consumerKey: settings.consumerKey,
       consumerSecret: settings.consumerSecret,
+      wordpressUsername: settings.wordpressUsername,
+      wordpressAppPassword: settings.wordpressAppPassword,
       _csrf: getCSRFToken(),
     };
 

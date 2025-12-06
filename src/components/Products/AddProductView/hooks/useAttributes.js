@@ -108,7 +108,7 @@ export const useAttributes = () => {
     attributeTerms,
     selectedAttributeIds,
     selectedAttributeTerms,
-    loadingAttributes,
+    loadingAttributes: isLoadingAttributes,
     originalProductAttributes,
     setAttributes,
     setAttributeTerms,

@@ -14,7 +14,11 @@ export const useProductImages = () => {
 
     setUploadingImage(true);
     try {
-      const uploadPromises = files.map(file => mediaAPI.upload(file));
+      const uploadPromises = files.map(file => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return mediaAPI.upload(formData);
+      });
       const uploadedImages = await Promise.all(uploadPromises);
 
       const newImages = uploadedImages.map(img => ({
@@ -28,6 +32,7 @@ export const useProductImages = () => {
 
       return { success: true, images: newImages };
     } catch (error) {
+      console.error('Image upload failed:', error);
       return {
         success: false,
         error: error.message || 'Failed to upload image'

@@ -6,7 +6,7 @@ export default {
   customers: 'לקוחות',
   coupons: 'קופונים',
   settings: 'הגדרות',
-  
+
   // Authentication
   login: 'התחבר',
   logout: 'התנתק',
@@ -37,7 +37,7 @@ export default {
   welcomeDescription: 'ActivePanel עוזרת לבעלי עסקים וחנויות אינטרנטיות לנהל את הפעילות שלהם בצורה חכמה, מסודרת ויעילה — עם לוחות בקרה, מודולים ברורים וממשק נעים, מבוסס AI ומונחה נתונים (Data-driven) שמסדר את כל המידע בעסק.',
   welcomeDescription2: 'הצטרף אלינו והתחל לנהל את העסק שלך בצורה פשוטה וחכמה יותר כבר היום.',
   communityStats: 'יותר מ-17 אלף אנשים הצטרפו אלינו, תורך עכשיו.',
-  
+
   // Dashboard
   welcome: 'ברוכים הבאים לפאנל הניהול של WooCommerce',
   loadingDashboardData: 'מעבדים את הנתונים… עוד שנייה ואנחנו שם.',
@@ -85,7 +85,7 @@ export default {
   configureGA4: 'הגדר GA4 בהגדרות',
   monthlyOrdersChart: 'הזמנות והכנסות חודשיות',
   noOrdersData: 'אין נתוני הזמנות זמינים',
-  
+
   // Products
   manageProducts: 'נהל את קטלוג המוצרים',
   addProduct: 'הוסף מוצר',
@@ -235,7 +235,7 @@ export default {
   maxPrice: 'מחיר מקסימלי',
   clearFilters: 'נקה מסננים',
   applyFilters: 'החל מסננים',
-  
+
   // Orders
   manageOrders: 'נהל ומעקב אחר הזמנות לקוחות',
   searchOrders: 'חפש לפי מספר הזמנה, שם לקוח או אימייל...',
@@ -276,7 +276,7 @@ export default {
   unpaid: 'לא שולם',
   pendingPayment: 'תשלום ממתין',
   failed: 'נכשל',
-  
+
   // Customers
   manageCustomers: 'נהל את מסד הנתונים של הלקוחות',
   searchCustomers: 'חפש לקוחות לפי שם, אימייל או שם משתמש...',
@@ -288,7 +288,7 @@ export default {
   billingAddress: 'כתובת חיוב',
   shippingAddress: 'כתובת משלוח',
   phone: 'טלפון',
-  
+
   // Settings
   configureAPI: 'הגדר את פרטי ה-WooCommerce API שלך',
   woocommerceSettings: 'הגדרות WooCommerce API',
@@ -368,8 +368,12 @@ export default {
   step5: 'העתק את מפתח הצרכן וסוד הצרכן',
   step6: 'הדבק אותם בשדות למעלה ושמור',
   securityNote: 'הערת אבטחה',
+  credentialConfigured: 'מוגדר (הזן ערך חדש לעדכון)',
+  credentialsConfigured: 'איזה כיף! ההגדרות שלך תקינות אפשר להתחיל לעבוד!',
+  checkConnection: 'בדוק חיבור',
+  editSettings: 'ערוך הגדרות',
   securityText: 'לשימוש בפרודקשן, שמור את הפרטים האלה כמשתני סביבה במקום localStorage. צור קובץ .env עם:',
-  
+
   // Common
   loading: 'טוען...',
   error: 'שגיאה',
@@ -387,7 +391,7 @@ export default {
   connected: 'מחובר',
   connectionFailed: 'חיבור נכשל',
   clickToCheck: 'לחץ לבדיקת חיבור',
-  
+
   // Status translations
   'pending': 'ממתין',
   'processing': 'מעבד',
@@ -395,7 +399,7 @@ export default {
   'completed': 'הושלם',
   'cancelled': 'בוטל',
   'refunded': 'הוחזר',
-  
+
   // Coupons
   displayingCoupons: 'מציג',
   searchCoupons: 'חפש קופונים לפי קוד או תיאור...',
@@ -460,7 +464,7 @@ export default {
   clearCacheConfirm: 'האם אתה בטוח שברצונך לנקות את כל ה-Cache? זה יגרום לאפליקציה לטעון מחדש את כל הנתונים מהשרת.',
   cacheCleared: 'ה-Cache נוקה בהצלחה. הנתונים ייטענו מחדש בפעם הבאה.',
   calculator: 'מחשבון',
-  
+
   // Imports
   imports: 'ייבוא',
   importsDescription: 'ייבוא ועדכון מוצרים מ-CSV, Excel או יצירה ידנית',
@@ -593,7 +597,7 @@ export default {
   enterDataToSeeResults: 'הזן נתונים כדי לראות תוצאות',
   detailedResults: 'תוצאות מפורטות',
   createProductWithThisPrice: 'צור מוצר עם מחיר זה',
-  
+
   // Product Add View
   enterProductName: 'הזן שם מוצר',
   max20Characters: 'מקסימום 20 תווים',
@@ -610,7 +614,7 @@ export default {
   min4Images: 'נדרשות לפחות 4 תמונות',
   min4ImagesNote: 'עליך להוסיף לפחות 4 תמונות. שים לב לאיכות התמונות שאתה מוסיף, עומד בתקני צבע הרקע. תמונות חייבות להיות במידות מסוימות. שים לב שהמוצר מציג את כל הפרטים.',
   min1Image: 'נדרשת לפחות תמונה אחת',
-  min1ImageNote: 'עליך להוסיף לפחות תמונה אחת. שים לב לאיכות התמונות שאתה מוסיף, עומד בתקני צבע הרקע. תמונות חייבות להיות במידות מסוימות. שים לב שהמוצר מציג את כל הפרטים.',
+  min1ImageNote: 'מומלץ להוסיף תמונות איכותיות. שים לב לאיכות התמונות שאתה מוסיף, עומד בתקני צבע הרקע. תמונות חייבות להיות במידות מסוימות. שים לב שהמוצר מציג את כל הפרטים.',
   max400Words: 'מקסימום 400 מילים',
   words: 'מילים',
   highlyRecommended: 'מומלץ מאוד',
@@ -636,6 +640,8 @@ export default {
   productCreated: 'המוצר נוצר בהצלחה',
   productUpdatedMessage: 'המוצר עודכן בהצלחה במערכת.',
   productCreatedMessage: 'המוצר נוצר בהצלחה במערכת.',
+  productDeleted: 'המוצר נמחק בהצלחה',
+  productDeletedMessage: 'המוצר הוסר מהמערכת בהצלחה.',
   ok: 'אישור',
   simpleProductDesc: 'מוצר יחיד',
   variableProductDesc: 'וריאציות',
@@ -691,5 +697,6 @@ export default {
   tax: 'מס',
   gst: 'מע"מ',
   noAddress: 'לא צוין כתובת',
+  checkAndSave: 'בדוק חיבור ושמור',
 };
 

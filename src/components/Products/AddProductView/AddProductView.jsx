@@ -133,6 +133,7 @@ const AddProductView = () => {
           vm.navigate('/products');
         }}
         isEditMode={vm.isEditMode}
+        action={vm.isEditMode ? 'update' : 'create'}
         onConfirm={() => {
           vm.setShowSuccessModal(false);
           vm.navigate('/products');

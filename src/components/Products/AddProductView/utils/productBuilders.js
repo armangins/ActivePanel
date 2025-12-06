@@ -140,8 +140,8 @@ export const cleanVariationData = (variationData) => {
     regular_price: rest.regular_price || '',
     sale_price: rest.sale_price || '',
     sku: rest.sku || '',
-    manage_stock: rest.manage_stock !== undefined 
-      ? rest.manage_stock 
+    manage_stock: rest.manage_stock !== undefined
+      ? rest.manage_stock
       : (rest.stock_quantity !== '' && rest.stock_quantity !== null),
     stock_quantity: rest.stock_quantity || null,
     stock_status: rest.stock_status || (rest.stock_quantity > 0 ? 'instock' : 'outofstock'),

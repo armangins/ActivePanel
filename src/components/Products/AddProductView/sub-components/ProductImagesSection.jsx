@@ -45,7 +45,7 @@ const ProductImagesSection = ({
       <h3 className="text-lg font-semibold text-gray-800 mb-4 text-right">
         {t('uploadImages')}
       </h3>
-      
+
       {/* Images Grid - 3 columns */}
       <div className="grid grid-cols-3 gap-4 mb-4">
         {/* Existing Images */}
@@ -75,9 +75,8 @@ const ProductImagesSection = ({
 
         {/* Upload Area - Only show if less than max images */}
         {images.length < maxImages && (
-          <div className={`border-2 border-dashed rounded-lg aspect-square flex items-center justify-center ${
-            error ? 'border-orange-300 bg-orange-50' : 'border-blue-300 bg-blue-50'
-          }`}>
+          <div className={`border-2 border-dashed rounded-lg aspect-square flex items-center justify-center ${error ? 'border-orange-300 bg-orange-50' : 'border-blue-300 bg-blue-50'
+            }`}>
             <input
               type="file"
               accept="image/*"
@@ -91,11 +90,10 @@ const ProductImagesSection = ({
               id="product-image-upload"
               disabled={uploading}
             />
-            <label 
-              htmlFor="product-image-upload" 
-              className={`cursor-pointer w-full h-full flex flex-col items-center justify-center p-4 ${
-                uploading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+            <label
+              htmlFor="product-image-upload"
+              className={`cursor-pointer w-full h-full flex flex-col items-center justify-center p-4 ${uploading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
             >
               {uploading ? (
                 <>
@@ -114,7 +112,7 @@ const ProductImagesSection = ({
           </div>
         )}
       </div>
-      
+
       {error && (
         <p className="text-orange-500 text-xs mt-2 text-right">{error}</p>
       )}

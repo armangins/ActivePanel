@@ -18,6 +18,7 @@ const Products = () => {
   const navigate = useNavigate();
   const { t, formatCurrency, isRTL } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
@@ -29,6 +30,15 @@ const Products = () => {
   const [sortDirection, setSortDirection] = useState('asc');
   const [gridColumns, setGridColumns] = useState(4);
 
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const {
     data,
     isLoading: loading,
@@ -39,6 +49,10 @@ const Products = () => {
     refetch
   } = useInfiniteProducts({
     per_page: PER_PAGE,
+    search: debouncedSearchQuery,
+    category: selectedCategory,
+    min_price: minPrice,
+    max_price: maxPrice,
     _fields: ['id', 'name', 'slug',
       'permalink', 'date_created', 'status',
       'stock_status', 'stock_quantity', 'price',
@@ -91,27 +105,8 @@ const Products = () => {
     }
   };
 
-  const filteredProducts = allProducts.filter(product => {
-    const matchesSearch =
-      product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.sku?.toLowerCase().includes(searchQuery.toLowerCase());
-
-    if (!matchesSearch) return false;
-
-    if (selectedCategory) {
-      const productCategories = product.categories?.map(cat => cat.id.toString()) || [];
-      if (!productCategories.includes(selectedCategory)) return false;
-    }
-
-    const price = parseFloat(product.price || 0);
-    if (minPrice && price < parseFloat(minPrice)) return false;
-    if (maxPrice && price > parseFloat(maxPrice)) return false;
-
-    return true;
-  });
-
-  // Sort products
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
+  // Sort products (client-side sorting of the fetched results)
+  const sortedProducts = [...allProducts].sort((a, b) => {
     if (!sortField) return 0;
 
     if (sortField === 'name') {
@@ -163,7 +158,8 @@ const Products = () => {
     setGridColumns(columns);
   };
 
-  if (loading) {
+  // Only show full page loading state on initial load (when no products exist yet)
+  if (loading && !allProducts.length && !searchQuery && !selectedCategory && !minPrice && !maxPrice) {
     return <LoadingState message={t('loadingProducts')} />;
   }
 
@@ -227,6 +223,7 @@ const Products = () => {
         <ProductGrid
           products={sortedProducts}
           columns={gridColumns}
+          isLoading={loading}
           onView={(product) => {
             setSelectedProduct(product);
             setIsDetailsOpen(true);
@@ -243,6 +240,7 @@ const Products = () => {
       ) : (
         <ProductList
           products={sortedProducts}
+          isLoading={loading}
           onView={(product) => {
             setSelectedProduct(product);
             setIsDetailsOpen(true);
