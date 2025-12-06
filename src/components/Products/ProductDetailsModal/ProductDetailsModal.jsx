@@ -43,16 +43,7 @@ const ProductDetailsModal = ({ product: initialProduct, onClose, formatCurrency 
 
   const variations = variationsData?.data || [];
 
-  // Debug logging - Remove after testing
-  console.log('🔍 ProductDetailsModal Debug:', {
-    productId: product?.id,
-    productType: product?.type,
-    isVariableProduct,
-    variationsData,
-    variations,
-    loadingVariations,
-    error: variationsError?.message
-  });
+
 
   if (!product) return null;
 

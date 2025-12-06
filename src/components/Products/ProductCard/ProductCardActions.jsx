@@ -1,5 +1,5 @@
-import React from 'react';
-import { TrashIcon as Trash2, PencilIcon as Edit } from '@heroicons/react/24/outline';
+import { Trash2Icon } from '../../Trash2Icon';
+import { MoveLeftIcon } from '../../MoveLeftIcon';
 import { Button } from '../../ui';
 
 const ProductCardActions = ({
@@ -13,12 +13,12 @@ const ProductCardActions = ({
             <div className={`flex flex-row-reverse gap-2`}>
                 <Button
                     onClick={onEdit}
-                    className="w-10 h-10 !text-primary-500 !hover:bg-primary-50 border border-gray-200"
+                    className="h-10 px-3 !text-primary-500 !hover:bg-primary-50 border border-gray-200 flex items-center gap-2"
                     title={editLabel}
                     variant="ghost"
-                    size="icon"
                 >
-                    <Edit className="w-5 h-5" />
+                    <MoveLeftIcon className="w-5 h-5" />
+                    <span className="font-medium">עריכה</span>
                 </Button>
                 <Button
                     onClick={onDelete}
@@ -27,7 +27,7 @@ const ProductCardActions = ({
                     variant="ghost"
                     size="icon"
                 >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2Icon className="w-5 h-5" />
                 </Button>
             </div>
         </div>

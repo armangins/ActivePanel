@@ -14,7 +14,11 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, productName, t })
     }, [isOpen]);
 
     const handleConfirm = async () => {
-        if (confirmationText !== 'מחק') return;
+        const text = confirmationText.trim().toLowerCase();
+
+        if (text !== 'מחק' && text !== 'delete') {
+            return;
+        }
 
         setIsDeleting(true);
         try {
@@ -60,7 +64,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, productName, t })
                         <Input
                             value={confirmationText}
                             onChange={(e) => setConfirmationText(e.target.value)}
-                            placeholder="מחק"
+                            placeholder={t('מחק') || "מחק / delete"}
                             className="w-full"
                             autoFocus
                         />
@@ -75,7 +79,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, productName, t })
                 <Button
                     variant="danger"
                     onClick={handleConfirm}
-                    disabled={confirmationText !== 'מחק' || isDeleting}
+                    disabled={(confirmationText.trim().toLowerCase() !== 'מחק' && confirmationText.trim().toLowerCase() !== 'delete') || isDeleting}
                     isLoading={isDeleting}
                 >
                     {t('delete') || 'Delete'}

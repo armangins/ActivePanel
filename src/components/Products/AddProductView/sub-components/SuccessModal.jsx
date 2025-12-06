@@ -1,4 +1,4 @@
-import { CheckCircleIcon as CheckCircle } from '@heroicons/react/24/outline';
+import { CircleCheckBigIcon } from '../../../CircleCheckBigIcon';
 import Modal from '../../../ui/modals/Modal';
 import { useLanguage } from '../../../../contexts/LanguageContext';
 
@@ -43,7 +43,7 @@ const SuccessModal = ({ isOpen, onClose, action = 'create', onConfirm }) => {
       <div className="p-8 flex flex-col items-center justify-center text-center min-h-[300px]" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="flex justify-center mb-6">
           <div className="rounded-full bg-green-100 p-4">
-            <CheckCircle className="w-14 h-14 text-green-600" />
+            <CircleCheckBigIcon className="w-14 h-14 text-green-600" size={56} autoplay={true} />
           </div>
         </div>
         <h2 className="text-2xl font-semibold text-gray-900 mb-3 text-center">
@@ -64,4 +64,3 @@ const SuccessModal = ({ isOpen, onClose, action = 'create', onConfirm }) => {
 };
 
 export default SuccessModal;
-

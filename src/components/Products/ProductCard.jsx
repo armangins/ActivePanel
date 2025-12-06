@@ -38,8 +38,8 @@ const ProductCard = memo(({
 
   const handleDelete = useCallback((e) => {
     e.stopPropagation();
-    onDelete && onDelete(product.id);
-  }, [onDelete, product.id]);
+    onDelete && onDelete(product);
+  }, [onDelete, product]);
 
   return (
     <div

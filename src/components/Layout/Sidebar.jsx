@@ -1,22 +1,88 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  Squares2X2Icon as LayoutDashboard,
-  CubeIcon as Package,
-  ShoppingCartIcon as ShoppingCart,
-  UsersIcon as Users,
-  Cog6ToothIcon as Settings,
-  TicketIcon as Ticket,
-  FolderIcon as Folder,
   CalculatorIcon as Calculator,
-  ArrowUpTrayIcon as Upload,
   XMarkIcon as X,
   ChevronLeftIcon as ChevronLeft,
   ChevronRightIcon as ChevronRight
 } from '@heroicons/react/24/outline';
+import { DashboardIcon } from '../DashboardIcon';
+import { ShoppingBagIcon } from '../ShoppingBagIcon';
+import { ShoppingCartIcon } from '../ShoppingCartIcon';
+import { UsersIcon } from '../UsersIcon';
+import { SettingsIcon } from '../SettingsIcon';
+import { BadgeDollarIcon } from '../BadgeDollarIcon';
+import { FolderIcon } from '../FolderIcon';
+import { UploadIcon } from '../UploadIcon';
+
 import { useLanguage } from '../../contexts/LanguageContext';
 import useNewOrdersCount from '../../hooks/useNewOrdersCount';
 import { Button } from '../ui';
+
+const SidebarMenuItem = ({ item, isActive, isExpanded, onClose }) => {
+  const iconRef = useRef(null);
+  const Icon = item.icon;
+  const hasBadge = item.badge !== undefined && item.badge > 0;
+
+  const handleMouseEnter = () => {
+    iconRef.current?.startAnimation?.();
+  };
+
+  const handleMouseLeave = () => {
+    iconRef.current?.stopAnimation?.();
+  };
+
+  return (
+    <Link
+      to={item.path}
+      onClick={() => {
+        // Close sidebar on mobile when navigating
+        if (window.innerWidth < 1024) {
+          onClose();
+        }
+      }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className={`
+        sidebar-menu-item flex items-center ${isExpanded ? '' : 'justify-center'} gap-3 px-4 py-3 rounded-lg
+        transition-colors duration-200 relative font-regular
+        ${isActive
+          ? 'text-primary-500 active'
+          : 'text-gray-700'
+        }
+      `}
+      style={isActive ? { backgroundColor: '#EBF3FF' } : {}}
+      title={!isExpanded ? item.label : ''}
+    >
+      <div className="relative flex-shrink-0">
+        <Icon
+          ref={iconRef}
+          className="w-5 h-5"
+          style={isActive ? { color: '#4560FF' } : {}}
+        />
+        {item.isLoading && (
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+        )}
+        {item.hasError && (
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full"></span>
+        )}
+        {hasBadge && (
+          <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center z-10">
+            {item.badge > 99 ? '99+' : item.badge}
+          </span>
+        )}
+      </div>
+      {isExpanded && (
+        <span
+          className="text-right transition-opacity duration-300 opacity-100 flex-1 mr-2 font-regular"
+          style={isActive ? { color: '#4560FF' } : {}}
+        >
+          {item.label}
+        </span>
+      )}
+    </Link>
+  );
+};
 
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
@@ -47,22 +113,22 @@ const Sidebar = ({ isOpen, onClose }) => {
   const isExpanded = !isCollapsed || isHovered;
 
   const menuItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: t('dashboard') },
-    { path: '/products', icon: Package, label: t('products') },
+    { path: '/dashboard', icon: DashboardIcon, label: t('dashboard') },
+    { path: '/products', icon: ShoppingBagIcon, label: t('products') },
     {
       path: '/orders',
-      icon: ShoppingCart,
+      icon: ShoppingCartIcon,
       label: t('orders'),
       badge: (!hasError && !isLoading) ? newOrdersCount : null,
       isLoading: isLoading,
       hasError: hasError
     },
-    { path: '/customers', icon: Users, label: t('customers') },
-    { path: '/coupons', icon: Ticket, label: t('coupons') },
-    { path: '/categories', icon: Folder, label: t('categories') || 'Categories' },
+    { path: '/customers', icon: UsersIcon, label: t('customers') },
+    { path: '/coupons', icon: BadgeDollarIcon, label: t('coupons') },
+    { path: '/categories', icon: FolderIcon, label: t('categories') || 'Categories' },
     { path: '/calculator', icon: Calculator, label: t('calculator') || 'מחשבון' },
-    { path: '/imports', icon: Upload, label: t('imports') || 'ייבוא' },
-    { path: '/settings', icon: Settings, label: t('settings') },
+    { path: '/imports', icon: UploadIcon, label: t('imports') || 'ייבוא' },
+    { path: '/settings', icon: SettingsIcon, label: t('settings') },
   ];
 
   return (
@@ -117,60 +183,15 @@ const Sidebar = ({ isOpen, onClose }) => {
         </div>
 
         <nav className="flex-1 p-4 space-y-2 text-right">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            const hasBadge = item.badge !== undefined && item.badge > 0;
-
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => {
-                  // Close sidebar on mobile when navigating
-                  if (window.innerWidth < 1024) {
-                    onClose();
-                  }
-                }}
-                className={`
-                  sidebar-menu-item flex items-center ${isExpanded ? '' : 'justify-center'} gap-3 px-4 py-3 rounded-lg
-                  transition-colors duration-200 relative font-regular
-                  ${isActive
-                    ? 'text-primary-500 active'
-                    : 'text-gray-700'
-                  }
-                `}
-                style={isActive ? { backgroundColor: '#EBF3FF' } : {}}
-                title={!isExpanded ? item.label : ''}
-              >
-                <div className="relative flex-shrink-0">
-                  <Icon
-                    className="w-5 h-5"
-                    style={isActive ? { color: '#4560FF' } : {}}
-                  />
-                  {item.isLoading && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-                  )}
-                  {item.hasError && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full"></span>
-                  )}
-                  {hasBadge && (
-                    <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center z-10">
-                      {item.badge > 99 ? '99+' : item.badge}
-                    </span>
-                  )}
-                </div>
-                {isExpanded && (
-                  <span
-                    className="text-right transition-opacity duration-300 opacity-100 flex-1 mr-2 font-regular"
-                    style={isActive ? { color: '#4560FF' } : {}}
-                  >
-                    {item.label}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+          {menuItems.map((item) => (
+            <SidebarMenuItem
+              key={item.path}
+              item={item}
+              isActive={location.pathname === item.path}
+              isExpanded={isExpanded}
+              onClose={onClose}
+            />
+          ))}
         </nav>
 
         {isExpanded && (
@@ -187,4 +208,3 @@ const Sidebar = ({ isOpen, onClose }) => {
 };
 
 export default Sidebar;
-

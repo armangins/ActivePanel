@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import { TrashIcon as Trash2, PencilIcon as Edit, EllipsisVerticalIcon } from '@heroicons/react/24/outline';
-import DeleteConfirmModal from './DeleteConfirmModal';
+import { useEffect, useRef } from 'react';
+import { EllipsisVerticalIcon } from '@heroicons/react/24/outline';
+import { Trash2Icon } from '../../Trash2Icon';
+import { MoveLeftIcon } from '../../MoveLeftIcon';
 import { Button } from '../../ui';
 
 /**
@@ -27,7 +28,6 @@ const ActionsCell = ({
   t
 }) => {
   const menuRef = useRef(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -57,11 +57,8 @@ const ActionsCell = ({
   const handleDeleteClick = (e) => {
     e.stopPropagation();
     onActionMenuToggle(product.id);
-    setIsDeleteModalOpen(true);
-  };
-
-  const handleConfirmDelete = () => {
-    onDelete && onDelete(product.id);
+    // Pass the full product object to the parent handler
+    onDelete && onDelete(product);
   };
 
   return (
@@ -93,34 +90,23 @@ const ActionsCell = ({
                 onClick={handleEdit}
                 className={`w-full justify-end px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 flex-row-reverse h-auto rounded-none first:rounded-t-lg`}
               >
-                <Edit className="w-4 h-4" />
-                {t('editProduct')}
+                <MoveLeftIcon className="w-4 h-4" />
+                <span>עריכה</span>
               </Button>
               <Button
                 variant="ghost"
                 onClick={handleDeleteClick}
                 className={`w-full justify-end px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 flex items-center gap-2 flex-row-reverse h-auto rounded-none last:rounded-b-lg`}
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2Icon className="w-4 h-4" />
                 {t('removeProduct') || t('deleteProduct')}
               </Button>
             </div>
           </>
         )}
       </div>
-
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleConfirmDelete}
-        productName={product.name}
-        isRTL={isRTL}
-        t={t}
-      />
     </div>
   );
 };
 
 export default ActionsCell;
-
