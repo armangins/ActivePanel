@@ -1,10 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { XMarkIcon as X } from '@heroicons/react/24/outline';
+import { XMarkIcon as X, CubeIcon as Package } from '@heroicons/react/24/outline';
 import { ordersAPI } from '../../../services/woocommerce';
 import { useOrder } from '../../../hooks/useOrders';
-import { CubeIcon } from '@heroicons/react/24/outline';
 import { Button } from '../../ui';
 
 /**

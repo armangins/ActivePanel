@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import { Input } from '../ui/inputs';
+import { Input } from '../../ui/inputs';
 
 const ProductSettings = ({ settings, onSettingsChange }) => {
     const { t } = useLanguage();
