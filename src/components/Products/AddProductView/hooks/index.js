@@ -6,7 +6,7 @@
 
 export { useProductForm } from './useProductForm';
 export { useProductData } from './useProductData';
-export { useAttributes } from './useAttributes';
-export { useVariations } from './useVariations';
-export { useProductImages } from './useProductImages';
+export { useAttributes } from '../sub-components/AttributesSection/hooks/useAttributes';
+export { useVariations } from '../sub-components/VariationsSection/hooks/useVariations';
+export { useProductImages } from '../sub-components/ProductImagesSection/hooks/useProductImages';
 export { useAddProductViewModel } from './useAddProductViewModel';

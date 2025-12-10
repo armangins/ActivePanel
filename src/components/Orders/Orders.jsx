@@ -4,7 +4,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { ordersAPI } from '../../services/woocommerce';
 import { useOrders } from '../../hooks/useOrders';
 import { SearchInput, EmptyState, LoadingState, ErrorState } from '../ui';
-import Pagination from '../ui/Pagination';
+import Pagination from '../ui/Pagination/Pagination';
 import OrderDetailsModal from './OrderDetailsModal/OrderDetailsModal';
 import OrdersHeader from './OrdersHeader';
 import OrdersTable from './OrdersTable';

@@ -15,7 +15,7 @@ export { default as Table } from './tables/Table';
 export { default as TableHeader } from './tables/TableHeader';
 export { default as TableRow } from './tables/TableRow';
 export { default as TableCell } from './tables/TableCell';
-export { default as OptimizedImage } from './OptimizedImage';
+export { default as OptimizedImage } from './OptimizedImage/OptimizedImage';
 
 // States
 export { default as LoadingState } from './states/LoadingState';
@@ -23,6 +23,7 @@ export { default as ErrorState } from './states/ErrorState';
 export { default as EmptyState } from './states/EmptyState';
 export { default as DataPlaceholder } from './states/DataPlaceholder';
 export { default as StateHandler } from './states/StateHandler';
+export { default as StatusMessage } from './states/StatusMessage';
 
 // Indicators
 export { default as LoadingMoreIndicator } from './indicators/LoadingMoreIndicator';
@@ -38,3 +39,5 @@ export { default as Breadcrumbs } from './common/Breadcrumbs';
 // Buttons
 export { default as Button } from './buttons/Button';
 
+// Toast
+export { Toast } from './Toast';

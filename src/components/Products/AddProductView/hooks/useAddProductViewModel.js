@@ -4,10 +4,14 @@ import { useLanguage } from '../../../../contexts/LanguageContext';
 import { productsAPI, variationsAPI, attributesAPI } from '../../../../services/woocommerce';
 import { generateSKU, improveText } from '../../../../services/gemini';
 import { secureLog } from '../../../../utils/logger';
-import { useProductForm, useProductData, useAttributes, useVariations, useProductImages } from './';
-import { validateProductForm, buildProductData, cleanVariationData, mapProductAttributesToTerms } from '../utils';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { productSchema } from '../../../../schemas/product';
+import { useProductData, useAttributes, useVariations, useProductImages } from './';
+import { buildProductData, cleanVariationData } from '../utils/productBuilders';
 
 export const useAddProductViewModel = () => {
+    // ViewModel responsible for AddProductView logic
     const { t, isRTL, formatCurrency } = useLanguage();
     const navigate = useNavigate();
     const { id } = useParams();
@@ -29,19 +33,57 @@ export const useAddProductViewModel = () => {
     const [improvingShortDescription, setImprovingShortDescription] = useState(false);
     const [improvingDescription, setImprovingDescription] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    // Note: The 'saving' state variable is already destructured from useForm's formState.isSubmitting.
+    // Adding a new local state variable named 'saving' would cause a conflict or redundancy.
+    // Assuming the instruction intended to use the 'saving' from formState, or rename it if a separate state was needed.
+    // For now, we will not add `const [saving, setSaving] = useState(false);` to avoid conflict.
 
-    // Form State Management Hook
+    // React Hook Form
+    const methods = useForm({
+        resolver: zodResolver(productSchema),
+        defaultValues: {
+            name: '',
+            status: 'draft',
+            type: 'simple',
+            description: '',
+            short_description: '',
+            regular_price: '',
+            sale_price: '',
+            sku: '',
+            manage_stock: true,
+            stock_quantity: '',
+            stock_status: 'instock',
+            categories: [],
+            images: [],
+            attributes: [],
+            tags: [],
+            requires_shipping: false,
+            weight: '',
+            dimensions: { length: '', width: '', height: '' },
+            shipping_class: '',
+            tax_status: 'taxable',
+            tax_class: ''
+        },
+        mode: 'onChange'
+    });
+
     const {
-        formData,
-        errors,
-        saving,
-        setFormData,
-        updateFormData,
-        updateField,
-        setErrors,
-        clearErrors,
-        setSaving
-    } = useProductForm();
+        register,
+        control,
+        handleSubmit,
+        setValue,
+        getValues,
+        watch,
+        reset,
+        formState: { errors: formErrors, isSubmitting: saving }
+    } = methods;
+
+    // Watch all fields to keep UI in sync (mimic old formData behavior)
+    const formData = watch();
+    const errors = formErrors; // Map to existing errors variable name to minimize refactor
+
+    // Get submit error from form state for toast display
+    const submitError = formErrors.root?.message;
 
     // Attributes Hook
     const {
@@ -63,7 +105,8 @@ export const useAddProductViewModel = () => {
         isAttributeSelected,
         isTermSelected,
         clearAttributes,
-        resetAttributes
+        resetAttributes,
+        attributeErrors
     } = useAttributes();
 
     // Variations Hook
@@ -107,7 +150,8 @@ export const useAddProductViewModel = () => {
         productId: id,
         isEditMode,
         productType,
-        setFormData,
+        resetForm: reset,
+        setValue,
         setProductType,
         setScheduleDates,
         setOriginalProductAttributes,
@@ -119,24 +163,61 @@ export const useAddProductViewModel = () => {
 
     // Load attributes when product type changes to variable
     useEffect(() => {
-        if (productType === 'variable') {
+        if (productType === 'variable' && !loadingAttributes && attributes.length === 0) {
             loadAttributes(productType);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [productType]);
+    }, [productType, loadingAttributes, attributes.length, loadAttributes]);
+
+    // Helper compatibility functions
+    const updateField = useCallback((field, value) => {
+        setValue(field, value, { shouldValidate: true, shouldDirty: true });
+    }, [setValue]);
+
+    const setFormData = useCallback((newData) => {
+        if (typeof newData === 'function') {
+            const current = getValues();
+            const updated = newData(current);
+            reset(updated);
+        } else {
+            reset(newData);
+        }
+    }, [reset, getValues]);
+
+    // Handler for success modal close - resets form for creating another product
+    const handleSuccessModalClose = useCallback(() => {
+        setShowSuccessModal(false);
+
+        // Only reset form if we're in create mode (not edit mode)
+        if (!isEditMode) {
+            // Reset form to initial state
+            reset();
+            // Clear variations
+            clearVariations();
+            clearPendingVariations();
+            // Clear selected attributes
+            setSelectedAttributeIds([]);
+            setSelectedAttributeTerms({});
+            // Note: Images are managed by useProductImages hook and will reset with form
+        }
+    }, [isEditMode, reset, clearVariations, clearPendingVariations, setSelectedAttributeIds, setSelectedAttributeTerms]);
+
+    const handleScheduleClick = useCallback(() => { }, [productType]);
 
     // Handlers
 
     const handleImageUpload = useCallback(async (fileList) => {
         const result = await handleImageUploadBase(fileList, formData.images || [], (updatedImages) => {
             updateField('images', updatedImages);
-            clearErrors();
+            methods.clearErrors('images');
         });
 
         if (!result.success && result.error) {
-            setErrors(prev => ({ ...prev, images: result.error }));
+            methods.setError('images', {
+                type: 'manual',
+                message: result.error
+            });
         }
-    }, [handleImageUploadBase, formData.images, updateField, clearErrors, setErrors]);
+    }, [handleImageUploadBase, formData.images, updateField, methods]);
 
     const removeImage = useCallback((imageId) => {
         removeImageBase(imageId, formData.images || [], (updatedImages) => {
@@ -299,11 +380,7 @@ export const useAddProductViewModel = () => {
         }
     }, [formData.description, formData.name, setFormData]);
 
-    const validateForm = useCallback(() => {
-        const { isValid, errors: validationErrors } = validateProductForm(formData, t);
-        setErrors(validationErrors);
-        return isValid;
-    }, [formData, t, setErrors]);
+
 
     const buildProductDataForSave = useCallback((status = 'draft') => {
         return buildProductData({
@@ -316,12 +393,28 @@ export const useAddProductViewModel = () => {
         });
     }, [formData, productType, selectedAttributeTerms, attributes, attributeTerms]);
 
-    const handleSave = useCallback(async (status = 'draft') => {
-        if (!validateForm()) return;
+    const onSubmit = useCallback(async (data, status = 'draft') => {
+        // Map product_name back to name for API compatibility
+        const mappedData = {
+            ...data,
+            name: data.product_name, // Map frontend field to backend field
+            status
+        };
+        delete mappedData.product_name; // Remove frontend-only field
 
-        setSaving(true);
+
+
         try {
-            const productData = buildProductDataForSave(status);
+            const productData = buildProductData({
+                formData: mappedData,
+                productType,
+                selectedAttributeTerms,
+                attributes,
+                attributeTerms,
+                status
+            });
+
+
 
             let createdProductId = id;
 
@@ -330,23 +423,33 @@ export const useAddProductViewModel = () => {
                 createdProductId = id;
             } else {
                 const newProduct = await productsAPI.create(productData);
-                createdProductId = newProduct.id;
+
+                // Handle both response formats: { id: 123 } or { data: { id: 123 } }
+                createdProductId = newProduct.data?.id || newProduct.id;
+
             }
 
+
             if (pendingVariations.length > 0 && createdProductId && productType === 'variable') {
+
+
                 try {
                     await new Promise(resolve => setTimeout(resolve, 500));
 
-                    const variationPromises = pendingVariations.map(async (pendingVariation) => {
+                    const variationPromises = pendingVariations.map(async (pendingVariation, index) => {
                         const cleanedData = cleanVariationData(pendingVariation);
-                        return await variationsAPI.create(createdProductId, cleanedData);
+                        const result = await variationsAPI.create(createdProductId, cleanedData);
+                        return result;
                     });
 
                     await Promise.all(variationPromises);
 
+
                     clearPendingVariations();
                     await loadVariations(createdProductId);
                 } catch (variationError) {
+                    console.error('❌ Error creating variations:', variationError);
+                    console.error('❌ Error response:', variationError.response?.data);
                     secureLog.error('Error creating variations', variationError);
                     const errorMessage = variationError.response?.data?.message ||
                         variationError.response?.data?.data?.message ||
@@ -354,22 +457,76 @@ export const useAddProductViewModel = () => {
                         t('failedToCreateVariations') ||
                         'נכשל ביצירת וריאציות';
 
-                    setErrors(prev => ({
-                        ...prev,
-                        variations: errorMessage
-                    }));
-
+                    // Manually set error on variations field if possible, or alert
                     alert(t('error') + ': ' + errorMessage);
                 }
+            } else {
+
             }
+
+
 
             setShowSuccessModal(true);
         } catch (error) {
-            setErrors(prev => ({ ...prev, submit: error.message || t('saveFailed') }));
-        } finally {
-            setSaving(false);
+            console.error('Submit Error', error);
+
+            // Extract detailed error message
+            let errorMessage = t('failedToSaveProduct') || 'שגיאה בשמירת המוצר';
+
+            if (error.response?.data) {
+                const errorData = error.response.data;
+                // Handle specific error cases
+                if (errorData.code === 'product_invalid_sku') {
+                    errorMessage = t('skuAlreadyExists') || 'מק"ט זה כבר קיים במערכת. אנא השתמש במק"ט אחר.';
+                } else if (errorData.code === 'woocommerce_rest_product_invalid_id') {
+                    errorMessage = t('productNotFound') || 'המוצר לא נמצא';
+                } else if (errorData.data?.params) {
+                    // Validation errors with field details
+                    const params = errorData.data.params;
+                    const fieldErrors = Object.keys(params).map(field => {
+                        const fieldName = field === 'name' ? (t('productName') || 'שם מוצר') :
+                            field === 'regular_price' ? (t('regularPrice') || 'מחיר רגיל') :
+                                field === 'sku' ? (t('sku') || 'מק"ט') :
+                                    field === 'stock_quantity' ? (t('stockQuantity') || 'כמות במלאי') :
+                                        field;
+                        return `${fieldName}: ${params[field]}`;
+                    });
+                    errorMessage = fieldErrors.join('\n');
+                }
+
+                // Backend validation errors
+                if (errorData.errors && Array.isArray(errorData.errors)) {
+                    const validationErrors = errorData.errors.map(err => {
+                        if (err.path && err.message) {
+                            const fieldName = err.path[0] === 'product_name' ? (t('productName') || 'שם מוצר') :
+                                err.path[0] === 'regular_price' ? (t('regularPrice') || 'מחיר רגיל') :
+                                    err.path[0] === 'sku' ? (t('sku') || 'מק"ט') :
+                                        err.path[0] === 'stock_quantity' ? (t('stockQuantity') || 'כמות במלאי') :
+                                            err.path[0];
+                            return `${fieldName}: ${err.message}`;
+                        }
+                        return err.message || JSON.stringify(err);
+                    });
+                    errorMessage = validationErrors.join('\n');
+                }
+            }
+
+            // Set form error with detailed message
+            methods.setError('root', {
+                type: 'manual',
+                message: errorMessage
+            });
         }
-    }, [validateForm, buildProductDataForSave, id, isEditMode, productType, pendingVariations, t, setSaving, setErrors, clearPendingVariations, loadVariations]);
+    }, [id, isEditMode, productType, pendingVariations, t, clearPendingVariations, loadVariations, selectedAttributeTerms, attributes, attributeTerms, methods]);
+
+    const handleSave = useCallback(async (status = 'draft') => {
+        // Update status in form first so validation runs against the correct status
+        setValue('status', status);
+
+        // Wait for state update/render cycle if needed, but synchronous setValue should work with RHF
+        // Trigger validation and submit
+        return handleSubmit((data) => onSubmit(data, status))();
+    }, [handleSubmit, onSubmit, setValue]);
 
     return {
         t, isRTL, formatCurrency, navigate, id, isEditMode,
@@ -380,14 +537,15 @@ export const useAddProductViewModel = () => {
         generatingSKU, setGeneratingSKU,
         improvingShortDescription, setImprovingShortDescription,
         improvingDescription, setImprovingDescription,
-        showSuccessModal, setShowSuccessModal,
-        formData, errors, saving, setFormData, updateFormData, updateField, setErrors, clearErrors, setSaving,
-        attributes, attributeTerms, selectedAttributeIds, selectedAttributeTerms, loadingAttributes, originalProductAttributes, setAttributes, setAttributeTerms, setSelectedAttributeIds, setSelectedAttributeTerms, setOriginalProductAttributes, loadAttributes, loadAttributeTerms, toggleAttribute, toggleAttributeTerm, isAttributeSelected, isTermSelected, clearAttributes, resetAttributes,
+        showSuccessModal, setShowSuccessModal, handleSuccessModalClose,
+        formData, errors, saving, submitError, setFormData, updateField,
+        attributes, attributeTerms, selectedAttributeIds, selectedAttributeTerms, loadingAttributes, originalProductAttributes, setAttributes, setAttributeTerms, setSelectedAttributeIds, setSelectedAttributeTerms, setOriginalProductAttributes, loadAttributes, loadAttributeTerms, toggleAttribute, toggleAttributeTerm, isAttributeSelected, isTermSelected, clearAttributes, resetAttributes, attributeErrors,
         variations, pendingVariations, loadingVariations, showCreateVariationModal, showEditVariationModal, editingVariationId, creatingVariation, variationFormData, setVariations, setPendingVariations, setShowCreateVariationModal, setShowEditVariationModal, setEditingVariationId, setVariationFormData, loadVariations, resetVariationForm, handleDeletePendingVariation, createVariation, updateVariation, clearPendingVariations, clearVariations,
         uploadingImage, handleImageUpload, removeImage,
         categories, loadingProduct, loadProduct,
         handleCreateVariation, handleEditVariation, handleUpdateVariation, handleProductTypeChange,
         handleDiscountSelect, handleDiscountClear, handleGenerateSKU, handleImproveShortDescription, handleImproveDescription,
-        handleSave
+        handleSave,
+        methods // Expose RHF methods to the view
     };
 };

@@ -1,5 +1,4 @@
-import { Trash2Icon } from '../../Trash2Icon';
-import { MoveLeftIcon } from '../../MoveLeftIcon';
+import { Trash2Icon, MoveLeftIcon } from '../../icons';
 import { Button } from '../../ui';
 
 const ProductCardActions = ({

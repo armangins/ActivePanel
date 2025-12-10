@@ -7,7 +7,7 @@ import { SearchInput, EmptyState, LoadingState, ErrorState, LoadingMoreIndicator
 import CustomerDetailsModal from './CustomerDetailsModal/CustomerDetailsModal';
 import CustomersHeader from './CustomersHeader';
 import CustomersGrid from './CustomersGrid';
-import Pagination from '../ui/Pagination';
+import Pagination from '../ui/Pagination/Pagination';
 import { PAGINATION_DEFAULTS } from '../../shared/constants';
 
 const PER_PAGE = PAGINATION_DEFAULTS.CUSTOMERS_PER_PAGE;

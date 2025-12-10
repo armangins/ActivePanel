@@ -50,7 +50,7 @@ import { useLanguage } from '../../../contexts/LanguageContext';
  */
 const Input = forwardRef(({
   type = 'text',
-  value = '',
+  value, // Removed default '' to allow uncontrolled mode
   onChange,
   onBlur,
   onFocus,
@@ -81,6 +81,7 @@ const Input = forwardRef(({
   containerClassName = '',
   showIconOnFocus = false,
   isRTL: overrideRTL,
+  testId, // Add testId prop for testing
   ...rest
 }, ref) => {
   const { isRTL: contextRTL } = useLanguage();
@@ -90,7 +91,7 @@ const Input = forwardRef(({
 
   // Generate ID if not provided
   const inputId = id || (label ? `input-${label.toLowerCase().replace(/\s+/g, '-')}` : `input-${Math.random().toString(36).substr(2, 9)}`);
-  
+
   // Size classes
   const sizeClasses = {
     sm: 'px-3 py-1.5 text-sm',
@@ -106,11 +107,12 @@ const Input = forwardRef(({
   };
 
   // Determine if we should show icons
-  const shouldShowLeftIcon = Boolean(leftIcon) && (!showIconOnFocus || isFocused || value);
-  const shouldShowRightIcon = Boolean(rightIcon) && (!showIconOnFocus || isFocused || value);
-  const shouldShowPrefix = Boolean(prefix) && (!showIconOnFocus || isFocused || value);
-  const shouldShowSuffix = Boolean(suffix) && (!showIconOnFocus || isFocused || value);
-  
+  const hasValue = value !== undefined && value !== null && value !== '';
+  const shouldShowLeftIcon = Boolean(leftIcon) && (!showIconOnFocus || isFocused || hasValue);
+  const shouldShowRightIcon = Boolean(rightIcon) && (!showIconOnFocus || isFocused || hasValue);
+  const shouldShowPrefix = Boolean(prefix) && (!showIconOnFocus || isFocused || hasValue);
+  const shouldShowSuffix = Boolean(suffix) && (!showIconOnFocus || isFocused || hasValue);
+
   // Icon size classes
   const iconSizeClass = size === 'sm' ? 'w-4 h-4' : size === 'lg' ? 'w-6 h-6' : 'w-5 h-5';
 
@@ -176,8 +178,8 @@ const Input = forwardRef(({
     <div className={containerClassName}>
       {/* Label */}
       {label && (
-        <label 
-          htmlFor={inputId} 
+        <label
+          htmlFor={inputId}
           className={`block text-sm font-normal text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}
         >
           {label}
@@ -240,6 +242,12 @@ const Input = forwardRef(({
             ${className}
           `.trim().replace(/\s+/g, ' ')}
           {...rest}
+          spellCheck="false"
+          autoCorrect="off"
+          data-lpignore="true"
+          data-1p-ignore
+          data-form-type="other"
+          data-testid={testId}
         />
 
         {/* Password Toggle Button */}

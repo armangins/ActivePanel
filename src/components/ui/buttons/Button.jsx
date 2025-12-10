@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { LoaderIcon } from '../../LoaderIcon';
+import { LoaderIcon } from '../../icons/LoaderIcon';
 
 const Button = React.forwardRef(({
     children,
@@ -23,6 +23,7 @@ const Button = React.forwardRef(({
         danger: 'bg-red-600 text-white hover:bg-red-700 shadow-sm',
         ghost: 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
         link: 'text-primary-600 hover:text-primary-700 underline-offset-4 hover:underline p-0 h-auto shadow-none',
+        outline: 'bg-transparent border border-gray-300 text-gray-700 hover:bg-gray-50',
     };
 
     const sizes = {
@@ -63,7 +64,7 @@ const Button = React.forwardRef(({
 Button.displayName = 'Button';
 
 Button.propTypes = {
-    variant: PropTypes.oneOf(['primary', 'secondary', 'danger', 'ghost', 'link']),
+    variant: PropTypes.oneOf(['primary', 'secondary', 'danger', 'ghost', 'link', 'outline']),
     size: PropTypes.oneOf(['xs', 'sm', 'md', 'lg', 'icon']),
     isLoading: PropTypes.bool,
     icon: PropTypes.elementType,

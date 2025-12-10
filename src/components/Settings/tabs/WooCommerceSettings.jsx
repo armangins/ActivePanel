@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
+import { useFormContext } from 'react-hook-form';
 import { GlobeAltIcon as Globe, KeyIcon as Key, ArrowPathIcon as Loader, CheckCircleIcon as CheckCircle, PencilIcon as Pencil } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { Input } from '../../ui/inputs';
 import { Button } from '../../ui';
 
-const WooCommerceSettings = ({ settings, configuredCredentials = {}, onSettingsChange, onTestConnection, testing }) => {
+const WooCommerceSettings = ({ configuredCredentials = {}, onTestConnection, testing }) => {
     const { t } = useLanguage();
+    const { register, watch, formState: { errors } } = useFormContext();
     const [showFields, setShowFields] = useState(false);
+
+    const woocommerceUrl = watch('woocommerceUrl');
 
     // Check if all credentials are configured
     const allConfigured = configuredCredentials.hasConsumerKey &&
@@ -47,7 +51,7 @@ const WooCommerceSettings = ({ settings, configuredCredentials = {}, onSettingsC
                     <div className="flex items-center justify-between">
                         <div className="text-right flex-1">
                             <p className="text-sm text-gray-600 mb-1">{t('storeURL')}</p>
-                            <p className="font-medium text-gray-900">{settings.woocommerceUrl}</p>
+                            <p className="font-medium text-gray-900">{woocommerceUrl}</p>
                         </div>
                         <Globe className="w-5 h-5 text-gray-400 mr-3" />
                     </div>
@@ -61,51 +65,48 @@ const WooCommerceSettings = ({ settings, configuredCredentials = {}, onSettingsC
         <div className="space-y-6">
             <div>
                 <Input
+                    {...register('woocommerceUrl')}
                     id="woocommerce-url"
-                    name="woocommerceUrl"
                     label={t('storeURL')}
                     type="url"
                     placeholder={t('enterStoreURL') || 'https://your-store.com'}
-                    value={settings.woocommerceUrl}
-                    onChange={(e) => onSettingsChange({ ...settings, woocommerceUrl: e.target.value })}
                     leftIcon={Globe}
                     autoComplete="url"
+                    error={errors.woocommerceUrl?.message}
                 />
-                <p className={`text - xs text - gray - 500 mt - 1 ${'text-right'} `}>
+                <p className={`text-xs text-gray-500 mt-1 ${'text-right'} `}>
                     {t('enterStoreURL')}
                 </p>
             </div>
 
             <div>
                 <Input
+                    {...register('consumerKey')}
                     id="consumer-key"
-                    name="consumerKey"
                     label={t('consumerKey')}
                     type="password"
                     placeholder={configuredCredentials.hasConsumerKey ? t('credentialConfigured') : "ck_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}
-                    value={settings.consumerKey}
-                    onChange={(e) => onSettingsChange({ ...settings, consumerKey: e.target.value })}
                     leftIcon={Key}
                     autoComplete="username"
+                    error={errors.consumerKey?.message}
                 />
-                <p className={`text - xs text - gray - 500 mt - 1 ${'text-right'} `}>
+                <p className={`text-xs text-gray-500 mt-1 ${'text-right'} `}>
                     {t('yourConsumerKey')}
                 </p>
             </div>
 
             <div>
                 <Input
+                    {...register('consumerSecret')}
                     id="consumer-secret"
-                    name="consumerSecret"
                     label={t('consumerSecret')}
                     type="password"
                     placeholder={configuredCredentials.hasConsumerSecret ? t('credentialConfigured') : "cs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}
-                    value={settings.consumerSecret}
-                    onChange={(e) => onSettingsChange({ ...settings, consumerSecret: e.target.value })}
                     leftIcon={Key}
                     autoComplete="current-password"
+                    error={errors.consumerSecret?.message}
                 />
-                <p className={`text - xs text - gray - 500 mt - 1 ${'text-right'} `}>
+                <p className={`text-xs text-gray-500 mt-1 ${'text-right'} `}>
                     {t('yourConsumerSecret')}
                 </p>
             </div>
@@ -122,31 +123,29 @@ const WooCommerceSettings = ({ settings, configuredCredentials = {}, onSettingsC
                 <div className="space-y-6">
                     <div>
                         <Input
+                            {...register('wordpressUsername')}
                             id="wordpress-username"
-                            name="wordpressUsername"
                             label={t('wpUsername') || 'WordPress Username'}
                             type="text"
                             placeholder={configuredCredentials.hasWordpressUsername ? t('credentialConfigured') : (t('wpUsernamePlaceholder') || 'your-wordpress-username')}
-                            value={settings.wordpressUsername}
-                            onChange={(e) => onSettingsChange({ ...settings, wordpressUsername: e.target.value })}
                             leftIcon={Key}
                             autoComplete="username"
+                            error={errors.wordpressUsername?.message}
                         />
                     </div>
 
                     <div>
                         <Input
+                            {...register('wordpressAppPassword')}
                             id="app-password"
-                            name="wordpressAppPassword"
                             label={t('appPassword') || 'Application Password'}
                             type="password"
                             placeholder={configuredCredentials.hasWordpressAppPassword ? t('credentialConfigured') : "xxxx xxxx xxxx xxxx xxxx xxxx"}
-                            value={settings.wordpressAppPassword}
-                            onChange={(e) => onSettingsChange({ ...settings, wordpressAppPassword: e.target.value })}
                             leftIcon={Key}
                             autoComplete="current-password"
+                            error={errors.wordpressAppPassword?.message}
                         />
-                        <p className={`text - xs text - gray - 500 mt - 1 ${'text-right'} `}>
+                        <p className={`text-xs text-gray-500 mt-1 ${'text-right'} `}>
                             {t('appPasswordDesc') || 'Generated from WordPress → Users → Profile → Application Passwords'}
                         </p>
                     </div>
@@ -155,8 +154,9 @@ const WooCommerceSettings = ({ settings, configuredCredentials = {}, onSettingsC
 
             <div className="pt-4 border-t border-gray-200 flex gap-3 justify-end">
                 <Button
+                    type="button"
                     onClick={onTestConnection}
-                    disabled={testing || !settings.woocommerceUrl || !settings.consumerKey || !settings.consumerSecret}
+                    disabled={testing}
                     variant="secondary"
                     className="flex items-center gap-2"
                 >

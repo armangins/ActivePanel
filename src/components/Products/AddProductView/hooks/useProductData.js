@@ -25,7 +25,9 @@ export const useProductData = ({
   productId,
   isEditMode,
   productType,
-  setFormData,
+  setFormData, // Deprecated, use resetForm/setValue
+  resetForm,
+  setValue,
   setProductType,
   setScheduleDates,
   setOriginalProductAttributes,
@@ -64,13 +66,16 @@ export const useProductData = ({
         setProductType(product.type || 'simple');
 
         // Map product data to formData structure
-        setFormData({
-          name: product.name || '',
+        const formattedData = {
+          product_name: product.name || '',
+          status: product.status || 'draft',
           description: product.description || '',
           short_description: product.short_description || '',
           regular_price: product.regular_price || '',
           sale_price: product.sale_price || '',
           sku: product.sku || '',
+          manage_stock: product.manage_stock ?? true,
+          stock_status: product.stock_status || 'instock',
           stock_quantity: product.stock_quantity?.toString() || '',
           categories: product.categories?.map(cat => cat.id) || [],
           images: product.images || [],
@@ -78,7 +83,19 @@ export const useProductData = ({
           tags: product.tags?.map(tag => tag.id) || [],
           date_on_sale_from: product.date_on_sale_from || '',
           date_on_sale_to: product.date_on_sale_to || '',
-        });
+          requires_shipping: !product.virtual,
+          weight: product.weight || '',
+          dimensions: product.dimensions || { length: '', width: '', height: '' },
+          shipping_class: product.shipping_class || '',
+          tax_status: product.tax_status || 'taxable',
+          tax_class: product.tax_class || '',
+        };
+
+        if (resetForm) {
+          resetForm(formattedData);
+        } else if (setFormData) {
+          setFormData(formattedData);
+        }
 
         // Load variations if it's a variable product
         if (product.type === 'variable') {
@@ -122,7 +139,7 @@ export const useProductData = ({
     };
 
     processProductData();
-  }, [product, isEditMode, setFormData, setProductType, setScheduleDates, setOriginalProductAttributes, setSelectedAttributeIds, setSelectedAttributeTerms, loadAttributeTerms, loadVariations]);
+  }, [product, isEditMode, setFormData, resetForm, setProductType, setScheduleDates, setOriginalProductAttributes, setSelectedAttributeIds, setSelectedAttributeTerms, loadAttributeTerms, loadVariations]);
 
   // Manual load function (wrapper around refetch)
   const loadProduct = useCallback((id) => {
@@ -136,14 +153,19 @@ export const useProductData = ({
       if (priceParam) {
         const price = parseFloat(priceParam);
         if (!isNaN(price) && price > 0) {
-          setFormData(prev => ({
-            ...prev,
-            regular_price: price.toFixed(2)
-          }));
+          const priceVal = price.toFixed(2);
+          if (setValue) {
+            setValue('regular_price', priceVal);
+          } else if (setFormData) {
+            setFormData(prev => ({
+              ...prev,
+              regular_price: priceVal
+            }));
+          }
         }
       }
     }
-  }, [isEditMode, searchParams, setFormData]);
+  }, [isEditMode, searchParams, setFormData, setValue]);
 
   return {
     categories,

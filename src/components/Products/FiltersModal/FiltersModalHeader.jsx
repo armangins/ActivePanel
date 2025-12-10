@@ -1,6 +1,6 @@
 import React from 'react';
 import { XMarkIcon as X } from '@heroicons/react/24/outline';
-import { Button } from '../../ui';
+import { ModalHeader } from '../../ui';
 
 const FiltersModalHeader = ({ t, onClose }) => {
     return (

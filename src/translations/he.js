@@ -706,5 +706,22 @@ export default {
   gst: 'מע"מ',
   noAddress: 'לא צוין כתובת',
   checkAndSave: 'בדוק חיבור ושמור',
+
+  // New Product Flow Keys
+  publishProduct: 'פרסם מוצר',
+  saveDraft: 'שמור טיוטה',
+  switchToDraft: 'העבר לטיוטה',
+  manageStock: 'ניהול מלאי',
+  thisProductRequiresShipping: 'פרטי מוצר למשלוח',
+  taxStatus: 'סטטוס מס',
+  taxClass: 'סוג מס',
+  taxable: 'חייב במס',
+  shippingOnly: 'משלוח בלבד',
+  none: 'ללא',
+  standard: 'סטנדרטי',
+  reducedRate: 'מופחת',
+  zeroRate: 'אפס',
+  selectAttributesFirst: 'אנא בחר תכונות למוצר תחילה',
+  select: 'בחר...',
 };
 

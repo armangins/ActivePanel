@@ -1,4 +1,4 @@
-import VariationCard from '../../VariationCard';
+import VariationCard from '../../../VariationCard';
 
 /**
  * ProductDetailsInfo Component

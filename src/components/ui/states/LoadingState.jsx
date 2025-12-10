@@ -9,7 +9,7 @@ import { useLanguage } from '../../../contexts/LanguageContext';
  * @param {string} size - Size of spinner: 'sm', 'md', 'lg' (default: 'md')
  * @param {boolean} fullHeight - Whether to take full height
  */
-import { LoaderIcon } from '../../LoaderIcon';
+import { LoaderIcon } from '../../icons/LoaderIcon';
 
 const LoadingState = ({ message, size = 'md', fullHeight = false }) => {
   const { t } = useLanguage();

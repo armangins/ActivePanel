@@ -12,7 +12,10 @@ export const useProductForm = (initialFormData = {}) => {
     short_description: '',
     regular_price: '',
     sale_price: '',
+    status: 'draft',
     sku: '',
+    manage_stock: true,
+    stock_status: 'instock',
     stock_quantity: '',
     categories: [],
     images: [],
@@ -20,6 +23,12 @@ export const useProductForm = (initialFormData = {}) => {
     tags: [],
     date_on_sale_from: '',
     date_on_sale_to: '',
+    requires_shipping: false,
+    weight: '',
+    dimensions: { length: '', width: '', height: '' },
+    shipping_class: '',
+    tax_status: 'taxable',
+    tax_class: '',
     ...initialFormData
   });
 
@@ -56,6 +65,8 @@ export const useProductForm = (initialFormData = {}) => {
       regular_price: '',
       sale_price: '',
       sku: '',
+      manage_stock: true,
+      stock_status: 'instock',
       stock_quantity: '',
       categories: [],
       images: [],
@@ -63,6 +74,12 @@ export const useProductForm = (initialFormData = {}) => {
       tags: [],
       date_on_sale_from: '',
       date_on_sale_to: '',
+      requires_shipping: false,
+      weight: '',
+      dimensions: { length: '', width: '', height: '' },
+      shipping_class: '',
+      tax_status: 'taxable',
+      tax_class: '',
       ...newData
     });
     setErrors({});

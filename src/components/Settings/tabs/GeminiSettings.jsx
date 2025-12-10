@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
+import { useFormContext } from 'react-hook-form';
 import { SparklesIcon as Sparkles, ArrowPathIcon as Loader, CheckCircleIcon as CheckCircle, XCircleIcon as XCircle } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { Input } from '../../ui/inputs';
 import { Button } from '../../ui';
 import { testGeminiConnection, setGeminiApiKey } from '../../../services/gemini';
 
-const GeminiSettings = ({ settings, onSettingsChange }) => {
+const GeminiSettings = () => {
     const { t } = useLanguage();
+    const { register, watch, formState: { errors } } = useFormContext();
     const [testingGemini, setTestingGemini] = useState(false);
     const [connectionStatus, setConnectionStatus] = useState(null);
     const [message, setMessage] = useState(null);
 
+    const geminiApiKey = watch('geminiApiKey');
+
     const handleTestConnection = async () => {
-        if (!settings.geminiApiKey) {
+        if (!geminiApiKey) {
             setMessage({ type: 'error', text: t('fillGeminiApiKey') || 'אנא הזן מפתח API לפני בדיקת החיבור.' });
             return;
         }
@@ -23,7 +27,7 @@ const GeminiSettings = ({ settings, onSettingsChange }) => {
 
         try {
             // Set API key in memory for testing
-            setGeminiApiKey(settings.geminiApiKey);
+            setGeminiApiKey(geminiApiKey);
 
             try {
                 const isConnected = await testGeminiConnection();
@@ -57,15 +61,14 @@ const GeminiSettings = ({ settings, onSettingsChange }) => {
 
             <div>
                 <Input
+                    {...register('geminiApiKey')}
                     id="gemini-api-key"
-                    name="geminiApiKey"
                     label={t('geminiApiKey') || 'מפתח API של Gemini'}
                     type="password"
                     placeholder={t('geminiApiKeyPlaceholder') || 'הכנס מפתח API של Gemini'}
-                    value={settings.geminiApiKey}
-                    onChange={(e) => onSettingsChange({ ...settings, geminiApiKey: e.target.value })}
                     leftIcon={Sparkles}
                     autoComplete="off"
+                    error={errors.geminiApiKey?.message}
                 />
                 <p className={`text-xs text-gray-500 mt-1 ${'text-right'}`}>
                     {t('geminiApiKeyDesc') || 'קבל מפתח מ-Google AI Studio: https://makersuite.google.com/app/apikey'}
@@ -86,8 +89,9 @@ const GeminiSettings = ({ settings, onSettingsChange }) => {
 
             <div className="pt-4 border-t border-gray-200 flex gap-3 flex-row-reverse">
                 <Button
+                    type="button"
                     onClick={handleTestConnection}
-                    disabled={testingGemini || !settings.geminiApiKey}
+                    disabled={testingGemini || !geminiApiKey}
                     variant="secondary"
                     className={`flex items-center ${'flex-row-reverse space-x-reverse'}`}
                 >

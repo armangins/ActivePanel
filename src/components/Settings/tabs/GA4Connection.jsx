@@ -1,20 +1,18 @@
 import { useState } from 'react';
+import { useFormContext } from 'react-hook-form';
 import { ChartBarIcon as BarChart3, CheckCircleIcon as CheckCircle, XCircleIcon as XCircle } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { Input } from '../../ui/inputs';
-import { Card, Button } from '../../ui';
+import { Button } from '../../ui';
 
-const GA4Connection = ({ settings, onSettingsChange, onTestConnection }) => {
+const GA4Connection = ({ onTestConnection }) => {
     const { t } = useLanguage();
-    const [connecting, setConnecting] = useState(false);
+    const { register, watch, formState: { errors } } = useFormContext();
     const [testing, setTesting] = useState(false);
     const [connectionStatus, setConnectionStatus] = useState(null);
     const [message, setMessage] = useState(null);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        onSettingsChange(prev => ({ ...prev, [name]: value }));
-    };
+    const ga4PropertyId = watch('ga4PropertyId');
 
     return (
         <div className="space-y-6">
@@ -34,37 +32,34 @@ const GA4Connection = ({ settings, onSettingsChange, onTestConnection }) => {
 
             <div className="grid grid-cols-1 gap-6">
                 <Input
+                    {...register('ga4PropertyId')}
                     label={t('ga4PropertyId') || 'GA4 Property ID'}
-                    name="ga4PropertyId"
-                    value={settings.ga4PropertyId}
-                    onChange={handleChange}
                     placeholder="e.g. 123456789"
                     dir="ltr"
                     className="text-left"
                     helperText={t('ga4PropertyIdHelp') || 'Found in Admin > Property Settings'}
+                    error={errors.ga4PropertyId?.message}
                 />
 
                 <Input
+                    {...register('ga4MeasurementId')}
                     label={t('ga4MeasurementId') || 'GA4 Measurement ID'}
-                    name="ga4MeasurementId"
-                    value={settings.ga4MeasurementId || ''}
-                    onChange={handleChange}
                     placeholder="e.g. G-XXXXXXXXXX"
                     dir="ltr"
                     className="text-left"
                     helperText={t('ga4MeasurementIdHelp') || 'Found in Admin > Data Streams'}
+                    error={errors.ga4MeasurementId?.message}
                 />
 
                 <Input
+                    {...register('ga4ApiSecret')}
                     label={t('ga4ApiSecret') || 'GA4 API Secret'}
-                    name="ga4ApiSecret"
-                    value={settings.ga4ApiSecret || ''}
-                    onChange={handleChange}
                     type="password"
                     placeholder="e.g. xxxxxxxxxxxx"
                     dir="ltr"
                     className="text-left"
                     helperText={t('ga4ApiSecretHelp') || 'Create in Admin > Data Streams > Measurement Protocol API secrets'}
+                    error={errors.ga4ApiSecret?.message}
                 />
             </div>
 
@@ -72,7 +67,7 @@ const GA4Connection = ({ settings, onSettingsChange, onTestConnection }) => {
                 <Button
                     type="button"
                     onClick={onTestConnection}
-                    disabled={testing || !settings.ga4PropertyId}
+                    disabled={testing || !ga4PropertyId}
                     variant="secondary"
                     className="flex items-center gap-2"
                 >

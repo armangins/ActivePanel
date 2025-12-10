@@ -1,5 +1,6 @@
 import { XMarkIcon as X } from '@heroicons/react/24/outline';
-import { Button } from '../../ui';
+import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from '../../ui';
+import { Input } from '../../ui/inputs';
 
 /**
  * DeleteConfirmModal Component

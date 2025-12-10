@@ -73,19 +73,19 @@ const Login = () => {
   return (
     <div className="min-h-screen flex" dir="rtl">
       {/* Left Panel - Login Form */}
-      <div className="flex-1 flex items-center justify-center bg-white p-8 lg:p-12">
+      <div className="flex-1 flex items-center justify-center bg-white p-6 sm:p-8 lg:p-12">
         <div className="w-full max-w-md">
           {/* Logo */}
-          <div className="mb-8">
+          <div className="mb-6 lg:mb-8">
             <img
               src="/logo.svg"
               alt="ActivePanel"
-              className="h-12 mb-6"
+              className="h-10 lg:h-12 mb-4 lg:mb-6"
             />
           </div>
 
           {/* Sign In Title */}
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
             {t('signIn') || 'התחבר'}
           </h1>
 
@@ -125,6 +125,8 @@ const Login = () => {
               required
               disabled={loading}
               autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
               dir="ltr"
             />
 
@@ -141,6 +143,8 @@ const Login = () => {
               required
               disabled={loading}
               autoComplete="current-password"
+              autoCapitalize="none"
+              autoCorrect="off"
               dir="rtl"
             />
 

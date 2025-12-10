@@ -4,6 +4,8 @@
  * Provides security functions for data protection
  */
 
+import DOMPurify from 'dompurify';
+
 /**
  * Sanitize user input to prevent XSS attacks
  * @param {string} input - User input string
@@ -12,12 +14,8 @@
 export const sanitizeInput = (input) => {
   if (typeof input !== 'string') return input;
 
-  // Remove potentially dangerous characters
-  return input
-    .replace(/[<>]/g, '') // Remove < and >
-    .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+=/gi, '') // Remove event handlers
-    .trim();
+  // Use DOMPurify for robust sanitization
+  return DOMPurify.sanitize(input.trim()).trim();
 };
 
 /**

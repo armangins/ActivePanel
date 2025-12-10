@@ -1,34 +1,47 @@
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { XMarkIcon as X, ArrowPathIcon as Loader } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { categoriesAPI } from '../../services/woocommerce';
 import { Input } from '../ui/inputs';
 import { Button } from '../ui';
+import { categorySchema } from '../../schemas/category';
 import DOMPurify from 'dompurify';
 
 const CategoryModal = ({ category, onClose, isRTL, t }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    description: '',
-    parent: 0,
-  });
   const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState({});
   const [parentCategories, setParentCategories] = useState([]);
   const isEditMode = Boolean(category);
+
+  const { register, handleSubmit, reset, setError, formState: { errors } } = useForm({
+    resolver: zodResolver(categorySchema),
+    defaultValues: {
+      name: '',
+      slug: '',
+      description: '',
+      parent: 0,
+    }
+  });
 
   useEffect(() => {
     loadParentCategories();
     if (category) {
-      setFormData({
+      reset({
         name: category.name || '',
         slug: category.slug || '',
         description: category.description || '',
         parent: category.parent || 0,
       });
+    } else {
+      reset({
+        name: '',
+        slug: '',
+        description: '',
+        parent: 0,
+      });
     }
-  }, [category]);
+  }, [category, reset]);
 
   const loadParentCategories = async () => {
     try {
@@ -43,34 +56,14 @@ const CategoryModal = ({ category, onClose, isRTL, t }) => {
     }
   };
 
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
-    }
-  };
-
-  const validate = () => {
-    const newErrors = {};
-    if (!formData.name || formData.name.trim() === '') {
-      newErrors.name = t('categoryNameRequired') || 'Category name is required';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
-
+  const onSubmit = async (data) => {
     setSaving(true);
     try {
       const categoryData = {
-        name: formData.name.trim(),
-        slug: formData.slug.trim() || undefined, // Let WooCommerce generate if empty
-        description: formData.description || '',
-        parent: formData.parent || 0,
+        name: data.name.trim(),
+        slug: data.slug?.trim() || undefined, // Let WooCommerce generate if empty
+        description: data.description || '',
+        parent: Number(data.parent) || 0,
       };
 
       if (isEditMode) {
@@ -81,7 +74,7 @@ const CategoryModal = ({ category, onClose, isRTL, t }) => {
 
       onClose();
     } catch (err) {
-      setErrors({ submit: err.message || t('error') || 'An error occurred' });
+      setError('root', { message: err.message || t('error') || 'An error occurred' });
     } finally {
       setSaving(false);
     }
@@ -113,15 +106,14 @@ const CategoryModal = ({ category, onClose, isRTL, t }) => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           {/* Name */}
           <div>
             <Input
+              {...register('name')}
               label={t('name') || 'Name'}
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
               placeholder={t('categoryNamePlaceholder') || 'הכנס שם קטגוריה'}
-              error={errors.name}
+              error={errors.name?.message}
               required
               isRTL={isRTL}
             />
@@ -130,11 +122,10 @@ const CategoryModal = ({ category, onClose, isRTL, t }) => {
           {/* Slug */}
           <div>
             <Input
+              {...register('slug')}
               label={t('slug') || 'נתיב URL'}
-              value={formData.slug}
-              onChange={(e) => handleChange('slug', e.target.value)}
               placeholder={t('categorySlugPlaceholder') || 'category-slug (אופציונלי)'}
-              error={errors.slug}
+              error={errors.slug?.message}
               isRTL={isRTL}
             />
             <p className={`text-xs text-gray-500 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -148,8 +139,7 @@ const CategoryModal = ({ category, onClose, isRTL, t }) => {
               {t('parentCategory') || 'קטגוריית אב'}
             </label>
             <select
-              value={formData.parent}
-              onChange={(e) => handleChange('parent', parseInt(e.target.value, 10))}
+              {...register('parent')}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
               dir={isRTL ? 'rtl' : 'ltr'}
             >
@@ -168,8 +158,7 @@ const CategoryModal = ({ category, onClose, isRTL, t }) => {
               {t('description') || 'תיאור'}
             </label>
             <textarea
-              value={formData.description}
-              onChange={(e) => handleChange('description', e.target.value)}
+              {...register('description')}
               placeholder={t('categoryDescriptionPlaceholder') || 'הכנס תיאור קטגוריה (HTML מותר)'}
               rows={4}
               className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none resize-none ${isRTL ? 'text-right' : 'text-left'}`}
@@ -178,9 +167,9 @@ const CategoryModal = ({ category, onClose, isRTL, t }) => {
           </div>
 
           {/* Error Message */}
-          {errors.submit && (
+          {errors.root && (
             <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-              <p className={`text-orange-800 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>{errors.submit}</p>
+              <p className={`text-orange-800 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>{errors.root.message}</p>
             </div>
           )}
 

@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
-import ErrorBoundary from './components/ErrorBoundary';
+import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import { LoadingState } from './components/ui';
 import Sidebar from './components/Layout/Sidebar';
@@ -14,7 +14,7 @@ import MobileBottomNav from './components/Layout/MobileBottomNav';
 const Login = lazy(() => import('./components/Auth/Login'));
 const SignUp = lazy(() => import('./components/Auth/SignUp'));
 const Dashboard = lazy(() => import('./components/Dashboard/Dashboard'));
-const Products = lazy(() => import('./components/Products/Products'));
+const Products = lazy(() => import('./components/Products/Products/Products'));
 const Orders = lazy(() => import('./components/Orders/Orders'));
 const Customers = lazy(() => import('./components/Customers/Customers'));
 const Coupons = lazy(() => import('./components/Coupons/Coupons'));
@@ -24,7 +24,7 @@ const Imports = lazy(() => import('./components/Imports/Imports'));
 const Settings = lazy(() => import('./components/Settings/Settings'));
 const AddProductView = lazy(() => import('./components/Products/AddProductView'));
 const ChatAssistant = lazy(() => import('./components/AI/ChatAssistant'));
-const EditVariationView = lazy(() => import('./components/Products/EditVariationView'));
+const EditVariationView = lazy(() => import('./components/Products/EditVariationView/EditVariationView'));
 const Onboarding = lazy(() => import('./components/Onboarding/Onboarding'));
 
 
@@ -59,7 +59,7 @@ function App() {
       <LanguageProvider>
         <AuthProvider>
           <SettingsProvider>
-            <Router>
+            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <Suspense fallback={<LoadingState />}>
                 <Routes>
                   <Route path="/login" element={<Login />} />

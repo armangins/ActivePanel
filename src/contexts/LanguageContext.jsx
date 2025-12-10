@@ -13,7 +13,7 @@ export const useLanguage = () => {
 
 export const LanguageProvider = ({ children }) => {
   const t = useCallback((key) => {
-    return heTranslations[key] || key;
+    return heTranslations[key];
   }, []);
 
   const formatCurrency = useCallback((amount) => {

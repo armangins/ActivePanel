@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { registerSchema } from '../../schemas/auth';
 
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, Link } from 'react';
@@ -50,26 +51,22 @@ const SignUp = () => {
         return;
       }
 
-      // Validation
-      if (!name || !email || !password || !confirmPassword) {
-        setError('אנא מלא את כל השדות');
+      // Schema Validation
+      const validationResult = registerSchema.safeParse({
+        name,
+        email,
+        password,
+        confirmPassword
+      });
+
+      if (!validationResult.success) {
+        setError(validationResult.error.issues[0].message);
         setLoading(false);
         return;
       }
 
-      if (password !== confirmPassword) {
-        setError('הסיסמאות אינן תואמות');
-        setLoading(false);
-        return;
-      }
+      // Additional checks if any (e.g. rate limit is already done above)
 
-      // Enhanced password validation
-      const passwordValidation = validatePassword(password);
-      if (password.length < 6) {
-        setError('הסיסמה חייבת להכיל לפחות 6 תווים');
-        setLoading(false);
-        return;
-      }
 
       // For demo, allow simple passwords but warn
       // In production, enforce strong passwords

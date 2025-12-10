@@ -4,6 +4,8 @@
  * Pure functions for building product data structures for WooCommerce API
  */
 
+import { sanitizeInput } from '../../../../utils/security';
+
 /**
  * Build product data object from form state
  * @param {Object} params - Parameters
@@ -24,21 +26,38 @@ export const buildProductData = ({
   status = 'draft'
 }) => {
   const productData = {
-    name: formData.name,
+    name: sanitizeInput(formData.name),
     type: productType || 'simple',
     status: status,
-    description: formData.description || '',
-    short_description: formData.short_description || '',
-    regular_price: formData.regular_price || '',
-    sale_price: formData.sale_price || '',
-    sku: formData.sku || '',
-    manage_stock: formData.stock_quantity !== '' && formData.stock_quantity !== null,
-    stock_quantity: formData.stock_quantity || null,
-    stock_status: formData.stock_quantity > 0 ? 'instock' : 'outofstock',
+    description: sanitizeInput(formData.description || ''),
+    short_description: sanitizeInput(formData.short_description || ''),
+    // Variable products don't have prices at parent level - prices come from variations
+    regular_price: productType === 'variable' ? '' : (formData.regular_price || ''),
+    sale_price: productType === 'variable' ? '' : (formData.sale_price || ''),
+    sku: sanitizeInput(formData.sku || ''),
+    // For variable products, force manage_stock to false if no stock quantity is provided
+    // This prevents "manage_stock: true, stock_quantity: null" which causes WooCommerce 400 Error
+    manage_stock: productType === 'variable' && !formData.stock_quantity
+      ? false
+      : (formData.manage_stock ?? true),
+
+    stock_quantity: (productType === 'variable' && !formData.stock_quantity)
+      ? null
+      : ((formData.manage_stock ?? true) ? (formData.stock_quantity || null) : null),
+
+    stock_status: (formData.manage_stock ?? true)
+      ? (formData.stock_quantity > 0 ? 'instock' : 'outofstock')
+      : (formData.stock_status || 'instock'),
     categories: (formData.categories || []).map(id => ({ id })),
     images: (formData.images || []).map(img => ({ id: img.id })),
+    virtual: !formData.requires_shipping,
     date_on_sale_from: formData.date_on_sale_from || null,
     date_on_sale_to: formData.date_on_sale_to || null,
+    weight: formData.weight || '',
+    dimensions: formData.dimensions || { length: '', width: '', height: '' },
+    shipping_class: formData.shipping_class || '',
+    tax_status: formData.tax_status || 'taxable',
+    tax_class: formData.tax_class || '',
   };
 
   // Add attributes if any
@@ -114,7 +133,7 @@ export const buildVariationData = ({
     attributes: variationAttributes,
     regular_price: regularPrice,
     sale_price: salePrice,
-    sku: variationFormData.sku || '',
+    sku: sanitizeInput(variationFormData.sku || ''),
     manage_stock: variationFormData.stock_quantity !== '' && variationFormData.stock_quantity !== null,
     stock_quantity: variationFormData.stock_quantity || null,
     stock_status: variationFormData.stock_quantity > 0 ? 'instock' : 'outofstock',
@@ -139,7 +158,7 @@ export const cleanVariationData = (variationData) => {
   return {
     regular_price: rest.regular_price || '',
     sale_price: rest.sale_price || '',
-    sku: rest.sku || '',
+    sku: sanitizeInput(rest.sku || ''),
     manage_stock: rest.manage_stock !== undefined
       ? rest.manage_stock
       : (rest.stock_quantity !== '' && rest.stock_quantity !== null),

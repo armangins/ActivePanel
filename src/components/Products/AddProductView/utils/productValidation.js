@@ -1,3 +1,5 @@
+import { productSchema } from '../../../../schemas/product';
+
 /**
  * Product Validation Utilities
  * 
@@ -5,57 +7,32 @@
  */
 
 /**
- * Validate product form data
- * @param {Object} formData - Product form data
+ * Validate product form data using Zod schema
+ * @param {Object} formData - Form data to validate
  * @param {Function} t - Translation function
- * @returns {Object} - Object with isValid boolean and errors object
+ * @returns {Object} { isValid: boolean, errors: Object }
  */
 export const validateProductForm = (formData, t) => {
-  const errors = {};
+  const result = productSchema.safeParse(formData);
 
-  // Name validation
-  if (!formData.name?.trim()) {
-    errors.name = t('requiredField') || 'Required';
-  } else if (formData.name.length > 20) {
-    errors.name = t('max20Characters') || 'Maximum 20 characters';
-  }
+  if (!result.success) {
+    const errors = {};
+    result.error.issues.forEach((issue) => {
+      // Map Zod path to form field names
+      const path = issue.path[0];
+      if (path) {
+        errors[path] = issue.message;
+      }
+    });
 
-  // Categories validation
-  if (!formData.categories || formData.categories.length === 0) {
-    errors.categories = t('requiredField') || 'Required';
-  }
-
-  // Regular price validation
-  if (!formData.regular_price) {
-    errors.regular_price = t('requiredField') || 'Required';
-  }
-
-  // Stock quantity validation
-  if (!formData.stock_quantity || formData.stock_quantity === '') {
-    errors.stock_quantity = t('requiredField') || 'Required';
-  }
-
-  // Images validation
-  // Images validation - Optional now
-  // if (!formData.images || formData.images.length < 1) {
-  //   errors.images = t('min1Image') || 'At least 1 image required';
-  // }
-
-  // Description word count validation
-  if (formData.description) {
-    const wordCount = formData.description.trim().split(/\s+/).filter(word => word.length > 0).length;
-    if (wordCount > 400) {
-      errors.description = t('max400Words') || 'Maximum 400 words allowed';
-    }
+    return {
+      isValid: false,
+      errors
+    };
   }
 
   return {
-    isValid: Object.keys(errors).length === 0,
-    errors
+    isValid: true,
+    errors: {}
   };
 };
-
-
-
-
-

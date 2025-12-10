@@ -73,9 +73,9 @@ const StatusMessage = ({
                 )}
 
                 {message && (
-                    <p className="text-lg text-gray-600 mb-6 max-w-md mx-auto leading-relaxed">
+                    <div className="text-lg text-gray-600 mb-6 max-w-md mx-auto leading-relaxed">
                         {message}
-                    </p>
+                    </div>
                 )}
 
                 {action && (

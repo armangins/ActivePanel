@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { TagIcon as Tag, UsersIcon as Users, CubeIcon as Package } from '@heroicons/react/24/outline';
 import { couponsAPI, productsAPI, categoriesAPI } from '../../../services/woocommerce';
+import { couponSchema } from '../../../schemas/coupon';
 
 const useCouponModal = (coupon, onClose, onSave, t) => {
     const [currentStep, setCurrentStep] = useState(0);
@@ -93,17 +94,43 @@ const useCouponModal = (coupon, onClose, onSave, t) => {
     }, [allCategories, categorySearch]);
 
     const validateStep = (step) => {
-        const errors = {};
+        let result;
+        const currentData = { ...formData };
+
         if (step === 0) {
-            if (!formData.code || formData.code.trim() === '') {
-                errors.code = t('couponCodeRequired') || 'Coupon code is required';
-            }
-            if (!formData.amount || parseFloat(formData.amount) <= 0) {
-                errors.amount = t('amountRequired') || 'Amount is required';
-            }
+            // General Settings
+            result = couponSchema.pick({ code: true, amount: true }).safeParse(currentData);
+        } else if (step === 1) {
+            // Usage Restrictions - mostly optional, but validate structure matches schema
+            // We pick all fields relevant to this step if schema enforces them
+            // Currently schema allows optional, so we just check basic validity
+            result = couponSchema.pick({
+                minimum_amount: true,
+                maximum_amount: true,
+                email_restrictions: true
+            }).safeParse(currentData);
+        } else if (step === 2) {
+            // Usage Limits
+            result = couponSchema.pick({
+                usage_limit: true,
+                usage_limit_per_user: true
+            }).safeParse(currentData);
         }
-        setValidationErrors(errors);
-        return Object.keys(errors).length === 0;
+
+        if (result && !result.success) {
+            const errors = {};
+            result.error.issues.forEach((issue) => {
+                const path = issue.path[0];
+                if (path) {
+                    errors[path] = issue.message;
+                }
+            });
+            setValidationErrors(errors);
+            return false;
+        }
+
+        setValidationErrors({});
+        return true;
     };
 
     const handleNext = () => {

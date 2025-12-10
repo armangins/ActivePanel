@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { EllipsisVerticalIcon } from '@heroicons/react/24/outline';
-import { Trash2Icon } from '../../Trash2Icon';
-import { MoveLeftIcon } from '../../MoveLeftIcon';
+import { Trash2Icon, MoveLeftIcon } from '../../icons';
 import { Button } from '../../ui';
 
 /**

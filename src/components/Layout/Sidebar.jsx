@@ -6,14 +6,14 @@ import {
   ChevronLeftIcon as ChevronLeft,
   ChevronRightIcon as ChevronRight
 } from '@heroicons/react/24/outline';
-import { DashboardIcon } from '../DashboardIcon';
-import { ShoppingBagIcon } from '../ShoppingBagIcon';
-import { ShoppingCartIcon } from '../ShoppingCartIcon';
-import { UsersIcon } from '../UsersIcon';
-import { SettingsIcon } from '../SettingsIcon';
-import { BadgeDollarIcon } from '../BadgeDollarIcon';
-import { FolderIcon } from '../FolderIcon';
-import { UploadIcon } from '../UploadIcon';
+import { DashboardIcon } from '../icons/DashboardIcon';
+import { ShoppingBagIcon } from '../icons/ShoppingBagIcon';
+import { ShoppingCartIcon } from '../icons/ShoppingCartIcon';
+import { UsersIcon } from '../icons/UsersIcon';
+import { SettingsIcon } from '../icons/SettingsIcon';
+import { BadgeDollarIcon } from '../icons/BadgeDollarIcon';
+import { FolderIcon } from '../icons/FolderIcon';
+import { UploadIcon } from '../icons/UploadIcon';
 
 import { useLanguage } from '../../contexts/LanguageContext';
 import useNewOrdersCount from '../../hooks/useNewOrdersCount';

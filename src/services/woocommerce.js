@@ -1,4 +1,5 @@
 import { api } from './api';
+import { sanitizeInput } from '../utils/security';
 
 const ERROR_MESSAGES = {
   401: {
@@ -165,13 +166,29 @@ export const productsAPI = {
 
   // Create new product
   create: async (productData) => {
-    const response = await api.post('/products', productData);
+    const sanitizedData = {
+      ...productData,
+      name: productData.name ? sanitizeInput(productData.name) : undefined,
+      slug: productData.slug ? sanitizeInput(productData.slug) : undefined,
+      description: productData.description ? sanitizeInput(productData.description) : undefined,
+      short_description: productData.short_description ? sanitizeInput(productData.short_description) : undefined,
+      sku: productData.sku ? sanitizeInput(productData.sku) : undefined,
+    };
+    const response = await api.post('/products', sanitizedData);
     return response.data;
   },
 
   // Update existing product
   update: async (id, productData) => {
-    const response = await api.put(`/products/${id}`, productData);
+    const sanitizedData = {
+      ...productData,
+      name: productData.name ? sanitizeInput(productData.name) : undefined,
+      slug: productData.slug ? sanitizeInput(productData.slug) : undefined,
+      description: productData.description ? sanitizeInput(productData.description) : undefined,
+      short_description: productData.short_description ? sanitizeInput(productData.short_description) : undefined,
+      sku: productData.sku ? sanitizeInput(productData.sku) : undefined,
+    };
+    const response = await api.put(`/products/${id}`, sanitizedData);
     return response.data;
   },
 
@@ -351,7 +368,12 @@ export const categoriesAPI = {
 
   create: async (categoryData) => {
     try {
-      const response = await api.post('/products/categories', categoryData);
+      const response = await api.post('/products/categories', {
+        ...categoryData,
+        name: sanitizeInput(categoryData.name),
+        slug: sanitizeInput(categoryData.slug),
+        description: sanitizeInput(categoryData.description),
+      });
       return response.data;
     } catch (error) {
       handleError(error);
@@ -360,7 +382,12 @@ export const categoriesAPI = {
 
   update: async (id, categoryData) => {
     try {
-      const response = await api.put(`/products/categories/${id}`, categoryData);
+      const response = await api.put(`/products/categories/${id}`, {
+        ...categoryData,
+        name: categoryData.name ? sanitizeInput(categoryData.name) : undefined,
+        slug: categoryData.slug ? sanitizeInput(categoryData.slug) : undefined,
+        description: categoryData.description ? sanitizeInput(categoryData.description) : undefined,
+      });
       return response.data;
     } catch (error) {
       handleError(error);
@@ -382,10 +409,26 @@ export const categoriesAPI = {
       // using the backend endpoints.
 
       // 1. Fetch products
-      const products = await productsAPI.getAll({
-        include: productIds.join(','),
-        per_page: 100
-      });
+      // 1. Fetch products in chunks to avoid URL length limits
+      const chunkArray = (arr, size) => {
+        return Array.from({ length: Math.ceil(arr.length / size) }, (v, i) =>
+          arr.slice(i * size, i * size + size)
+        );
+      };
+
+      const idChunks = chunkArray(productIds, 40); // 40 IDs per request is safe for URL length
+
+      // OPTIMIZATION: Run fetches in parallel and request ONLY needed fields
+      const chunksPromises = idChunks.map(chunk =>
+        productsAPI.getAll({
+          include: chunk.join(','),
+          per_page: 50,
+          _fields: 'id,categories' // Critical: Fetch only what we need!
+        })
+      );
+
+      const chunkResults = await Promise.all(chunksPromises);
+      const products = chunkResults.flat();
 
       // 2. Prepare updates
       const updateData = products.map(product => {
@@ -431,11 +474,13 @@ export const attributesAPI = {
 
   getTerms: async (attributeId, params = {}) => {
     try {
-      const { data } = await fetchCollection(`/products/attributes/${attributeId}/terms`, {
+      console.log(`[attributesAPI] calling /products/attributes/${attributeId}/terms`);
+      const response = await fetchCollection(`/products/attributes/${attributeId}/terms`, {
         per_page: 100,
         ...params,
       });
-      return data;
+      console.log(`[attributesAPI] raw response for ${attributeId}:`, response);
+      return response.data;
     } catch (error) {
       handleError(error);
     }
@@ -447,11 +492,7 @@ export const mediaAPI = {
   upload: async (formData) => {
     try {
       // Backend should handle media upload to WP
-      const response = await api.post('/media', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await api.post('/media', formData);
       return response.data;
     } catch (error) {
       handleError(error);
@@ -581,7 +622,11 @@ export const couponsAPI = {
 
   create: async (couponData) => {
     try {
-      const response = await api.post('/coupons', couponData);
+      const response = await api.post('/coupons', {
+        ...couponData,
+        code: sanitizeInput(couponData.code),
+        description: sanitizeInput(couponData.description),
+      });
       return response.data;
     } catch (error) {
       handleError(error);
@@ -590,7 +635,11 @@ export const couponsAPI = {
 
   update: async (id, couponData) => {
     try {
-      const response = await api.put(`/coupons/${id}`, couponData);
+      const response = await api.put(`/coupons/${id}`, {
+        ...couponData,
+        code: couponData.code ? sanitizeInput(couponData.code) : undefined,
+        description: couponData.description ? sanitizeInput(couponData.description) : undefined,
+      });
       return response.data;
     } catch (error) {
       handleError(error);

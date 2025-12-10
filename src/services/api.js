@@ -5,17 +5,15 @@
  */
 
 import axios from 'axios';
+import { sanitizeInput } from '../utils/security';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Security: Validate API URL configuration
-if (!import.meta.env.VITE_API_URL && import.meta.env.PROD) {
-  console.warn('⚠️ VITE_API_URL environment variable is not set. Using default: /api');
-}
+if (!import.meta.env.VITE_API_URL && import.meta.env.PROD) { }
 
 // Security: Warn if not using HTTPS in production
 if (import.meta.env.PROD && API_URL.startsWith('http://')) {
-  console.warn('⚠️ API URL should use HTTPS in production for security');
 }
 
 // In-memory token storage
@@ -47,9 +45,8 @@ const createApiClient = () => {
   const instance = axios.create({
     baseURL: API_URL,
     withCredentials: true, // Important for cookies
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    withCredentials: true, // Important for cookies
+    // headers: { 'Content-Type': 'application/json' } // Removed: Let Axios set content type automatically (needed for multipart/form-data)
   });
 
   // Request interceptor - add CSRF token
@@ -142,18 +139,13 @@ export const authAPI = {
    */
   register: async (email, password, name) => {
     const response = await api.post('/auth/register', {
-      email,
-      password,
-      name,
+      email: sanitizeInput(email),
+      password, // Do not sanitize password to allow special characters
+      name: sanitizeInput(name),
       _csrf: getCSRFToken(), // CSRF token in body
     });
 
-    // Store token in memory
-    if (response.data.token) {
-      setAuthToken(response.data.token);
-    }
-
-    return response.data;
+    // ...
   },
 
   /**
@@ -161,10 +153,11 @@ export const authAPI = {
    */
   login: async (email, password) => {
     const response = await api.post('/auth/login', {
-      email,
-      password,
+      email: sanitizeInput(email),
+      password, // Do not sanitize password
       _csrf: getCSRFToken(),
     });
+
 
     // Store token in memory
     if (response.data.token) {
@@ -265,10 +258,10 @@ export const settingsAPI = {
     // but usually extra fields are ignored. 
     // However, to be clean and match the requested JSON format:
     const cleanPayload = {
-      storeUrl: settings.woocommerceUrl,
-      consumerKey: settings.consumerKey,
-      consumerSecret: settings.consumerSecret,
-      wordpressUsername: settings.wordpressUsername,
+      storeUrl: sanitizeInput(settings.woocommerceUrl || settings.storeUrl || ''),
+      consumerKey: sanitizeInput(settings.consumerKey || ''),
+      consumerSecret: sanitizeInput(settings.consumerSecret || ''),
+      wordpressUsername: sanitizeInput(settings.wordpressUsername || ''),
       wordpressAppPassword: settings.wordpressAppPassword,
       _csrf: getCSRFToken(),
     };

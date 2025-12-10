@@ -11,6 +11,8 @@ import { authAPI } from '../services/api';
 
 const USE_BACKEND_API = import.meta.env.VITE_API_URL;
 
+import { loginSchema } from '../schemas/auth';
+
 /**
  * Validate login form inputs
  * @param {string} email - User email
@@ -18,10 +20,12 @@ const USE_BACKEND_API = import.meta.env.VITE_API_URL;
  * @returns {Object} { isValid: boolean, error: string }
  */
 export const validateLoginForm = (email, password) => {
-  if (!email || !password) {
+  const result = loginSchema.safeParse({ email, password });
+
+  if (!result.success) {
     return {
       isValid: false,
-      error: 'אנא מלא את כל השדות',
+      error: result.error.issues[0].message,
     };
   }
   return { isValid: true, error: null };

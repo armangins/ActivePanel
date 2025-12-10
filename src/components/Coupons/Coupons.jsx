@@ -6,7 +6,7 @@ import { useCoupons } from '../../hooks/useCoupons';
 import CouponModal from './CouponModal';
 import CouponsHeader from './CouponsHeader';
 import CouponsTable from './CouponsTable';
-import Pagination from '../ui/Pagination';
+import Pagination from '../ui/Pagination/Pagination';
 import { EmptyState, LoadingState, ErrorState, LoadingMoreIndicator } from '../ui';
 import { PAGINATION_DEFAULTS } from '../../shared/constants';
 
