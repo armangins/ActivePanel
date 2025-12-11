@@ -28,13 +28,35 @@ jobs:
           NODE_ENV: production
           VITE_API_URL: ${{ secrets.VITE_API_URL || '/api' }}
 
+      - name: Validate FTP Secrets
+        run: |
+          if [ -z "${{ secrets.FTP_SERVER }}" ]; then
+            echo "❌ Error: FTP_SERVER secret is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.FTP_USERNAME }}" ]; then
+            echo "❌ Error: FTP_USERNAME secret is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.FTP_PASSWORD }}" ]; then
+            echo "❌ Error: FTP_PASSWORD secret is not set"
+            exit 1
+          fi
+          echo "✅ All FTP secrets are set"
+          echo "FTP_SERVER format check: ${{ secrets.FTP_SERVER }}"
+          # Check if server contains protocol prefix (common mistake)
+          if [[ "${{ secrets.FTP_SERVER }}" == ftp://* ]] || [[ "${{ secrets.FTP_SERVER }}" == ftps://* ]]; then
+            echo "⚠️  Warning: FTP_SERVER should NOT include 'ftp://' or 'ftps://' prefix"
+            echo "   Use only the IP address or hostname (e.g., '185.185.185.185' or 'ftp.yourdomain.com')"
+          fi
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          port: ${{ secrets.FTP_PORT }}
+          port: ${{ secrets.FTP_PORT || '21' }}
           protocol: ftp
           local-dir: ./build/
           server-dir: /public_html/
