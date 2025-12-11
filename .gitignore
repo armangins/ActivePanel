@@ -19,6 +19,10 @@ build
 .env.production
 .env.production.local
 
+# Documentation files
+*.md
+!README.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -29,11 +33,6 @@ build
 *.njsproj
 *.sln
 *.sw?
-
-# Environment variables
-.env
-.env.local
-.env.production
 
 
 
