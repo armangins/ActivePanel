@@ -23,7 +23,11 @@ export const useCoupons = (filters = {}) => {
       per_page: filters.per_page || PER_PAGE,
       ...filters,
     }),
-    staleTime: 15 * 60 * 1000,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+    // PERFORMANCE: Use placeholderData for instant display from cache
+    placeholderData: (previousData) => previousData,
+    // PERFORMANCE: Keep previous data while fetching new data
+    keepPreviousData: true,
   });
 };
 

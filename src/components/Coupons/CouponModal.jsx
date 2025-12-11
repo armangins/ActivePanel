@@ -26,9 +26,12 @@ const CouponModal = ({ coupon, onClose, onSave, formatCurrency, isRTL, t }) => {
     setFormData,
     validationErrors,
     filteredProducts,
+    filteredExcludeProducts,
     filteredCategories,
     productSearch,
     setProductSearch,
+    excludeProductSearch,
+    setExcludeProductSearch,
     categorySearch,
     setCategorySearch,
     emailInput,
@@ -41,6 +44,16 @@ const CouponModal = ({ coupon, onClose, onSave, formatCurrency, isRTL, t }) => {
     removeEmailRestriction,
     toggleProductId,
     toggleCategoryId,
+    showProductDropdown,
+    setShowProductDropdown,
+    showExcludeProductDropdown,
+    setShowExcludeProductDropdown,
+    tempSelectedProducts,
+    tempSelectedExcludeProducts,
+    toggleTempProductSelection,
+    addSelectedProducts,
+    removeProductId,
+    allProducts,
   } = useCouponModal(coupon, onClose, onSave, t);
 
   const renderStepContent = () => {
@@ -61,9 +74,12 @@ const CouponModal = ({ coupon, onClose, onSave, formatCurrency, isRTL, t }) => {
             formData={formData}
             setFormData={setFormData}
             filteredProducts={filteredProducts}
+            filteredExcludeProducts={filteredExcludeProducts}
             filteredCategories={filteredCategories}
             productSearch={productSearch}
             setProductSearch={setProductSearch}
+            excludeProductSearch={excludeProductSearch}
+            setExcludeProductSearch={setExcludeProductSearch}
             categorySearch={categorySearch}
             setCategorySearch={setCategorySearch}
             emailInput={emailInput}
@@ -74,6 +90,17 @@ const CouponModal = ({ coupon, onClose, onSave, formatCurrency, isRTL, t }) => {
             toggleCategoryId={toggleCategoryId}
             isRTL={isRTL}
             t={t}
+            validationErrors={validationErrors}
+            showProductDropdown={showProductDropdown}
+            setShowProductDropdown={setShowProductDropdown}
+            showExcludeProductDropdown={showExcludeProductDropdown}
+            setShowExcludeProductDropdown={setShowExcludeProductDropdown}
+            tempSelectedProducts={tempSelectedProducts}
+            tempSelectedExcludeProducts={tempSelectedExcludeProducts}
+            toggleTempProductSelection={toggleTempProductSelection}
+            addSelectedProducts={addSelectedProducts}
+            removeProductId={removeProductId}
+            allProducts={allProducts}
           />
         );
 
@@ -82,6 +109,7 @@ const CouponModal = ({ coupon, onClose, onSave, formatCurrency, isRTL, t }) => {
           <UsageLimitsStep
             formData={formData}
             setFormData={setFormData}
+            validationErrors={validationErrors}
             t={t}
           />
         );
@@ -110,7 +138,7 @@ const CouponModal = ({ coupon, onClose, onSave, formatCurrency, isRTL, t }) => {
         />
 
         {/* Content */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6" style={{ overflowX: 'visible' }}>
           {renderStepContent()}
         </form>
 
@@ -124,6 +152,7 @@ const CouponModal = ({ coupon, onClose, onSave, formatCurrency, isRTL, t }) => {
           saving={saving}
           coupon={coupon}
           t={t}
+          validationErrors={validationErrors}
         />
       </div>
     </div>

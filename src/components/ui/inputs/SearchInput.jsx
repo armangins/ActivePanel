@@ -16,6 +16,7 @@ import Input from './Input';
 const SearchInput = ({ 
   value, 
   onChange, 
+  onFocus,
   placeholder = 'Search...', 
   isRTL = true,
   className = '' 
@@ -25,6 +26,7 @@ const SearchInput = ({
       type="text"
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onFocus={onFocus}
       placeholder={placeholder}
       leftIcon={Search}
       variant="filled"

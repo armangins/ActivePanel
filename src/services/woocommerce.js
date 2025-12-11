@@ -47,14 +47,27 @@ const handleError = (error) => {
     }
 
     if (data?.message) {
-      const err = new Error(data.message);
+      // SECURITY: Sanitize error message to prevent sensitive data exposure
+      const sanitizedMessage = process.env.NODE_ENV === 'development' 
+        ? data.message 
+        : (data.message.includes('API') || data.message.includes('credentials') || data.message.includes('key')
+            ? 'An error occurred while processing your request.'
+            : data.message);
+      const err = new Error(sanitizedMessage);
       err.code = data.code || 'API_ERROR';
       err.status = status;
       throw err;
     }
 
     if (data?.error) {
-      const err = new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+      // SECURITY: Sanitize error message
+      const errorText = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+      const sanitizedMessage = process.env.NODE_ENV === 'development' 
+        ? errorText 
+        : (errorText.includes('API') || errorText.includes('credentials') || errorText.includes('key')
+            ? 'An error occurred while processing your request.'
+            : errorText);
+      const err = new Error(sanitizedMessage);
       err.code = data.code || 'API_ERROR';
       err.status = status;
       throw err;
@@ -634,11 +647,33 @@ export const couponsAPI = {
 
   create: async (couponData) => {
     try {
-      const response = await api.post('/coupons', {
+      // SECURITY: Sanitize all string inputs and validate arrays
+      const sanitizedData = {
         ...couponData,
-        code: sanitizeInput(couponData.code),
-        description: sanitizeInput(couponData.description),
-      });
+        code: sanitizeInput(couponData.code || ''),
+        description: couponData.description ? sanitizeInput(couponData.description) : undefined,
+        // Validate and sanitize email restrictions
+        email_restrictions: couponData.email_restrictions && Array.isArray(couponData.email_restrictions)
+          ? couponData.email_restrictions
+              .filter(email => typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+              .map(email => email.trim().toLowerCase())
+          : undefined,
+        // Ensure arrays contain only positive integers
+        product_ids: couponData.product_ids && Array.isArray(couponData.product_ids)
+          ? couponData.product_ids.filter(id => Number.isInteger(id) && id > 0)
+          : undefined,
+        exclude_product_ids: couponData.exclude_product_ids && Array.isArray(couponData.exclude_product_ids)
+          ? couponData.exclude_product_ids.filter(id => Number.isInteger(id) && id > 0)
+          : undefined,
+        product_categories: couponData.product_categories && Array.isArray(couponData.product_categories)
+          ? couponData.product_categories.filter(id => Number.isInteger(id) && id > 0)
+          : undefined,
+        exclude_product_categories: couponData.exclude_product_categories && Array.isArray(couponData.exclude_product_categories)
+          ? couponData.exclude_product_categories.filter(id => Number.isInteger(id) && id > 0)
+          : undefined,
+      };
+      
+      const response = await api.post('/coupons', sanitizedData);
       return response.data;
     } catch (error) {
       handleError(error);
@@ -647,11 +682,33 @@ export const couponsAPI = {
 
   update: async (id, couponData) => {
     try {
-      const response = await api.put(`/coupons/${id}`, {
+      // SECURITY: Sanitize all string inputs and validate arrays
+      const sanitizedData = {
         ...couponData,
         code: couponData.code ? sanitizeInput(couponData.code) : undefined,
         description: couponData.description ? sanitizeInput(couponData.description) : undefined,
-      });
+        // Validate and sanitize email restrictions
+        email_restrictions: couponData.email_restrictions !== undefined && Array.isArray(couponData.email_restrictions)
+          ? couponData.email_restrictions
+              .filter(email => typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+              .map(email => email.trim().toLowerCase())
+          : undefined,
+        // Ensure arrays contain only positive integers
+        product_ids: couponData.product_ids !== undefined && Array.isArray(couponData.product_ids)
+          ? couponData.product_ids.filter(id => Number.isInteger(id) && id > 0)
+          : undefined,
+        exclude_product_ids: couponData.exclude_product_ids !== undefined && Array.isArray(couponData.exclude_product_ids)
+          ? couponData.exclude_product_ids.filter(id => Number.isInteger(id) && id > 0)
+          : undefined,
+        product_categories: couponData.product_categories !== undefined && Array.isArray(couponData.product_categories)
+          ? couponData.product_categories.filter(id => Number.isInteger(id) && id > 0)
+          : undefined,
+        exclude_product_categories: couponData.exclude_product_categories !== undefined && Array.isArray(couponData.exclude_product_categories)
+          ? couponData.exclude_product_categories.filter(id => Number.isInteger(id) && id > 0)
+          : undefined,
+      };
+      
+      const response = await api.put(`/coupons/${id}`, sanitizedData);
       return response.data;
     } catch (error) {
       handleError(error);

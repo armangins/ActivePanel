@@ -183,7 +183,9 @@ const Input = forwardRef(({
           className={`block text-sm font-normal text-gray-700 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}
         >
           {label}
-          {required && <span className="text-orange-500 ml-1">*</span>}
+          {required && (
+            <span className={`text-orange-500 ${isRTL ? 'mr-1' : 'ml-1'}`}>*</span>
+          )}
         </label>
       )}
 

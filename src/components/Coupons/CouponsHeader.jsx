@@ -39,7 +39,7 @@ const CouponsHeader = ({
       <div className={`flex flex-col sm:flex-row gap-3 ${'sm:flex-row-reverse'}`}>
         <SearchInput
           value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={onSearchChange}
           placeholder={t('searchCoupons') || 'Search coupons by code or description...'}
           isRTL={isRTL}
         />
@@ -57,5 +57,3 @@ const CouponsHeader = ({
 };
 
 export default CouponsHeader;
-
-

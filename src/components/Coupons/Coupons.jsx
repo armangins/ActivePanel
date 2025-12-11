@@ -1,18 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, lazy, Suspense, memo } from 'react';
 import { TagIcon as Tag } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { couponsAPI } from '../../services/woocommerce';
 import { useCoupons } from '../../hooks/useCoupons';
-import CouponModal from './CouponModal';
 import CouponsHeader from './CouponsHeader';
-import CouponsTable from './CouponsTable';
+import CouponsTableSkeleton from './CouponsTableSkeleton';
 import Pagination from '../ui/Pagination/Pagination';
-import { EmptyState, LoadingState, ErrorState, LoadingMoreIndicator } from '../ui';
+import { EmptyState, LoadingState, ErrorState } from '../ui';
 import { PAGINATION_DEFAULTS } from '../../shared/constants';
+import { validateCouponId } from './utils/securityHelpers';
+import { secureLog } from '../../utils/logger';
+
+const CouponModal = lazy(() => import('./CouponModal'));
+const CouponsTable = lazy(() => import('./CouponsTable'));
 
 const PER_PAGE = PAGINATION_DEFAULTS.COUPONS_PER_PAGE;
 
-const Coupons = () => {
+const Coupons = memo(() => {
   const { t, formatCurrency, isRTL } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCoupon, setSelectedCoupon] = useState(null);
@@ -38,25 +42,35 @@ const Coupons = () => {
   const totalPages = couponsData?.totalPages || 1;
 
 
-
-  // Infinite scroll effect - only when no search query
-
-
   const handleDelete = async (id) => {
+    // SECURITY: Validate coupon ID before processing
+    const validId = validateCouponId(id);
+    if (!validId) {
+      secureLog.warn('Invalid coupon ID for deletion:', id);
+      return;
+    }
+    
     if (!window.confirm(t('deleteCoupon') || 'Are you sure you want to delete this coupon?')) {
       return;
     }
 
-    if (selectedCoupon?.id === id) {
+    if (selectedCoupon?.id === validId) {
       setIsModalOpen(false);
       setSelectedCoupon(null);
     }
 
     try {
-      await couponsAPI.delete(id);
+      await couponsAPI.delete(validId);
       refetch();
     } catch (err) {
-      alert(t('error') + ': ' + err.message);
+      // SECURITY: Don't expose full error message to user
+      const errorMessage = process.env.NODE_ENV === 'development' 
+        ? err.message 
+        : (err.code === 'NETWORK_ERROR' 
+            ? t('networkError') || 'Network error. Please check your connection.'
+            : t('error') || 'An error occurred');
+      alert(errorMessage);
+      secureLog.warn('Coupon deletion error:', err);
       refetch();
     }
   };
@@ -64,12 +78,33 @@ const Coupons = () => {
   // Client-side filtering - instant!
   const filteredCoupons = allCoupons; // Search is handled by the hook
 
+  // PERFORMANCE: Show skeleton loading for better perceived performance
   if (loading && !allCoupons.length) {
-    return <LoadingState message={t('loading') || 'Loading...'} />;
+    return (
+      <div className="space-y-6" dir="rtl">
+        <CouponsHeader
+          totalCount={0}
+          displayedCount={0}
+          onCreateCoupon={() => {
+            setSelectedCoupon(null);
+            setIsModalOpen(true);
+          }}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          isRTL={isRTL}
+          t={t}
+        />
+        <CouponsTableSkeleton count={10} />
+      </div>
+    );
   }
 
   if (error && !allCoupons.length) {
-    return <ErrorState error={error.message || t('error')} onRetry={() => refetch()} fullPage />;
+    // SECURITY: Don't expose full error message in production
+    const errorMessage = process.env.NODE_ENV === 'development' 
+      ? error.message 
+      : t('error') || 'An error occurred';
+    return <ErrorState error={errorMessage} onRetry={() => refetch()} fullPage />;
   }
 
   return (
@@ -91,17 +126,20 @@ const Coupons = () => {
         <EmptyState message={t('noCoupons') || 'No coupons found'} description={t('noCouponsDesc') || 'Get started by creating your first coupon'} isRTL={isRTL} icon={Tag} />
       ) : (
         <>
-          <CouponsTable
-            coupons={filteredCoupons}
-            onEdit={(coupon) => {
-              setSelectedCoupon(coupon);
-              setIsModalOpen(true);
-            }}
-            onDelete={handleDelete}
-            formatCurrency={formatCurrency}
-            isRTL={isRTL}
-            t={t}
-          />
+          <Suspense fallback={<CouponsTableSkeleton count={filteredCoupons.length} />}>
+            <CouponsTable
+              coupons={filteredCoupons}
+              isLoading={loading}
+              onEdit={(coupon) => {
+                setSelectedCoupon(coupon);
+                setIsModalOpen(true);
+              }}
+              onDelete={handleDelete}
+              formatCurrency={formatCurrency}
+              isRTL={isRTL}
+              t={t}
+            />
+          </Suspense>
           {/* Pagination */}
           <div className="mt-6">
             <Pagination
@@ -121,25 +159,33 @@ const Coupons = () => {
       )}
 
       {isModalOpen && (
-        <CouponModal
-          coupon={selectedCoupon}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedCoupon(null);
-          }}
-          onSave={() => {
-            setIsModalOpen(false);
-            setSelectedCoupon(null);
-            refetch();
-          }}
-          formatCurrency={formatCurrency}
-          isRTL={isRTL}
-          t={t}
-        />
+        <Suspense fallback={null}>
+          <CouponModal
+            coupon={selectedCoupon}
+            onClose={() => {
+              setIsModalOpen(false);
+              setSelectedCoupon(null);
+            }}
+            onSave={() => {
+              setIsModalOpen(false);
+              setSelectedCoupon(null);
+              // Reset to page 1 to show the newly created coupon (sorted by date desc)
+              setPage(1);
+              // React Query mutations will automatically invalidate and refetch,
+              // but we also call refetch here for immediate update
+              refetch();
+            }}
+            formatCurrency={formatCurrency}
+            isRTL={isRTL}
+            t={t}
+          />
+        </Suspense>
       )}
     </div>
   );
-};
+});
+
+Coupons.displayName = 'Coupons';
 
 export default Coupons;
 
