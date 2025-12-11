@@ -1,7 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PhotoIcon } from '@heroicons/react/24/outline';
+import { validateImageUrl } from '../../Products/utils/securityHelpers';
 
-const OptimizedImage = ({ src, alt, className = '', placeholderClassName = '' }) => {
+/**
+ * OptimizedImage Component
+ * 
+ * PERFORMANCE: Optimized image component with lazy loading and resizing support
+ * - Lazy loads images below the fold
+ * - Supports image resizing via query parameters
+ * - Shows skeleton placeholder while loading
+ */
+const OptimizedImage = ({ 
+    src, 
+    alt, 
+    className = '', 
+    placeholderClassName = '',
+    // PERFORMANCE: Optional image resizing for list views
+    width,
+    height,
+    resize = false
+}) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [hasError, setHasError] = useState(false);
 
@@ -13,6 +31,41 @@ const OptimizedImage = ({ src, alt, className = '', placeholderClassName = '' })
         setHasError(true);
         setIsLoaded(true); // Stop showing loading state
     };
+
+    // SECURITY: Validate image URL to prevent XSS via malicious URLs
+    // PERFORMANCE: Resize image URL if resize prop is true
+    // WooCommerce supports image resizing via query parameters
+    const getOptimizedImageUrl = (originalUrl) => {
+        if (!originalUrl) return null;
+        
+        // SECURITY: Validate URL before processing
+        const validatedUrl = validateImageUrl(originalUrl);
+        if (!validatedUrl) {
+            return null;
+        }
+        
+        // If resize is requested, add resize parameters
+        if (resize && (width || height)) {
+            const separator = validatedUrl.includes('?') ? '&' : '?';
+            const params = [];
+            if (width) params.push(`w=${width}`);
+            if (height) params.push(`h=${height}`);
+            params.push('fit=crop'); // Maintain aspect ratio with crop
+            return `${validatedUrl}${separator}${params.join('&')}`;
+        }
+        
+        return validatedUrl;
+    };
+
+    const optimizedSrc = getOptimizedImageUrl(src);
+    
+    // SECURITY: Reset error state if src changes to a valid URL
+    useEffect(() => {
+        if (optimizedSrc && hasError) {
+            setHasError(false);
+            setIsLoaded(false);
+        }
+    }, [optimizedSrc, hasError]);
 
     return (
         <div className={`relative overflow-hidden ${className} ${!isLoaded ? 'bg-gray-100 animate-pulse' : ''}`}>
@@ -31,9 +84,10 @@ const OptimizedImage = ({ src, alt, className = '', placeholderClassName = '' })
             ) : (
                 /* Actual Image */
                 <img
-                    src={src}
+                    src={optimizedSrc}
                     alt={alt}
                     loading="lazy"
+                    decoding="async"
                     onLoad={handleLoad}
                     onError={handleError}
                     className={`w-full h-full object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'

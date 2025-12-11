@@ -38,6 +38,10 @@ const ProductCardImage = ({
                         src={currentMainImage}
                         alt={productName}
                         className="w-full h-full object-cover"
+                        // PERFORMANCE: Resize images for list view (300x300)
+                        resize={true}
+                        width={300}
+                        height={300}
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">
@@ -47,9 +51,11 @@ const ProductCardImage = ({
             </div>
 
             {/* Gallery Thumbnails */}
+            {/* PERFORMANCE: Only show thumbnails if there are images (lazy render) */}
             {thumbnailImages.length > 0 && (
                 <div className="px-2 pb-2 pt-1 flex gap-1 overflow-x-auto">
-                    {thumbnailImages.slice(0, 4).map((thumbnailImage, index) => {
+                    {/* PERFORMANCE: Limit to 3 thumbnails initially for faster rendering */}
+                    {thumbnailImages.slice(0, 3).map((thumbnailImage, index) => {
                         // Check if this thumbnail corresponds to the currently selected main image
                         const isSelected = allImages[selectedImageIndex] === thumbnailImage;
 
@@ -67,13 +73,17 @@ const ProductCardImage = ({
                                     src={thumbnailImage}
                                     alt={`${productName} - Gallery ${index + 1}`}
                                     className="w-full h-full object-cover"
+                                    // PERFORMANCE: Resize thumbnails (48x48 for 12x12 grid)
+                                    resize={true}
+                                    width={48}
+                                    height={48}
                                 />
                             </div>
                         );
                     })}
-                    {thumbnailImages.length > 4 && (
+                    {thumbnailImages.length > 3 && (
                         <div className="flex-shrink-0 w-12 h-12 rounded border border-gray-200 bg-gray-100 flex items-center justify-center">
-                            <span className="text-xs text-gray-500">+{thumbnailImages.length - 4}</span>
+                            <span className="text-xs text-gray-500">+{thumbnailImages.length - 3}</span>
                         </div>
                     )}
                 </div>

@@ -36,7 +36,9 @@ export const useInfiniteProducts = (filters = {}) => {
     queryFn: ({ pageParam = 1 }) => productsAPI.list({
       page: pageParam,
       per_page: filters.per_page || PER_PAGE,
-      _fields: filters._fields || 'id,name,type,status,stock_status,stock_quantity,price,regular_price,sale_price,images,categories,sku',
+      // PERFORMANCE: Default to minimal fields for faster loading
+      // Only request 'price' field if explicitly needed (we prefer regular_price)
+      _fields: filters._fields || 'id,name,type,status,stock_status,stock_quantity,regular_price,sale_price,images,categories,sku',
       ...filters,
     }),
     getNextPageParam: (lastPage, allPages) => {
@@ -45,7 +47,13 @@ export const useInfiniteProducts = (filters = {}) => {
       const currentPage = allPages.length;
       return currentPage < lastPage.totalPages ? currentPage + 1 : undefined;
     },
-    staleTime: 15 * 60 * 1000,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+    // PERFORMANCE: Use placeholderData for instant display from cache
+    // This provides better perceived performance by showing cached data immediately
+    placeholderData: (previousData) => previousData,
+    // PERFORMANCE: Keep previous data while fetching new data
+    // This prevents flickering when refetching
+    keepPreviousData: true,
   });
 };
 

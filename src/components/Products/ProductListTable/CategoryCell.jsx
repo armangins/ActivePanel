@@ -1,3 +1,5 @@
+import { sanitizeCategoryName } from '../utils/securityHelpers';
+
 /**
  * CategoryCell Component
  * 
@@ -9,7 +11,8 @@
 const CategoryCell = ({ product }) => {
   const getCategoryName = () => {
     if (product.categories && product.categories.length > 0) {
-      return product.categories[0].name;
+      // SECURITY: Sanitize category name to prevent XSS
+      return sanitizeCategoryName(product.categories[0].name);
     }
     return '-';
   };
@@ -22,10 +25,6 @@ const CategoryCell = ({ product }) => {
 };
 
 export default CategoryCell;
-
-
-
-
 
 
 

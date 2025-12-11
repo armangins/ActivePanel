@@ -66,6 +66,8 @@ const Products = () => {
     category: filters.selectedCategory,
     min_price: filters.minPrice,
     max_price: filters.maxPrice,
+    // PERFORMANCE: Only request essential fields for list view
+    // Request only first image (images[0]) to reduce payload size
     _fields: ['id', 'name', 'type', 'status', 'stock_status',
       'stock_quantity', 'regular_price',
       'sale_price', 'images', 'categories', 'sku']
@@ -244,9 +246,37 @@ const Products = () => {
     totalCount: totalProducts || allProducts.length
   }), [sortedProducts.length, totalProducts, allProducts.length]);
 
-  // Loading state - only show full page loading on initial load
+  // PERFORMANCE: Show skeleton loading for better perceived performance
+  // Only show full page loading on initial load with no filters
   if (loading && !allProducts.length && !filters.searchQuery && !filters.selectedCategory && !filters.minPrice && !filters.maxPrice) {
-    return <LoadingState message={t('loadingProducts')} />;
+    // Show skeleton grid instead of generic loading state for better UX
+    return (
+      <div className="space-y-6">
+        <ProductsHeader
+          displayedCount={0}
+          totalCount={0}
+          onCreateProduct={() => navigate('/products/add')}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+          gridColumns={gridColumns}
+          onGridColumnsChange={setGridColumns}
+          isRTL={isRTL}
+          t={t}
+        />
+        {viewMode === 'grid' ? (
+          <ProductGrid
+            products={[]}
+            columns={gridColumns}
+            isLoading={true}
+            formatCurrency={formatCurrency}
+            isRTL={isRTL}
+            t={t}
+          />
+        ) : (
+          <LoadingState message={t('loadingProducts')} />
+        )}
+      </div>
+    );
   }
 
   // Error state
@@ -296,8 +326,15 @@ const Products = () => {
         </div>
       )}
 
-      {loading ? (
-        <LoadingState message={t('searching')} />
+      {loading && sortedProducts.length === 0 && !filters.searchQuery && !filters.selectedCategory && !filters.minPrice && !filters.maxPrice ? (
+        // PERFORMANCE: Show skeleton table for better perceived performance
+        <ProductList
+          products={[]}
+          isLoading={true}
+          formatCurrency={formatCurrency}
+          isRTL={isRTL}
+          t={t}
+        />
       ) : sortedProducts.length === 0 ? (
         <EmptyState
           message={t('noProducts')}

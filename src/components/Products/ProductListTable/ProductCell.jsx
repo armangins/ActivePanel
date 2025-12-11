@@ -1,5 +1,6 @@
 import { CubeIcon as Package, ChevronDownIcon, ChevronRightIcon, ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { UserAvatar, OptimizedImage } from '../../ui';
+import { validateImageUrl, sanitizeProductName, sanitizeAttributeValue } from '../utils/securityHelpers';
 
 /**
  * ProductCell Component
@@ -14,8 +15,12 @@ import { UserAvatar, OptimizedImage } from '../../ui';
  * @param {Function} onToggleExpand - Callback to toggle expansion
  */
 const ProductCell = ({ product, isRTL, t, isExpanded, onToggleExpand }) => {
-  const imageUrl = product.images && product.images.length > 0 ? product.images[0].src : null;
-  const productName = product.name || t('productName');
+  // SECURITY: Validate and sanitize image URL
+  const rawImageUrl = product.images && product.images.length > 0 ? product.images[0].src : null;
+  const imageUrl = rawImageUrl ? validateImageUrl(rawImageUrl) : null;
+  
+  // SECURITY: Sanitize product name to prevent XSS
+  const productName = sanitizeProductName(product.name || t('productName'));
   const isVariable = product.type === 'variable';
 
   // Extract variation details from attributes
@@ -32,12 +37,15 @@ const ProductCell = ({ product, isRTL, t, isExpanded, onToggleExpand }) => {
     }
 
     // Format attributes as "AttributeName : value1 , value2 , value3"
+    // SECURITY: Sanitize attribute names and values to prevent XSS
     return variationAttributes.map(attr => {
-      const attrName = attr.name || '';
+      const attrName = sanitizeAttributeValue(attr.name || '');
       const options = attr.options || [];
       if (options.length === 0) return null;
 
-      const values = options.join(' , ');
+      // SECURITY: Sanitize each option value
+      const sanitizedOptions = options.map(opt => sanitizeAttributeValue(String(opt)));
+      const values = sanitizedOptions.join(' , ');
       return `${attrName} : ${values}`;
     }).filter(Boolean);
   };
@@ -70,6 +78,10 @@ const ProductCell = ({ product, isRTL, t, isExpanded, onToggleExpand }) => {
               src={imageUrl}
               alt={productName}
               className="w-full h-full object-cover"
+              // PERFORMANCE: Resize images for list view (48x48 for table cells)
+              resize={true}
+              width={48}
+              height={48}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">

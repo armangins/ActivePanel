@@ -4,6 +4,7 @@ import PriceCell from './PriceCell';
 import SalePriceCell from './SalePriceCell';
 import StockCell from './StockCell';
 import ActionsCell from './ActionsCell';
+import { validateProductId, sanitizeProductName } from '../utils/securityHelpers';
 
 /**
  * ProductListRow Component
@@ -53,7 +54,7 @@ const ProductListRow = ({
             }
           }}
           className="w-4 h-4 text-primary-500 rounded border-gray-300 focus:ring-primary-500 focus:ring-2 cursor-pointer"
-          aria-label={t('selectProduct') || `Select ${product.name}`}
+          aria-label={t('selectProduct') || `Select ${sanitizeProductName(product.name || '')}`}
         />
       </td>
 

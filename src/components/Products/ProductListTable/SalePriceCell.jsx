@@ -1,3 +1,5 @@
+import { hasSalePrice, getSalePrice } from './utils/priceHelpers';
+
 /**
  * SalePriceCell Component
  * 
@@ -17,8 +19,7 @@ const SalePriceCell = ({ product, formatCurrency }) => {
     );
   }
 
-  const hasSalePrice = product.sale_price && parseFloat(product.sale_price) > 0;
-  const salePriceValue = hasSalePrice ? parseFloat(product.sale_price) : null;
+  const salePriceValue = getSalePrice(product);
 
   return (
     <td className="py-3 px-4 text-right">
@@ -34,10 +35,6 @@ const SalePriceCell = ({ product, formatCurrency }) => {
 };
 
 export default SalePriceCell;
-
-
-
-
 
 
 

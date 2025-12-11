@@ -1,3 +1,5 @@
+import { calculateVariationPriceRange, formatPriceRange, getRegularPrice, hasSalePrice } from './utils/priceHelpers';
+
 /**
  * PriceCell Component
  * 
@@ -12,29 +14,14 @@ const PriceCell = ({ product, formatCurrency }) => {
   const isVariable = product.type === 'variable';
 
   // For variable products, calculate price range from variations
-  if (isVariable && product.variations && Array.isArray(product.variations) && product.variations.length > 0) {
-    // Use only regular_price - do not use 'price' field as it may include tax calculations
-    // The 'price' field in WooCommerce can be modified by tax settings, so we stick to regular_price
-    const prices = product.variations
-      .map(v => {
-        // Only use regular_price to avoid tax calculation discrepancies
-        const priceValue = v.regular_price || 0;
-        return parseFloat(priceValue);
-      })
-      .filter(p => p > 0);
-
-    if (prices.length > 0) {
-      const minPrice = Math.min(...prices);
-      const maxPrice = Math.max(...prices);
-
-      const priceRange = minPrice === maxPrice
-        ? formatCurrency(minPrice)
-        : `${formatCurrency(minPrice)} - ${formatCurrency(maxPrice)}`;
-
+  if (isVariable && product.variations) {
+    const priceRange = calculateVariationPriceRange(product.variations);
+    
+    if (priceRange) {
       return (
         <td className="py-3 px-4 text-right">
           <span className="text-sm font-medium text-gray-900">
-            {priceRange}
+            {formatPriceRange(priceRange.minPrice, priceRange.maxPrice, formatCurrency)}
           </span>
         </td>
       );
@@ -43,12 +30,12 @@ const PriceCell = ({ product, formatCurrency }) => {
 
   // Simple product pricing
   // Use only regular_price - do not use 'price' field as it may include tax calculations
-  const hasSalePrice = product.sale_price && parseFloat(product.sale_price) > 0;
-  const regularPriceValue = parseFloat(product.regular_price || 0);
+  const regularPriceValue = getRegularPrice(product);
+  const hasSale = hasSalePrice(product);
 
   return (
     <td className="py-3 px-4 text-right">
-      <span className={`text-sm font-medium ${hasSalePrice ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+      <span className={`text-sm font-medium ${hasSale ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
         {formatCurrency(regularPriceValue)}
       </span>
     </td>
