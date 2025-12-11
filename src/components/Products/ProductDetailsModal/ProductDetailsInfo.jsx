@@ -19,7 +19,8 @@ import VariationCard from '../../../VariationCard';
  */
 const ProductDetailsInfo = ({ product, formatCurrency, isRTL, t, variations = [], loadingVariations = false, variationsError = null }) => {
   const stockStatus = product.stock_status || 'instock';
-  const regularPrice = product.regular_price || product.price || null;
+  // Use only regular_price - do not use 'price' field as it may include tax calculations
+  const regularPrice = product.regular_price || null;
   const salePrice = product.sale_price || null;
 
   return (

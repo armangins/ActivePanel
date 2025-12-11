@@ -16,8 +16,10 @@ import ProductListTable from '../ProductListTable/ProductListTable';
  * @param {String} sortField - Current sort field ('name' or 'price')
  * @param {String} sortDirection - Current sort direction ('asc' or 'desc')
  * @param {Function} onSort - Callback when sort is triggered
+ * @param {Set} selectedProductIds - Set of selected product IDs
+ * @param {Function} onSelectionChange - Callback when selection changes
  */
-const ProductList = ({ products, onView, onEdit, onDelete, formatCurrency, isRTL, t, sortField, sortDirection, onSort, isLoading = false }) => {
+const ProductList = ({ products, onView, onEdit, onDelete, formatCurrency, isRTL, t, sortField, sortDirection, onSort, isLoading = false, selectedProductIds, onSelectionChange }) => {
   return (
     <ProductListTable
       products={products}
@@ -31,6 +33,8 @@ const ProductList = ({ products, onView, onEdit, onDelete, formatCurrency, isRTL
       sortDirection={sortDirection}
       onSort={onSort}
       isLoading={isLoading}
+      selectedProductIds={selectedProductIds}
+      onSelectionChange={onSelectionChange}
     />
   );
 };

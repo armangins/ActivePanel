@@ -204,6 +204,18 @@ export const productsAPI = {
     const response = await api.post('/products/batch', data);
     return response.data;
   },
+
+  // Bulk delete products
+  bulkDelete: async (ids) => {
+    if (!ids || ids.length === 0) {
+      throw new Error('No product IDs provided');
+    }
+    // Use batch API to delete multiple products
+    const response = await api.post('/products/batch', {
+      delete: ids
+    });
+    return response.data;
+  },
 };
 
 // Alias for compatibility with hooks

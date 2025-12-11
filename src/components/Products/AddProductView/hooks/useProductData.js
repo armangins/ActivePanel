@@ -4,6 +4,7 @@ import { productsAPI, categoriesAPI, attributesAPI } from '../../../../services/
 import { useCategories } from '../../../../hooks/useCategories';
 import { useProduct } from '../../../../hooks/useProducts';
 import { mapProductAttributesToTerms } from '../utils/attributeHelpers';
+import { secureLog } from '../../../../utils/logger';
 
 /**
  * Custom hook for loading product data and categories
@@ -66,13 +67,24 @@ export const useProductData = ({
         setProductType(product.type || 'simple');
 
         // Map product data to formData structure
+        // SECURITY & ACCURACY: Format prices properly - only use regular_price, not price field
+        // WooCommerce may return price field with tax calculations, so we ignore it
+        const formatPriceForForm = (priceValue) => {
+          if (!priceValue) return '';
+          // Convert to number and format to 2 decimal places
+          const numPrice = parseFloat(priceValue);
+          if (isNaN(numPrice)) return '';
+          return numPrice.toFixed(2);
+        };
+
         const formattedData = {
           product_name: product.name || '',
           status: product.status || 'draft',
           description: product.description || '',
           short_description: product.short_description || '',
-          regular_price: product.regular_price || '',
-          sale_price: product.sale_price || '',
+          // Only use regular_price, ignore price field (may include tax)
+          regular_price: formatPriceForForm(product.regular_price),
+          sale_price: formatPriceForForm(product.sale_price),
           sku: product.sku || '',
           manage_stock: product.manage_stock ?? true,
           stock_status: product.stock_status || 'instock',
@@ -131,7 +143,7 @@ export const useProductData = ({
           setSelectedAttributeTerms(termsMap);
         }
       } catch (err) {
-        console.error('Error processing product data:', err);
+        secureLog.error('Error processing product data', err);
         // navigate('/products'); // Don't navigate away on processing error, let user try again
       } finally {
         setProcessingProduct(false);

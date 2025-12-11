@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusIcon as Plus, AdjustmentsHorizontalIcon as SlidersHorizontal } from '@heroicons/react/24/outline';
+import { PlusIcon as Plus, AdjustmentsHorizontalIcon as SlidersHorizontal, TrashIcon as Trash } from '@heroicons/react/24/outline';
 import { Button } from '../../ui';
 import FiltersModal from '../FiltersModal/FiltersModal';
 import ViewModeToggle from '../ViewModeToggle/ViewModeToggle';
@@ -30,7 +30,10 @@ const ProductsHeader = memo(({
   onMinPriceChange,
   maxPrice,
   onMaxPriceChange,
-  products = []
+  products = [],
+  // Bulk delete props
+  selectedProductIds = new Set(),
+  onBulkDelete
 }) => {
   const navigate = useNavigate();
   const buttonRef = useRef(null);
@@ -131,6 +134,21 @@ const ProductsHeader = memo(({
             </>
           )}
         </div>
+
+        {/* Bulk Delete Button - Only show in list view when items are selected */}
+        {viewMode === 'list' && selectedProductIds && selectedProductIds.size > 0 && (
+          <Button
+            variant="danger"
+            onClick={onBulkDelete}
+            className={`flex items-center justify-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 md:gap-2 px-3 md:px-4 py-2`}
+          >
+            <Trash className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden md:inline">
+              {t('deleteSelected') || 'Delete Selected'} ({selectedProductIds.size})
+            </span>
+            <span className="md:hidden">{selectedProductIds.size}</span>
+          </Button>
+        )}
 
         {/* Create Product Button */}
         <Button

@@ -8,19 +8,30 @@ import { useLanguage } from '../../../../../contexts/LanguageContext';
  * 
  * Displays a success message after product creation/update
  * with options to create another product or go to products page
+ * 
+ * @param {boolean} isOpen - Whether modal is open
+ * @param {function} onClose - Callback to close modal
+ * @param {function} onCreateAnother - Callback to create another product (clears form)
+ * @param {function} onGoToProducts - Callback to navigate to products page
+ * @param {string} action - Action type: 'create' or 'update'
  */
-const SuccessModal = ({ isOpen, onClose, action = 'create' }) => {
+const SuccessModal = ({ 
+  isOpen, 
+  onClose, 
+  onCreateAnother,
+  onGoToProducts,
+  action = 'create' 
+}) => {
   const { t } = useLanguage();
-  const navigate = useNavigate();
 
   if (!isOpen) return null;
 
   const handleCreateAnother = () => {
-    onClose(); // This will trigger form reset in parent
+    onCreateAnother?.();
   };
 
   const handleGoToProducts = () => {
-    navigate('/products');
+    onGoToProducts?.();
   };
 
   return (

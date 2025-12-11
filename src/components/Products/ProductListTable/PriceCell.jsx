@@ -13,9 +13,14 @@ const PriceCell = ({ product, formatCurrency }) => {
 
   // For variable products, calculate price range from variations
   if (isVariable && product.variations && Array.isArray(product.variations) && product.variations.length > 0) {
-    // Use regular_price first, fall back to price (not sale_price)
+    // Use only regular_price - do not use 'price' field as it may include tax calculations
+    // The 'price' field in WooCommerce can be modified by tax settings, so we stick to regular_price
     const prices = product.variations
-      .map(v => parseFloat(v.regular_price || v.price || 0))
+      .map(v => {
+        // Only use regular_price to avoid tax calculation discrepancies
+        const priceValue = v.regular_price || 0;
+        return parseFloat(priceValue);
+      })
       .filter(p => p > 0);
 
     if (prices.length > 0) {
@@ -37,8 +42,9 @@ const PriceCell = ({ product, formatCurrency }) => {
   }
 
   // Simple product pricing
+  // Use only regular_price - do not use 'price' field as it may include tax calculations
   const hasSalePrice = product.sale_price && parseFloat(product.sale_price) > 0;
-  const regularPriceValue = parseFloat(product.regular_price || product.price || 0);
+  const regularPriceValue = parseFloat(product.regular_price || 0);
 
   return (
     <td className="py-3 px-4 text-right">

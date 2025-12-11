@@ -32,8 +32,9 @@ export const buildProductData = ({
     description: sanitizeInput(formData.description || ''),
     short_description: sanitizeInput(formData.short_description || ''),
     // Variable products don't have prices at parent level - prices come from variations
-    regular_price: productType === 'variable' ? '' : (formData.regular_price || ''),
-    sale_price: productType === 'variable' ? '' : (formData.sale_price || ''),
+    // Format prices as strings with 2 decimal places for WooCommerce API
+    regular_price: productType === 'variable' ? '' : (formData.regular_price ? parseFloat(formData.regular_price).toFixed(2) : ''),
+    sale_price: productType === 'variable' ? '' : (formData.sale_price ? parseFloat(formData.sale_price).toFixed(2) : ''),
     sku: sanitizeInput(formData.sku || ''),
     // For variable products, force manage_stock to false if no stock quantity is provided
     // This prevents "manage_stock: true, stock_quantity: null" which causes WooCommerce 400 Error
@@ -126,13 +127,23 @@ export const buildVariationData = ({
   });
 
   // Use variation form prices, or fallback to parent product prices if empty
+  // Ensure prices are properly formatted as strings (WooCommerce expects string format)
   const regularPrice = variationFormData.regular_price || parentRegularPrice || '';
   const salePrice = variationFormData.sale_price || parentSalePrice || '';
 
+  // Convert to string and ensure proper decimal format (WooCommerce API requirement)
+  const formatPriceForWooCommerce = (price) => {
+    if (!price || price === '') return '';
+    const numPrice = parseFloat(price);
+    if (isNaN(numPrice)) return '';
+    // Return as string with 2 decimal places
+    return numPrice.toFixed(2);
+  };
+
   const variationData = {
     attributes: variationAttributes,
-    regular_price: regularPrice,
-    sale_price: salePrice,
+    regular_price: formatPriceForWooCommerce(regularPrice),
+    sale_price: formatPriceForWooCommerce(salePrice),
     sku: sanitizeInput(variationFormData.sku || ''),
     manage_stock: variationFormData.stock_quantity !== '' && variationFormData.stock_quantity !== null,
     stock_quantity: variationFormData.stock_quantity || null,
@@ -155,9 +166,17 @@ export const buildVariationData = ({
 export const cleanVariationData = (variationData) => {
   const { id: tempId, ...rest } = variationData;
 
+  // Format prices as strings with 2 decimal places for WooCommerce API
+  const formatPriceForWooCommerce = (price) => {
+    if (!price || price === '') return '';
+    const numPrice = parseFloat(price);
+    if (isNaN(numPrice)) return '';
+    return numPrice.toFixed(2);
+  };
+
   return {
-    regular_price: rest.regular_price || '',
-    sale_price: rest.sale_price || '',
+    regular_price: formatPriceForWooCommerce(rest.regular_price),
+    sale_price: formatPriceForWooCommerce(rest.sale_price),
     sku: sanitizeInput(rest.sku || ''),
     manage_stock: rest.manage_stock !== undefined
       ? rest.manage_stock
@@ -172,6 +191,8 @@ export const cleanVariationData = (variationData) => {
     ...(rest.image?.id && { image: { id: rest.image.id } })
   };
 };
+
+
 
 
 

@@ -19,6 +19,9 @@ import { useLanguage } from '../../../../../contexts/LanguageContext';
  * @param {boolean} generatingSKU - Whether SKU is being generated
  * @param {function} onGenerateSKU - Callback to generate SKU
  * @param {string} parentProductName - Parent product name (for SKU generation)
+ * @param {string} parentSku - Parent product SKU
+ * @param {Array} existingVariationSkus - Array of SKUs from other variations (excluding current)
+ * @param {string|number} currentVariationId - ID of current variation (for edit mode, to exclude from duplicate check)
  * @param {boolean} disabled - Whether form is disabled
  */
 const VariationForm = ({
@@ -31,9 +34,36 @@ const VariationForm = ({
   onGenerateSKU,
   parentProductName = '',
   parentSku = '',
+  existingVariationSkus = [],
+  currentVariationId = null,
   disabled = false,
 }) => {
   const { t } = useLanguage();
+
+  // Validate SKU for duplicates
+  const getSkuValidationError = () => {
+    const currentSku = (formData.sku || '').trim();
+    if (!currentSku) return null; // Empty SKU is allowed
+
+    // Check against parent SKU
+    if (parentSku && currentSku === parentSku.trim()) {
+      return t('skuCannotMatchParent') || 'המק״ט לא יכול להיות זהה למק״ט האב';
+    }
+
+    // Check against other variations
+    // existingVariationSkus should already exclude the current variation in edit mode
+    const hasDuplicate = existingVariationSkus.some(sku => {
+      return sku && sku.trim() === currentSku;
+    });
+
+    if (hasDuplicate) {
+      return t('skuAlreadyUsedByVariation') || 'מק״ט זה כבר בשימוש על ידי וריאציה אחרת';
+    }
+
+    return null;
+  };
+
+  const skuError = getSkuValidationError();
 
   const handleAttributeChange = (attributeId, termId) => {
     onFormDataChange({
@@ -183,6 +213,7 @@ const VariationForm = ({
               placeholder={t('enterSKU') || 'הכנס SKU'}
               containerClassName="flex-1"
               disabled={disabled}
+              className={skuError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
             />
             <Button
               type="button"
@@ -196,9 +227,9 @@ const VariationForm = ({
               {generatingSKU ? <Loader className="w-[18px] h-[18px] animate-spin" /> : <Sparkles className="w-[18px] h-[18px]" />}
             </Button>
           </div>
-          {parentSku && formData.sku === parentSku && (
+          {skuError && (
             <p className="text-xs text-red-500 mt-1 text-right">
-              {t('skuCannotMatchParent') || 'המק״ט לא יכול להיות זהה למק״ט האב'}
+              {skuError}
             </p>
           )}
         </div>

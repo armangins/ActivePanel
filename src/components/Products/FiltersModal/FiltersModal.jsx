@@ -40,7 +40,8 @@ const FiltersModal = ({
 }) => {
   // Calculate price range from products
   const priceRange = products.length > 0 ? products.reduce((acc, product) => {
-    const price = parseFloat(product.price || product.regular_price || 0);
+    // Use only regular_price - do not use 'price' field as it may include tax calculations
+    const price = parseFloat(product.regular_price || 0);
     return {
       min: Math.min(acc.min, price),
       max: Math.max(acc.max, price)

@@ -32,13 +32,31 @@ const ProductListRow = ({
   isRTL,
   t,
   isExpanded,
-  onToggleExpand
+  onToggleExpand,
+  isSelected,
+  onSelect
 }) => {
   return (
     <tr
       className="hover:bg-gray-50 transition-colors cursor-pointer"
       onClick={() => onView && onView(product)}
     >
+      {/* Checkbox Cell */}
+      <td className="py-3 px-4 w-12 text-center" onClick={(e) => e.stopPropagation()}>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={(e) => {
+            e.stopPropagation();
+            if (onSelect) {
+              onSelect(product.id, e.target.checked);
+            }
+          }}
+          className="w-4 h-4 text-primary-500 rounded border-gray-300 focus:ring-primary-500 focus:ring-2 cursor-pointer"
+          aria-label={t('selectProduct') || `Select ${product.name}`}
+        />
+      </td>
+
       {/* Product Cell (Image + Name) */}
       <ProductCell
         product={product}

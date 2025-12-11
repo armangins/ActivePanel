@@ -9,6 +9,7 @@ import { buildVariationData } from '../../../utils/productBuilders';
 export const useVariations = () => {
   const [variations, setVariations] = useState([]);
   const [pendingVariations, setPendingVariations] = useState([]);
+  const [deletedVariationIds, setDeletedVariationIds] = useState([]); // Track deleted variation IDs
   const [loadingVariations, setLoadingVariations] = useState(false);
   const [showCreateVariationModal, setShowCreateVariationModal] = useState(false);
   const [showEditVariationModal, setShowEditVariationModal] = useState(false);
@@ -53,12 +54,29 @@ export const useVariations = () => {
     setPendingVariations(prev => prev.filter(v => v.id !== tempId));
   }, []);
 
+  // Delete a saved variation (for edit mode)
+  const handleDeleteVariation = useCallback((variationId) => {
+    if (variationId && typeof variationId === 'number') {
+      // Track deleted variation ID
+      setDeletedVariationIds(prev => [...prev, variationId]);
+      // Remove from variations list
+      setVariations(prev => prev.filter(v => v.id !== variationId));
+    }
+  }, []);
+
+  // Clear deleted variations tracking
+  const clearDeletedVariations = useCallback(() => {
+    setDeletedVariationIds([]);
+  }, []);
+
   const createVariation = useCallback(async ({
     isEditMode,
     productId,
     formData,
     attributes,
     attributeTerms,
+    parentSku,
+    existingVariationSkus = [],
     t
   }) => {
     // Validate that at least one attribute is selected
@@ -83,6 +101,26 @@ export const useVariations = () => {
     if (stockQuantity === '' || stockQuantity === null || stockQuantity === undefined) {
       alert(t('stockQuantityRequired') || 'כמות במלאי היא שדה חובה');
       return false;
+    }
+
+    // Validate SKU for duplicates
+    const currentSku = (variationFormData.sku || '').trim();
+    if (currentSku) {
+      // Check against parent SKU
+      if (parentSku && currentSku === parentSku.trim()) {
+        alert(t('skuCannotMatchParent') || 'המק״ט לא יכול להיות זהה למק״ט האב');
+        return false;
+      }
+
+      // Check against other variations
+      const hasDuplicate = existingVariationSkus.some(sku => {
+        return sku && sku.trim() === currentSku;
+      });
+
+      if (hasDuplicate) {
+        alert(t('skuAlreadyUsedByVariation') || 'מק״ט זה כבר בשימוש על ידי וריאציה אחרת');
+        return false;
+      }
     }
 
     setCreatingVariation(true);
@@ -129,6 +167,8 @@ export const useVariations = () => {
     formData,
     attributes,
     attributeTerms,
+    parentSku,
+    existingVariationSkus = [],
     t
   }) => {
     // Validate that at least one attribute is selected
@@ -152,6 +192,26 @@ export const useVariations = () => {
     if (stockQuantity === '' || stockQuantity === null || stockQuantity === undefined) {
       alert(t('stockQuantityRequired') || 'כמות במלאי היא שדה חובה');
       return false;
+    }
+
+    // Validate SKU for duplicates
+    const currentSku = (variationFormData.sku || '').trim();
+    if (currentSku) {
+      // Check against parent SKU
+      if (parentSku && currentSku === parentSku.trim()) {
+        alert(t('skuCannotMatchParent') || 'המק״ט לא יכול להיות זהה למק״ט האב');
+        return false;
+      }
+
+      // Check against other variations (excluding current one)
+      const hasDuplicate = existingVariationSkus.some(sku => {
+        return sku && sku.trim() === currentSku;
+      });
+
+      if (hasDuplicate) {
+        alert(t('skuAlreadyUsedByVariation') || 'מק״ט זה כבר בשימוש על ידי וריאציה אחרת');
+        return false;
+      }
     }
 
     setCreatingVariation(true);
@@ -215,6 +275,7 @@ export const useVariations = () => {
   return {
     variations,
     pendingVariations,
+    deletedVariationIds,
     loadingVariations,
     showCreateVariationModal,
     showEditVariationModal,
@@ -230,6 +291,8 @@ export const useVariations = () => {
     loadVariations,
     resetVariationForm,
     handleDeletePendingVariation,
+    handleDeleteVariation,
+    clearDeletedVariations,
     createVariation,
     updateVariation,
     clearPendingVariations,

@@ -12,6 +12,7 @@ import VariationCard from '../../../VariationCard/VariationCard';
  * @param {function} onAddClick - Callback when "Add Variation" is clicked
  * @param {function} onVariationClick - Callback when variation card is clicked (edit mode only)
  * @param {function} onDeletePending - Callback to delete a pending variation
+ * @param {function} onDeleteVariation - Callback to delete a saved variation (edit mode only)
  * @param {function} formatCurrency - Currency formatter function
  * @param {boolean} isRTL - RTL layout flag
  * @param {function} t - Translation function
@@ -24,6 +25,7 @@ const VariationsSection = ({
   onAddClick,
   onVariationClick,
   onDeletePending,
+  onDeleteVariation,
   formatCurrency,
   isRTL,
   t,
@@ -115,8 +117,8 @@ const VariationsSection = ({
           {variations.map((variation) => (
             <div
               key={variation.id}
+              className="relative group cursor-pointer"
               onClick={() => onVariationClick?.(variation)}
-              className="cursor-pointer"
             >
               <VariationCard
                 variation={variation}
@@ -124,6 +126,25 @@ const VariationsSection = ({
                 isRTL={isRTL}
                 t={t}
               />
+              {/* Delete button for saved variations (edit mode only) */}
+              {isEditMode && (
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm(t('confirmDeleteVariation') || 'האם אתה בטוח שברצונך למחוק וריאציה זו?')) {
+                        onDeleteVariation?.(variation.id);
+                      }
+                    }}
+                    className="bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-600 shadow-sm backdrop-blur-sm h-7 w-7 rounded-full"
+                    title={t('deleteVariation') || 'מחק וריאציה'}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </div>

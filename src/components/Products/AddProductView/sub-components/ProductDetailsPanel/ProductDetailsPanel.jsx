@@ -12,9 +12,7 @@ import {
   DiscountSelector,
   SkuAndStockFields,
   ShortDescriptionField,
-  DescriptionField,
-  ShippingFields,
-  TaxFields
+  DescriptionField
 } from '../';
 
 /**
@@ -143,24 +141,6 @@ const ProductDetailsPanel = ({
           onStockStatusChange={(value) => handleFieldChange('stock_status', value)}
           onGenerateSKU={() => onGenerateSKU?.()}
           generatingSKU={generatingSKU}
-        />
-
-        {/* Shipping Fields for Simple Products (or parent) */}
-        {productType === 'simple' && (
-          <ShippingFields
-            formData={formData}
-            onWeightChange={(value) => handleFieldChange('weight', value)}
-            onDimensionsChange={(value) => handleFieldChange('dimensions', value)}
-            onShippingClassChange={(value) => handleFieldChange('shipping_class', value)}
-            onRequiresShippingChange={(checked) => handleFieldChange('requires_shipping', checked)}
-          />
-        )}
-
-        {/* Tax Fields */}
-        <TaxFields
-          formData={formData}
-          onTaxStatusChange={(value) => handleFieldChange('tax_status', value)}
-          onTaxClassChange={(value) => handleFieldChange('tax_class', value)}
         />
 
         {/* Short Description */}

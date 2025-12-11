@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { attributesAPI } from '../../../../../../services/woocommerce';
 import { useAttributesData, useAttributeTerms } from '../../../../../../hooks/useAttributes';
+import { secureLog } from '../../../../../../utils/logger';
 
 /**
  * Custom hook for managing product attributes and terms
@@ -53,7 +54,7 @@ export const useAttributes = () => {
         [attributeId]: terms || []
       }));
     } catch (err) {
-      console.error(`Error loading terms for attribute ${attributeId}:`, err);
+      secureLog.error(`Error loading terms for attribute ${attributeId}`, err);
       setAttributeErrors(prev => ({
         ...prev,
         [attributeId]: err.message || 'Failed to load values'

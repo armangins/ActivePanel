@@ -1,143 +1,54 @@
+import { memo, useMemo } from 'react';
 import ProductCard from '../ProductCard/ProductCard';
+import { processProductForDisplay } from './utils/productProcessing';
 
-const ProductGrid = ({ products, onView, onEdit, onDelete, formatCurrency, isRTL, t, columns = 4, isLoading = false }) => {
+const ProductGrid = memo(({ products, onView, onEdit, onDelete, formatCurrency, isRTL, t, columns = 4, isLoading = false }) => {
   // Map columns to Tailwind grid classes
   const gridColsClass = {
-    1: 'grid-cols-1', // Mobile: 1 column, Desktop: 1 column
-    2: 'grid-cols-2 md:grid-cols-2', // Mobile: 2 columns, Desktop: 2 columns
+    1: 'grid-cols-1',
+    2: 'grid-cols-2 md:grid-cols-2',
     3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
-    4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4', // Mobile: 1 column (default for desktop selections), Desktop: 4 columns
+    4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
     5: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5',
     6: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6',
   };
 
+  // Memoize processed products to avoid recalculating on every render
+  const processedProducts = useMemo(() => {
+    return products.map((product) => processProductForDisplay(product, formatCurrency, t));
+  }, [products, formatCurrency, t]);
+
   return (
     <div className={`grid ${gridColsClass[columns] || gridColsClass[4]} gap-3 sm:gap-4 md:gap-6 ${isLoading ? 'opacity-50 transition-opacity duration-200' : ''}`}>
-      {products.map((product) => {
-        const isVariable = product.type === 'variable';
-
-        // Calculate values for ProductCard
-        const imageUrl = product.images && product.images.length > 0 ? product.images[0].src : null;
-
-        // For variable products, include variation images in gallery
-        let galleryImages = [];
-        if (product.images && product.images.length > 1) {
-          galleryImages = product.images.slice(1).map(img => img.src || img.url || img.source_url).filter(Boolean);
-        }
-        // Add variation images if available
-        if (isVariable && product.variations && Array.isArray(product.variations)) {
-          const variationImages = product.variations
-            .map(v => v.image?.src)
-            .filter(Boolean);
-          galleryImages = [...galleryImages, ...variationImages];
-        }
-
-        const productName = product.name || t('productName');
-        const stockStatus = product.stock_status || 'instock';
-        const stockStatusLabel = stockStatus === 'instock' ? t('inStock') : t('outOfStock');
-        const sku = product.sku ? `${t('sku')}: ${product.sku}` : null;
-
-        // Price calculations - handle variable products differently
-        let displayPrice, formattedSalePrice, formattedRegularPrice, discountPercentage = 0;
-
-        if (isVariable && product.variations && Array.isArray(product.variations) && product.variations.length > 0) {
-          // Calculate price ranges from variations
-          const regularPrices = product.variations
-            .map(v => parseFloat(v.regular_price || v.price || 0))
-            .filter(p => p > 0);
-
-          const salePrices = product.variations
-            .map(v => v.sale_price ? parseFloat(v.sale_price) : null)
-            .filter(p => p !== null && p > 0);
-
-          if (regularPrices.length > 0) {
-            const minRegularPrice = Math.min(...regularPrices);
-            const maxRegularPrice = Math.max(...regularPrices);
-
-            // Check if any variations have sale prices
-            if (salePrices.length > 0) {
-              const minSalePrice = Math.min(...salePrices);
-              const maxSalePrice = Math.max(...salePrices);
-
-              // Show sale price range
-              if (minSalePrice === maxSalePrice) {
-                displayPrice = formatCurrency(minSalePrice);
-              } else {
-                displayPrice = `${formatCurrency(minSalePrice)} - ${formatCurrency(maxSalePrice)}`;
-              }
-
-              // Show regular price range (for strikethrough)
-              if (minRegularPrice === maxRegularPrice) {
-                formattedRegularPrice = formatCurrency(minRegularPrice);
-              } else {
-                formattedRegularPrice = `${formatCurrency(minRegularPrice)} - ${formatCurrency(maxRegularPrice)}`;
-              }
-
-              formattedSalePrice = displayPrice;
-
-              // Calculate average discount percentage
-              const avgDiscount = ((minRegularPrice - minSalePrice) / minRegularPrice) * 100;
-              discountPercentage = Math.round(avgDiscount);
-            } else {
-              // No sale prices, show regular price range
-              if (minRegularPrice === maxRegularPrice) {
-                displayPrice = formatCurrency(minRegularPrice);
-              } else {
-                displayPrice = `${formatCurrency(minRegularPrice)} - ${formatCurrency(maxRegularPrice)}`;
-              }
-              formattedSalePrice = null;
-              formattedRegularPrice = null;
-            }
-          } else {
-            displayPrice = formatCurrency(0);
-            formattedSalePrice = null;
-            formattedRegularPrice = null;
-          }
-        } else {
-          // Simple product pricing
-          const hasSalePrice = product.sale_price && parseFloat(product.sale_price) > 0;
-          const regularPriceValue = parseFloat(product.regular_price || product.price || 0);
-          const salePriceValue = hasSalePrice ? parseFloat(product.sale_price) : null;
-
-          // Calculate discount percentage
-          if (hasSalePrice && regularPriceValue > 0) {
-            discountPercentage = Math.round(((regularPriceValue - salePriceValue) / regularPriceValue) * 100);
-          }
-
-          // Format prices
-          displayPrice = formatCurrency(regularPriceValue);
-          formattedSalePrice = salePriceValue ? formatCurrency(salePriceValue) : null;
-          formattedRegularPrice = regularPriceValue > 0 ? formatCurrency(regularPriceValue) : null;
-        }
-
-        return (
-          <ProductCard
-            key={product.id}
-            product={product}
-            onView={onView}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            imageUrl={imageUrl}
-            galleryImages={galleryImages}
-            productName={productName}
-            stockStatus={stockStatus}
-            stockStatusLabel={stockStatusLabel}
-            sku={sku}
-            displayPrice={displayPrice}
-            salePrice={formattedSalePrice}
-            regularPrice={formattedRegularPrice}
-            discountPercentage={discountPercentage}
-            stockQuantity={product.stock_quantity}
-            stockLabel={t('stock')}
-            editLabel={t('editProduct')}
-            deleteLabel={t('deleteProduct')}
-            offLabel={t('off')}
-            isRTL={isRTL}
-          />
-        );
-      })}
+      {processedProducts.map((productData) => (
+        <ProductCard
+          key={productData.id}
+          product={productData.product}
+          onView={onView}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          imageUrl={productData.imageUrl}
+          galleryImages={productData.galleryImages}
+          productName={productData.productName}
+          stockStatus={productData.stockStatus}
+          stockStatusLabel={productData.stockStatusLabel}
+          sku={productData.sku}
+          displayPrice={productData.displayPrice}
+          salePrice={productData.formattedSalePrice}
+          regularPrice={productData.formattedRegularPrice}
+          discountPercentage={productData.discountPercentage}
+          stockQuantity={productData.stockQuantity}
+          stockLabel={t('stock')}
+          editLabel={t('editProduct')}
+          deleteLabel={t('deleteProduct')}
+          offLabel={t('off')}
+          isRTL={isRTL}
+        />
+      ))}
     </div>
   );
-};
+});
+
+ProductGrid.displayName = 'ProductGrid';
 
 export default ProductGrid;

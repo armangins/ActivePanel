@@ -21,6 +21,9 @@ import { useLanguage } from '../../../../../contexts/LanguageContext';
  * @param {boolean} generatingSKU - Whether SKU is being generated
  * @param {function} onGenerateSKU - Callback to generate SKU
  * @param {string} parentProductName - Parent product name (for SKU generation)
+ * @param {string} parentSku - Parent product SKU
+ * @param {Array} existingVariationSkus - Array of SKUs from other variations (excluding current)
+ * @param {string|number} currentVariationId - ID of current variation being edited
  * @param {function} onSubmit - Callback when form is submitted
  */
 const EditVariationModal = ({
@@ -36,15 +39,29 @@ const EditVariationModal = ({
   onGenerateSKU,
   parentProductName,
   parentSku,
+  existingVariationSkus = [],
+  currentVariationId = null,
   onSubmit,
 }) => {
   const { t, isRTL } = useLanguage();
 
   if (!isOpen) return null;
 
+  // Check for SKU duplicates
+  const currentSku = (formData.sku || '').trim();
+  const hasSkuError = currentSku && (
+    (parentSku && currentSku === parentSku.trim()) ||
+    existingVariationSkus.some(sku => sku && sku.trim() === currentSku)
+  );
+
   const handleSubmit = () => {
+    if (hasSkuError) {
+      return; // Prevent submission if SKU is duplicate
+    }
     onSubmit?.();
   };
+
+  const canSubmit = !updating && !hasSkuError;
 
   return (
     <>
@@ -83,6 +100,8 @@ const EditVariationModal = ({
             onGenerateSKU={onGenerateSKU}
             parentProductName={parentProductName}
             parentSku={parentSku}
+            existingVariationSkus={existingVariationSkus}
+            currentVariationId={currentVariationId}
             disabled={updating}
           />
 
@@ -91,7 +110,7 @@ const EditVariationModal = ({
             <Button
               variant="primary"
               onClick={handleSubmit}
-              disabled={updating}
+              disabled={!canSubmit}
               isLoading={updating}
               icon={Save}
               className="px-6"

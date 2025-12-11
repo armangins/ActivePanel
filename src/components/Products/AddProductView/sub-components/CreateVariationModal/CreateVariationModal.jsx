@@ -21,6 +21,8 @@ import { useLanguage } from '../../../../../contexts/LanguageContext';
  * @param {boolean} generatingSKU - Whether SKU is being generated
  * @param {function} onGenerateSKU - Callback to generate SKU
  * @param {string} parentProductName - Parent product name (for SKU generation)
+ * @param {string} parentSku - Parent product SKU
+ * @param {Array} existingVariationSkus - Array of SKUs from other variations
  * @param {function} onSubmit - Callback when form is submitted
  */
 const CreateVariationModal = ({
@@ -36,6 +38,7 @@ const CreateVariationModal = ({
   onGenerateSKU,
   parentProductName,
   parentSku,
+  existingVariationSkus = [],
   onSubmit,
 }) => {
   const { t, isRTL } = useLanguage();
@@ -46,7 +49,14 @@ const CreateVariationModal = ({
     onSubmit?.();
   };
 
-  const canSubmit = selectedAttributeIds.length > 0 && !creating;
+  // Check for SKU duplicates
+  const currentSku = (formData.sku || '').trim();
+  const hasSkuError = currentSku && (
+    (parentSku && currentSku === parentSku.trim()) ||
+    existingVariationSkus.some(sku => sku && sku.trim() === currentSku)
+  );
+
+  const canSubmit = selectedAttributeIds.length > 0 && !creating && !hasSkuError;
 
   return (
     <>
@@ -85,6 +95,7 @@ const CreateVariationModal = ({
             onGenerateSKU={onGenerateSKU}
             parentProductName={parentProductName}
             parentSku={parentSku}
+            existingVariationSkus={existingVariationSkus}
             disabled={creating}
           />
 

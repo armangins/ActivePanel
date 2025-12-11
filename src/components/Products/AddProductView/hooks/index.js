@@ -10,3 +10,5 @@ export { useAttributes } from '../sub-components/AttributesSection/hooks/useAttr
 export { useVariations } from '../sub-components/VariationsSection/hooks/useVariations';
 export { useProductImages } from '../sub-components/ProductImagesSection/hooks/useProductImages';
 export { useAddProductViewModel } from './useAddProductViewModel';
+
+

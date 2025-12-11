@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { mediaAPI } from '../../../../../../services/woocommerce';
+import { secureLog } from '../../../../../../utils/logger';
 
 /**
  * Custom hook for managing product images
@@ -32,7 +33,7 @@ export const useProductImages = () => {
 
       return { success: true, images: newImages };
     } catch (error) {
-      console.error('Image upload failed:', error);
+      secureLog.error('Image upload failed', error);
       return {
         success: false,
         error: error.message || 'Failed to upload image'

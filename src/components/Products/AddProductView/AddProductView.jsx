@@ -1,7 +1,7 @@
 import React from 'react';
 import { FormProvider } from 'react-hook-form';
 import { CalculatorIcon as Calculator } from '@heroicons/react/24/outline';
-import { Breadcrumbs, Button, Toast } from '../../ui';
+import { Breadcrumbs, Button } from '../../ui';
 import {
   PageTitle,
   ProductDetailsPanel,
@@ -11,7 +11,6 @@ import {
   CreateVariationModal
 } from './sub-components';
 import { useAddProductViewModel } from './hooks';
-import { generateSKU } from '../../../services/gemini';
 
 const AddProductView = () => {
   const vm = useAddProductViewModel();
@@ -132,6 +131,7 @@ const AddProductView = () => {
               }}
               onVariationClick={vm.handleEditVariation}
               onDeletePendingVariation={vm.handleDeletePendingVariation}
+              onDeleteVariation={vm.handleDeleteVariation}
 
               // Utils
               formatCurrency={vm.formatCurrency}
@@ -161,16 +161,10 @@ const AddProductView = () => {
       {/* Success Modal */}
       <SuccessModal
         isOpen={vm.showSuccessModal}
-        onClose={() => {
-          vm.setShowSuccessModal(false);
-          vm.navigate('/products');
-        }}
-        isEditMode={vm.isEditMode}
+        onClose={vm.handleSuccessModalClose}
+        onCreateAnother={vm.handleCreateAnotherProduct}
+        onGoToProducts={vm.handleGoToProducts}
         action={vm.isEditMode ? 'update' : 'create'}
-        onConfirm={() => {
-          vm.setShowSuccessModal(false);
-          vm.navigate('/products');
-        }}
       />
 
       {/* Edit Variation Modal */}
@@ -184,25 +178,27 @@ const AddProductView = () => {
         attributeTerms={vm.attributeTerms}
         updating={vm.creatingVariation}
         generatingSKU={vm.generatingSKU}
-        onGenerateSKU={async () => {
-          try {
-            vm.setGeneratingSKU(true);
-            const sku = await generateSKU(vm.formData.name || '');
-            vm.setVariationFormData(prev => ({ ...prev, sku }));
-          } catch (error) {
-            // Failed to generate SKU
-          } finally {
-            vm.setGeneratingSKU(false);
-          }
-        }}
-        parentProductName={vm.formData.name}
+        onGenerateSKU={vm.handleGenerateVariationSKU}
+        parentProductName={vm.formData.product_name}
+        parentSku={vm.formData.sku || ''}
+        existingVariationSkus={[
+          ...vm.variations
+            .filter(v => v.id !== vm.editingVariationId)
+            .map(v => v.sku)
+            .filter(Boolean),
+          ...vm.pendingVariations
+            .filter(v => v.id !== vm.editingVariationId)
+            .map(v => v.sku)
+            .filter(Boolean)
+        ]}
+        currentVariationId={vm.editingVariationId}
         onSubmit={vm.handleUpdateVariation}
       />
 
       {/* Create Variation Modal */}
       <CreateVariationModal
         isOpen={vm.showCreateVariationModal}
-        onClose={() => vm.setShowCreateVariationModal(false)}
+        onClose={() => vm.setShowEditVariationModal(false)}
         formData={vm.variationFormData}
         onFormDataChange={vm.setVariationFormData}
         selectedAttributeIds={vm.selectedAttributeIds}
@@ -210,18 +206,13 @@ const AddProductView = () => {
         attributeTerms={vm.attributeTerms}
         creating={vm.creatingVariation}
         generatingSKU={vm.generatingSKU}
-        onGenerateSKU={async () => {
-          try {
-            vm.setGeneratingSKU(true);
-            const sku = await generateSKU(vm.formData.name || '');
-            vm.setVariationFormData(prev => ({ ...prev, sku }));
-          } catch (error) {
-            // Failed to generate SKU
-          } finally {
-            vm.setGeneratingSKU(false);
-          }
-        }}
-        parentProductName={vm.formData.name}
+        onGenerateSKU={vm.handleGenerateVariationSKU}
+        parentProductName={vm.formData.product_name}
+        parentSku={vm.formData.sku || ''}
+        existingVariationSkus={[
+          ...vm.variations.map(v => v.sku).filter(Boolean),
+          ...vm.pendingVariations.map(v => v.sku).filter(Boolean)
+        ]}
         onSubmit={vm.handleCreateVariation}
       />
     </div>

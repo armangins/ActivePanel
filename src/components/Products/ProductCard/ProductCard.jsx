@@ -27,19 +27,22 @@ const ProductCard = memo(({
   offLabel,
   isRTL
 }) => {
+  // Optimize callbacks to only recreate when product ID changes, not entire object
+  const productId = product.id;
+
   const handleCardClick = useCallback(() => {
     if (onView) onView(product);
-  }, [onView, product]);
+  }, [onView, productId, product]);
 
   const handleEdit = useCallback((e) => {
     e.stopPropagation();
     onEdit && onEdit(product);
-  }, [onEdit, product]);
+  }, [onEdit, productId, product]);
 
   const handleDelete = useCallback((e) => {
     e.stopPropagation();
     onDelete && onDelete(product);
-  }, [onDelete, product]);
+  }, [onDelete, productId, product]);
 
   return (
     <div

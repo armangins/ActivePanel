@@ -17,7 +17,7 @@ const ProductSidePanel = ({
     loadingAttributes, onToggleAttribute, onToggleTerm, isAttributeSelected, isTermSelected,
     // Variations
     variations, pendingVariations, loadingVariations, isEditMode, id,
-    onAddVariationClick, onVariationClick, onDeletePendingVariation,
+    onAddVariationClick, onVariationClick, onDeletePendingVariation, onDeleteVariation,
     // Utils
     formatCurrency, isRTL, t, status,
     // Modals State
@@ -52,6 +52,7 @@ const ProductSidePanel = ({
                     onAddClick={onAddVariationClick}
                     onVariationClick={onVariationClick}
                     onDeletePending={onDeletePendingVariation}
+                    onDeleteVariation={onDeleteVariation}
                     formatCurrency={formatCurrency}
                     isRTL={isRTL}
                     t={t}

@@ -23,5 +23,4 @@ export { default as CreateVariationModal } from './CreateVariationModal/CreateVa
 export { default as EditVariationModal } from './EditVariationModal/EditVariationModal';
 export { default as ProductDetailsPanel } from './ProductDetailsPanel/ProductDetailsPanel';
 export { default as ProductSidePanel } from './ProductSidePanel/ProductSidePanel';
-export { default as ShippingFields } from './ShippingFields/ShippingFields';
-export { default as TaxFields } from './TaxFields/TaxFields';
+// ShippingFields and TaxFields removed - no longer used in UI

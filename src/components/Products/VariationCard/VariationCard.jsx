@@ -10,7 +10,8 @@ const VariationCard = memo(({
 }) => {
   // Direct property access is faster than useMemo for simple values
   const imageUrl = variation.image?.src || null;
-  const regularPrice = variation.regular_price || variation.price || null;
+  // Use only regular_price - do not use 'price' field as it may include tax calculations
+  const regularPrice = variation.regular_price || null;
   const salePrice = variation.sale_price || null;
 
   const displayPrice = regularPrice ? formatCurrency(parseFloat(regularPrice)) : '-';

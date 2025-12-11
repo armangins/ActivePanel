@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '../../../../contexts/LanguageContext';
 import { productsAPI, variationsAPI, attributesAPI } from '../../../../services/woocommerce';
 import { generateSKU, improveText } from '../../../../services/gemini';
@@ -9,6 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { productSchema } from '../../../../schemas/product';
 import { useProductData, useAttributes, useVariations, useProductImages } from './';
 import { buildProductData, cleanVariationData } from '../utils/productBuilders';
+import { productKeys } from '../../../../hooks/useProducts';
 
 export const useAddProductViewModel = () => {
     // ViewModel responsible for AddProductView logic
@@ -16,6 +18,7 @@ export const useAddProductViewModel = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const [searchParams] = useSearchParams();
+    const queryClient = useQueryClient();
 
     // Dynamically determine if we're in edit mode based on URL parameter
     const isEditMode = Boolean(id);
@@ -33,6 +36,7 @@ export const useAddProductViewModel = () => {
     const [improvingShortDescription, setImprovingShortDescription] = useState(false);
     const [improvingDescription, setImprovingDescription] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [createdProductId, setCreatedProductId] = useState(null);
     // Note: The 'saving' state variable is already destructured from useForm's formState.isSubmitting.
     // Adding a new local state variable named 'saving' would cause a conflict or redundancy.
     // Assuming the instruction intended to use the 'saving' from formState, or rename it if a separate state was needed.
@@ -42,7 +46,7 @@ export const useAddProductViewModel = () => {
     const methods = useForm({
         resolver: zodResolver(productSchema),
         defaultValues: {
-            name: '',
+            product_name: '', // Form uses 'product_name' not 'name' (see schema)
             status: 'draft',
             type: 'simple',
             description: '',
@@ -57,12 +61,15 @@ export const useAddProductViewModel = () => {
             images: [],
             attributes: [],
             tags: [],
+            // Shipping and tax fields removed from UI but kept as defaults for WooCommerce API
             requires_shipping: false,
             weight: '',
             dimensions: { length: '', width: '', height: '' },
             shipping_class: '',
             tax_status: 'taxable',
-            tax_class: ''
+            tax_class: '',
+            date_on_sale_from: '',
+            date_on_sale_to: ''
         },
         mode: 'onChange'
     });
@@ -113,6 +120,7 @@ export const useAddProductViewModel = () => {
     const {
         variations,
         pendingVariations,
+        deletedVariationIds,
         loadingVariations,
         showCreateVariationModal,
         showEditVariationModal,
@@ -128,6 +136,8 @@ export const useAddProductViewModel = () => {
         loadVariations,
         resetVariationForm,
         handleDeletePendingVariation,
+        handleDeleteVariation,
+        clearDeletedVariations,
         createVariation,
         updateVariation,
         clearPendingVariations,
@@ -186,22 +196,92 @@ export const useAddProductViewModel = () => {
     // Handler for success modal close - resets form for creating another product
     const handleSuccessModalClose = useCallback(() => {
         setShowSuccessModal(false);
+        setCreatedProductId(null);
+    }, []);
+
+    // Handler to create another product - clears the form
+    const handleCreateAnotherProduct = useCallback(() => {
+        setShowSuccessModal(false);
+        setCreatedProductId(null);
 
         // Only reset form if we're in create mode (not edit mode)
         if (!isEditMode) {
-            // Reset form to initial state
-            reset();
+            // Reset form to initial state with explicit default values
+            // Note: Form uses 'product_name' not 'name' (see schema)
+            reset({
+                product_name: '',
+                status: 'draft',
+                type: 'simple',
+                description: '',
+                short_description: '',
+                regular_price: '',
+                sale_price: '',
+                sku: '',
+                manage_stock: true,
+                stock_quantity: '',
+                stock_status: 'instock',
+                categories: [],
+                images: [],
+                attributes: [],
+                tags: [],
+                requires_shipping: false,
+                weight: '',
+                dimensions: { length: '', width: '', height: '' },
+                shipping_class: '',
+                tax_status: 'taxable',
+                tax_class: '',
+                date_on_sale_from: '',
+                date_on_sale_to: ''
+            });
+            
             // Clear variations
             clearVariations();
             clearPendingVariations();
+            clearDeletedVariations();
+            
             // Clear selected attributes
             setSelectedAttributeIds([]);
             setSelectedAttributeTerms({});
-            // Note: Images are managed by useProductImages hook and will reset with form
+            
+            // Reset product type to simple
+            setProductType('simple');
+            
+            // Reset additional UI state
+            setSelectedDiscount('');
+            setScheduleDates({
+                start: '',
+                end: ''
+            });
+            setShowCalculatorModal(false);
+            setShowScheduleModal(false);
+            
+            // Reset variation form data
+            resetVariationForm();
+            
+            // Clear any form errors
+            methods.clearErrors();
         }
-    }, [isEditMode, reset, clearVariations, clearPendingVariations, setSelectedAttributeIds, setSelectedAttributeTerms]);
+    }, [isEditMode, reset, clearVariations, clearPendingVariations, setSelectedAttributeIds, setSelectedAttributeTerms, setProductType, setSelectedDiscount, setScheduleDates, setShowCalculatorModal, setShowScheduleModal, resetVariationForm, methods]);
 
-    const handleScheduleClick = useCallback(() => { }, [productType]);
+    // Handler to go to products page with the created product
+    const handleGoToProducts = useCallback(async () => {
+        setShowSuccessModal(false);
+        
+        // Invalidate all products queries to ensure the new product appears in the list
+        // This will trigger a refetch when the Products component mounts
+        queryClient.invalidateQueries({ queryKey: productKeys.all });
+        
+        if (createdProductId) {
+            navigate(`/products?view=${createdProductId}`);
+        } else {
+            navigate('/products');
+        }
+    }, [createdProductId, navigate, queryClient]);
+
+    // Schedule click handler - currently unused but kept for future implementation
+    const handleScheduleClick = useCallback(() => {
+        // Future: Open schedule modal for sale dates
+    }, []);
 
     // Handlers
 
@@ -232,9 +312,14 @@ export const useAddProductViewModel = () => {
             formData,
             attributes,
             attributeTerms,
+            parentSku: formData.sku || '',
+            existingVariationSkus: [
+                ...variations.map(v => v.sku).filter(Boolean),
+                ...pendingVariations.map(v => v.sku).filter(Boolean)
+            ],
             t
         });
-    }, [createVariation, isEditMode, id, formData, attributes, attributeTerms, t]);
+    }, [createVariation, isEditMode, id, formData, attributes, attributeTerms, variations, pendingVariations, t]);
 
     const handleEditVariation = useCallback(async (variation) => {
         setEditingVariationId(variation.id);
@@ -254,10 +339,19 @@ export const useAddProductViewModel = () => {
             }
         }
 
+        // Format prices properly - only use regular_price, not price field
+        const formatPriceForForm = (priceValue) => {
+            if (!priceValue) return '';
+            const numPrice = parseFloat(priceValue);
+            if (isNaN(numPrice)) return '';
+            return numPrice.toFixed(2);
+        };
+
         setVariationFormData({
             attributes: attributesMap,
-            regular_price: variation.regular_price || '',
-            sale_price: variation.sale_price || '',
+            // Only use regular_price, ignore price field (may include tax)
+            regular_price: formatPriceForForm(variation.regular_price),
+            sale_price: formatPriceForForm(variation.sale_price),
             sku: variation.sku || '',
             stock_quantity: variation.stock_quantity?.toString() || '',
             image: variation.image || null,
@@ -273,9 +367,20 @@ export const useAddProductViewModel = () => {
             formData,
             attributes,
             attributeTerms,
+            parentSku: formData.sku || '',
+            existingVariationSkus: [
+                ...variations
+                    .filter(v => v.id !== editingVariationId)
+                    .map(v => v.sku)
+                    .filter(Boolean),
+                ...pendingVariations
+                    .filter(v => v.id !== editingVariationId)
+                    .map(v => v.sku)
+                    .filter(Boolean)
+            ],
             t
         });
-    }, [updateVariation, id, editingVariationId, formData, attributes, attributeTerms, t]);
+    }, [updateVariation, id, editingVariationId, formData, attributes, attributeTerms, variations, pendingVariations, t]);
 
     const handleProductTypeChange = useCallback(async (newType) => {
         if (productType === newType) return;
@@ -336,7 +441,7 @@ export const useAddProductViewModel = () => {
     const handleGenerateSKU = useCallback(async () => {
         setGeneratingSKU(true);
         try {
-            const generatedSKU = await generateSKU(formData.name);
+            const generatedSKU = await generateSKU(formData.product_name || '');
             setFormData(prev => ({ ...prev, sku: generatedSKU }));
         } catch (error) {
             const fallbackSKU = `PRD-${Date.now().toString(36).toUpperCase().substring(7)}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
@@ -344,13 +449,26 @@ export const useAddProductViewModel = () => {
         } finally {
             setGeneratingSKU(false);
         }
-    }, [formData.name, setFormData]);
+    }, [formData.product_name, setFormData]);
+
+    // Handler for generating SKU for variations (extracted to avoid duplication)
+    const handleGenerateVariationSKU = useCallback(async () => {
+        setGeneratingSKU(true);
+        try {
+            const generatedSKU = await generateSKU(formData.product_name || '');
+            setVariationFormData(prev => ({ ...prev, sku: generatedSKU }));
+        } catch (error) {
+            secureLog.error('Error generating variation SKU', error);
+        } finally {
+            setGeneratingSKU(false);
+        }
+    }, [formData.product_name, setVariationFormData]);
 
     const handleImproveShortDescription = useCallback(async () => {
         if (!formData.short_description?.trim()) return;
         setImprovingShortDescription(true);
         try {
-            const improved = await improveText(formData.short_description, 'short_description', formData.name);
+            const improved = await improveText(formData.short_description, 'short_description', formData.product_name || '');
             const cleaned = improved
                 .replace(/<[^>]*>/g, '')
                 .replace(/&[a-zA-Z0-9#]+;/g, ' ')
@@ -362,13 +480,13 @@ export const useAddProductViewModel = () => {
         } finally {
             setImprovingShortDescription(false);
         }
-    }, [formData.short_description, formData.name, setFormData]);
+    }, [formData.short_description, formData.product_name, setFormData]);
 
     const handleImproveDescription = useCallback(async () => {
         if (!formData.description?.trim()) return;
         setImprovingDescription(true);
         try {
-            const improved = await improveText(formData.description, 'description', formData.name);
+            const improved = await improveText(formData.description, 'description', formData.product_name || '');
             const cleaned = improved.replace(/<[^>]*>/g, '').trim();
             const words = cleaned.split(/\s+/).filter(word => word.length > 0);
             const limitedWords = words.slice(0, 400).join(' ');
@@ -378,7 +496,7 @@ export const useAddProductViewModel = () => {
         } finally {
             setImprovingDescription(false);
         }
-    }, [formData.description, formData.name, setFormData]);
+    }, [formData.description, formData.product_name, setFormData]);
 
 
 
@@ -429,46 +547,77 @@ export const useAddProductViewModel = () => {
 
             }
 
+            // Store the created product ID for navigation
+            setCreatedProductId(createdProductId);
 
-            if (pendingVariations.length > 0 && createdProductId && productType === 'variable') {
-
-
+            // Handle variations for both create and update modes
+            if (productType === 'variable' && createdProductId) {
                 try {
+                    // Wait a bit for product to be fully saved
                     await new Promise(resolve => setTimeout(resolve, 500));
 
-                    const variationPromises = pendingVariations.map(async (pendingVariation, index) => {
-                        const cleanedData = cleanVariationData(pendingVariation);
-                        const result = await variationsAPI.create(createdProductId, cleanedData);
-                        return result;
-                    });
+                    const variationOperations = [];
 
-                    await Promise.all(variationPromises);
+                    // 1. Delete removed variations (edit mode only)
+                    if (isEditMode && deletedVariationIds.length > 0) {
+                        const deletePromises = deletedVariationIds.map(variationId =>
+                            variationsAPI.delete(createdProductId, variationId).catch(err => {
+                                secureLog.error(`Error deleting variation ${variationId}`, err);
+                                throw err;
+                            })
+                        );
+                        variationOperations.push(...deletePromises);
+                    }
 
+                    // 2. Create new pending variations (both create and update modes)
+                    if (pendingVariations.length > 0) {
+                        const createPromises = pendingVariations.map(async (pendingVariation) => {
+                            const cleanedData = cleanVariationData(pendingVariation);
+                            return variationsAPI.create(createdProductId, cleanedData);
+                        });
+                        variationOperations.push(...createPromises);
+                    }
 
+                    // Execute all variation operations in parallel
+                    if (variationOperations.length > 0) {
+                        await Promise.all(variationOperations);
+                    }
+
+                    // Clear pending and deleted variations
                     clearPendingVariations();
+                    clearDeletedVariations();
+                    
+                    // Reload variations to get latest state
                     await loadVariations(createdProductId);
                 } catch (variationError) {
-                    console.error('❌ Error creating variations:', variationError);
-                    console.error('❌ Error response:', variationError.response?.data);
-                    secureLog.error('Error creating variations', variationError);
+                    secureLog.error('Error managing variations', variationError);
+                    secureLog.error('Error response', variationError.response?.data);
                     const errorMessage = variationError.response?.data?.message ||
                         variationError.response?.data?.data?.message ||
                         variationError.message ||
-                        t('failedToCreateVariations') ||
-                        'נכשל ביצירת וריאציות';
+                        t('failedToManageVariations') ||
+                        'נכשל בניהול וריאציות';
 
-                    // Manually set error on variations field if possible, or alert
-                    alert(t('error') + ': ' + errorMessage);
+                    // Set error on form
+                    methods.setError('root', {
+                        type: 'manual',
+                        message: errorMessage
+                    });
+                    return; // Don't proceed if variation operations failed
                 }
-            } else {
-
             }
 
-
-
-            setShowSuccessModal(true);
+            // For update mode: redirect directly to products page
+            if (isEditMode) {
+                // Invalidate queries and navigate to products page with updated product
+                queryClient.invalidateQueries({ queryKey: productKeys.all });
+                navigate(`/products?view=${createdProductId}`);
+            } else {
+                // For create mode: show success modal
+                setShowSuccessModal(true);
+            }
         } catch (error) {
-            console.error('Submit Error', error);
+            secureLog.error('Submit Error', error);
 
             // Extract detailed error message
             let errorMessage = t('failedToSaveProduct') || 'שגיאה בשמירת המוצר';
@@ -517,7 +666,7 @@ export const useAddProductViewModel = () => {
                 message: errorMessage
             });
         }
-    }, [id, isEditMode, productType, pendingVariations, t, clearPendingVariations, loadVariations, selectedAttributeTerms, attributes, attributeTerms, methods]);
+    }, [id, isEditMode, productType, pendingVariations, deletedVariationIds, t, clearPendingVariations, clearDeletedVariations, loadVariations, selectedAttributeTerms, attributes, attributeTerms, methods]);
 
     const handleSave = useCallback(async (status = 'draft') => {
         // Update status in form first so validation runs against the correct status
@@ -537,14 +686,14 @@ export const useAddProductViewModel = () => {
         generatingSKU, setGeneratingSKU,
         improvingShortDescription, setImprovingShortDescription,
         improvingDescription, setImprovingDescription,
-        showSuccessModal, setShowSuccessModal, handleSuccessModalClose,
+        showSuccessModal, setShowSuccessModal, handleSuccessModalClose, handleCreateAnotherProduct, handleGoToProducts, createdProductId,
         formData, errors, saving, submitError, setFormData, updateField,
         attributes, attributeTerms, selectedAttributeIds, selectedAttributeTerms, loadingAttributes, originalProductAttributes, setAttributes, setAttributeTerms, setSelectedAttributeIds, setSelectedAttributeTerms, setOriginalProductAttributes, loadAttributes, loadAttributeTerms, toggleAttribute, toggleAttributeTerm, isAttributeSelected, isTermSelected, clearAttributes, resetAttributes, attributeErrors,
-        variations, pendingVariations, loadingVariations, showCreateVariationModal, showEditVariationModal, editingVariationId, creatingVariation, variationFormData, setVariations, setPendingVariations, setShowCreateVariationModal, setShowEditVariationModal, setEditingVariationId, setVariationFormData, loadVariations, resetVariationForm, handleDeletePendingVariation, createVariation, updateVariation, clearPendingVariations, clearVariations,
+        variations, pendingVariations, deletedVariationIds, loadingVariations, showCreateVariationModal, showEditVariationModal, editingVariationId, creatingVariation, variationFormData, setVariations, setPendingVariations, setShowCreateVariationModal, setShowEditVariationModal, setEditingVariationId, setVariationFormData, loadVariations, resetVariationForm, handleDeletePendingVariation, handleDeleteVariation, clearDeletedVariations, createVariation, updateVariation, clearPendingVariations, clearVariations,
         uploadingImage, handleImageUpload, removeImage,
         categories, loadingProduct, loadProduct,
         handleCreateVariation, handleEditVariation, handleUpdateVariation, handleProductTypeChange,
-        handleDiscountSelect, handleDiscountClear, handleGenerateSKU, handleImproveShortDescription, handleImproveDescription,
+        handleDiscountSelect, handleDiscountClear, handleGenerateSKU, handleGenerateVariationSKU, handleImproveShortDescription, handleImproveDescription,
         handleSave,
         methods // Expose RHF methods to the view
     };
