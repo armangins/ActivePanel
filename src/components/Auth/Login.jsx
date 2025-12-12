@@ -13,7 +13,15 @@ import { Input } from '../ui/inputs';
 import { Button } from '../ui';
 import LoginWelcomePanel from './LoginWelcomePanel';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Get API URL and enforce HTTPS in production
+let API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:3000');
+
+// Enforce HTTPS in production
+if (import.meta.env.PROD && API_URL.startsWith('http://')) {
+  console.warn('⚠️  WARNING: API_URL uses HTTP in production. Converting to HTTPS.');
+  API_URL = API_URL.replace('http://', 'https://');
+}
+
 // VITE_API_URL already includes /api, so just append /auth/google
 const GOOGLE_LOGIN_URL = API_URL.endsWith('/api') 
   ? `${API_URL}/auth/google` 

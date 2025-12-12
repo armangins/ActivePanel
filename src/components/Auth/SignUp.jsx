@@ -218,7 +218,14 @@ const SignUp = () => {
           <div className="mt-6">
             <Button
               onClick={() => {
-                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+                let apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:3000');
+                
+                // Enforce HTTPS in production
+                if (import.meta.env.PROD && apiUrl.startsWith('http://')) {
+                  console.warn('⚠️  WARNING: API_URL uses HTTP in production. Converting to HTTPS.');
+                  apiUrl = apiUrl.replace('http://', 'https://');
+                }
+                
                 // VITE_API_URL already includes /api, so just append /auth/google
                 const googleUrl = apiUrl.endsWith('/api') 
                   ? `${apiUrl}/auth/google` 
