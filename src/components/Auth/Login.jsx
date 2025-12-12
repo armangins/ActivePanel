@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { authAPI } from '../../services/api';
 
 import { validateLoginForm, checkLoginRateLimit, authenticateUser } from '../../utils/loginHelpers';
 import {
