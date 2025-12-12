@@ -38,11 +38,36 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Check if user is coming back from Google OAuth (check URL params)
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    
+    if (error === 'true') {
+      setError(t('googleLoginError') || 'שגיאה בהתחברות עם Google. אנא נסה שוב.');
+    }
+    
     // If already authenticated, redirect to dashboard
+    // Also check after a delay to handle Google OAuth redirect case
     if (isAuthenticated) {
       navigate('/dashboard');
+    } else {
+      // After Google OAuth redirect, wait a bit for session to be established
+      // then check authentication again
+      const checkAuthAfterRedirect = setTimeout(async () => {
+        try {
+          const currentUser = await authAPI.getCurrentUser();
+          if (currentUser) {
+            login(currentUser);
+            navigate('/dashboard');
+          }
+        } catch (err) {
+          // User not authenticated, stay on login page
+        }
+      }, 1000); // Wait 1 second for session cookie to be set
+      
+      return () => clearTimeout(checkAuthAfterRedirect);
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, login, t]);
 
   const handleGoogleLogin = useCallback(() => {
     window.location.href = GOOGLE_LOGIN_URL;
