@@ -14,7 +14,10 @@ import { Button } from '../ui';
 import LoginWelcomePanel from './LoginWelcomePanel';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-const GOOGLE_LOGIN_URL = `${API_URL}/api/auth/google`;
+// VITE_API_URL already includes /api, so just append /auth/google
+const GOOGLE_LOGIN_URL = API_URL.endsWith('/api') 
+  ? `${API_URL}/auth/google` 
+  : `${API_URL}/api/auth/google`;
 
 const Login = () => {
   const { login, isAuthenticated } = useAuth();

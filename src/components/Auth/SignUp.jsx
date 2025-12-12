@@ -219,7 +219,11 @@ const SignUp = () => {
             <Button
               onClick={() => {
                 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-                window.location.href = `${apiUrl}/api/auth/google`;
+                // VITE_API_URL already includes /api, so just append /auth/google
+                const googleUrl = apiUrl.endsWith('/api') 
+                  ? `${apiUrl}/auth/google` 
+                  : `${apiUrl}/api/auth/google`;
+                window.location.href = googleUrl;
               }}
               variant="outline"
               className="w-full flex items-center justify-center gap-3 bg-white border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
