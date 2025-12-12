@@ -42,8 +42,18 @@ const Login = () => {
     // Check if user is coming back from Google OAuth (check URL params)
     const urlParams = new URLSearchParams(window.location.search);
     const error = urlParams.get('error');
+    const errorMessage = urlParams.get('message');
     
-    if (error === 'true') {
+    if (error === 'google_auth_failed') {
+      // Handle specific error cases
+      if (errorMessage) {
+        // Decode URL-encoded message
+        const decodedMessage = decodeURIComponent(errorMessage);
+        setError(decodedMessage || t('googleLoginError') || 'שגיאה בהתחברות עם Google. אנא נסה שוב.');
+      } else {
+        setError(t('googleLoginError') || 'שגיאה בהתחברות עם Google. אנא נסה שוב.');
+      }
+    } else if (error === 'true') {
       setError(t('googleLoginError') || 'שגיאה בהתחברות עם Google. אנא נסה שוב.');
     }
     
@@ -143,7 +153,15 @@ const Login = () => {
           {/* Error Message */}
           {error && (
             <div className="bg-orange-50 border border-orange-200 text-orange-800 rounded-lg p-4 mb-6 text-sm text-right">
-              {error}
+              <p className="mb-2">{error}</p>
+              {(error.includes('No account found') || error.includes('sign up')) && (
+                <p className="text-xs mt-2">
+                  {t('dontHaveAccount') || 'אין לך חשבון?'}{' '}
+                  <Link to="/signup" className="text-primary-600 hover:text-primary-700 font-medium underline">
+                    {t('signUp') || 'הירשם כאן'}
+                  </Link>
+                </p>
+              )}
             </div>
           )}
 
