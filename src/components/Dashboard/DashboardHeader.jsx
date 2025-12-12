@@ -10,7 +10,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
  */
 const DashboardHeader = ({ t, isRTL }) => {
   return (
-    <div className={'text-right'}>
+    <div className={'text-right'} data-onboarding="dashboard-header">
       <h1 className="text-3xl font-bold text-gray-900">{t('dashboard')}</h1>
       <p className="text-gray-600 mt-1">{t('welcome')}</p>
     </div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { registerSchema } from '../../schemas/auth';
 
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate, Link } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { registerUser } from '../../services/auth';
 import { authAPI } from '../../services/api';
@@ -15,6 +15,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Input } from '../ui/inputs';
 import { Button } from '../ui';
+import { GoogleAuthButton } from './GoogleAuthButton';
 
 const USE_BACKEND_API = import.meta.env.VITE_API_URL;
 
@@ -214,30 +215,9 @@ const SignUp = () => {
             </div>
           </form>
 
-          {/* Google Sign Up Button */}
+          {/* Google Authentication Button */}
           <div className="mt-6">
-            <Button
-              onClick={() => {
-                let apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:3000');
-                
-                // Enforce HTTPS in production
-                if (import.meta.env.PROD && apiUrl.startsWith('http://')) {
-                  console.warn('⚠️  WARNING: API_URL uses HTTP in production. Converting to HTTPS.');
-                  apiUrl = apiUrl.replace('http://', 'https://');
-                }
-                
-                // VITE_API_URL already includes /api, so just append /auth/google
-                const googleUrl = apiUrl.endsWith('/api') 
-                  ? `${apiUrl}/auth/google` 
-                  : `${apiUrl}/api/auth/google`;
-                window.location.href = googleUrl;
-              }}
-              variant="outline"
-              className="w-full flex items-center justify-center gap-3 bg-white border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
-            >
-              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
-              {t('signUpWithGoogle') || 'הירשם עם Google'}
-            </Button>
+            <GoogleAuthButton />
           </div>
         </div>
       </div>

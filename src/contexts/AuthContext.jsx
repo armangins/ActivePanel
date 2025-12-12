@@ -11,55 +11,97 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+    let pollAttempts = 0;
+    const MAX_POLL_ATTEMPTS = 10; // Maximum 10 polling attempts (20 seconds total)
+    let intervalId = null;
+    let timeoutId = null;
+
     // Check if user is logged in on mount
     const checkAuth = async () => {
       try {
         // Try to get user from backend
         try {
           const currentUser = await authAPI.getCurrentUser();
-          setUser(currentUser);
+          if (isMounted) {
+            setUser(currentUser);
+            setLoading(false);
+          }
         } catch (error) {
           // Not authenticated or backend not available
-          setUser(null);
+          if (isMounted) {
+            setUser(null);
+            setLoading(false);
+          }
         }
       } catch (error) {
         // Ensure user is set to null on any unexpected error
-        setUser(null);
-      } finally {
-        // Always set loading to false, even if there's an error
-        setLoading(false);
-      }
-    };
-
-    // Add a timeout fallback to ensure loading never stays true forever
-    const timeoutId = setTimeout(() => {
-      setLoading(false);
-    }, 5000); // 5 second timeout
-
-    checkAuth().finally(() => {
-      clearTimeout(timeoutId);
-    });
-
-    // Also check auth periodically if not authenticated (handles Google OAuth redirect case)
-    // This helps catch cases where user comes back from OAuth but session check hasn't completed
-    const intervalId = setInterval(async () => {
-      if (!user && !loading) {
-        try {
-          const currentUser = await authAPI.getCurrentUser();
-          if (currentUser) {
-            setUser(currentUser);
-          }
-        } catch (error) {
-          // Not authenticated, continue checking
+        if (isMounted) {
+          setUser(null);
+          setLoading(false);
         }
       }
-    }, 2000); // Check every 2 seconds if not authenticated
+    };
+
+    // Initial auth check
+    checkAuth();
+
+    // Add a timeout fallback to ensure loading never stays true forever
+    timeoutId = setTimeout(() => {
+      if (isMounted) {
+        setLoading(false);
+      }
+    }, 5000); // 5 second timeout
+
+    // Poll for authentication only after OAuth redirect (limited attempts)
+    // This helps catch cases where user comes back from OAuth but session check hasn't completed
+    intervalId = setInterval(async () => {
+      pollAttempts++;
+      
+      // Stop polling after max attempts or if user is authenticated
+      if (pollAttempts >= MAX_POLL_ATTEMPTS) {
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+        return;
+      }
+
+      // Only poll if not authenticated and not loading
+      if (isMounted && !user && !loading) {
+        try {
+          const currentUser = await authAPI.getCurrentUser();
+          if (currentUser && isMounted) {
+            setUser(currentUser);
+            // Stop polling once authenticated
+            if (intervalId) {
+              clearInterval(intervalId);
+              intervalId = null;
+            }
+          }
+        } catch (error) {
+          // Not authenticated, continue checking (but limited attempts)
+          // Don't log errors to avoid spam
+        }
+      } else if (user) {
+        // User is authenticated, stop polling
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+      }
+    }, 2000); // Check every 2 seconds (max 10 attempts = 20 seconds)
 
     return () => {
-      clearTimeout(timeoutId);
-      clearInterval(intervalId);
+      isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     };
-  }, [user, loading]);
+  }, []); // Empty dependency array - only run on mount
 
   const login = async (userData) => {
     // Validate and sanitize picture URL

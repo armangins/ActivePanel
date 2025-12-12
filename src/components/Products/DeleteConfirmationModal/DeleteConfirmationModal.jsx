@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from '../../ui';
 import { Input } from '../../ui/inputs';
+import { secureLog } from '../../../utils/logger';
 
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, productName, t }) => {
     const [confirmationText, setConfirmationText] = useState('');
@@ -25,7 +26,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, productName, t })
             await onConfirm();
             onClose();
         } catch (error) {
-            console.error('Delete failed', error);
+            secureLog.error('Delete failed', error);
             setIsDeleting(false);
         }
     };

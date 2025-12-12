@@ -5,6 +5,8 @@ import { useInfiniteProducts } from '../../../hooks/useProducts';
 import { useCategories } from '../../../hooks/useCategories';
 import { PAGINATION_DEFAULTS } from '../../../shared/constants';
 import { productsAPI } from '../../../services/woocommerce';
+import { useWooCommerceSettings } from '../../../hooks/useWooCommerceSettings';
+import { SetupRequired } from '../../ui/SetupRequired';
 
 // Custom hooks
 import {
@@ -27,6 +29,7 @@ import ProductList from '../ProductList/ProductList';
 import { LoadMoreIndicator } from '../LoadMoreIndicator/LoadMoreIndicator';
 import { EmptyState, LoadingState, ErrorState, Toast } from '../../ui';
 import { useDeleteProduct } from '../../../hooks/useProducts';
+import { secureLog } from '../../../utils/logger';
 
 const PER_PAGE = PAGINATION_DEFAULTS.PRODUCTS_PER_PAGE;
 
@@ -34,6 +37,7 @@ const Products = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, formatCurrency, isRTL } = useLanguage();
+  const { hasSettings, isLoading: settingsLoading } = useWooCommerceSettings();
 
   // UI State
   const [showFilters, setShowFilters] = useState(false);
@@ -113,7 +117,7 @@ const Products = () => {
             }
           })
           .catch(error => {
-            console.error('Failed to fetch product:', error);
+            secureLog.error('Failed to fetch product:', error);
             // Remove invalid view param
             const newSearchParams = new URLSearchParams(searchParams);
             newSearchParams.delete('view');
@@ -163,7 +167,7 @@ const Products = () => {
         type: 'success'
       });
     } catch (err) {
-      console.error('Delete error:', err);
+      secureLog.error('Delete error:', err);
       // Show error toast
       setToast({
         message: t('deleteProductFailed') || `שגיאה במחיקת המוצר: ${err.message || t('error')}`,
@@ -211,7 +215,7 @@ const Products = () => {
         type: 'success'
       });
     } catch (err) {
-      console.error('Bulk delete error:', err);
+      secureLog.error('Bulk delete error:', err);
       setShowBulkDeleteModal(false);
       
       // Show error toast
@@ -245,6 +249,18 @@ const Products = () => {
     displayedCount: sortedProducts.length,
     totalCount: totalProducts || allProducts.length
   }), [sortedProducts.length, totalProducts, allProducts.length]);
+
+  // Show setup message if settings aren't configured
+  if (!settingsLoading && !hasSettings) {
+    return (
+      <div className="space-y-6">
+        <SetupRequired
+          title={t('configureWooCommerceToViewProducts') || 'הגדר את WooCommerce כדי לראות מוצרים'}
+          description={t('configureWooCommerceSettings') || 'כדי להתחיל, אנא הגדר את הגדרות WooCommerce שלך.'}
+        />
+      </div>
+    );
+  }
 
   // PERFORMANCE: Show skeleton loading for better perceived performance
   // Only show full page loading on initial load with no filters

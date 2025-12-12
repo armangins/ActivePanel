@@ -32,9 +32,22 @@ const SidebarMenuItem = ({ item, isActive, isExpanded, onClose }) => {
     iconRef.current?.stopAnimation?.();
   };
 
+  // Determine onboarding data attribute
+  const getOnboardingAttr = () => {
+    if (item.onboardingTarget) {
+      return item.onboardingTarget;
+    }
+    // Fallback for settings
+    if (item.path === '/settings') {
+      return 'settings-nav';
+    }
+    return undefined;
+  };
+
   return (
     <Link
       to={item.path}
+      data-onboarding={getOnboardingAttr()}
       onClick={() => {
         // Close sidebar on mobile when navigating
         if (window.innerWidth < 1024) {
@@ -114,21 +127,22 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const menuItems = [
     { path: '/dashboard', icon: DashboardIcon, label: t('dashboard') },
-    { path: '/products', icon: ShoppingBagIcon, label: t('products') },
+    { path: '/products', icon: ShoppingBagIcon, label: t('products'), onboardingTarget: 'products-nav' },
     {
       path: '/orders',
       icon: ShoppingCartIcon,
       label: t('orders'),
       badge: (!hasError && !isLoading) ? newOrdersCount : null,
       isLoading: isLoading,
-      hasError: hasError
+      hasError: hasError,
+      onboardingTarget: 'orders-nav'
     },
     { path: '/customers', icon: UsersIcon, label: t('customers') },
     { path: '/coupons', icon: BadgeDollarIcon, label: t('coupons') },
     { path: '/categories', icon: FolderIcon, label: t('categories') || 'Categories' },
     { path: '/calculator', icon: Calculator, label: t('calculator') || 'מחשבון' },
     { path: '/imports', icon: UploadIcon, label: t('imports') || 'ייבוא' },
-    { path: '/settings', icon: SettingsIcon, label: t('settings') },
+    { path: '/settings', icon: SettingsIcon, label: t('settings'), onboardingTarget: 'settings-nav' },
   ];
 
   return (

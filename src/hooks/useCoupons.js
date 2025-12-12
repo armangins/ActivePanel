@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { couponsAPI } from '../services/woocommerce';
 import { PAGINATION_DEFAULTS } from '../shared/constants';
+import { useWooCommerceSettings } from './useWooCommerceSettings';
 
 const PER_PAGE = PAGINATION_DEFAULTS.COUPONS_PER_PAGE;
 
@@ -16,6 +17,8 @@ export const couponKeys = {
 
 // Fetch coupons list
 export const useCoupons = (filters = {}) => {
+  const { hasSettings } = useWooCommerceSettings();
+  
   return useQuery({
     queryKey: couponKeys.list(filters),
     queryFn: () => couponsAPI.list({
@@ -23,6 +26,7 @@ export const useCoupons = (filters = {}) => {
       per_page: filters.per_page || PER_PAGE,
       ...filters,
     }),
+    enabled: hasSettings, // Only fetch if settings are configured
     staleTime: 15 * 60 * 1000, // 15 minutes
     // PERFORMANCE: Use placeholderData for instant display from cache
     placeholderData: (previousData) => previousData,
@@ -33,6 +37,8 @@ export const useCoupons = (filters = {}) => {
 
 // Fetch all coupons (for client-side filtering)
 export const useAllCoupons = () => {
+  const { hasSettings } = useWooCommerceSettings();
+  
   return useQuery({
     queryKey: [...couponKeys.all, 'all'],
     queryFn: async () => {
@@ -52,16 +58,19 @@ export const useAllCoupons = () => {
 
       return allCoupons;
     },
+    enabled: hasSettings, // Only fetch if settings are configured
     staleTime: 15 * 60 * 1000,
   });
 };
 
 // Fetch single coupon
 export const useCoupon = (id) => {
+  const { hasSettings } = useWooCommerceSettings();
+  
   return useQuery({
     queryKey: couponKeys.detail(id),
     queryFn: () => couponsAPI.get(id),
-    enabled: !!id,
+    enabled: !!id && hasSettings, // Only fetch if ID exists and settings are configured
     staleTime: 15 * 60 * 1000,
   });
 };

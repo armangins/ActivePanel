@@ -9,11 +9,14 @@ import CustomersHeader from './CustomersHeader';
 import CustomersGrid from './CustomersGrid';
 import Pagination from '../ui/Pagination/Pagination';
 import { PAGINATION_DEFAULTS } from '../../shared/constants';
+import { useWooCommerceSettings } from '../../hooks/useWooCommerceSettings';
+import { SetupRequired } from '../ui/SetupRequired';
 
 const PER_PAGE = PAGINATION_DEFAULTS.CUSTOMERS_PER_PAGE;
 
 const Customers = () => {
   const { t, isRTL, formatCurrency } = useLanguage();
+  const { hasSettings, isLoading: settingsLoading } = useWooCommerceSettings();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [page, setPage] = useState(1);
@@ -56,6 +59,18 @@ const Customers = () => {
   const filteredCustomers = allCustomers; // Search is handled by the hook
 
   const displayedCount = filteredCustomers.length;
+
+  // Show setup message if settings aren't configured
+  if (!settingsLoading && !hasSettings) {
+    return (
+      <div className="space-y-6" dir="rtl">
+        <SetupRequired
+          title={t('configureWooCommerceToViewCustomers') || 'הגדר את WooCommerce כדי לראות לקוחות'}
+          description={t('configureWooCommerceSettings') || 'כדי להתחיל, אנא הגדר את הגדרות WooCommerce שלך.'}
+        />
+      </div>
+    );
+  }
 
   if (loading) {
     return <LoadingState message={t('loading') || 'Loading customers...'} />;

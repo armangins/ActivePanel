@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Input } from '../../ui/inputs';
 import { Button } from '../../ui';
 import { useCreateVariation, useUpdateVariation } from '../../../hooks/useVariations';
+import { secureLog } from '../../../utils/logger';
 
 /**
  * VariationForm Component
@@ -81,7 +82,7 @@ const VariationForm = ({
             }
             onSuccess?.();
         } catch (err) {
-            console.error('Save variation error:', err);
+            secureLog.error('Save variation error:', err);
             alert(`${t('error') || 'Error'}: ${err.message || 'Failed to save variation'}`);
         }
     };

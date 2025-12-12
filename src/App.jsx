@@ -3,16 +3,19 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
+import { OnboardingProvider } from './contexts/OnboardingContext';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import { LoadingState } from './components/ui';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
 import MobileBottomNav from './components/Layout/MobileBottomNav';
+import OnboardingTour from './components/Onboarding/OnboardingTour';
 
 // Lazy load components for code splitting
 const Login = lazy(() => import('./components/Auth/Login'));
 const SignUp = lazy(() => import('./components/Auth/SignUp'));
+const ThankYou = lazy(() => import('./components/Auth/ThankYou'));
 const Dashboard = lazy(() => import('./components/Dashboard/Dashboard'));
 const Products = lazy(() => import('./components/Products/Products/Products'));
 const Orders = lazy(() => import('./components/Orders/Orders'));
@@ -22,12 +25,10 @@ const Categories = lazy(() => import('./components/Categories/Categories'));
 const Calculator = lazy(() => import('./components/Calculator/Calculator'));
 const Imports = lazy(() => import('./components/Imports/Imports'));
 const Settings = lazy(() => import('./components/Settings/Settings'));
+const WooCommerceSetupGuide = lazy(() => import('./components/Settings/WooCommerceSetupGuide'));
 const AddProductView = lazy(() => import('./components/Products/AddProductView'));
 const ChatAssistant = lazy(() => import('./components/AI/ChatAssistant'));
 const EditVariationView = lazy(() => import('./components/Products/EditVariationView/EditVariationView'));
-// Onboarding disabled - user requested to remove onboarding
-// const Onboarding = lazy(() => import('./components/Onboarding/Onboarding'));
-
 
 function App() {
   // Sidebar closed by default on mobile, open on desktop
@@ -60,20 +61,13 @@ function App() {
       <LanguageProvider>
         <AuthProvider>
           <SettingsProvider>
-            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <OnboardingProvider>
+              <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <Suspense fallback={<LoadingState />}>
                 <Routes>
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<SignUp />} />
-                  {/* Onboarding route disabled - user requested to remove onboarding */}
-                  {/* <Route
-                    path="/onboarding"
-                    element={
-                      <ProtectedRoute>
-                        <Onboarding />
-                      </ProtectedRoute>
-                    }
-                  /> */}
+                  <Route path="/thank-you" element={<ThankYou />} />
                   <Route
                     path="/*"
                     element={
@@ -95,6 +89,7 @@ function App() {
                                   <Route path="/calculator" element={<Calculator />} />
                                   <Route path="/imports" element={<Imports />} />
                                   <Route path="/settings" element={<Settings />} />
+                                  <Route path="/settings/woocommerce-setup" element={<WooCommerceSetupGuide />} />
                                   <Route path="/products/add" element={<AddProductView />} />
                                   <Route path="/products/edit/:id" element={<AddProductView />} />
                                   <Route path="/products/:id/variations/:variationId/edit" element={<EditVariationView />} />
@@ -109,12 +104,15 @@ function App() {
                         <Suspense fallback={null}>
                           <ChatAssistant />
                         </Suspense>
+                        {/* Interactive Onboarding Tour */}
+                        <OnboardingTour />
                       </ProtectedRoute>
                     }
                   />
                 </Routes>
               </Suspense>
             </Router>
+            </OnboardingProvider>
           </SettingsProvider>
         </AuthProvider>
       </LanguageProvider>

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersAPI } from '../services/woocommerce';
 import { PAGINATION_DEFAULTS } from '../shared/constants';
+import { useWooCommerceSettings } from './useWooCommerceSettings';
 
 const PER_PAGE = PAGINATION_DEFAULTS.ORDERS_PER_PAGE;
 
@@ -17,6 +18,8 @@ export const orderKeys = {
 
 // Fetch orders list
 export const useOrders = (filters = {}) => {
+  const { hasSettings } = useWooCommerceSettings();
+  
   return useQuery({
     queryKey: orderKeys.list(filters),
     queryFn: () => ordersAPI.list({
@@ -27,12 +30,15 @@ export const useOrders = (filters = {}) => {
       _fields: filters.fields, // Pass fields if present
       ...filters,
     }),
+    enabled: hasSettings, // Only fetch if settings are configured
     staleTime: 15 * 60 * 1000,
   });
 };
 
 // Fetch all orders (for client-side filtering)
 export const useAllOrders = () => {
+  const { hasSettings } = useWooCommerceSettings();
+  
   return useQuery({
     queryKey: [...orderKeys.all, 'all'],
     queryFn: async () => {
@@ -54,31 +60,39 @@ export const useAllOrders = () => {
 
       return allOrders;
     },
+    enabled: hasSettings, // Only fetch if settings are configured
     staleTime: 15 * 60 * 1000,
   });
 };
 
 // Fetch single order
 export const useOrder = (id) => {
+  const { hasSettings } = useWooCommerceSettings();
+  
   return useQuery({
     queryKey: orderKeys.detail(id),
     queryFn: () => ordersAPI.get(id),
-    enabled: !!id,
+    enabled: !!id && hasSettings, // Only fetch if ID exists and settings are configured
     staleTime: 15 * 60 * 1000,
   });
 };
 
 // Fetch total orders count
 export const useOrdersTotalCount = () => {
+  const { hasSettings } = useWooCommerceSettings();
+  
   return useQuery({
     queryKey: orderKeys.totalCount(),
     queryFn: () => ordersAPI.getTotalCount(),
+    enabled: hasSettings, // Only fetch if settings are configured
     staleTime: 15 * 60 * 1000,
   });
 };
 
 // Fetch orders by status counts
 export const useOrderStatusCounts = () => {
+  const { hasSettings } = useWooCommerceSettings();
+  
   return useQuery({
     queryKey: orderKeys.statusCounts(),
     queryFn: async () => {
@@ -104,6 +118,7 @@ export const useOrderStatusCounts = () => {
 
       return counts;
     },
+    enabled: hasSettings, // Only fetch if settings are configured
     staleTime: 15 * 60 * 1000,
   });
 };

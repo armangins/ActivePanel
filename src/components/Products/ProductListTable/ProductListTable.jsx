@@ -2,6 +2,7 @@ import { useState, Fragment, lazy, Suspense, memo } from 'react';
 import ProductListHeader from './ProductListHeader';
 import ProductListTableSkeleton from './ProductListTableSkeleton';
 import { validateProductId, validateProduct } from '../utils/securityHelpers';
+import { secureLog } from '../../../utils/logger';
 
 // PERFORMANCE: Lazy load row components for code splitting
 const ProductListRow = lazy(() => import('./ProductListRow'));
@@ -34,7 +35,7 @@ const ProductListTable = memo(({ products, onView, onEdit, onDelete, formatCurre
     // SECURITY: Validate product ID before processing
     const validId = validateProductId(productId);
     if (!validId) {
-      console.warn('Invalid product ID for expand:', productId);
+      secureLog.warn('Invalid product ID for expand:', productId);
       return;
     }
     
@@ -68,7 +69,7 @@ const ProductListTable = memo(({ products, onView, onEdit, onDelete, formatCurre
       // SECURITY: Validate product ID before processing
       const validId = validateProductId(productId);
       if (!validId) {
-        console.warn('Invalid product ID for selection:', productId);
+        secureLog.warn('Invalid product ID for selection:', productId);
         return;
       }
       

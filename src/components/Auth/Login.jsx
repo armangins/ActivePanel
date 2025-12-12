@@ -13,20 +13,7 @@ import {
 import { Input } from '../ui/inputs';
 import { Button } from '../ui';
 import LoginWelcomePanel from './LoginWelcomePanel';
-
-// Get API URL and enforce HTTPS in production
-let API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:3000');
-
-// Enforce HTTPS in production
-if (import.meta.env.PROD && API_URL.startsWith('http://')) {
-  console.warn('⚠️  WARNING: API_URL uses HTTP in production. Converting to HTTPS.');
-  API_URL = API_URL.replace('http://', 'https://');
-}
-
-// VITE_API_URL already includes /api, so just append /auth/google
-const GOOGLE_LOGIN_URL = API_URL.endsWith('/api') 
-  ? `${API_URL}/auth/google` 
-  : `${API_URL}/api/auth/google`;
+import { GoogleAuthButton } from './GoogleAuthButton';
 
 const Login = () => {
   const { login, isAuthenticated } = useAuth();
@@ -43,46 +30,42 @@ const Login = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const error = urlParams.get('error');
     const errorMessage = urlParams.get('message');
+    const errorCode = urlParams.get('code');
+    const success = urlParams.get('success');
     
-    if (error === 'google_auth_failed') {
-      // Handle specific error cases
+    
+    // Handle Google authentication errors (works for both login and signup)
+    if (error === 'google_auth_failed' || error === 'google_signup_failed') {
       if (errorMessage) {
-        // Decode URL-encoded message
         const decodedMessage = decodeURIComponent(errorMessage);
-        setError(decodedMessage || t('googleLoginError') || 'שגיאה בהתחברות עם Google. אנא נסה שוב.');
+        // Only log in development for debugging
+        if (import.meta.env.DEV) {
+          console.log('⚠️  Google authentication error:', decodedMessage);
+        }
+        setError(decodedMessage || t('googleAuthError') || 'שגיאה בהתחברות עם Google. אנא נסה שוב.');
       } else {
-        setError(t('googleLoginError') || 'שגיאה בהתחברות עם Google. אנא נסה שוב.');
+        setError(t('googleAuthError') || 'שגיאה בהתחברות עם Google. אנא נסה שוב.');
       }
-    } else if (error === 'true') {
-      setError(t('googleLoginError') || 'שגיאה בהתחברות עם Google. אנא נסה שוב.');
+      // Clean up URL params after setting error
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } 
+    else if (error === 'true') {
+      setError(t('googleAuthError') || 'שגיאה בהתחברות עם Google. אנא נסה שוב.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    // If no error but we have URL params, log only in development
+    else if (window.location.search && !error && !success && import.meta.env.DEV) {
+      console.warn('⚠️  Unexpected URL params on login page:', window.location.search);
     }
     
     // If already authenticated, redirect to dashboard
-    // Also check after a delay to handle Google OAuth redirect case
     if (isAuthenticated) {
       navigate('/dashboard');
-    } else {
-      // After Google OAuth redirect, wait a bit for session to be established
-      // then check authentication again
-      const checkAuthAfterRedirect = setTimeout(async () => {
-        try {
-          const currentUser = await authAPI.getCurrentUser();
-          if (currentUser) {
-            login(currentUser);
-            navigate('/dashboard');
-          }
-        } catch (err) {
-          // User not authenticated, stay on login page
-        }
-      }, 1000); // Wait 1 second for session cookie to be set
-      
-      return () => clearTimeout(checkAuthAfterRedirect);
     }
+    // Note: AuthContext handles periodic auth checks after OAuth redirect
+    // No need to poll here to avoid rate limiting
   }, [isAuthenticated, navigate, login, t]);
 
-  const handleGoogleLogin = useCallback(() => {
-    window.location.href = GOOGLE_LOGIN_URL;
-  }, []);
 
   const handleEmailLogin = useCallback(async (e) => {
     e.preventDefault();
@@ -133,34 +116,62 @@ const Login = () => {
 
           {/* Sign In Title */}
           <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-            {t('signIn') || 'התחבר'}
+           התחברו והתחילו לנהל את החנות שלכם
           </h1>
-
-          <p className="text-gray-600 mb-8">
-            {t('dontHaveAccount') || 'אין לך חשבון?'}{' '}
-            <Link to="/signup" className="text-primary-500 hover:text-primary-600 font-medium">
-              {t('signUp') || 'הירשם'}
-            </Link>
-          </p>
 
           {/* Demo Info Box */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-right">
             <p className="text-sm text-blue-800">
-              {t('demoInfo') || 'אתה גולש ב-ActivePanel Demo. לחץ על כפתור "התחבר" כדי לגשת לדמו ולתיעוד.'}
+           אתם גולשים כרגע בכגרסת הדמו של Active Panel תהנו ! 
             </p>
           </div>
 
+          {/* Info message if user just signed up but ended up here */}
+          {!error && window.location.search.includes('signup') && (
+            <div className="bg-green-50 border-2 border-green-300 text-green-900 rounded-lg p-4 mb-6 text-sm text-right shadow-md">
+              <div className="flex items-start gap-2">
+                <svg className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <div>
+                  <p className="font-semibold mb-2">{t('signupCompleted') || 'ההרשמה הושלמה בהצלחה!'}</p>
+                  <p className="mb-3">{t('pleaseSignIn') || 'כעת תוכל להתחבר עם Google או עם אימייל וסיסמה.'}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Error Message */}
           {error && (
-            <div className="bg-orange-50 border border-orange-200 text-orange-800 rounded-lg p-4 mb-6 text-sm text-right">
-              <p className="mb-2">{error}</p>
-              {(error.includes('No account found') || error.includes('sign up')) && (
-                <p className="text-xs mt-2">
-                  {t('dontHaveAccount') || 'אין לך חשבון?'}{' '}
-                  <Link to="/signup" className="text-primary-600 hover:text-primary-700 font-medium underline">
-                    {t('signUp') || 'הירשם כאן'}
-                  </Link>
-                </p>
+            <div className="bg-orange-50 border-2 border-orange-300 text-orange-900 rounded-lg p-4 mb-6 text-sm text-right shadow-md">
+              <div className="flex items-start gap-2 mb-2">
+                <svg className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <p className="font-semibold text-base">{error}</p>
+              </div>
+              
+              {/* Note: "No account found" errors no longer occur since accounts are auto-created via Google OAuth */}
+              
+              {/* Show login link for "user already exists" errors */}
+              {(error.includes('already exists') || error.includes('User already exists')) && (
+                <div className="mt-3 pt-3 border-t border-orange-200">
+                  <p className="text-xs mb-2 text-orange-700">
+                    {t('accountExists') || 'החשבון כבר קיים'}
+                  </p>
+                  <GoogleAuthButton 
+                    className="border-orange-300 text-orange-700 hover:bg-orange-50 text-xs py-2"
+                  />
+                </div>
+              )}
+              
+              {/* Show email/password login link for "account exists but not with Google" errors */}
+              {error.includes('Account exists but was not created with Google') && (
+                <div className="mt-3 pt-3 border-t border-orange-200">
+                  <p className="text-xs text-orange-700">
+                    {t('useEmailPassword') || 'אנא השתמש בהתחברות עם אימייל וסיסמה'}
+                  </p>
+                </div>
               )}
             </div>
           )}
@@ -249,16 +260,9 @@ const Login = () => {
             </div>
           </form>
 
-          {/* Google Login Button */}
+          {/* Google Authentication Button */}
           <div className="mt-6">
-            <Button
-              onClick={handleGoogleLogin}
-              variant="outline"
-              className="w-full flex items-center justify-center gap-3 bg-white border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
-            >
-              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
-              {t('signInWithGoogle') || 'התחבר עם Google'}
-            </Button>
+            <GoogleAuthButton />
           </div>
         </div>
       </div>

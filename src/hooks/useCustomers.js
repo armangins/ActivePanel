@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { customersAPI } from '../services/woocommerce';
 import { PAGINATION_DEFAULTS } from '../shared/constants';
+import { useWooCommerceSettings } from './useWooCommerceSettings';
 
 const PER_PAGE = PAGINATION_DEFAULTS.CUSTOMERS_PER_PAGE;
 
@@ -16,6 +17,8 @@ export const customerKeys = {
 
 // Fetch customers list
 export const useCustomers = (filters = {}) => {
+  const { hasSettings } = useWooCommerceSettings();
+  
   return useQuery({
     queryKey: customerKeys.list(filters),
     queryFn: () => customersAPI.list({
@@ -24,12 +27,15 @@ export const useCustomers = (filters = {}) => {
       _fields: filters._fields || 'id,first_name,last_name,username,email,avatar_url,billing,shipping,date_created,orders_count,total_spent',
       ...filters,
     }),
+    enabled: hasSettings, // Only fetch if settings are configured
     staleTime: 15 * 60 * 1000,
   });
 };
 
 // Fetch all customers (for client-side filtering)
 export const useAllCustomers = () => {
+  const { hasSettings } = useWooCommerceSettings();
+  
   return useQuery({
     queryKey: [...customerKeys.all, 'all'],
     queryFn: async () => {
@@ -49,25 +55,31 @@ export const useAllCustomers = () => {
 
       return allCustomers;
     },
+    enabled: hasSettings, // Only fetch if settings are configured
     staleTime: 15 * 60 * 1000,
   });
 };
 
 // Fetch single customer
 export const useCustomer = (id) => {
+  const { hasSettings } = useWooCommerceSettings();
+  
   return useQuery({
     queryKey: customerKeys.detail(id),
     queryFn: () => customersAPI.get(id),
-    enabled: !!id,
+    enabled: !!id && hasSettings, // Only fetch if ID exists and settings are configured
     staleTime: 15 * 60 * 1000,
   });
 };
 
 // Fetch total customers count
 export const useCustomersTotalCount = () => {
+  const { hasSettings } = useWooCommerceSettings();
+  
   return useQuery({
     queryKey: customerKeys.totalCount(),
     queryFn: () => customersAPI.getTotalCount(),
+    enabled: hasSettings, // Only fetch if settings are configured
     staleTime: 15 * 60 * 1000,
   });
 };

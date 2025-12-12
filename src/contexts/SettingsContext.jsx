@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { settingsAPI } from '../services/api';
 import { useAuth } from './AuthContext';
+import { secureLog } from '../utils/logger';
 
 const SettingsContext = createContext(null);
 
@@ -16,10 +17,16 @@ export const SettingsProvider = ({ children }) => {
         try {
             setLoading(true);
             const data = await settingsAPI.get();
-            setSettings(data);
+            // Handle null settings (new users) gracefully
+            setSettings(data || null);
+            setError(null);
         } catch (err) {
-            console.error('Failed to load settings:', err);
-            setError(err);
+            // Only log unexpected errors (not 404s which are now handled as null)
+            if (err.response?.status !== 404) {
+                secureLog.error('Failed to load settings:', err);
+            }
+            setError(err.response?.status === 404 ? null : err);
+            setSettings(null);
         } finally {
             setLoading(false);
         }

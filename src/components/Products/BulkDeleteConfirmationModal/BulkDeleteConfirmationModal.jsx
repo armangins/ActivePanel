@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from '../../ui';
 import { Input } from '../../ui/inputs';
+import { secureLog } from '../../../utils/logger';
 
 /**
  * BulkDeleteConfirmationModal Component
@@ -37,7 +38,7 @@ const BulkDeleteConfirmationModal = ({ isOpen, onClose, onConfirm, productCount,
       await onConfirm();
       onClose();
     } catch (error) {
-      console.error('Bulk delete failed', error);
+      secureLog.error('Bulk delete failed', error);
       setIsDeleting(false);
     }
   };

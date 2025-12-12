@@ -4,6 +4,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { LoadingState, ErrorState } from '../ui';
 import { useDashboardLogic } from './hooks/useDashboardLogic';
 import { useDashboardSidebar } from './hooks/useDashboardSidebar';
+import { useSettings } from '../../contexts/SettingsContext';
+import { Link } from 'react-router-dom';
 
 
 // These are loaded immediately as they are above the fold or essential for the initial view
@@ -37,6 +39,10 @@ const Dashboard = () => {
   // Global hooks for language and query client
   const { t, formatCurrency, isRTL } = useLanguage();
   const queryClient = useQueryClient();
+  const { settings, loading: settingsLoading } = useSettings();
+  
+  // Check if WooCommerce settings are configured
+  const hasSettings = settings && settings.hasConsumerKey && settings.hasConsumerSecret;
 
   // Custom Hook: useDashboardLogic
   // Handles all data fetching and state management for the dashboard
@@ -68,7 +74,32 @@ const Dashboard = () => {
   //   return <LoadingState message={t('loadingDashboardData') || 'מעבדים את הנתונים… עוד שנייה ואנחנו שם.'} fullHeight />;
   // }
 
-  // 2. Error State
+  // 2. Show setup message if settings aren't configured
+  if (!settingsLoading && !hasSettings) {
+    return (
+      <div className="space-y-4 sm:space-y-6" dir="rtl">
+        <DashboardHeader t={t} isRTL={isRTL} />
+        <div className="card p-8 text-center">
+          <div className="max-w-md mx-auto">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              {t('welcomeToDashboard') || 'ברוכים הבאים לדשבורד'}
+            </h2>
+            <p className="text-gray-600 mb-6">
+              {t('configureWooCommerceSettings') || 'כדי להתחיל, אנא הגדר את הגדרות WooCommerce שלך.'}
+            </p>
+            <Link
+              to="/settings"
+              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              {t('goToSettings') || 'עבור להגדרות'}
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Error State
   // Shown if critical data fetching fails
   if (error) {
     // Generic secure error message
@@ -84,9 +115,9 @@ const Dashboard = () => {
     );
   }
 
-  // 3. Main Dashboard Render
+  // 4. Main Dashboard Render
   return (
-    <div className="space-y-4 sm:space-y-6" dir="rtl">
+    <div className="space-y-4 sm:space-y-6" dir="rtl" data-onboarding="dashboard">
       {/* Displays the dashboard title and global actions */}
       <DashboardHeader t={t} isRTL={isRTL} />
 

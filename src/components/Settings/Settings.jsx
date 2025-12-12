@@ -18,6 +18,7 @@ import { testConnection, productsAPI } from '../../services/woocommerce';
 import { settingsAPI } from '../../services/api';
 import { settingsSchema } from '../../schemas/settings';
 import { LoadingState, Button } from '../ui';
+import { secureLog } from '../../utils/logger';
 
 
 // Lazy load tab components
@@ -94,7 +95,7 @@ const Settings = () => {
                     });
                 }
             } catch (error) {
-                console.error('Failed to load settings:', error);
+                secureLog.error('Failed to load settings:', error);
                 setMessage({ type: 'error', text: 'Failed to load settings from server.' });
             } finally {
                 setLoading(false);

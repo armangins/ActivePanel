@@ -10,11 +10,14 @@ import OrdersHeader from './OrdersHeader';
 import OrdersTable from './OrdersTable';
 import OrderStatusCards from './OrderStatusCards';
 import { PAGINATION_DEFAULTS } from '../../shared/constants';
+import { useWooCommerceSettings } from '../../hooks/useWooCommerceSettings';
+import { SetupRequired } from '../ui/SetupRequired';
 
 const PER_PAGE = 10; // Use 10 items per page as requested for Products
 
 const Orders = () => {
   const { t, formatCurrency, isRTL } = useLanguage();
+  const { hasSettings, isLoading: settingsLoading } = useWooCommerceSettings();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -125,6 +128,18 @@ const Orders = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
+
+  // Show setup message if settings aren't configured
+  if (!settingsLoading && !hasSettings) {
+    return (
+      <div className="space-y-6" dir="rtl">
+        <SetupRequired
+          title={t('configureWooCommerceToViewOrders') || 'הגדר את WooCommerce כדי לראות הזמנות'}
+          description={t('configureWooCommerceSettings') || 'כדי להתחיל, אנא הגדר את הגדרות WooCommerce שלך.'}
+        />
+      </div>
+    );
+  }
 
   if (error && !orders.length) {
     return <ErrorState error={error.message || t('error')} onRetry={() => refetch()} fullPage />;

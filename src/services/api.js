@@ -109,12 +109,15 @@ const createApiClient = () => {
       }
 
       // 4. The "Real Error" (Server Error)
-      // Log detailed errors only in development
-      if (import.meta.env.DEV) {
+      // Don't log 404 errors for settings endpoint (expected for new users)
+      const isSettings404 = error.config?.url?.includes('/settings') && error.response?.status === 404;
+      
+      // Log detailed errors only in development (skip expected 404s)
+      if (import.meta.env.DEV && !isSettings404) {
         console.error('API Error:', error.response?.data?.message || error.message);
         console.error('Full error:', error.response?.data);
-      } else {
-        // Production: Log generic message only
+      } else if (!isSettings404) {
+        // Production: Log generic message only (skip expected 404s)
         console.error('An error occurred. Please try again.');
       }
 
@@ -231,6 +234,19 @@ export const authAPI = {
 };
 
 /**
+ * Onboarding API
+ */
+export const onboardingAPI = {
+  /**
+   * Mark onboarding as completed
+   */
+  complete: async () => {
+    const response = await api.post('/auth/onboarding/complete');
+    return response.data;
+  },
+};
+
+/**
  * Settings API
  */
 export const settingsAPI = {
@@ -239,8 +255,8 @@ export const settingsAPI = {
    */
   get: async () => {
     const response = await api.get('/settings');
-    // Backend returns { settings: { storeUrl: '...', hasSettings: true } } or similar
-    return response.data.settings || response.data;
+    // Backend returns { settings: { ... } } or { settings: null } for new users
+    return response.data.settings || null;
   },
 
   /**

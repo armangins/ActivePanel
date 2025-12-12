@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDeleteProduct } from '../../../hooks/useProducts';
+import { secureLog } from '../../../utils/logger';
 
 /**
  * Custom hook to handle product deletion with confirmation
@@ -26,7 +27,7 @@ export const useProductDelete = (allProducts, selectedProduct, setIsDetailsOpen,
             // Success - mutation will automatically invalidate and refetch
         } catch (err) {
             // Error handling - could integrate with toast notification system
-            console.error('Delete error:', err);
+            secureLog.error('Delete error:', err);
             const errorMessage = err.message || t('error') || 'An error occurred';
             // TODO: Replace with toast notification for better UX
             alert(`${t('error') || 'Error'}: ${errorMessage}`);

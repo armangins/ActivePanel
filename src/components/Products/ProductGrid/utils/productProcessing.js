@@ -114,6 +114,7 @@ export const calculateProductPricing = (product, formatCurrency, t) => {
 };
 
 import { validateImageUrl, sanitizeProductName, sanitizeSKU, validateProduct } from '../../utils/securityHelpers';
+import { secureLog } from '../../../../utils/logger';
 
 /**
  * Process product data for display in ProductCard
@@ -121,9 +122,18 @@ import { validateImageUrl, sanitizeProductName, sanitizeSKU, validateProduct } f
  * SECURITY: Sanitizes all user-facing data to prevent XSS
  */
 export const processProductForDisplay = (product, formatCurrency, t) => {
+    // Handle SETUP_REQUIRED responses from backend
+    if (product && product.code === 'SETUP_REQUIRED') {
+        // Don't log as error - this is expected for new users without WooCommerce settings
+        return null;
+    }
+    
     // SECURITY: Validate product structure
     if (!validateProduct(product)) {
-        console.warn('Invalid product object:', product);
+        // Only log if it's not a SETUP_REQUIRED response
+        if (!product || product.code !== 'SETUP_REQUIRED') {
+            secureLog.warn('Invalid product object:', product);
+        }
         return null;
     }
     

@@ -100,6 +100,15 @@ const fetchCollection = async (endpoint, params = {}) => {
   try {
     const response = await api.get(endpoint, { params: requestParams });
 
+    // Handle SETUP_REQUIRED response (new users without WooCommerce settings)
+    if (response.data && response.data.code === 'SETUP_REQUIRED') {
+      return {
+        data: [],
+        total: 0,
+        totalPages: 0,
+      };
+    }
+
     const parseHeaderNumber = (value, fallback = 0) => {
       const parsed = parseInt(value ?? fallback, 10);
       return Number.isNaN(parsed) ? fallback : parsed;
@@ -499,12 +508,10 @@ export const attributesAPI = {
 
   getTerms: async (attributeId, params = {}) => {
     try {
-      console.log(`[attributesAPI] calling /products/attributes/${attributeId}/terms`);
       const response = await fetchCollection(`/products/attributes/${attributeId}/terms`, {
         per_page: 100,
         ...params,
       });
-      console.log(`[attributesAPI] raw response for ${attributeId}:`, response);
       return response.data;
     } catch (error) {
       handleError(error);

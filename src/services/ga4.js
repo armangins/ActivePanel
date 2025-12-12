@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { secureLog } from '../utils/logger';
 
 // Google Analytics 4 Measurement Protocol API
 const GA4_ENDPOINT = 'https://www.google-analytics.com/mp/collect';
@@ -27,7 +28,7 @@ const fetchGA4Data = async (metric, startDate, endDate) => {
     const { propertyId, accessToken } = getGA4Config();
 
     if (!propertyId || !accessToken) {
-        console.warn('GA4 credentials not configured');
+        secureLog.warn('GA4 credentials not configured');
         return null;
     }
 

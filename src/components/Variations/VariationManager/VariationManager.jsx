@@ -3,6 +3,7 @@ import { useVariations, useDeleteVariation } from '../../../hooks/useVariations'
 import VariationsList from '../VariationsList';
 import { Button } from '../../ui';
 import { PlusIcon } from '@heroicons/react/24/outline';
+import { secureLog } from '../../../utils/logger';
 
 /**
  * VariationManager Component
@@ -61,7 +62,7 @@ const VariationManager = ({
                 variationId: variation.id
             });
         } catch (err) {
-            console.error('Delete variation error:', err);
+            secureLog.error('Delete variation error:', err);
             alert(`${t('error') || 'Error'}: ${err.message || 'Failed to delete variation'}`);
         }
     };

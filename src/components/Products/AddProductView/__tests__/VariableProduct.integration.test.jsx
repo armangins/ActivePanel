@@ -139,20 +139,14 @@ describe('Variable Product Upload Tests', () => {
                 expect(variableButton).toHaveAttribute('aria-pressed', 'true');
             });
 
-            console.log('✅ Product type changed to Variable');
-
             // Wait for attributes section to appear
             await waitFor(() => {
                 expect(screen.getByText(/תכונות|attributes/i)).toBeInTheDocument();
             }, { timeout: 3000 });
 
-            console.log('✅ Attributes section loaded');
-
             // Select Color attribute
             const colorCheckbox = screen.getByRole('checkbox', { name: /color|צבע/i });
             await user.click(colorCheckbox);
-
-            console.log('✅ Color attribute selected');
 
             // Wait for color terms to load
             await waitFor(() => {
@@ -166,13 +160,9 @@ describe('Variable Product Upload Tests', () => {
             const blueCheckbox = screen.getByRole('checkbox', { name: /blue|כחול/i });
             await user.click(blueCheckbox);
 
-            console.log('✅ Color terms selected (Red, Blue)');
-
             // Click "Add Variation" button
             const addVariationButton = screen.getByRole('button', { name: /add variation|הוסף וריאציה/i });
             await user.click(addVariationButton);
-
-            console.log('✅ Add Variation button clicked');
 
             // Wait for variation modal to appear
             await waitFor(() => {
@@ -197,13 +187,9 @@ describe('Variable Product Upload Tests', () => {
             const variationStockInput = within(modal).getByTestId('stock-quantity-input');
             await user.type(variationStockInput, '10');
 
-            console.log('✅ Variation details filled');
-
             // Save variation
             const saveVariationButton = within(modal).getByRole('button', { name: /create|צור/i });
             await user.click(saveVariationButton);
-
-            console.log('✅ Variation created');
 
             // Wait for modal to close
             await waitFor(() => {
@@ -213,13 +199,9 @@ describe('Variable Product Upload Tests', () => {
             // Verify variation appears in pending list
             expect(screen.getByText(/VAR-RED/i)).toBeInTheDocument();
 
-            console.log('✅ Variation appears in pending list');
-
             // Click Publish button
             const publishButton = screen.getByRole('button', { name: /פרסם|publish/i });
             await user.click(publishButton);
-
-            console.log('✅ Publish button clicked');
 
             // Verify parent product was created
             await waitFor(() => {
@@ -230,8 +212,6 @@ describe('Variable Product Upload Tests', () => {
                     })
                 );
             }, { timeout: 5000 });
-
-            console.log('✅ Parent product created');
 
             // Verify variation was created
             await waitFor(() => {
@@ -245,14 +225,10 @@ describe('Variable Product Upload Tests', () => {
                 );
             }, { timeout: 5000 });
 
-            console.log('✅ Variation created via API');
-
             // Verify success modal appears
             await waitFor(() => {
                 expect(screen.getByText(/הצלחה|success/i)).toBeInTheDocument();
             }, { timeout: 5000 });
-
-            console.log('✅ Success modal displayed');
         }, 30000); // 30 second timeout for this complex test
 
         it('should handle multiple variations', async () => {
@@ -285,8 +261,6 @@ describe('Variable Product Upload Tests', () => {
 
             // Select attributes and create 2 variations
             // This test verifies that multiple variations can be added to the pending list
-
-            console.log('✅ Multiple variations test setup complete');
         }, 20000);
     });
 
@@ -308,8 +282,6 @@ describe('Variable Product Upload Tests', () => {
             await user.click(variableButton);
 
             // The test verifies that variation SKU validation prevents duplicates
-
-            console.log('✅ SKU validation test complete');
         });
     });
 });

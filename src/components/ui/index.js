@@ -24,6 +24,7 @@ export { default as EmptyState } from './states/EmptyState';
 export { default as DataPlaceholder } from './states/DataPlaceholder';
 export { default as StateHandler } from './states/StateHandler';
 export { default as StatusMessage } from './states/StatusMessage';
+export { SetupRequired } from './SetupRequired';
 
 // Indicators
 export { default as LoadingMoreIndicator } from './indicators/LoadingMoreIndicator';

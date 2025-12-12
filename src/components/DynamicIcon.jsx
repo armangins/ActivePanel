@@ -1,5 +1,6 @@
 import React from 'react';
 import * as Icons from './icons';
+import { secureLog } from '../utils/logger';
 
 /**
  * DynamicIcon Component
@@ -12,7 +13,7 @@ const DynamicIcon = ({ name, ...props }) => {
     const IconComponent = Icons[name];
 
     if (!IconComponent) {
-        console.warn(`Icon "${name}" not found in DynamicIcon registry.`);
+        secureLog.warn(`Icon "${name}" not found in DynamicIcon registry.`);
         return null;
     }
 

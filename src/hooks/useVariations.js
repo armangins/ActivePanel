@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { variationsAPI } from '../services/woocommerce';
+import { useWooCommerceSettings } from './useWooCommerceSettings';
 
 // Query keys
 export const variationKeys = {
@@ -16,10 +17,12 @@ export const variationKeys = {
  * @param {object} options - React Query options
  */
 export const useVariations = (productId, options = {}) => {
+    const { hasSettings } = useWooCommerceSettings();
+    
     return useQuery({
         queryKey: variationKeys.list(productId),
         queryFn: () => variationsAPI.list(productId),
-        enabled: !!productId && options.enabled !== false,
+        enabled: !!productId && hasSettings && options.enabled !== false, // Only fetch if productId exists and settings are configured
         staleTime: 15 * 60 * 1000, // 15 minutes
         ...options,
     });
@@ -31,10 +34,12 @@ export const useVariations = (productId, options = {}) => {
  * @param {number} variationId - Variation ID
  */
 export const useVariation = (productId, variationId) => {
+    const { hasSettings } = useWooCommerceSettings();
+    
     return useQuery({
         queryKey: variationKeys.detail(productId, variationId),
         queryFn: () => variationsAPI.getById(productId, variationId),
-        enabled: !!productId && !!variationId,
+        enabled: !!productId && !!variationId && hasSettings, // Only fetch if IDs exist and settings are configured
         staleTime: 15 * 60 * 1000,
     });
 };

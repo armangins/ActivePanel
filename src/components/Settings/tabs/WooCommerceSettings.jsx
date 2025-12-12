@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { GlobeAltIcon as Globe, KeyIcon as Key, ArrowPathIcon as Loader, CheckCircleIcon as CheckCircle, PencilIcon as Pencil } from '@heroicons/react/24/outline';
+import { useNavigate } from 'react-router-dom';
+import { GlobeAltIcon as Globe, KeyIcon as Key, ArrowPathIcon as Loader, CheckCircleIcon as CheckCircle, PencilIcon as Pencil, BookOpenIcon } from '@heroicons/react/24/outline';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { Input } from '../../ui/inputs';
 import { Button } from '../../ui';
 
 const WooCommerceSettings = ({ configuredCredentials = {}, onTestConnection, testing }) => {
     const { t } = useLanguage();
+    const navigate = useNavigate();
     const { register, watch, formState: { errors } } = useFormContext();
     const [showFields, setShowFields] = useState(false);
 
@@ -62,7 +64,32 @@ const WooCommerceSettings = ({ configuredCredentials = {}, onTestConnection, tes
 
     // Show full form (either not configured or user clicked "edit")
     return (
-        <div className="space-y-6">
+        <div className="space-y-6" data-onboarding="woocommerce-settings">
+            {/* Setup Guide Link */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-3">
+                        <BookOpenIcon className="w-5 h-5 text-blue-600" />
+                        <div>
+                            <h4 className="font-semibold text-blue-900 text-sm">
+                                צריך עזרה בהגדרה?
+                            </h4>
+                            <p className="text-blue-700 text-xs mt-0.5">
+                                צפה במדריך ההגדרה שלנו שלב אחר שלב
+                            </p>
+                        </div>
+                    </div>
+                    <Button
+                        onClick={() => navigate('/settings/woocommerce-setup')}
+                        variant="secondary"
+                        className="text-sm flex items-center gap-2 bg-white hover:bg-blue-50 border-blue-300"
+                    >
+                        <BookOpenIcon className="w-4 h-4" />
+                        צפה במדריך
+                    </Button>
+                </div>
+            </div>
+
             <div>
                 <Input
                     {...register('woocommerceUrl')}
