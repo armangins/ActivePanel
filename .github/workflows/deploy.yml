@@ -50,6 +50,21 @@ jobs:
             echo "   Use only the IP address or hostname (e.g., '185.185.185.185' or 'ftp.yourdomain.com')"
           fi
 
+      - name: Verify build files
+        run: |
+          echo "📦 Build files:"
+          ls -la build/ | head -10
+          echo ""
+          echo "📄 Checking .htaccess:"
+          if [ -f build/.htaccess ]; then
+            echo "✅ .htaccess exists in build folder"
+            echo "First 5 lines of .htaccess:"
+            head -5 build/.htaccess
+          else
+            echo "❌ .htaccess MISSING in build folder!"
+            exit 1
+          fi
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
@@ -66,4 +81,8 @@ jobs:
             **/.git*/**
             **/node_modules/**
             **/.DS_Store
+          # Explicitly include .htaccess (dotfiles might be excluded by default)
+          include: |
+            **/.htaccess
+            **/*
 
