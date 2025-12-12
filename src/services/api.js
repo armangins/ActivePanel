@@ -11,13 +11,12 @@ let API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Security: Enforce HTTPS in production
 if (import.meta.env.PROD && API_URL.startsWith('http://')) {
-  console.warn('⚠️  WARNING: API_URL uses HTTP in production. Converting to HTTPS.');
   API_URL = API_URL.replace('http://', 'https://');
 }
 
 // Security: Validate API URL configuration
 if (!import.meta.env.VITE_API_URL && import.meta.env.PROD) {
-  console.warn('⚠️  WARNING: VITE_API_URL not set in production');
+
 }
 
 // In-memory token storage
