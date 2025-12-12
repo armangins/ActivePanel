@@ -1,30 +1,31 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import { useOnboarding } from '../../../contexts/OnboardingContext';
-import { DocumentTextIcon, ExternalLinkIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
-import { Button } from '../../ui';
+// import { useOnboarding } from '../../../contexts/OnboardingContext'; // DISABLED: Onboarding disabled
+import { DocumentTextIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
+// import { Button } from '../../ui'; // DISABLED: Not needed without onboarding
 
 const HelpSettings = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
-    const { restartOnboarding } = useOnboarding();
+    // const { restartOnboarding } = useOnboarding(); // DISABLED: Onboarding disabled
 
     const handleOpenDocumentation = () => {
         // Navigate to the setup guide page
         navigate('/settings/woocommerce-setup');
     };
 
-    const handleRestartOnboarding = async () => {
-        if (window.confirm(t('onboarding.restartConfirm') || 'האם אתה בטוח שברצונך להתחיל מחדש את סיור ההיכרות?')) {
-            await restartOnboarding();
-        }
-    };
+    // DISABLED: Onboarding restart functionality
+    // const handleRestartOnboarding = async () => {
+    //     if (window.confirm(t('onboarding.restartConfirm') || 'האם אתה בטוח שברצונך להתחיל מחדש את סיור ההיכרות?')) {
+    //         await restartOnboarding();
+    //     }
+    // };
 
     return (
         <div className="space-y-6">
-            {/* Restart Onboarding */}
-            <div className="bg-primary-50 border border-primary-200 rounded-lg p-6">
+            {/* Restart Onboarding - DISABLED */}
+            {/* <div className="bg-primary-50 border border-primary-200 rounded-lg p-6">
                 <div className="flex items-start gap-4">
                     <ArrowPathIcon className="w-6 h-6 text-primary-600 flex-shrink-0 mt-1" />
                     <div className="flex-1 text-right">
@@ -44,7 +45,7 @@ const HelpSettings = () => {
                         </Button>
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             {/* Documentation Link */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
@@ -62,7 +63,7 @@ const HelpSettings = () => {
                             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                         >
                             <span>{t('openFullGuide') || 'פתח מדריך מלא'}</span>
-                            <ExternalLinkIcon className="w-4 h-4" />
+                            <ArrowTopRightOnSquareIcon className="w-4 h-4" />
                         </button>
                     </div>
                 </div>

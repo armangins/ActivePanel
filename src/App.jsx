@@ -3,14 +3,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
-import { OnboardingProvider } from './contexts/OnboardingContext';
+// import { OnboardingProvider } from './contexts/OnboardingContext'; // DISABLED: Onboarding disabled
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import { LoadingState } from './components/ui';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
 import MobileBottomNav from './components/Layout/MobileBottomNav';
-import OnboardingTour from './components/Onboarding/OnboardingTour';
+// import OnboardingTour from './components/Onboarding/OnboardingTour'; // DISABLED: Onboarding disabled
 
 // Lazy load components for code splitting
 const Login = lazy(() => import('./components/Auth/Login'));
@@ -61,7 +61,7 @@ function App() {
       <LanguageProvider>
         <AuthProvider>
           <SettingsProvider>
-            <OnboardingProvider>
+            {/* <OnboardingProvider> DISABLED: Onboarding disabled */}
               <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <Suspense fallback={<LoadingState />}>
                 <Routes>
@@ -104,15 +104,15 @@ function App() {
                         <Suspense fallback={null}>
                           <ChatAssistant />
                         </Suspense>
-                        {/* Interactive Onboarding Tour */}
-                        <OnboardingTour />
+                        {/* Interactive Onboarding Tour - DISABLED */}
+                        {/* <OnboardingTour /> */}
                       </ProtectedRoute>
                     }
                   />
                 </Routes>
               </Suspense>
             </Router>
-            </OnboardingProvider>
+            {/* </OnboardingProvider> DISABLED: Onboarding disabled */}
           </SettingsProvider>
         </AuthProvider>
       </LanguageProvider>
