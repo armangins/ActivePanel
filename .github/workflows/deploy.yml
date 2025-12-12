@@ -75,14 +75,12 @@ jobs:
           protocol: ftp
           local-dir: ./build/
           server-dir: /public_html/
+          timeout: 60000
           dangerous-clean-slate: false
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
             **/.DS_Store
-          # Explicitly include .htaccess (dotfiles might be excluded by default)
-          include: |
-            **/.htaccess
-            **/*
+
 
