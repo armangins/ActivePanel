@@ -84,3 +84,4 @@ const ProductListTableSkeleton = memo(({ count = 16 }) => {
 ProductListTableSkeleton.displayName = 'ProductListTableSkeleton';
 
 export default ProductListTableSkeleton;
+

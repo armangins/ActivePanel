@@ -83,3 +83,4 @@ const CouponsTableSkeleton = memo(({ count = 10 }) => {
 CouponsTableSkeleton.displayName = 'CouponsTableSkeleton';
 
 export default CouponsTableSkeleton;
+

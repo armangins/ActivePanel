@@ -105,3 +105,4 @@ export const sanitizeAmount = (amount) => {
   
   return String(numAmount);
 };
+

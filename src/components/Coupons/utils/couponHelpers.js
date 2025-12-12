@@ -59,3 +59,4 @@ export const getStatusConfig = (status) => {
     label: isActive ? 'active' : 'inactive'
   };
 };
+

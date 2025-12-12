@@ -21,3 +21,4 @@ const ProductGridSkeleton = memo(({ columns = 4, count = 16 }) => {
 ProductGridSkeleton.displayName = 'ProductGridSkeleton';
 
 export default ProductGridSkeleton;
+

@@ -41,3 +41,4 @@ You need to add these secrets to your GitHub repository:
 - **Build fails**: Check the Actions logs for error messages
 - **Deployment fails**: Verify your FTP credentials in GitHub Secrets
 - **Files not updating**: Ensure `.htaccess` is being uploaded correctly
+

@@ -22,3 +22,4 @@ export const gridColsClass = {
 export const getGridClass = (columns, defaultColumns = 4) => {
   return gridColsClass[columns] || gridColsClass[defaultColumns];
 };
+

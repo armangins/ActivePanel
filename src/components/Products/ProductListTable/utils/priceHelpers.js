@@ -76,3 +76,4 @@ export const getSalePrice = (product) => {
 export const getRegularPrice = (product) => {
   return parseFloat(product.regular_price || 0);
 };
+

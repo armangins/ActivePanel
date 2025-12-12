@@ -176,3 +176,4 @@ export const validateProduct = (product) => {
   
   return true;
 };
+
