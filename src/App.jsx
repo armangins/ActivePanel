@@ -25,7 +25,8 @@ const Settings = lazy(() => import('./components/Settings/Settings'));
 const AddProductView = lazy(() => import('./components/Products/AddProductView'));
 const ChatAssistant = lazy(() => import('./components/AI/ChatAssistant'));
 const EditVariationView = lazy(() => import('./components/Products/EditVariationView/EditVariationView'));
-const Onboarding = lazy(() => import('./components/Onboarding/Onboarding'));
+// Onboarding disabled - user requested to remove onboarding
+// const Onboarding = lazy(() => import('./components/Onboarding/Onboarding'));
 
 
 function App() {
@@ -64,14 +65,15 @@ function App() {
                 <Routes>
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<SignUp />} />
-                  <Route
+                  {/* Onboarding route disabled - user requested to remove onboarding */}
+                  {/* <Route
                     path="/onboarding"
                     element={
                       <ProtectedRoute>
                         <Onboarding />
                       </ProtectedRoute>
                     }
-                  />
+                  /> */}
                   <Route
                     path="/*"
                     element={
