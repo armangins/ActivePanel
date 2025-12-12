@@ -1,140 +1,96 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { sanitizeInput } from '../utils/security';
-import { authAPI } from '../services/api';
+import { authAPI, setAuthToken, getAuthToken } from '../services/api';
+import useTokenRefresh from '../hooks/useTokenRefresh';
 
 const AuthContext = createContext(null);
 
-
-
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [accessToken, setAccessToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  /**
+   * Refresh access token using refresh token from httpOnly cookie
+   */
+  const refreshAccessToken = useCallback(async () => {
+    try {
+      const response = await authAPI.refreshToken();
+
+      if (response.accessToken) {
+        setAccessToken(response.accessToken);
+        setAuthToken(response.accessToken);
+        return response.accessToken;
+      }
+
+      throw new Error('No access token in refresh response');
+    } catch (error) {
+      // Refresh failed - clear tokens and logout
+      setAccessToken(null);
+      setAuthToken(null);
+      setUser(null);
+      throw error;
+    }
+  }, []);
+
+  /**
+   * Initialize authentication on mount
+   * Try to refresh token to check if user has valid refresh token
+   */
   useEffect(() => {
     let isMounted = true;
-    let pollAttempts = 0;
-    const MAX_POLL_ATTEMPTS = 15; // Increased to 15 attempts (30 seconds total) for OAuth redirects
-    let intervalId = null;
-    let timeoutId = null;
 
-    // Check if we're coming from an OAuth redirect (no error params, on login or dashboard)
-    const isOAuthRedirect = (window.location.pathname === '/login' || window.location.pathname === '/dashboard') 
-      && !window.location.search.includes('error');
-
-    // Check if user is logged in on mount
-    const checkAuth = async () => {
+    const initAuth = async () => {
       try {
-        // Try to get user from backend
-        try {
+        // Try to refresh token (uses httpOnly cookie)
+        const newAccessToken = await refreshAccessToken();
+
+        if (isMounted && newAccessToken) {
+          // Get user data
           const currentUser = await authAPI.getCurrentUser();
           if (isMounted) {
             setUser(currentUser);
-            setLoading(false);
-          }
-        } catch (error) {
-          // Not authenticated or backend not available
-          // In production, if we get a 401, the session might not be established yet
-          // This can happen right after OAuth redirect - give it a moment
-          if (isMounted) {
-            // Only set user to null if it's a clear 401, not a network error
-            if (error.response?.status === 401) {
-              setUser(null);
-            }
-            // Don't set loading to false immediately after OAuth redirect
-            // Let the polling mechanism handle it
-            if (!isOAuthRedirect) {
-              setLoading(false);
-            }
           }
         }
       } catch (error) {
-        // Ensure user is set to null on any unexpected error
+        // Not authenticated or refresh failed
         if (isMounted) {
+          setAccessToken(null);
+          setAuthToken(null);
           setUser(null);
-          if (!isOAuthRedirect) {
-            setLoading(false);
-          }
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
         }
       }
     };
 
-    // Initial auth check
-    // Add a small delay for OAuth redirects to ensure cookie is available
-    if (isOAuthRedirect) {
-      setTimeout(() => {
-        checkAuth();
-      }, 200); // 200ms delay for OAuth redirects
-    } else {
-      checkAuth();
-    }
-
-    // Add a timeout fallback to ensure loading never stays true forever
-    timeoutId = setTimeout(() => {
-      if (isMounted) {
-        setLoading(false);
-      }
-    }, 5000); // 5 second timeout
-
-    // Poll for authentication only after OAuth redirect (limited attempts)
-    // This helps catch cases where user comes back from OAuth but session check hasn't completed
-    intervalId = setInterval(async () => {
-      pollAttempts++;
-      
-      // Stop polling after max attempts or if user is authenticated
-      if (pollAttempts >= MAX_POLL_ATTEMPTS) {
-        if (intervalId) {
-          clearInterval(intervalId);
-          intervalId = null;
-        }
-        return;
-      }
-
-      // Poll if not authenticated (even if loading, to catch OAuth redirects)
-      if (isMounted && !user) {
-        try {
-          const currentUser = await authAPI.getCurrentUser();
-          if (currentUser && isMounted) {
-            setUser(currentUser);
-            setLoading(false);
-            // Stop polling once authenticated
-            if (intervalId) {
-              clearInterval(intervalId);
-              intervalId = null;
-            }
-          } else if (isMounted && pollAttempts >= 3) {
-            // After a few attempts, stop loading if still no user
-            setLoading(false);
-          }
-        } catch (error) {
-          // Not authenticated yet, continue checking (but limited attempts)
-          // After max attempts, stop loading
-          if (isMounted && pollAttempts >= MAX_POLL_ATTEMPTS) {
-            setLoading(false);
-          }
-          // Don't log errors to avoid spam
-        }
-      } else if (user) {
-        // User is authenticated, stop polling
-        setLoading(false);
-        if (intervalId) {
-          clearInterval(intervalId);
-          intervalId = null;
-        }
-      }
-    }, 2000); // Check every 2 seconds (max 10 attempts = 20 seconds)
+    initAuth();
 
     return () => {
       isMounted = false;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
     };
-  }, []); // Empty dependency array - only run on mount
+  }, [refreshAccessToken]);
 
-  const login = async (userData) => {
+  /**
+   * Set up automatic token refresh
+   * Refreshes every 14 minutes (1 minute before 15-minute expiration)
+   */
+  useTokenRefresh(accessToken, refreshAccessToken);
+
+  /**
+   * Login with email/password or OAuth
+   * @param {Object} userData - User data from login response
+   * @param {string} token - Access token from login response
+   */
+  const login = useCallback(async (userData, token) => {
+    // Store access token
+    if (token) {
+      setAccessToken(token);
+      setAuthToken(token);
+    }
+
     // Validate and sanitize picture URL
     let pictureUrl = null;
     if (userData.picture && typeof userData.picture === 'string') {
@@ -149,10 +105,11 @@ export const AuthProvider = ({ children }) => {
     const sanitizedUserData = {
       id: userData.id,
       email: sanitizeInput(userData.email || ''),
-      name: sanitizeInput(userData.name || ''),
-      picture: pictureUrl, // Use validated picture URL or null
+      name: sanitizeInput(userData.displayName || userData.name || ''),
+      picture: pictureUrl,
       role: userData.role || 'user',
       provider: userData.provider || 'email',
+      onboardingCompleted: userData.onboardingCompleted || false,
     };
 
     // NEVER store password or sensitive data
@@ -161,25 +118,44 @@ export const AuthProvider = ({ children }) => {
     delete sanitizedUserData.secret;
 
     setUser(sanitizedUserData);
-  };
+  }, []);
 
-  const logout = async () => {
-    // Call backend logout
+  /**
+   * Logout user
+   * Clears access token and calls backend to revoke refresh token
+   */
+  const logout = useCallback(async () => {
     try {
-      const response = await authAPI.logout();
+      // Call backend logout (requires Bearer token)
+      await authAPI.logout();
     } catch (error) {
       // Continue even if logout fails
+      console.error('[Logout] Error:', error.message);
+    } finally {
+      // Clear tokens and user state
+      setAccessToken(null);
+      setAuthToken(null);
+      setUser(null);
     }
+  }, []);
 
-    setUser(null);
-  };
+  /**
+   * Get current access token
+   * Exported for use in API client
+   */
+  const getToken = useCallback(() => {
+    return accessToken;
+  }, [accessToken]);
 
   const value = {
     user,
+    accessToken,
     login,
     logout,
+    refreshAccessToken,
+    getToken,
     loading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !!accessToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

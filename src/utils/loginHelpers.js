@@ -49,7 +49,12 @@ export const checkLoginRateLimit = (email) => {
  */
 export const authenticateUser = async (email, password) => {
   const result = await authAPI.login(email, password);
-  return result.user;
+
+  // Return both user and accessToken for JWT authentication
+  return {
+    user: result.user,
+    accessToken: result.accessToken
+  };
 };
 
 

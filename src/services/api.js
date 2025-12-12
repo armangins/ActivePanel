@@ -51,17 +51,18 @@ const createApiClient = () => {
     // headers: { 'Content-Type': 'application/json' } // Removed: Let Axios set content type automatically (needed for multipart/form-data)
   });
 
-  // Request interceptor - add CSRF token
+  // Request interceptor - add Bearer token and CSRF token
   instance.interceptors.request.use(
     (config) => {
+      // Add Bearer token from memory if available
+      if (authToken && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${authToken}`;
+      }
+
+      // Add CSRF token for state-changing operations
       const csrfToken = getCSRFToken();
       if (csrfToken) {
         config.headers['X-CSRF-Token'] = csrfToken;
-      }
-
-      // Add auth token from memory if available
-      if (authToken && !config.headers.Authorization) {
-        config.headers.Authorization = `Bearer ${authToken}`;
       }
 
       return config;
@@ -71,7 +72,7 @@ const createApiClient = () => {
     }
   );
 
-  // Response interceptor - handle errors and update CSRF token
+  // Response interceptor - handle errors, token refresh, and CSRF token
   instance.interceptors.response.use(
     (response) => {
       // Update CSRF token from response header
@@ -83,33 +84,58 @@ const createApiClient = () => {
         document.cookie = `csrf-token=${csrfToken}; path=/; SameSite=Strict${isSecure}; Max-Age=3600`;
       }
 
-      // 2. The "First Time User" (Setup Required)
-      // 2. The "First Time User" (Setup Required)
+      // Handle setup required
       if (response.data && response.data.code === 'SETUP_REQUIRED') {
-        // window.location.href = '/onboarding'; // DISABLED: User requested to remove onboarding for now
         return response;
       }
 
-      // 1. The "Happy Path" (Success)
       return response;
     },
     async (error) => {
-      // 3. The "Not Logged In" (Unauthorized)
+      const originalRequest = error.config;
+
+      // Handle 401 Unauthorized - Token Expired
       if (error.response?.status === 401) {
-        // Don't redirect for auth check, let the app handle it (e.g. show login page)
-        if (error.config.url.includes('/auth/me')) {
-          return Promise.reject(error);
+        // Check if this is a token expiration error
+        const isTokenExpired = error.response?.data?.code === 'TOKEN_EXPIRED';
+
+        // Don't retry for auth endpoints or if already retried
+        const isAuthEndpoint = originalRequest.url?.includes('/auth/me') ||
+          originalRequest.url?.includes('/auth/login') ||
+          originalRequest.url?.includes('/auth/refresh');
+
+        if (isTokenExpired && !isAuthEndpoint && !originalRequest._retry) {
+          originalRequest._retry = true;
+
+          try {
+            // Try to refresh the token
+            const response = await instance.post('/auth/refresh', {}, {
+              withCredentials: true,
+            });
+
+            if (response.data.accessToken) {
+              // Update token in memory
+              setAuthToken(response.data.accessToken);
+
+              // Retry original request with new token
+              originalRequest.headers.Authorization = `Bearer ${response.data.accessToken}`;
+              return instance(originalRequest);
+            }
+          } catch (refreshError) {
+            // Refresh failed - clear token and redirect to login
+            setAuthToken(null);
+            window.location.href = '/login';
+            return Promise.reject(refreshError);
+          }
         }
 
-        // Redirect to Google Login URL for other unauthorized requests
-        // window.location.href = 'http://localhost:3000/auth/google'; // REMOVED: This causes loops
+        // For auth endpoints or already retried, just reject
         return Promise.reject(error);
       }
 
-      // 4. The "Real Error" (Server Error)
-      // Don't log 404 errors for settings endpoint (expected for new users)
+      // Handle other errors
       const isSettings404 = error.config?.url?.includes('/settings') && error.response?.status === 404;
-      
+
       // Log detailed errors only in development (skip expected 404s)
       if (import.meta.env.DEV && !isSettings404) {
         console.error('API Error:', error.response?.data?.message || error.message);
@@ -163,10 +189,9 @@ export const authAPI = {
       _csrf: getCSRFToken(),
     });
 
-
-    // Store token in memory
-    if (response.data.token) {
-      setAuthToken(response.data.token);
+    // Store access token in memory
+    if (response.data.accessToken) {
+      setAuthToken(response.data.accessToken);
     }
 
     return response.data;
@@ -193,8 +218,8 @@ export const authAPI = {
    */
   logout: async () => {
     try {
-      // User confirmed logout is a GET request
-      const response = await api.get('/auth/logout');
+      // JWT logout is a POST request with Bearer token
+      const response = await api.post('/auth/logout');
       return response.data;
     } catch (error) {
       if (error.response && error.response.status === 404) {
@@ -203,6 +228,7 @@ export const authAPI = {
       }
       throw error;
     } finally {
+      // Clear token from memory
       setAuthToken(null);
     }
   },
@@ -216,15 +242,15 @@ export const authAPI = {
   },
 
   /**
-   * Refresh token
+   * Refresh access token using refresh token from httpOnly cookie
    */
   refreshToken: async () => {
     const response = await api.post('/auth/refresh', {}, {
       withCredentials: true,
     });
 
-    if (response.data.token) {
-      setAuthToken(response.data.token);
+    if (response.data.accessToken) {
+      setAuthToken(response.data.accessToken);
     }
 
     return response.data;

@@ -32,8 +32,8 @@ const Login = () => {
     const errorMessage = urlParams.get('message');
     const errorCode = urlParams.get('code');
     const success = urlParams.get('success');
-    
-    
+
+
     // Handle Google authentication errors (works for both login and signup)
     if (error === 'google_auth_failed' || error === 'google_signup_failed') {
       if (errorMessage) {
@@ -48,7 +48,7 @@ const Login = () => {
       }
       // Clean up URL params after setting error
       window.history.replaceState({}, document.title, window.location.pathname);
-    } 
+    }
     else if (error === 'true') {
       setError(t('googleAuthError') || 'שגיאה בהתחברות עם Google. אנא נסה שוב.');
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -57,7 +57,7 @@ const Login = () => {
     else if (window.location.search && !error && !success && import.meta.env.DEV) {
       console.warn('⚠️  Unexpected URL params on login page:', window.location.search);
     }
-    
+
     // If already authenticated, redirect to dashboard
     // Add a small delay after OAuth redirect to ensure session cookie is available
     if (isAuthenticated) {
@@ -99,9 +99,12 @@ const Login = () => {
         return;
       }
 
-      // Authenticate user
-      const user = await authenticateUser(email, password);
-      login(user);
+      // Authenticate user - returns { user, accessToken }
+      const { user, accessToken } = await authenticateUser(email, password);
+
+      // Login with JWT - pass user data and access token
+      login(user, accessToken);
+
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'שגיאה בהתחברות. אנא נסה שוב.');
@@ -126,13 +129,13 @@ const Login = () => {
 
           {/* Sign In Title */}
           <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-           התחברו והתחילו לנהל את החנות שלכם
+            התחברו והתחילו לנהל את החנות שלכם
           </h1>
 
           {/* Demo Info Box */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-right">
             <p className="text-sm text-blue-800">
-           אתם גולשים כרגע בכגרסת הדמו של Active Panel תהנו ! 
+              אתם גולשים כרגע בכגרסת הדמו של Active Panel תהנו !
             </p>
           </div>
 
@@ -160,21 +163,21 @@ const Login = () => {
                 </svg>
                 <p className="font-semibold text-base">{error}</p>
               </div>
-              
+
               {/* Note: "No account found" errors no longer occur since accounts are auto-created via Google OAuth */}
-              
+
               {/* Show login link for "user already exists" errors */}
               {(error.includes('already exists') || error.includes('User already exists')) && (
                 <div className="mt-3 pt-3 border-t border-orange-200">
                   <p className="text-xs mb-2 text-orange-700">
                     {t('accountExists') || 'החשבון כבר קיים'}
                   </p>
-                  <GoogleAuthButton 
+                  <GoogleAuthButton
                     className="border-orange-300 text-orange-700 hover:bg-orange-50 text-xs py-2"
                   />
                 </div>
               )}
-              
+
               {/* Show email/password login link for "account exists but not with Google" errors */}
               {error.includes('Account exists but was not created with Google') && (
                 <div className="mt-3 pt-3 border-t border-orange-200">
