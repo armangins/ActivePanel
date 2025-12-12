@@ -15,6 +15,7 @@ import MobileBottomNav from './components/Layout/MobileBottomNav';
 // Lazy load components for code splitting
 const Login = lazy(() => import('./components/Auth/Login'));
 const SignUp = lazy(() => import('./components/Auth/SignUp'));
+const OAuthCallback = lazy(() => import('./components/Auth/OAuthCallback'));
 const ThankYou = lazy(() => import('./components/Auth/ThankYou'));
 const Dashboard = lazy(() => import('./components/Dashboard/Dashboard'));
 const Products = lazy(() => import('./components/Products/Products/Products'));
@@ -62,11 +63,12 @@ function App() {
         <AuthProvider>
           <SettingsProvider>
             {/* <OnboardingProvider> DISABLED: Onboarding disabled */}
-              <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <Suspense fallback={<LoadingState />}>
                 <Routes>
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<SignUp />} />
+                  <Route path="/auth/callback" element={<OAuthCallback />} />
                   <Route path="/thank-you" element={<ThankYou />} />
                   <Route
                     path="/*"
