@@ -39,7 +39,27 @@ export const AuthProvider = ({ children }) => {
     checkAuth().finally(() => {
       clearTimeout(timeoutId);
     });
-  }, []);
+
+    // Also check auth periodically if not authenticated (handles Google OAuth redirect case)
+    // This helps catch cases where user comes back from OAuth but session check hasn't completed
+    const intervalId = setInterval(async () => {
+      if (!user && !loading) {
+        try {
+          const currentUser = await authAPI.getCurrentUser();
+          if (currentUser) {
+            setUser(currentUser);
+          }
+        } catch (error) {
+          // Not authenticated, continue checking
+        }
+      }
+    }, 2000); // Check every 2 seconds if not authenticated
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+    };
+  }, [user, loading]);
 
   const login = async (userData) => {
     // Validate and sanitize picture URL
