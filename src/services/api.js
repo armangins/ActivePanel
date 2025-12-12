@@ -48,8 +48,7 @@ const createApiClient = () => {
 
   const instance = axios.create({
     baseURL: API_URL,
-    withCredentials: true, // Important for cookies
-    withCredentials: true, // Important for cookies
+    withCredentials: true, // Important for cookies - must be true for session cookies to work
     // headers: { 'Content-Type': 'application/json' } // Removed: Let Axios set content type automatically (needed for multipart/form-data)
   });
 

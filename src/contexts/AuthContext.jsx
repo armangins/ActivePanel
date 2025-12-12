@@ -13,9 +13,13 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let isMounted = true;
     let pollAttempts = 0;
-    const MAX_POLL_ATTEMPTS = 10; // Maximum 10 polling attempts (20 seconds total)
+    const MAX_POLL_ATTEMPTS = 15; // Increased to 15 attempts (30 seconds total) for OAuth redirects
     let intervalId = null;
     let timeoutId = null;
+
+    // Check if we're coming from an OAuth redirect (no error params, on login or dashboard)
+    const isOAuthRedirect = (window.location.pathname === '/login' || window.location.pathname === '/dashboard') 
+      && !window.location.search.includes('error');
 
     // Check if user is logged in on mount
     const checkAuth = async () => {
@@ -29,22 +33,40 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (error) {
           // Not authenticated or backend not available
+          // In production, if we get a 401, the session might not be established yet
+          // This can happen right after OAuth redirect - give it a moment
           if (isMounted) {
-            setUser(null);
-            setLoading(false);
+            // Only set user to null if it's a clear 401, not a network error
+            if (error.response?.status === 401) {
+              setUser(null);
+            }
+            // Don't set loading to false immediately after OAuth redirect
+            // Let the polling mechanism handle it
+            if (!isOAuthRedirect) {
+              setLoading(false);
+            }
           }
         }
       } catch (error) {
         // Ensure user is set to null on any unexpected error
         if (isMounted) {
           setUser(null);
-          setLoading(false);
+          if (!isOAuthRedirect) {
+            setLoading(false);
+          }
         }
       }
     };
 
     // Initial auth check
-    checkAuth();
+    // Add a small delay for OAuth redirects to ensure cookie is available
+    if (isOAuthRedirect) {
+      setTimeout(() => {
+        checkAuth();
+      }, 200); // 200ms delay for OAuth redirects
+    } else {
+      checkAuth();
+    }
 
     // Add a timeout fallback to ensure loading never stays true forever
     timeoutId = setTimeout(() => {
@@ -67,24 +89,33 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      // Only poll if not authenticated and not loading
-      if (isMounted && !user && !loading) {
+      // Poll if not authenticated (even if loading, to catch OAuth redirects)
+      if (isMounted && !user) {
         try {
           const currentUser = await authAPI.getCurrentUser();
           if (currentUser && isMounted) {
             setUser(currentUser);
+            setLoading(false);
             // Stop polling once authenticated
             if (intervalId) {
               clearInterval(intervalId);
               intervalId = null;
             }
+          } else if (isMounted && pollAttempts >= 3) {
+            // After a few attempts, stop loading if still no user
+            setLoading(false);
           }
         } catch (error) {
-          // Not authenticated, continue checking (but limited attempts)
+          // Not authenticated yet, continue checking (but limited attempts)
+          // After max attempts, stop loading
+          if (isMounted && pollAttempts >= MAX_POLL_ATTEMPTS) {
+            setLoading(false);
+          }
           // Don't log errors to avoid spam
         }
       } else if (user) {
         // User is authenticated, stop polling
+        setLoading(false);
         if (intervalId) {
           clearInterval(intervalId);
           intervalId = null;

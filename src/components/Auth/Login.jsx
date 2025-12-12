@@ -59,8 +59,18 @@ const Login = () => {
     }
     
     // If already authenticated, redirect to dashboard
+    // Add a small delay after OAuth redirect to ensure session cookie is available
     if (isAuthenticated) {
-      navigate('/dashboard');
+      // If we're on login page and authenticated, wait a bit for session to be fully established
+      const isOAuthRedirect = window.location.pathname === '/login' && !error;
+      if (isOAuthRedirect) {
+        // Small delay to ensure session cookie is available
+        setTimeout(() => {
+          navigate('/dashboard', { replace: true });
+        }, 100);
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     }
     // Note: AuthContext handles periodic auth checks after OAuth redirect
     // No need to poll here to avoid rate limiting
