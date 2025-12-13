@@ -73,7 +73,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.SFTP_PORT || '22' }}
           local_path: ./build/*
-          remote_path: /public_html/
+          remote_path: /home/u921221256/domains/saddlebrown-panther-817210.hostingersite.com/public_html/
           sftp_only: true
           delete_remote_files: false
 
