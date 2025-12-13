@@ -60,8 +60,10 @@ const OAuthCallback = () => {
                 // Clear the URL fragment for security
                 window.history.replaceState(null, '', '/dashboard');
 
-                // Redirect to dashboard
-                navigate('/dashboard', { replace: true });
+                // DO NOT redirect immediately - wait for user confirmation
+                // This allows us to verify if the login state (e.g. header) updated correctly
+                // navigate('/dashboard', { replace: true });
+                setProcessed(true); // Ensure we don't re-run
             } catch (error) {
                 console.error('[OAuth] Error handling callback:', error);
                 navigate('/login?error=google_auth_failed&message=' + encodeURIComponent('Failed to complete authentication: ' + error.message));
@@ -70,6 +72,31 @@ const OAuthCallback = () => {
 
         handleOAuthCallback();
     }, [navigate, login, loading, processed]);
+
+    if (processed) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center p-8 bg-white rounded-lg shadow-md">
+                    <div className="text-green-500 mb-4">
+                        <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold mb-4">Login Successful!</h2>
+                    <p className="text-gray-600 mb-6">You have been successfully authenticated.</p>
+                    <button
+                        onClick={() => navigate('/dashboard', { replace: true })}
+                        className="bg-primary-600 text-white px-6 py-2 rounded-md hover:bg-primary-700 transition-colors"
+                    >
+                        Continue to Dashboard
+                    </button>
+                    <p className="text-sm text-gray-400 mt-4">
+                        Check the top right corner - you should see your profile.
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
