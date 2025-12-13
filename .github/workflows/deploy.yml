@@ -77,5 +77,3 @@ jobs:
           sftp_only: true
           delete_remote_files: false
 
-
-
