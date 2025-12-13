@@ -26,8 +26,25 @@
   ExpiresByType image/webp "access plus 1 year"
   ExpiresByType text/css "access plus 1 month"
   ExpiresByType application/javascript "access plus 1 month"
+  
+  # HTML: Force revalidation (0 seconds)
+  # This ensures index.html is always fresh, pointing to new hashed JS files
   ExpiresByType text/html "access plus 0 seconds"
 </IfModule>
+
+# Cache-Control Headers
+<IfModule mod_headers.c>
+  # HTML: No-Cache for Single Page App entry point
+  <FilesMatch "\.(html|htm)$">
+    Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "Wed, 11 Jan 1984 05:00:00 GMT"
+  </FilesMatch>
+
+  # Assets: Long cache (they are hashed)
+  <FilesMatch "\.(js|css|png|jpg|jpeg|gif|ico|svg|webp)$">
+    Header set Cache-Control "max-age=2592000, public"
+  </FilesMatch>
 
 # Security Headers
 <IfModule mod_headers.c>
