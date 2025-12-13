@@ -134,7 +134,11 @@ export const AuthProvider = ({ children }) => {
       setAccessToken(token);
       setAuthToken(token);
       // Save to localStorage for Incognito persistence
-      localStorage.setItem('accessToken', token);
+      try {
+        localStorage.setItem('accessToken', token);
+      } catch (e) {
+        console.warn('LocalStorage access denied:', e);
+      }
     }
 
     // Validate and sanitize picture URL
@@ -182,7 +186,11 @@ export const AuthProvider = ({ children }) => {
       setAccessToken(null);
       setAuthToken(null);
       setUser(null);
-      localStorage.removeItem('accessToken'); // Clear from storage
+      try {
+        localStorage.removeItem('accessToken'); // Clear from storage
+      } catch (e) {
+        console.warn('LocalStorage access denied:', e);
+      }
     }
   }, []);
 
