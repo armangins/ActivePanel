@@ -76,6 +76,6 @@ jobs:
           local-dir: ./build/
           server-dir: /home/u921221256/domains/saddlebrown-panther-817210.hostingersite.com/public_html/
           timeout: 300000
-          dangerous-clean-slate: false
+          dangerous-clean-slate: true
 
 
