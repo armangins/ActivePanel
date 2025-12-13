@@ -94,10 +94,13 @@ const OAuthCallback = () => {
                     </button>
 
                     <div className="text-xs text-left bg-gray-100 p-3 rounded overflow-hidden">
-                        <p className="font-bold text-gray-500 mb-1">Debug Info:</p>
+                        <p className="font-bold text-gray-500 mb-1">Debug Info (v2.1):</p>
                         <p>Status: Authenticated</p>
                         <p>Storage: {localStorage.getItem('accessToken') ? 'Token Saved (LS)' : 'No Token in LS'}</p>
                         <p className="truncate">Token: {localStorage.getItem('accessToken')?.substring(0, 20)}...</p>
+                    </div>
+                    <div className="mt-4 text-center text-xs text-gray-300">
+                        Build: v2.1 Mobile Fix
                     </div>
                 </div>
             </div>
@@ -108,7 +111,7 @@ const OAuthCallback = () => {
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-                <p className="text-gray-600">Completing authentication...</p>
+                <p className="text-gray-600">Completing authentication (v2.1)...</p>
             </div>
         </div>
     );
