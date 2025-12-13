@@ -61,9 +61,7 @@ const OAuthCallback = () => {
                 // Clear the URL fragment for security
                 window.history.replaceState(null, '', '/dashboard');
 
-                // DO NOT redirect immediately - wait for user confirmation
-                // This allows us to verify if the login state (e.g. header) updated correctly
-                // navigate('/dashboard', { replace: true });
+
                 setProcessed(true); // Ensure we don't re-run
             } catch (error) {
                 console.error('[OAuth] Error handling callback:', error);
