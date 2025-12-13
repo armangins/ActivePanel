@@ -36,28 +36,72 @@ export const AuthProvider = ({ children }) => {
   /**
    * Initialize authentication on mount
    * Try to refresh token to check if user has valid refresh token
+   * Fallback to localStorage if cookie is blocked (Incognito/Mobile)
    */
   useEffect(() => {
     let isMounted = true;
 
     const initAuth = async () => {
       try {
-        // Try to refresh token (uses httpOnly cookie)
-        const newAccessToken = await refreshAccessToken();
+        // 1. Try to refresh token (preferred: httpOnly cookie)
+        // This fails in Incognito/Mobile due to 3rd party cookie blocking
+        try {
+          const newAccessToken = await refreshAccessToken();
+          if (isMounted && newAccessToken) {
+            const currentUser = await authAPI.getCurrentUser();
+            if (isMounted) {
+              setUser(currentUser);
+              return; // Success!
+            }
+          }
+        } catch (cookieError) {
+          // Cookie refresh failed (expected in Incognito)
+          // Fall through to localStorage check
+          if (import.meta.env.DEV) console.log('Cookie refresh failed, checking localStorage fallback');
+        }
 
-        if (isMounted && newAccessToken) {
-          // Get user data
-          const currentUser = await authAPI.getCurrentUser();
-          if (isMounted) {
-            setUser(currentUser);
+        // 2. Fallback: Check localStorage for valid access token
+        const storedToken = localStorage.getItem('accessToken');
+        if (storedToken) {
+          // Decode token to check expiry
+          try {
+            const payload = JSON.parse(atob(storedToken.split('.')[1]));
+            const now = Math.floor(Date.now() / 1000);
+
+            if (payload.exp > now) {
+              // Token is valid
+              if (isMounted) {
+                setAccessToken(storedToken);
+                setAuthToken(storedToken);
+
+                // Get user data using this token
+                try {
+                  const currentUser = await authAPI.getCurrentUser();
+                  if (isMounted) {
+                    setUser(currentUser);
+                    return; // Success!
+                  }
+                } catch (apiError) {
+                  // Token invalid or revoked server-side
+                  localStorage.removeItem('accessToken');
+                }
+              }
+            } else {
+              // Token expired
+              localStorage.removeItem('accessToken');
+            }
+          } catch (parseError) {
+            localStorage.removeItem('accessToken');
           }
         }
+
       } catch (error) {
-        // Not authenticated or refresh failed
+        // Not authenticated
         if (isMounted) {
           setAccessToken(null);
           setAuthToken(null);
           setUser(null);
+          localStorage.removeItem('accessToken');
         }
       } finally {
         if (isMounted) {
@@ -89,6 +133,8 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       setAccessToken(token);
       setAuthToken(token);
+      // Save to localStorage for Incognito persistence
+      localStorage.setItem('accessToken', token);
     }
 
     // Validate and sanitize picture URL
@@ -136,6 +182,7 @@ export const AuthProvider = ({ children }) => {
       setAccessToken(null);
       setAuthToken(null);
       setUser(null);
+      localStorage.removeItem('accessToken'); // Clear from storage
     }
   }, []);
 
@@ -144,7 +191,7 @@ export const AuthProvider = ({ children }) => {
    * Exported for use in API client
    */
   const getToken = useCallback(() => {
-    return accessToken;
+    return accessToken || localStorage.getItem('accessToken');
   }, [accessToken]);
 
   const value = {
@@ -155,7 +202,7 @@ export const AuthProvider = ({ children }) => {
     refreshAccessToken,
     getToken,
     loading,
-    isAuthenticated: !!user && !!accessToken,
+    isAuthenticated: !!user && (!!accessToken || !!localStorage.getItem('accessToken')),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
