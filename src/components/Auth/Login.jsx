@@ -128,18 +128,17 @@ const Login = () => {
           </div>
 
           {/* Sign In Title */}
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-            התחברו והתחילו לנהל את החנות שלכם
-          </h1>
-
-          {/* Demo Info Box */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-right">
-            <p className="text-sm text-blue-800">
-              אתם גולשים כרגע בכגרסת הדמו של Active Panel תהנו !
-            </p>
-          </div>
-
-          {/* Info message if user just signed up but ended up here */}
+          <div className="mb-8 text-center">
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
+              התחברו והתחילו לנהל את החנות שלכם
+            </h2>
+            <p className="text-xs text-gray-400 font-mono">v2.1 Mobile Fix</p>
+            {isDemo && (
+              <div className="mt-4 p-3 bg-blue-50 text-blue-700 rounded-md text-sm border border-blue-100">
+                אתם גולשים כרגע בגרסת הדמו של Active Panel תהנו !
+              </div>
+            )}
+          </div> {/* Info message if user just signed up but ended up here */}
           {!error && window.location.search.includes('signup') && (
             <div className="bg-green-50 border-2 border-green-300 text-green-900 rounded-lg p-4 mb-6 text-sm text-right shadow-md">
               <div className="flex items-start gap-2">
