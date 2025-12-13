@@ -72,10 +72,10 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT || '21' }}
-          protocol: ftp
+          protocol: ftps
           local-dir: ./build/
           server-dir: /public_html/
-          timeout: 60000
+          timeout: 120000
           dangerous-clean-slate: false
           exclude: |
             **/.git*
