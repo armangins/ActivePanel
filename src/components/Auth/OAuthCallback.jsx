@@ -8,83 +8,77 @@ import { useAuth } from '../../contexts/AuthContext';
  * Handles the OAuth redirect from Google authentication.
  * Extracts the access token from the URL fragment and logs the user in.
  */
-const navigate = useNavigate();
-const { login, loading } = useAuth();
-const [processed, setProcessed] = useState(false);
+const OAuthCallback = () => {
+    const navigate = useNavigate();
+    const { login, loading } = useAuth();
+    const [processed, setProcessed] = useState(false);
 
-useEffect(() => {
-    if (loading || processed) return;
 
-    const handleOAuthCallback = async () => {
-        setProcessed(true);
-        try {
-            // Extract access token from URL fragment
-            // Format: /auth/callback#access_token=eyJhbGc...
-            const hash = window.location.hash;
-            console.log('[OAuth Debug] Hash:', hash);
-            // ... rest of the logic ...
+    useEffect(() => {
+        if (loading || processed) return;
 
-            if (!hash || !hash.includes('access_token=')) {
-                console.error('[OAuth] No access token in URL fragment');
-                navigate('/login?error=google_auth_failed&message=' + encodeURIComponent('No access token received'));
-                return;
+        const handleOAuthCallback = async () => {
+            setProcessed(true);
+            try {
+
+                const hash = window.location.hash;
+
+                if (!hash || !hash.includes('access_token=')) {
+                    console.error('[OAuth] No access token in URL fragment');
+                    navigate('/login?error=google_auth_failed&message=' + encodeURIComponent('No access token received'));
+                    return;
+                }
+
+                // Parse the access token from the fragment
+                const params = new URLSearchParams(hash.substring(1)); // Remove the # and parse
+                const accessToken = params.get('access_token');
+
+                if (!accessToken) {
+                    console.error('[OAuth] Failed to parse access token');
+                    navigate('/login?error=google_auth_failed&message=' + encodeURIComponent('Failed to parse access token'));
+                    return;
+                }
+
+                // Decode the JWT to get user info (without verification - just for display)
+                const payloadStart = accessToken.split('.')[1];
+                if (!payloadStart) {
+                    throw new Error('Invalid token format');
+                }
+                const payload = JSON.parse(atob(payloadStart));
+
+                // Create user object from JWT payload
+                const user = {
+                    id: payload.userId,
+                    email: payload.email,
+                    role: payload.role,
+                    provider: 'google'
+                };
+
+                // Login with the access token
+                await login(user, accessToken);
+
+                // Clear the URL fragment for security
+                window.history.replaceState(null, '', '/dashboard');
+
+                // Redirect to dashboard
+                navigate('/dashboard', { replace: true });
+            } catch (error) {
+                console.error('[OAuth] Error handling callback:', error);
+                navigate('/login?error=google_auth_failed&message=' + encodeURIComponent('Failed to complete authentication: ' + error.message));
             }
+        };
 
-            // Parse the access token from the fragment
-            const params = new URLSearchParams(hash.substring(1)); // Remove the # and parse
-            const accessToken = params.get('access_token');
-            console.log('[OAuth Debug] Access Token found:', !!accessToken);
+        handleOAuthCallback();
+    }, [navigate, login, loading, processed]);
 
-            if (!accessToken) {
-                console.error('[OAuth] Failed to parse access token');
-                navigate('/login?error=google_auth_failed&message=' + encodeURIComponent('Failed to parse access token'));
-                return;
-            }
-
-            // Decode the JWT to get user info (without verification - just for display)
-            const payloadStart = accessToken.split('.')[1];
-            if (!payloadStart) {
-                throw new Error('Invalid token format');
-            }
-            const payload = JSON.parse(atob(payloadStart));
-            console.log('[OAuth Debug] Payload:', payload);
-
-            // Create user object from JWT payload
-            const user = {
-                id: payload.userId,
-                email: payload.email,
-                role: payload.role,
-                provider: 'google'
-            };
-
-            console.log('[OAuth Debug] Logging in...', user);
-            // Login with the access token
-            await login(user, accessToken);
-            console.log('[OAuth Debug] Login complete');
-
-            // Clear the URL fragment for security
-            window.history.replaceState(null, '', '/dashboard');
-
-            // Redirect to dashboard
-            console.log('[OAuth Debug] Navigating to dashboard');
-            navigate('/dashboard', { replace: true });
-        } catch (error) {
-            console.error('[OAuth] Error handling callback:', error);
-            navigate('/login?error=google_auth_failed&message=' + encodeURIComponent('Failed to complete authentication: ' + error.message));
-        }
-    };
-
-    handleOAuthCallback();
-}, [navigate, login, loading, processed]);
-
-return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Completing authentication...</p>
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+                <p className="text-gray-600">Completing authentication...</p>
+            </div>
         </div>
-    </div>
-);
+    );
 };
 
 export default OAuthCallback;

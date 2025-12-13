@@ -56,7 +56,7 @@ const ChatAssistant = () => {
     const userMessage = input.trim();
     setInput('');
 
-    // Add user message immediately
+
     const updatedMessages = [...messages, { role: 'user', content: userMessage }];
     setMessages(updatedMessages);
     setLoading(true);
