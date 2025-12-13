@@ -133,11 +133,9 @@ const Login = () => {
               התחברו והתחילו לנהל את החנות שלכם
             </h2>
             <p className="text-xs text-gray-400 font-mono">v2.1 Mobile Fix</p>
-            {isDemo && (
-              <div className="mt-4 p-3 bg-blue-50 text-blue-700 rounded-md text-sm border border-blue-100">
-                אתם גולשים כרגע בגרסת הדמו של Active Panel תהנו !
-              </div>
-            )}
+            <div className="mt-4 p-3 bg-blue-50 text-blue-700 rounded-md text-sm border border-blue-100">
+              אתם גולשים כרגע בגרסת הדמו של Active Panel תהנו !
+            </div>
           </div> {/* Info message if user just signed up but ended up here */}
           {!error && window.location.search.includes('signup') && (
             <div className="bg-green-50 border-2 border-green-300 text-green-900 rounded-lg p-4 mb-6 text-sm text-right shadow-md">
