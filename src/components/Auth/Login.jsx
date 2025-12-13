@@ -99,7 +99,6 @@ const Login = () => {
         return;
       }
 
-      // Authenticate user - returns { user, accessToken }
       const { user, accessToken } = await authenticateUser(email, password);
 
       // Login with JWT - pass user data and access token
@@ -132,7 +131,7 @@ const Login = () => {
             <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
               התחברו והתחילו לנהל את החנות שלכם
             </h2>
-            <p className="text-xs text-gray-400 font-mono">v2.1 Mobile Fix</p>
+            <p className="text-xs text-gray-400 font-mono">v2.2 Final Fix</p>
             <div className="mt-4 p-3 bg-blue-50 text-blue-700 rounded-md text-sm border border-blue-100">
               אתם גולשים כרגע בגרסת הדמו של Active Panel תהנו !
             </div>
