@@ -18,6 +18,7 @@ const OAuthCallback = () => {
                 // Extract access token from URL fragment
                 // Format: /auth/callback#access_token=eyJhbGc...
                 const hash = window.location.hash;
+                console.log('[OAuth Debug] Hash:', hash);
 
                 if (!hash || !hash.includes('access_token=')) {
                     console.error('[OAuth] No access token in URL fragment');
@@ -28,6 +29,7 @@ const OAuthCallback = () => {
                 // Parse the access token from the fragment
                 const params = new URLSearchParams(hash.substring(1)); // Remove the # and parse
                 const accessToken = params.get('access_token');
+                console.log('[OAuth Debug] Access Token found:', !!accessToken);
 
                 if (!accessToken) {
                     console.error('[OAuth] Failed to parse access token');
@@ -36,7 +38,12 @@ const OAuthCallback = () => {
                 }
 
                 // Decode the JWT to get user info (without verification - just for display)
-                const payload = JSON.parse(atob(accessToken.split('.')[1]));
+                const payloadStart = accessToken.split('.')[1];
+                if (!payloadStart) {
+                    throw new Error('Invalid token format');
+                }
+                const payload = JSON.parse(atob(payloadStart));
+                console.log('[OAuth Debug] Payload:', payload);
 
                 // Create user object from JWT payload
                 const user = {
@@ -46,17 +53,20 @@ const OAuthCallback = () => {
                     provider: 'google'
                 };
 
+                console.log('[OAuth Debug] Logging in...', user);
                 // Login with the access token
                 await login(user, accessToken);
+                console.log('[OAuth Debug] Login complete');
 
                 // Clear the URL fragment for security
                 window.history.replaceState(null, '', '/dashboard');
 
                 // Redirect to dashboard
+                console.log('[OAuth Debug] Navigating to dashboard');
                 navigate('/dashboard', { replace: true });
             } catch (error) {
                 console.error('[OAuth] Error handling callback:', error);
-                navigate('/login?error=google_auth_failed&message=' + encodeURIComponent('Failed to complete authentication'));
+                navigate('/login?error=google_auth_failed&message=' + encodeURIComponent('Failed to complete authentication: ' + error.message));
             }
         };
 
