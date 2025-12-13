@@ -76,7 +76,7 @@ const OAuthCallback = () => {
     if (processed) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="text-center p-8 bg-white rounded-lg shadow-md">
+                <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md w-full">
                     <div className="text-green-500 mb-4">
                         <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
@@ -84,15 +84,20 @@ const OAuthCallback = () => {
                     </div>
                     <h2 className="text-2xl font-bold mb-4">Login Successful!</h2>
                     <p className="text-gray-600 mb-6">You have been successfully authenticated.</p>
+
                     <button
                         onClick={() => navigate('/dashboard', { replace: true })}
-                        className="bg-primary-600 text-white px-6 py-2 rounded-md hover:bg-primary-700 transition-colors"
+                        className="bg-primary-600 text-white px-6 py-2 rounded-md hover:bg-primary-700 transition-colors w-full mb-4"
                     >
                         Continue to Dashboard
                     </button>
-                    <p className="text-sm text-gray-400 mt-4">
-                        Check the top right corner - you should see your profile.
-                    </p>
+
+                    <div className="text-xs text-left bg-gray-100 p-3 rounded overflow-hidden">
+                        <p className="font-bold text-gray-500 mb-1">Debug Info:</p>
+                        <p>Status: Authenticated</p>
+                        <p>Storage: {localStorage.getItem('accessToken') ? 'Token Saved (LS)' : 'No Token in LS'}</p>
+                        <p className="truncate">Token: {localStorage.getItem('accessToken')?.substring(0, 20)}...</p>
+                    </div>
                 </div>
             </div>
         );
