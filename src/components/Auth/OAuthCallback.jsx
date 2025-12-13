@@ -21,20 +21,21 @@ const OAuthCallback = () => {
             setProcessed(true);
             try {
 
-                const hash = window.location.hash;
+                // 1. Try to get token from Query Params (Preferred/New method)
+                const searchParams = new URLSearchParams(window.location.search);
+                let accessToken = searchParams.get('access_token');
+                console.log('[OAuth Debug] Query Params Token:', !!accessToken);
 
-                if (!hash || !hash.includes('access_token=')) {
-                    console.error('[OAuth] No access token in URL fragment');
-                    navigate('/login?error=google_auth_failed&message=' + encodeURIComponent('No access token received'));
-                    return;
+                // 2. Fallback: Try to get token from Hash Fragment (Legacy method)
+                if (!accessToken && window.location.hash) {
+                    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                    accessToken = hashParams.get('access_token');
+                    console.log('[OAuth Debug] Hash Fragment Token:', !!accessToken);
                 }
 
-                // Parse the access token from the fragment
-                const params = new URLSearchParams(hash.substring(1)); // Remove the # and parse
-                const accessToken = params.get('access_token');
-
                 if (!accessToken) {
-                    console.error('[OAuth] Failed to parse access token');
+                    console.error('[OAuth] Failed to parse access token from URL (both query and hash failed)');
+                    console.log('[OAuth Debug] Current URL:', window.location.href);
                     navigate('/login?error=google_auth_failed&message=' + encodeURIComponent('Failed to parse access token'));
                     return;
                 }
