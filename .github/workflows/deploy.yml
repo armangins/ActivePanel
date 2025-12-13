@@ -28,7 +28,7 @@ jobs:
           NODE_ENV: production
           VITE_API_URL: ${{ secrets.VITE_API_URL || '/api' }}
 
-      - name: Validate FTP Secrets
+      - name: Validate SFTP Secrets
         run: |
           if [ -z "${{ secrets.FTP_SERVER }}" ]; then
             echo "❌ Error: FTP_SERVER secret is not set"
@@ -42,11 +42,11 @@ jobs:
             echo "❌ Error: FTP_PASSWORD secret is not set"
             exit 1
           fi
-          echo "✅ All FTP secrets are set"
-          echo "FTP_SERVER format check: ${{ secrets.FTP_SERVER }}"
+          echo "✅ All SFTP secrets are set"
+          echo "SFTP_SERVER: ${{ secrets.FTP_SERVER }}"
           # Check if server contains protocol prefix (common mistake)
-          if [[ "${{ secrets.FTP_SERVER }}" == ftp://* ]] || [[ "${{ secrets.FTP_SERVER }}" == ftps://* ]]; then
-            echo "⚠️  Warning: FTP_SERVER should NOT include 'ftp://' or 'ftps://' prefix"
+          if [[ "${{ secrets.FTP_SERVER }}" == ftp://* ]] || [[ "${{ secrets.FTP_SERVER }}" == ftps://* ]] || [[ "${{ secrets.FTP_SERVER }}" == sftp://* ]]; then
+            echo "⚠️  Warning: FTP_SERVER should NOT include protocol prefix"
             echo "   Use only the IP address or hostname (e.g., '185.185.185.185' or 'ftp.yourdomain.com')"
           fi
 
@@ -65,22 +65,17 @@ jobs:
             exit 1
           fi
 
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+      - name: Deploy via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
-          server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
+          server: ${{ secrets.FTP_SERVER }}
           password: ${{ secrets.FTP_PASSWORD }}
-          port: ${{ secrets.FTP_PORT || '21' }}
-          protocol: ftps
-          local-dir: ./build/
-          server-dir: /public_html/
-          timeout: 120000
-          dangerous-clean-slate: false
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/.DS_Store
+          port: ${{ secrets.SFTP_PORT || '22' }}
+          local_path: ./build/*
+          remote_path: /public_html/
+          sftp_only: true
+          delete_remote_files: false
+
 
 
