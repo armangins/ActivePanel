@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusIcon as Plus, AdjustmentsHorizontalIcon as SlidersHorizontal, TrashIcon as Trash } from '@heroicons/react/24/outline';
+import { PlusOutlined as Plus, FilterOutlined as SlidersHorizontal, DeleteOutlined as Trash } from '@ant-design/icons';
 import { Button } from '../../ui';
 import FiltersModal from '../FiltersModal/FiltersModal';
 import ViewModeToggle from '../ViewModeToggle/ViewModeToggle';
 import GridColumnSelector from '../GridColumnSelector/GridColumnSelector';
+import { Typography, Badge, Popover } from 'antd';
+const { Title, Text } = Typography;
 
 const ProductsHeader = memo(({
   displayedCount,
@@ -63,8 +65,8 @@ const ProductsHeader = memo(({
   }, [showFilters, onToggleFilters]);
 
   return (
-    <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} justify-between`}>
-      <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-3`}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexDirection: isRTL ? 'row-reverse' : 'row', width: '100%', minWidth: 0, gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexDirection: isRTL ? 'row-reverse' : 'row', flexShrink: 0 }}>
         {/* View Mode Toggle */}
         <ViewModeToggle
           viewMode={viewMode}
@@ -82,71 +84,54 @@ const ProductsHeader = memo(({
           />
         )}
 
-        {/* Filters Button with Modal */}
-        <div className="relative">
+        {/* Filters Button with Popover */}
+        <Popover
+          content={
+            <div style={{ width: 384, direction: isRTL ? 'rtl' : 'ltr' }}>
+              <FiltersModal
+                searchQuery={searchQuery}
+                onSearchChange={onSearchChange}
+                categories={categories}
+                selectedCategory={selectedCategory}
+                onCategoryChange={onCategoryChange}
+                minPrice={minPrice}
+                onMinPriceChange={onMinPriceChange}
+                maxPrice={maxPrice}
+                onMaxPriceChange={onMaxPriceChange}
+                products={products}
+                isRTL={isRTL}
+                t={t}
+                onClose={onToggleFilters}
+              />
+            </div>
+          }
+          trigger="click"
+          open={showFilters}
+          onOpenChange={onToggleFilters}
+          placement={isRTL ? 'bottomRight' : 'bottomLeft'}
+        >
           <Button
-            ref={buttonRef}
             variant="secondary"
             onClick={onToggleFilters}
-            className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2`}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, flexDirection: isRTL ? 'row-reverse' : 'row' }}
           >
-            <SlidersHorizontal className="w-[18px] h-[18px]" />
+            <SlidersHorizontal />
             <span>{t('filters')}</span>
             {hasActiveFilters && (
-              <span className="bg-primary-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {activeFilterCount}
-              </span>
+              <Badge count={activeFilterCount} style={{ backgroundColor: '#4560FF' }} />
             )}
           </Button>
-
-          {/* Filters Modal */}
-          {showFilters && (
-            <>
-              {/* Backdrop */}
-              <div
-                className="fixed inset-0 bg-black bg-opacity-20 z-40"
-                onClick={onToggleFilters}
-              />
-
-              {/* Modal */}
-              <div
-                ref={modalRef}
-                className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-full mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 p-6`}
-                dir={isRTL ? 'rtl' : 'ltr'}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <FiltersModal
-                  searchQuery={searchQuery}
-                  onSearchChange={onSearchChange}
-                  categories={categories}
-                  selectedCategory={selectedCategory}
-                  onCategoryChange={onCategoryChange}
-                  minPrice={minPrice}
-                  onMinPriceChange={onMinPriceChange}
-                  maxPrice={maxPrice}
-                  onMaxPriceChange={onMaxPriceChange}
-                  products={products}
-                  isRTL={isRTL}
-                  t={t}
-                  onClose={onToggleFilters}
-                />
-              </div>
-            </>
-          )}
-        </div>
+        </Popover>
 
         {/* Bulk Delete Button - Only show in list view when items are selected */}
         {viewMode === 'list' && selectedProductIds && selectedProductIds.size > 0 && (
           <Button
             variant="danger"
             onClick={onBulkDelete}
-            className={`flex items-center justify-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 md:gap-2 px-3 md:px-4 py-2`}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, flexDirection: isRTL ? 'row-reverse' : 'row' }}
           >
-            <Trash className="w-4 h-4 md:w-5 md:h-5" />
-            <span className="hidden md:inline">
-              {t('deleteSelected') || 'Delete Selected'} ({selectedProductIds.size})
-            </span>
-            <span className="md:hidden">{selectedProductIds.size}</span>
+            <Trash />
+            <span>{t('deleteSelected') || 'Delete Selected'} ({selectedProductIds.size})</span>
           </Button>
         )}
 
@@ -160,17 +145,17 @@ const ProductsHeader = memo(({
               navigate('/products/add');
             }
           }}
-          className={`flex items-center justify-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 md:gap-2 px-3 md:px-4 py-2`}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, flexDirection: isRTL ? 'row-reverse' : 'row' }}
         >
-          <Plus className="w-4 h-4 md:w-5 md:h-5" />
-          <span className="hidden md:inline">{t('createProduct')}</span>
+          <Plus />
+          <span>{t('createProduct')}</span>
         </Button>
       </div>
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">{t('products')}</h1>
-        <p className="text-gray-600 mt-1">
+      <div style={{ minWidth: 0, flexShrink: 1, textAlign: isRTL ? 'right' : 'left' }}>
+        <Title level={1} style={{ marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('products')}</Title>
+        <Text type="secondary" style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {t('showing')} {displayedCount} {t('of')} {totalCount} {t('products').toLowerCase()}
-        </p>
+        </Text>
       </div>
     </div>
   );

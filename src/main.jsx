@@ -4,6 +4,8 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
 import { QueryProvider } from './providers/QueryProvider'
+import { LanguageProvider } from './contexts/LanguageContext'
+import { AntdProvider } from './providers/AntdProvider'
 
 
 // Global suppression of browser extension console errors
@@ -43,7 +45,11 @@ window.onerror = function (message, source, lineno, colno, error) {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryProvider>
-      <App />
+      <LanguageProvider>
+        <AntdProvider>
+          <App />
+        </AntdProvider>
+      </LanguageProvider>
     </QueryProvider>
   </React.StrictMode>,
 )

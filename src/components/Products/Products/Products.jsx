@@ -27,7 +27,8 @@ import ProductFilters from '../ProductFilters/ProductFilters';
 import ProductGrid from '../ProductGrid/ProductGrid';
 import ProductList from '../ProductList/ProductList';
 import { LoadMoreIndicator } from '../LoadMoreIndicator/LoadMoreIndicator';
-import { EmptyState, LoadingState, ErrorState, Toast } from '../../ui';
+import { EmptyState, LoadingState, ErrorState } from '../../ui';
+import { message } from 'antd';
 import { useDeleteProduct } from '../../../hooks/useProducts';
 import { secureLog } from '../../../utils/logger';
 
@@ -50,7 +51,6 @@ const Products = () => {
   const [gridColumns, setGridColumns] = useState(4);
   const [selectedProductIds, setSelectedProductIds] = useState(new Set()); // State for bulk selection
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
-  const [toast, setToast] = useState(null); // State for toast notifications
 
   // Filter management
   const filters = useProductFilters();
@@ -162,17 +162,11 @@ const Products = () => {
       setProductToDelete(null);
       
       // Show success toast
-      setToast({
-        message: t('productDeletedSuccessfully') || `המוצר "${productToDelete.name}" נמחק בהצלחה`,
-        type: 'success'
-      });
+      message.success(t('productDeletedSuccessfully') || `המוצר "${productToDelete.name}" נמחק בהצלחה`);
     } catch (err) {
       secureLog.error('Delete error:', err);
       // Show error toast
-      setToast({
-        message: t('deleteProductFailed') || `שגיאה במחיקת המוצר: ${err.message || t('error')}`,
-        type: 'error'
-      });
+      message.error(t('deleteProductFailed') || `שגיאה במחיקת המוצר: ${err.message || t('error')}`);
     }
   };
 
@@ -210,19 +204,13 @@ const Products = () => {
       
       // Show success toast
       const successMessage = t('productsDeletedSuccessfully')?.replace('{count}', count) || `${count} מוצר(ים) נמחקו בהצלחה`;
-      setToast({
-        message: successMessage,
-        type: 'success'
-      });
+      message.success(successMessage);
     } catch (err) {
       secureLog.error('Bulk delete error:', err);
       setShowBulkDeleteModal(false);
       
       // Show error toast
-      setToast({
-        message: t('bulkDeleteFailed') || `שגיאה במחיקת המוצרים: ${err.message || t('error')}`,
-        type: 'error'
-      });
+      message.error(t('bulkDeleteFailed') || `שגיאה במחיקת המוצרים: ${err.message || t('error')}`);
     }
   };
 
@@ -253,7 +241,7 @@ const Products = () => {
   // Show setup message if settings aren't configured
   if (!settingsLoading && !hasSettings) {
     return (
-      <div className="space-y-6">
+      <div>
         <SetupRequired
           title={t('configureWooCommerceToViewProducts') || 'הגדר את WooCommerce כדי לראות מוצרים'}
           description={t('configureWooCommerceSettings') || 'כדי להתחיל, אנא הגדר את הגדרות WooCommerce שלך.'}
@@ -267,7 +255,7 @@ const Products = () => {
   if (loading && !allProducts.length && !filters.searchQuery && !filters.selectedCategory && !filters.minPrice && !filters.maxPrice) {
     // Show skeleton grid instead of generic loading state for better UX
     return (
-      <div className="space-y-6">
+      <div>
         <ProductsHeader
           displayedCount={0}
           totalCount={0}
@@ -301,7 +289,7 @@ const Products = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       <ProductsHeader
         displayedCount={displayedCount}
         totalCount={totalCount}
@@ -336,11 +324,7 @@ const Products = () => {
         t={t}
       />
 
-      {error && (
-        <div className="card bg-orange-50 border-orange-200">
-          <p className="text-orange-600">{error}</p>
-        </div>
-      )}
+      {error && message.error(error)}
 
       {loading && sortedProducts.length === 0 && !filters.searchQuery && !filters.selectedCategory && !filters.minPrice && !filters.maxPrice ? (
         // PERFORMANCE: Show skeleton table for better perceived performance
@@ -434,15 +418,6 @@ const Products = () => {
         />
       </Suspense>
 
-      {/* Toast Notification */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          duration={5000}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   );
 };

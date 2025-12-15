@@ -1,4 +1,4 @@
-import { ChevronUpIcon as ChevronUp, ChevronDownIcon as ChevronDown, ArrowsUpDownIcon as ArrowUpDown } from '@heroicons/react/24/outline';
+import { UpOutlined as ChevronUp, DownOutlined as ChevronDown, SwapOutlined as ArrowUpDown } from '@ant-design/icons';
 import { Button } from '../../ui';
 
 /**

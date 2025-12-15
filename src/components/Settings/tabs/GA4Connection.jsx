@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { ChartBarIcon as BarChart3, CheckCircleIcon as CheckCircle, XCircleIcon as XCircle } from '@heroicons/react/24/outline';
+import { BarChartOutlined as BarChart3, CheckCircleOutlined as CheckCircle, CloseCircleOutlined as XCircle } from '@ant-design/icons';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { Input } from '../../ui/inputs';
 import { Button } from '../../ui';

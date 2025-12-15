@@ -1,35 +1,64 @@
+import { Select, Typography } from 'antd';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
+
+const { Text } = Typography;
 
 /**
  * CategorySelector Component
  * 
- * Handles category selection for the product.
+ * Dropdown for selecting product categories (multi-select).
  */
 const CategorySelector = ({ value, categories, error, onChange }) => {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
+
+  const options = categories.map(cat => ({
+    label: cat.name,
+    value: cat.id
+  }));
+
+  const handleChange = (selectedIds) => {
+    onChange(selectedIds);
+  };
 
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2 text-right">
-        {t('category')} <span className="text-orange-500">*</span>
-      </label>
-      <select
-        value={value || ''}
-        onChange={(e) => onChange(e.target.value ? [parseInt(e.target.value)] : [])}
-        className={`input-field text-right ${error ? 'border-orange-500' : ''}`}
-        dir="rtl"
-      >
-        <option value="">{t('chooseCategory') || 'בחר קטגוריה'}</option>
-        {categories.map(cat => (
-          <option key={cat.id} value={cat.id}>{cat.name}</option>
-        ))}
-      </select>
-      {error && (
-        <p className="text-orange-500 text-xs mt-1 text-right">{error}</p>
-      )}
+    <div style={{ width: '100%' }}>
+      <div>
+        <Text strong style={{
+          display: 'block',
+          marginBottom: 8,
+          textAlign: 'right'
+        }}>
+          {t('category') || 'קטגוריה'}
+        </Text>
+      </div>
+      <div>
+        <Select
+          mode="multiple"
+          value={value}
+          onChange={handleChange}
+          placeholder={t('chooseCategory') || 'בחר קטגוריות'}
+          style={{ width: '100%' }}
+          size="large"
+          options={options}
+          status={error ? 'error' : ''}
+          showSearch
+          optionFilterProp="label"
+          maxTagCount="responsive"
+          dir={isRTL ? 'rtl' : 'ltr'}
+        />
+        {error && (
+          <Text type="danger" style={{
+            fontSize: 12,
+            marginTop: 4,
+            display: 'block',
+            textAlign: 'right'
+          }}>
+            {error}
+          </Text>
+        )}
+      </div>
     </div>
   );
 };
 
 export default CategorySelector;
-

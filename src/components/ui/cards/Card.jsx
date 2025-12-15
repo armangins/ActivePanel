@@ -1,34 +1,23 @@
+import { Card as AntCard } from 'antd';
+
 /**
- * Card Component
+ * Card Component - Ant Design wrapper
  * 
- * Reusable card container component.
- * 
- * @param {React.ReactNode} children - Card content
- * @param {string} className - Additional CSS classes
- * @param {Function} onClick - Optional click handler
- * @param {boolean} hover - Whether to show hover effect
+ * Reusable card container component using Ant Design Card.
  */
-const Card = ({ children, className = '', onClick, hover = false }) => {
-  const baseClasses = 'bg-white rounded-lg shadow-sm border border-gray-200';
-  const hoverClasses = hover || onClick ? 'hover:shadow-md transition-shadow cursor-pointer' : '';
-  
+const Card = ({ children, className = '', onClick, hover = false, ...props }) => {
   return (
-    <div 
-      className={`${baseClasses} ${hoverClasses} ${className}`}
+    <AntCard
+      hoverable={hover || !!onClick}
       onClick={onClick}
+      className={className}
+      {...props}
     >
       {children}
-    </div>
+    </AntCard>
   );
 };
 
 export default Card;
-
-
-
-
-
-
-
 
 

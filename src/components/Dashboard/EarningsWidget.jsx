@@ -4,7 +4,7 @@ import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { format } from 'date-fns';
 import { he as heLocale } from 'date-fns/locale';
-import { ChevronDownIcon as ChevronDown } from '@heroicons/react/24/outline';
+import { DownOutlined as ChevronDown } from '@ant-design/icons';
 import { calculatePercentageChange } from '../../shared/utils';
 
 /**

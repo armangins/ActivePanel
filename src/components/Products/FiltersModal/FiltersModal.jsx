@@ -1,5 +1,4 @@
 import React from 'react';
-import FiltersModalHeader from './FiltersModalHeader';
 import FiltersModalSearch from './FiltersModalSearch';
 import FiltersModalCategory from './FiltersModalCategory';
 import FiltersModalPriceRange from './FiltersModalPriceRange';
@@ -52,10 +51,7 @@ const FiltersModal = ({
   const actualMax = priceRange.max === 0 ? 1000 : Math.ceil(priceRange.max);
 
   return (
-    <>
-      <FiltersModalHeader t={t} onClose={onClose} />
-
-      <div className="space-y-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <FiltersModalSearch
           searchQuery={searchQuery}
           onSearchChange={onSearchChange}
@@ -80,8 +76,7 @@ const FiltersModal = ({
           t={t}
           isRTL={isRTL}
         />
-      </div>
-    </>
+    </div>
   );
 };
 

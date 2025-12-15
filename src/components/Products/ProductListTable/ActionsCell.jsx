@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { EllipsisVerticalIcon } from '@heroicons/react/24/outline';
-import { Trash2Icon, MoveLeftIcon } from '../../icons';
+import { MoreOutlined as EllipsisVerticalIcon, DeleteOutlined as Trash2Icon, EditOutlined as MoveLeftIcon } from '@ant-design/icons';
 import { Button } from '../../ui';
 
 /**

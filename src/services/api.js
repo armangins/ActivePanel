@@ -15,15 +15,19 @@ if (import.meta.env.PROD && API_URL.startsWith('http://')) {
 }
 
 // Security: Validate API URL configuration
-if (!import.meta.env.VITE_API_URL && import.meta.env.PROD) {
 
-}
 
 // In-memory token storage
 let authToken = null;
 
 export const setAuthToken = (token) => {
   authToken = token;
+};
+
+// Callback to sync React state when token is refreshed by interceptor
+let onRefreshSuccess = null;
+export const setOnRefreshSuccess = (cb) => {
+  onRefreshSuccess = cb;
 };
 
 export const getAuthToken = () => authToken;
@@ -59,10 +63,19 @@ const createApiClient = () => {
         config.headers.Authorization = `Bearer ${authToken}`;
       }
 
-      // Add CSRF token for state-changing operations
-      const csrfToken = getCSRFToken();
-      if (csrfToken) {
-        config.headers['X-CSRF-Token'] = csrfToken;
+      // Add CSRF token for state-changing operations (POST, PUT, DELETE, PATCH)
+      // GET and HEAD requests don't need CSRF protection
+      const stateChangingMethods = ['POST', 'PUT', 'DELETE', 'PATCH'];
+      if (stateChangingMethods.includes(config.method?.toUpperCase())) {
+        const csrfToken = getCSRFToken();
+        if (csrfToken) {
+          config.headers['X-CSRF-Token'] = csrfToken;
+        } else {
+          // Log warning if CSRF token is missing for state-changing operations
+          if (import.meta.env.DEV) {
+            console.warn('CSRF token missing for state-changing operation:', config.method, config.url);
+          }
+        }
       }
 
       return config;
@@ -80,7 +93,11 @@ const createApiClient = () => {
       if (csrfToken) {
         // Set CSRF token with security flags
         // Note: CSRF tokens need to be readable by JS (not HttpOnly)
+        // Use SameSite=Strict to prevent CSRF attacks
+        // Use Secure flag in production (HTTPS)
         const isSecure = window.location.protocol === 'https:' ? '; Secure' : '';
+        // Use HttpOnly would prevent JS access, but we need JS access for X-CSRF-Token header
+        // Max-Age of 1 hour matches typical session duration
         document.cookie = `csrf-token=${csrfToken}; path=/; SameSite=Strict${isSecure}; Max-Age=3600`;
       }
 
@@ -96,13 +113,18 @@ const createApiClient = () => {
 
       // Handle 401 Unauthorized - Token Expired
       if (error.response?.status === 401) {
-        // Check if this is a token expiration error
-        const isTokenExpired = error.response?.data?.code === 'TOKEN_EXPIRED';
+        // Backend may return error with code: 'TOKEN_EXPIRED' or message indicating expiration
+        const isTokenExpired = error.response?.data?.code === 'TOKEN_EXPIRED' ||
+          error.response?.data?.message?.toLowerCase().includes('token expired') ||
+          error.response?.data?.message?.toLowerCase().includes('unauthorized');
 
         // Don't retry for auth endpoints or if already retried
         const isAuthEndpoint = originalRequest.url?.includes('/auth/me') ||
           originalRequest.url?.includes('/auth/login') ||
-          originalRequest.url?.includes('/auth/refresh');
+          originalRequest.url?.includes('/auth/register') ||
+          originalRequest.url?.includes('/auth/logout') ||
+          originalRequest.url?.includes('/auth/refresh') ||
+          originalRequest.url?.includes('/auth/google');
 
         if (isTokenExpired && !isAuthEndpoint && !originalRequest._retry) {
           originalRequest._retry = true;
@@ -117,6 +139,11 @@ const createApiClient = () => {
               // Update token in memory
               setAuthToken(response.data.accessToken);
 
+              // Sync with React state if callback registered
+              if (onRefreshSuccess) {
+                onRefreshSuccess(response.data.accessToken);
+              }
+
               // Retry original request with new token
               originalRequest.headers.Authorization = `Bearer ${response.data.accessToken}`;
               return instance(originalRequest);
@@ -124,7 +151,10 @@ const createApiClient = () => {
           } catch (refreshError) {
             // Refresh failed - clear token and redirect to login
             setAuthToken(null);
-            window.location.href = '/login';
+            // Only redirect if not already on login page
+            if (!window.location.pathname.includes('/login')) {
+              window.location.href = '/login';
+            }
             return Promise.reject(refreshError);
           }
         }
@@ -167,6 +197,8 @@ export const api = createApiClient();
 export const authAPI = {
   /**
    * Register new user
+   * Backend expects POST /auth/register with { email, password, name, _csrf }
+   * Returns { accessToken: "...", user: {...} } on success
    */
   register: async (email, password, name) => {
     const response = await api.post('/auth/register', {
@@ -176,11 +208,18 @@ export const authAPI = {
       _csrf: getCSRFToken(), // CSRF token in body
     });
 
-    // ...
+    // Store access token in memory
+    if (response.data.accessToken) {
+      setAuthToken(response.data.accessToken);
+    }
+
+    return response.data;
   },
 
   /**
    * Login user
+   * Backend expects POST /auth/login with { email, password, _csrf }
+   * Returns { accessToken: "...", user: {...} } on success
    */
   login: async (email, password) => {
     const response = await api.post('/auth/login', {
@@ -199,6 +238,9 @@ export const authAPI = {
 
   /**
    * Google OAuth login
+   * Note: This endpoint is not used in the current OAuth flow.
+   * The backend redirects to /auth/callback with access_token in query params.
+   * This function is kept for potential future use or alternative flows.
    */
   googleLogin: async (credential) => {
     const response = await api.post('/auth/google', {
@@ -206,8 +248,10 @@ export const authAPI = {
       _csrf: getCSRFToken(),
     });
 
-    if (response.data.token) {
-      setAuthToken(response.data.token);
+    // Backend may return either 'token' or 'accessToken' - check both
+    const token = response.data.accessToken || response.data.token;
+    if (token) {
+      setAuthToken(token);
     }
 
     return response.data;
@@ -215,42 +259,54 @@ export const authAPI = {
 
   /**
    * Logout user
+   * Backend expects POST /auth/logout with Bearer token
+   * Returns { success: true } on success
    */
   logout: async () => {
     try {
       // JWT logout is a POST request with Bearer token
       const response = await api.post('/auth/logout');
-      return response.data;
+      // Backend returns { success: true } or similar
+      return response.data || { success: true };
     } catch (error) {
-      if (error.response && error.response.status === 404) {
-        console.warn('Logout endpoint not found, clearing local session only.');
+      // 401 is expected if token is expired - still consider logout successful
+      if (error.response && (error.response.status === 404 || error.response.status === 401)) {
+
         return { success: true, localOnly: true };
       }
       throw error;
     } finally {
-      // Clear token from memory
+      // Always clear token from memory, even if API call fails
       setAuthToken(null);
     }
   },
 
   /**
    * Get current user
+   * Backend returns { user: { id, email, name, picture, role, provider, ... } }
    */
   getCurrentUser: async () => {
     const response = await api.get('/auth/me');
-    return response.data.user;
+    // Backend returns { user: {...} } or just the user object
+    return response.data.user || response.data;
   },
 
   /**
    * Refresh access token using refresh token from httpOnly cookie
+   * Backend expects POST /auth/refresh with httpOnly refresh token cookie
+   * Returns { accessToken: "..." } on success
    */
   refreshToken: async () => {
     const response = await api.post('/auth/refresh', {}, {
-      withCredentials: true,
+      withCredentials: true, // Required for httpOnly cookie
     });
 
-    if (response.data.accessToken) {
-      setAuthToken(response.data.accessToken);
+    // Backend returns { accessToken: "..." }
+    const token = response.data.accessToken;
+    if (token) {
+      setAuthToken(token);
+    } else {
+      throw new Error('No access token in refresh response');
     }
 
     return response.data;
@@ -263,6 +319,8 @@ export const authAPI = {
 export const onboardingAPI = {
   /**
    * Mark onboarding as completed
+   * Backend expects POST /auth/onboarding/complete
+   * Returns { success: true } or updated user object
    */
   complete: async () => {
     const response = await api.post('/auth/onboarding/complete');
@@ -279,8 +337,11 @@ export const settingsAPI = {
    */
   get: async () => {
     const response = await api.get('/settings');
+
     // Backend returns { settings: { ... } } or { settings: null } for new users
-    return response.data.settings || null;
+    const settings = response.data.settings || response.data || null;
+
+    return settings;
   },
 
   /**
@@ -321,21 +382,24 @@ export const settingsAPI = {
 export const usersAPI = {
   /**
    * Get current user profile
+   * Backend returns { user: {...} } or just the user object
    */
   getProfile: async () => {
     const response = await api.get('/users/me');
-    return response.data.user;
+    return response.data.user || response.data;
   },
 
   /**
    * Update user profile
+   * Backend expects PUT /users/me with profile data and _csrf
+   * Returns { user: {...} } with updated user data
    */
   updateProfile: async (profile) => {
     const response = await api.put('/users/me', {
       ...profile,
       _csrf: getCSRFToken(),
     });
-    return response.data.user;
+    return response.data.user || response.data;
   },
 };
 

@@ -1,11 +1,12 @@
 import { memo, useCallback } from 'react';
-import { 
-  CurrencyDollarIcon as DollarSign, 
-  ShoppingCartIcon as ShoppingCart, 
-  UsersIcon as Users, 
-  ExclamationTriangleIcon as AlertTriangle 
-} from '@heroicons/react/24/outline';
+import {
+  DollarOutlined as DollarSign,
+  ShoppingCartOutlined as ShoppingCart,
+  UserOutlined as Users,
+  ExclamationCircleOutlined as AlertTriangle
+} from '@ant-design/icons';
 import { StatCard } from '../ui';
+import { Row, Col } from 'antd';
 
 /**
  * DashboardStats Component
@@ -27,47 +28,55 @@ const DashboardStats = memo(({ stats, changes = {}, lowStockCount = 0, formatCur
   const handleCustomersClick = useCallback(() => onCardClick && onCardClick('customers'), [onCardClick]);
   const handleLowStockClick = useCallback(() => onLowStockClick && onLowStockClick(), [onLowStockClick]);
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-      <StatCard
-        title={t('totalRevenue')}
-        value={formatCurrency(stats.totalRevenue)}
-        change={changes.revenue}
-        trend={changes.revenue?.startsWith('+') ? 'up' : 'down'}
-        icon={DollarSign}
-        isRTL={isRTL}
-        onClick={handleRevenueClick}
-      />
-      <StatCard
-        title={t('totalOrders')}
-        value={stats.totalOrders}
-        change={changes.orders}
-        trend={changes.orders?.startsWith('+') ? 'up' : 'down'}
-        icon={ShoppingCart}
-        isRTL={isRTL}
-        onClick={handleOrdersClick}
-        iconBgColor="#CBD5E1"
-      />
-      <StatCard
-        title={t('totalCustomers')}
-        value={stats.totalCustomers}
-        change={changes.customers}
-        trend={changes.customers?.startsWith('+') ? 'up' : 'down'}
-        icon={Users}
-        isRTL={isRTL}
-        onClick={handleCustomersClick}
-        iconBgColor="#2278FC"
-      />
-      <StatCard
-        title={t('lowStockProducts')}
-        value={lowStockCount}
-        change={changes.lowStock}
-        trend={changes.lowStock?.startsWith('+') ? 'up' : 'down'}
-        icon={AlertTriangle}
-        isRTL={isRTL}
-        onClick={handleLowStockClick}
-        iconBgColor="#FF5200"
-      />
-    </div>
+    <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+      <Col xs={24} sm={12} lg={6}>
+        <StatCard
+          title={t('totalRevenue')}
+          value={formatCurrency(stats.totalRevenue)}
+          change={changes.revenue}
+          trend={changes.revenue?.startsWith('+') ? 'up' : 'down'}
+          icon={DollarSign}
+          isRTL={isRTL}
+          onClick={handleRevenueClick}
+        />
+      </Col>
+      <Col xs={24} sm={12} lg={6}>
+        <StatCard
+          title={t('totalOrders')}
+          value={stats.totalOrders}
+          change={changes.orders}
+          trend={changes.orders?.startsWith('+') ? 'up' : 'down'}
+          icon={ShoppingCart}
+          isRTL={isRTL}
+          onClick={handleOrdersClick}
+          iconBgColor="#CBD5E1"
+        />
+      </Col>
+      <Col xs={24} sm={12} lg={6}>
+        <StatCard
+          title={t('totalCustomers')}
+          value={stats.totalCustomers}
+          change={changes.customers}
+          trend={changes.customers?.startsWith('+') ? 'up' : 'down'}
+          icon={Users}
+          isRTL={isRTL}
+          onClick={handleCustomersClick}
+          iconBgColor="#2278FC"
+        />
+      </Col>
+      <Col xs={24} sm={12} lg={6}>
+        <StatCard
+          title={t('lowStockProducts')}
+          value={lowStockCount}
+          change={changes.lowStock}
+          trend={changes.lowStock?.startsWith('+') ? 'up' : 'down'}
+          icon={AlertTriangle}
+          isRTL={isRTL}
+          onClick={handleLowStockClick}
+          iconBgColor="#FF5200"
+        />
+      </Col>
+    </Row>
   );
 });
 

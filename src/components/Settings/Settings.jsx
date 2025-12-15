@@ -1,19 +1,21 @@
-import { useState, useMemo, useCallback, lazy, Suspense, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, lazy, Suspense, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Tabs, Alert } from 'antd';
 import {
-    GlobeAltIcon as Globe,
-    KeyIcon as Key,
-    ChartBarIcon as BarChart3,
-    SparklesIcon as Sparkles,
-    CubeIcon as Package,
-    CircleStackIcon as Database,
-    QuestionMarkCircleIcon as HelpCircle,
-    DocumentArrowDownIcon as Save,
-    CheckCircleIcon as CheckCircle,
-    XCircleIcon as XCircle
-} from '@heroicons/react/24/outline';
+    GlobalOutlined as Globe,
+    KeyOutlined as Key,
+    BarChartOutlined as BarChart3,
+    ThunderboltOutlined as Sparkles,
+    InboxOutlined as Package,
+    DatabaseOutlined as Database,
+    QuestionCircleOutlined as HelpCircle,
+    SaveOutlined as Save,
+    CheckCircleOutlined as CheckCircle,
+    CloseCircleOutlined as XCircle
+} from '@ant-design/icons';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useSettings } from '../../contexts/SettingsContext';
 import { testConnection, productsAPI } from '../../services/woocommerce';
 import { settingsAPI } from '../../services/api';
 import { settingsSchema } from '../../schemas/settings';
@@ -31,6 +33,7 @@ const HelpSettings = lazy(() => import('./tabs/HelpSettings'));
 
 const Settings = () => {
     const { t } = useLanguage();
+    const { updateSettings } = useSettings();
     const [activeTab, setActiveTab] = useState('woocommerce');
     const [loading, setLoading] = useState(false);
     const [testing, setTesting] = useState(false);
@@ -59,7 +62,9 @@ const Settings = () => {
             geminiApiKey: '',
             lowStockThreshold: 2,
         },
-        mode: 'onChange'
+        mode: 'onChange',
+        reValidateMode: 'onChange',
+        shouldUnregister: false
     });
 
     const { handleSubmit, reset, getValues, formState: { isValid, isDirty } } = methods;
@@ -81,16 +86,17 @@ const Settings = () => {
 
                     // Update form with saved settings
                     // Only update known fields to avoid polluting form state
+                    // Trim values to prevent whitespace validation issues
                     reset({
-                        woocommerceUrl: savedSettings.storeUrl || savedSettings.woocommerceUrl || '',
-                        consumerKey: savedSettings.consumerKey || '',
-                        consumerSecret: savedSettings.consumerSecret || '',
-                        wordpressUsername: savedSettings.wordpressUsername || '',
-                        wordpressAppPassword: savedSettings.wordpressAppPassword || '',
-                        ga4PropertyId: savedSettings.ga4PropertyId || '',
-                        ga4MeasurementId: savedSettings.ga4MeasurementId || '',
-                        ga4ApiSecret: savedSettings.ga4ApiSecret || '',
-                        geminiApiKey: savedSettings.geminiApiKey || '',
+                        woocommerceUrl: (savedSettings.storeUrl || savedSettings.woocommerceUrl || '').trim(),
+                        consumerKey: (savedSettings.consumerKey || '').trim(),
+                        consumerSecret: (savedSettings.consumerSecret || '').trim(),
+                        wordpressUsername: (savedSettings.wordpressUsername || '').trim(),
+                        wordpressAppPassword: (savedSettings.wordpressAppPassword || '').trim(),
+                        ga4PropertyId: (savedSettings.ga4PropertyId || '').trim(),
+                        ga4MeasurementId: (savedSettings.ga4MeasurementId || '').trim(),
+                        ga4ApiSecret: (savedSettings.ga4ApiSecret || '').trim(),
+                        geminiApiKey: (savedSettings.geminiApiKey || '').trim(),
                         lowStockThreshold: savedSettings.lowStockThreshold || 2,
                     });
                 }
@@ -158,7 +164,12 @@ const Settings = () => {
 
         try {
             // Save settings to backend
-            await settingsAPI.update(data);
+            const updated = await settingsAPI.update(data);
+            
+            // Update settings in context to trigger re-renders
+            if (updateSettings) {
+                await updateSettings(updated || data);
+            }
 
             setMessage({ type: 'success', text: t('settingsSaved') });
 
@@ -253,59 +264,37 @@ const Settings = () => {
 
                 {/* Global Message */}
                 {message && (
-                    <div className={`p-4 rounded-lg flex items-start gap-3 ${message.type === 'success'
-                        ? 'bg-green-50 text-green-800 border border-green-200'
-                        : 'bg-orange-50 text-orange-800 border border-orange-200'
-                        }`}>
-                        {connectionStatus === 'success' && <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />}
-                        {connectionStatus === 'error' && <XCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />}
-                        <p className="text-right">{message.text}</p>
-                    </div>
+                    <Alert
+                        message={message.text}
+                        type={message.type === 'success' ? 'success' : 'error'}
+                        showIcon
+                        closable
+                        onClose={() => setMessage(null)}
+                        style={{ marginBottom: 24 }}
+                    />
                 )}
 
                 {/* Main Settings Container */}
-                <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Sidebar Navigation */}
-                    <div className="lg:w-64 flex-shrink-0">
-                        <div className="card sticky top-6">
-                            <nav className="space-y-1">
-                                {tabs.map((tab) => {
-                                    const Icon = tab.icon;
-                                    return (
-                                        <Button
-                                            key={tab.id}
-                                            onClick={() => setActiveTab(tab.id)}
-                                            variant="ghost"
-                                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-right transition-colors justify-start h-auto ${activeTab === tab.id
-                                                ? 'bg-primary-50 text-primary-700 font-medium border-r-2 border-primary-500'
-                                                : 'text-gray-700 hover:bg-gray-50'
-                                                }`}
-                                        >
-                                            <Icon className="w-[18px] h-[18px] flex-shrink-0" />
-                                            <span className="flex-1">{tab.label}</span>
-                                        </Button>
-                                    );
-                                })}
-                            </nav>
-                        </div>
-                    </div>
-
-                    {/* Content Area */}
-                    <div className="flex-1">
-                        <div className="card">
-                            <div className="flex items-center gap-2 mb-6 flex-row-reverse">
-                                {(() => {
-                                    const activeTabData = tabs.find(t => t.id === activeTab);
-                                    const Icon = activeTabData?.icon || Globe;
-                                    return <Icon className="w-5 h-5 text-primary-500" />;
-                                })()}
-                                <h2 className="text-xl font-semibold text-gray-900">
-                                    {tabs.find(t => t.id === activeTab)?.label || 'הגדרות'}
-                                </h2>
-                            </div>
-                            {renderTabContent()}
-                        </div>
-                    </div>
+                <div className="flex-1">
+                    <Tabs
+                        activeKey={activeTab}
+                        onChange={setActiveTab}
+                        items={tabs.map(tab => ({
+                            key: tab.id,
+                            label: (
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    {React.createElement(tab.icon, { style: { fontSize: 16 } })}
+                                    {tab.label}
+                                </span>
+                            ),
+                            children: (
+                                <div style={{ padding: '24px 0' }}>
+                                    {renderTabContent()}
+                                </div>
+                            ),
+                        }))}
+                        direction="rtl"
+                    />
                 </div>
             </div>
         </FormProvider>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { FormProvider } from 'react-hook-form';
-import { CalculatorIcon as Calculator } from '@heroicons/react/24/outline';
+import { CalculatorOutlined as Calculator } from '@ant-design/icons';
 import { Breadcrumbs, Button } from '../../ui';
 import {
   PageTitle,
@@ -16,7 +16,7 @@ const AddProductView = () => {
   const vm = useAddProductViewModel();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6" dir={vm.isRTL ? 'rtl' : 'ltr'}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#fafafa', padding: '12px 16px 24px', direction: vm.isRTL ? 'rtl' : 'ltr' }}>
       {/* Breadcrumbs */}
       <Breadcrumbs
         items={[
@@ -33,7 +33,6 @@ const AddProductView = () => {
           <Button
             variant="ghost"
             onClick={() => vm.navigate('/calculator')}
-            className="flex items-center gap-2 text-gray-700 hover:text-primary-600 hover:bg-gray-100"
             icon={Calculator}
           >
             {vm.t('calculator') || 'מחשבון'}
@@ -41,10 +40,10 @@ const AddProductView = () => {
         }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px 24px' }}>
         <FormProvider {...vm.methods}>
           <form
-            className="col-span-1 lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6"
+            style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px 24px' }}
             onSubmit={(e) => e.preventDefault()}
             noValidate
             autoComplete="off"
@@ -74,6 +73,7 @@ const AddProductView = () => {
                 });
                 vm.setShowScheduleModal(true);
               }}
+              scheduleDates={vm.scheduleDates}
               saving={vm.saving}
             />
 

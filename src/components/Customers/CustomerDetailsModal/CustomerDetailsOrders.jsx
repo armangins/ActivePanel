@@ -1,6 +1,6 @@
 import { useOrders } from '../../../hooks/useOrders';
 import { format } from 'date-fns';
-import { ShoppingBagIcon as ShoppingBag, TruckIcon as Truck, PhotoIcon as Photo } from '@heroicons/react/24/outline';
+import { ShoppingOutlined as ShoppingBag, TruckOutlined as Truck, PictureOutlined as Photo } from '@ant-design/icons';
 import { OptimizedImage } from '../../ui';
 
 /**

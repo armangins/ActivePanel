@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { TagIcon as Tag, HashtagIcon as Percent, CurrencyDollarIcon as DollarSign, CalendarIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
+import { TagOutlined as Tag, NumberOutlined as Percent, DollarOutlined as DollarSign, CalendarOutlined as CalendarIcon, InfoCircleOutlined as InformationCircleIcon } from '@ant-design/icons';
 import { Input } from '../../ui/inputs';
 import { useLanguage } from '../../../contexts/LanguageContext';
 

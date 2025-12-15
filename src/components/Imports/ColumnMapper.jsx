@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import { CheckCircleOutlined as CheckCircleIcon, ExclamationCircleOutlined as ExclamationCircleIcon } from '@ant-design/icons';
 import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -163,6 +163,10 @@ const ColumnMapper = ({ headers, sampleRows, mode, onMappingComplete }) => {
 };
 
 export default ColumnMapper;
+
+
+
+
 
 
 

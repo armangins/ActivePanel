@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { CurrencyDollarIcon as DollarSign, EnvelopeIcon as Mail, XMarkIcon as X, InformationCircleIcon, CubeIcon as Package } from '@heroicons/react/24/outline';
+import { DollarOutlined as DollarSign, MailOutlined as Mail, CloseOutlined as X, InfoCircleOutlined as InformationCircleIcon, InboxOutlined as Package } from '@ant-design/icons';
 import SearchInput from '../../ui/inputs/SearchInput';
 import { Button, OptimizedImage } from '../../ui';
 import { Input } from '../../ui/inputs';

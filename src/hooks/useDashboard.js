@@ -25,7 +25,7 @@ export const dashboardKeys = {
 export const useDashboardStats = () => {
   const { settings } = useSettings();
   const hasSettings = !!(settings && settings.hasConsumerKey && settings.hasConsumerSecret);
-  
+
   return useQuery({
     queryKey: dashboardKeys.stats(),
     queryFn: async () => {
@@ -44,7 +44,12 @@ export const useDashboardStats = () => {
           secureLog.warn('Failed to fetch customer count:', err);
           return 0;
         }),
-        ordersAPI.getAll({ per_page: 100, orderby: 'date', order: 'desc' }).catch(err => {
+        ordersAPI.getAll({
+          per_page: 100,
+          orderby: 'date',
+          order: 'desc',
+          _fields: 'id,total,status,date_created,line_items'
+        }).catch(err => {
           secureLog.warn('Failed to fetch orders:', err);
           return [];
         }),
@@ -110,14 +115,14 @@ export const useDashboardStats = () => {
 export const useDashboardProducts = () => {
   const { settings } = useSettings();
   const hasSettings = !!(settings && settings.hasConsumerKey && settings.hasConsumerSecret);
-  
+
   return useQuery({
     queryKey: dashboardKeys.allProducts(),
     queryFn: () => productsAPI.getAll({
       per_page: 100,
       orderby: 'total_sales', // Prioritize top selling products
       order: 'desc',
-      _fields: 'id,name,total_sales,stock_status,stock_quantity,images,price,regular_price,sale_price,status'
+      _fields: 'id,name,total_sales,stock_status,stock_quantity,images,price,status'
     }),
     enabled: hasSettings, // Only fetch if settings are configured
     staleTime: 15 * 60 * 1000,
@@ -143,7 +148,7 @@ export const useDashboardCustomers = () => {
 export const useTopSellers = () => {
   const { settings } = useSettings();
   const hasSettings = !!(settings && settings.hasConsumerKey && settings.hasConsumerSecret);
-  
+
   return useQuery({
     queryKey: dashboardKeys.topSellers(),
     queryFn: () => reportsAPI.getTopSellers({ period: 'month' }),
@@ -156,7 +161,7 @@ export const useTopSellers = () => {
 export const useDashboardLowStock = () => {
   const { settings } = useSettings();
   const hasSettings = !!(settings && settings.hasConsumerKey && settings.hasConsumerSecret);
-  
+
   return useQuery({
     queryKey: dashboardKeys.lowStock(),
     queryFn: () => productsAPI.getLowStockProducts(),
@@ -268,7 +273,7 @@ export const useTopSellersProducts = (topSellersData, productsData) => {
 export const useGA4Traffic = () => {
   const { settings } = useSettings();
   const hasSettings = !!(settings && settings.hasConsumerKey && settings.hasConsumerSecret);
-  
+
   return useQuery({
     queryKey: dashboardKeys.ga4Traffic(),
     queryFn: () => getTrafficData('30daysAgo', 'today'),
@@ -282,7 +287,7 @@ export const useGA4Traffic = () => {
 export const useGA4Purchase = () => {
   const { settings } = useSettings();
   const hasSettings = !!(settings && settings.hasConsumerKey && settings.hasConsumerSecret);
-  
+
   return useQuery({
     queryKey: dashboardKeys.ga4Purchase(),
     queryFn: () => getPurchaseEvents('30daysAgo', 'today'),
@@ -296,7 +301,7 @@ export const useGA4Purchase = () => {
 export const useGA4AddToCart = () => {
   const { settings } = useSettings();
   const hasSettings = !!(settings && settings.hasConsumerKey && settings.hasConsumerSecret);
-  
+
   return useQuery({
     queryKey: dashboardKeys.ga4AddToCart(),
     queryFn: () => getAddToCartEvents('30daysAgo', 'today'),
@@ -310,7 +315,7 @@ export const useGA4AddToCart = () => {
 export const useGA4Revenue = () => {
   const { settings } = useSettings();
   const hasSettings = !!(settings && settings.hasConsumerKey && settings.hasConsumerSecret);
-  
+
   return useQuery({
     queryKey: dashboardKeys.ga4Revenue(),
     queryFn: () => getRevenueData('30daysAgo', 'today'),

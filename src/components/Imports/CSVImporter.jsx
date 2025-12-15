@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { ArrowUpTrayIcon, TableCellsIcon as FileSpreadsheet, CheckCircleIcon, ExclamationCircleIcon, MapIcon as Map } from '@heroicons/react/24/outline';
+import { UploadOutlined as ArrowUpTrayIcon, FileTextOutlined as FileSpreadsheet, CheckCircleOutlined as CheckCircleIcon, ExclamationCircleOutlined as ExclamationCircleIcon, EnvironmentOutlined as Map } from '@ant-design/icons';
 import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 import ColumnMapper from './ColumnMapper';

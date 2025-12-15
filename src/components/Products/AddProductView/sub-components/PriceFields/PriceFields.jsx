@@ -1,89 +1,215 @@
-import { CalculatorIcon as Calculator, CalendarIcon as Calendar } from '@heroicons/react/24/outline';
+import { CalculatorOutlined as Calculator, CalendarOutlined as Calendar } from '@ant-design/icons';
+import { Row, Col, Button as AntButton, Tooltip, Tour } from 'antd';
 import { Input } from '../../../../ui/inputs';
-import { Button } from '../../../../ui';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
+import { useRef, useState, useEffect } from 'react';
 
 /**
  * PriceFields Component
  * 
- * Handles regular price and sale price inputs with calculator and schedule buttons.
+ * Handles regular price, sale price, and stock quantity inputs in a single row.
  */
 const PriceFields = ({
   formData,
   errors,
   onRegularPriceChange,
   onSalePriceChange,
+  onStockChange,
   onCalculatorClick,
-  onScheduleClick
+  onScheduleClick,
+  scheduleDates
 }) => {
   const { t, isRTL } = useLanguage();
 
+  // Refs for tour targets
+  const calculatorRef = useRef(null);
+  const scheduleRef = useRef(null);
+
+  const [tourOpen, setTourOpen] = useState(false);
+  const [hasShownTour, setHasShownTour] = useState(() => {
+    // Check if tour has been shown before (using sessionStorage for session-based)
+    return sessionStorage.getItem('priceTourShown_v3') === 'true';
+  });
+
+  // Trigger tour when user first enters a regular price
+  useEffect(() => {
+    if (!hasShownTour && formData.regular_price && parseFloat(formData.regular_price) > 0) {
+      // Small delay to ensure refs are ready
+      const timer = setTimeout(() => {
+        setTourOpen(true);
+        setHasShownTour(true);
+        sessionStorage.setItem('priceTourShown_v3', 'true');
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [formData.regular_price, hasShownTour]);
+
+  // Tour steps
+  const tourSteps = [
+    {
+      title: 'תמחור חכם',
+      description: ' מתמחרים בקלות עם המחשבון החכם שלנו על בסיס עלויות, רווח שולי ועוד  לחצו על האייקון והתחילו לתמחר',
+      target: () => calculatorRef.current,
+      placement: 'bottom',
+    },
+    {
+      title: 'תזמון מבצע',
+      description: 'קבעו תאריכי התחלה וסיום למחירי המבצע. המערכת תעדכן אוטומטית את המחיר בתאריכים שנקבעו.',
+      target: () => scheduleRef.current,
+      placement: 'bottom',
+    },
+  ];
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('he-IL', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  };
+
+  // Check if schedule dates are set
+  const hasScheduleDates = scheduleDates?.start || scheduleDates?.end;
+  const scheduleDateText = hasScheduleDates
+    ? `${scheduleDates.start ? formatDate(scheduleDates.start) : ''} - ${scheduleDates.end ? formatDate(scheduleDates.end) : ''}`
+    : '';
+
+  // Check if sale price is entered
+  const hasSalePrice = formData.sale_price && String(formData.sale_price).trim() !== '' && parseFloat(formData.sale_price) > 0;
+
   return (
-    <div className="grid grid-cols-2 gap-4">
-      {/* Regular Price */}
-      <div>
-        <div className={`flex gap-2 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
-          <div className="flex-1">
+    <>
+      <Row gutter={16}>
+        {/* Regular Price */}
+        <Col span={8}>
+          <div>
             <Input
               label={t('regularPrice')}
               type="number"
               value={formData.regular_price}
-              onChange={(e) => onRegularPriceChange(e.target.value)}
+              onChange={(value) => onRegularPriceChange(value)}
               placeholder="0.00"
               error={errors.regular_price?.message}
               step="0.01"
               min="0"
-              className="mr-4 pr-7"
               required
-              suffix="₪"
+              prefix="₪"
               testId="regular-price-input"
+              suffix={
+                <Tooltip title="תמכור חכם">
+                  <span ref={calculatorRef} style={{ display: 'inline-flex' }}>
+                    <AntButton
+                      type="text"
+                      icon={<Calculator style={{ fontSize: '18px' }} />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCalculatorClick();
+                      }}
+                      style={{
+                        padding: 0,
+                        height: 'auto',
+                        color: '#1890ff',
+                        cursor: 'pointer',
+                        border: 'none',
+                        background: 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        pointerEvents: 'auto'
+                      }}
+                    />
+                  </span>
+                </Tooltip>
+              }
             />
           </div>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onCalculatorClick}
-            className={`flex items-center justify-center gap-2 whitespace-nowrap ${isRTL ? 'flex-row-reverse' : 'flex-row'} self-end`}
-            title={t('smartPricing') || 'מחיר חכם'}
-          >
-            <Calculator className="w-[18px] h-[18px]" />
-            <span className="hidden sm:inline text-center">{t('smartPricing') || 'מחיר חכם'}</span>
-          </Button>
-        </div>
-      </div>
+        </Col>
 
-      {/* Sale Price */}
-      <div>
-        <div className={`flex gap-2 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
-          <div className="flex-1">
+        {/* Sale Price */}
+        <Col span={8}>
+          <div>
             <Input
               label={t('salePrice')}
               type="number"
               value={formData.sale_price}
-              onChange={(e) => onSalePriceChange(e.target.value)}
+              onChange={(value) => onSalePriceChange(value)}
               placeholder="0.00"
               step="0.01"
               min="0"
-              className="mr-4 pr-7"
-              suffix="₪"
+              prefix="₪"
               testId="sale-price-input"
+              suffix={
+                <Tooltip title={hasSalePrice ? "תזמון מבצע" : "יש להזין מחיר מבצע"}>
+                  <span ref={scheduleRef} style={{ display: 'inline-flex' }}>
+                    <AntButton
+                      type="text"
+                      icon={<Calendar style={{ fontSize: '18px', opacity: hasSalePrice ? 1 : 0.5 }} />}
+                      onClick={(e) => {
+                        if (hasSalePrice) {
+                          e.stopPropagation();
+                          onScheduleClick();
+                        }
+                      }}
+                      disabled={!hasSalePrice}
+                      style={{
+                        padding: 0,
+                        height: 'auto',
+                        color: hasSalePrice ? '#1890ff' : '#bfbfbf',
+                        cursor: hasSalePrice ? 'pointer' : 'not-allowed',
+                        border: 'none',
+                        background: 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        pointerEvents: 'auto'
+                      }}
+                    />
+                  </span>
+                </Tooltip>
+              }
             />
+            {hasScheduleDates && (
+              <div style={{
+                fontSize: '12px',
+                color: '#8c8c8c',
+                marginTop: '4px',
+                textAlign: isRTL ? 'right' : 'left'
+              }}>
+                {scheduleDateText}
+              </div>
+            )}
           </div>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onScheduleClick}
-            className={`flex items-center justify-center gap-2 whitespace-nowrap ${isRTL ? 'flex-row-reverse' : 'flex-row'} self-end`}
-            title={t('schedule') || 'תזמון'}
-          >
-            <Calendar className="w-[18px] h-[18px]" />
-            <span className="hidden sm:inline text-center">{t('schedule') || 'תזמון'}</span>
-          </Button>
-        </div>
-      </div>
-    </div>
+        </Col>
+
+        {/* Stock Quantity */}
+        <Col span={8}>
+          <Input
+            label={t('stockQuantity') || 'כמות במלאי'}
+            type="number"
+            value={formData.stock_quantity || ''}
+            onChange={(value) => onStockChange(value)}
+            placeholder="0"
+            error={errors.stock_quantity?.message}
+            min="0"
+            step="1"
+            required={formData.manage_stock}
+            testId="stock-quantity-input"
+          />
+        </Col>
+      </Row>
+
+      {/* Tour Guide */}
+      <style>{`
+        .rtl-tour-swap .ant-tour-footer {
+          direction: ltr !important;
+        }
+      `}</style>
+      <Tour
+        open={tourOpen}
+        onClose={() => setTourOpen(false)}
+        steps={tourSteps}
+        rootClassName="rtl-tour-swap"
+      />
+    </>
   );
 };
 
 export default PriceFields;
-

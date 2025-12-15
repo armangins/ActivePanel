@@ -19,7 +19,7 @@ export const orderKeys = {
 // Fetch orders list
 export const useOrders = (filters = {}) => {
   const { hasSettings } = useWooCommerceSettings();
-  
+
   return useQuery({
     queryKey: orderKeys.list(filters),
     queryFn: () => ordersAPI.list({
@@ -27,7 +27,7 @@ export const useOrders = (filters = {}) => {
       per_page: filters.per_page || PER_PAGE,
       orderby: 'date',
       order: 'desc',
-      _fields: filters.fields, // Pass fields if present
+      _fields: filters._fields || 'id,number,status,total,currency,line_items,billing,payment_method,payment_method_title,payment_status,date_created',
       ...filters,
     }),
     enabled: hasSettings, // Only fetch if settings are configured
@@ -38,7 +38,7 @@ export const useOrders = (filters = {}) => {
 // Fetch all orders (for client-side filtering)
 export const useAllOrders = () => {
   const { hasSettings } = useWooCommerceSettings();
-  
+
   return useQuery({
     queryKey: [...orderKeys.all, 'all'],
     queryFn: async () => {
@@ -68,7 +68,7 @@ export const useAllOrders = () => {
 // Fetch single order
 export const useOrder = (id) => {
   const { hasSettings } = useWooCommerceSettings();
-  
+
   return useQuery({
     queryKey: orderKeys.detail(id),
     queryFn: () => ordersAPI.get(id),
@@ -80,7 +80,7 @@ export const useOrder = (id) => {
 // Fetch total orders count
 export const useOrdersTotalCount = () => {
   const { hasSettings } = useWooCommerceSettings();
-  
+
   return useQuery({
     queryKey: orderKeys.totalCount(),
     queryFn: () => ordersAPI.getTotalCount(),
@@ -92,7 +92,7 @@ export const useOrdersTotalCount = () => {
 // Fetch orders by status counts
 export const useOrderStatusCounts = () => {
   const { hasSettings } = useWooCommerceSettings();
-  
+
   return useQuery({
     queryKey: orderKeys.statusCounts(),
     queryFn: async () => {

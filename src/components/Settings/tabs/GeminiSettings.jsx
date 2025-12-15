@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { SparklesIcon as Sparkles, ArrowPathIcon as Loader, CheckCircleIcon as CheckCircle, XCircleIcon as XCircle } from '@heroicons/react/24/outline';
+import { ThunderboltOutlined as Sparkles, ReloadOutlined as Loader, CheckCircleOutlined as CheckCircle, CloseCircleOutlined as XCircle } from '@ant-design/icons';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { Input } from '../../ui/inputs';
 import { Button } from '../../ui';

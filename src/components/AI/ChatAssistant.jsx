@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { XMarkIcon as X, PaperAirplaneIcon as Send, SparklesIcon as Sparkles, ArrowPathIcon as Loader } from '@heroicons/react/24/outline';
+import { CloseOutlined as X, SendOutlined as Send, ThunderboltOutlined as Sparkles, ReloadOutlined as Loader } from '@ant-design/icons';
 import { Button } from '../ui';
 import { Input } from '../ui/inputs';
 import { useLanguage } from '../../contexts/LanguageContext';

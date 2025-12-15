@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowRightIcon, DocumentArrowDownIcon as FloppyDiskIcon, XMarkIcon as X } from '@heroicons/react/24/outline';
+import { ArrowRightOutlined as ArrowRightIcon, SaveOutlined as FloppyDiskIcon, CloseOutlined as X } from '@ant-design/icons';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { variationsAPI, attributesAPI, productsAPI } from '../../../services/woocommerce';
 import { Card, Breadcrumbs, Button } from '../../ui';

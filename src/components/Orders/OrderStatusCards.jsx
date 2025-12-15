@@ -1,11 +1,11 @@
 import { 
-  ShoppingCartIcon as ShoppingCart, 
-  ClockIcon as Clock, 
-  CheckCircleIcon as CheckCircle, 
-  XCircleIcon as XCircle, 
-  ExclamationCircleIcon as AlertCircle, 
-  ArrowPathIcon as RefreshCw 
-} from '@heroicons/react/24/outline';
+  ShoppingCartOutlined as ShoppingCart, 
+  ClockCircleOutlined as Clock, 
+  CheckCircleOutlined as CheckCircle, 
+  CloseCircleOutlined as XCircle, 
+  ExclamationCircleOutlined as AlertCircle, 
+  ReloadOutlined as RefreshCw 
+} from '@ant-design/icons';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 /**

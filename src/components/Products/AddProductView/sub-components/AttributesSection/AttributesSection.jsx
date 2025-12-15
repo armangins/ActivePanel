@@ -1,8 +1,11 @@
 import { memo } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { XMarkIcon as X } from '@heroicons/react/24/outline';
-import { Card } from '../../../../ui';
+import { CloseOutlined as X, PlusOutlined } from '@ant-design/icons';
+import { Spin, Tag, Typography } from 'antd';
+import { Card, Button } from '../../../../ui';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
+
+const { Text, Title } = Typography;
 
 /**
  * AttributesSection Component
@@ -41,48 +44,76 @@ const AttributesSection = ({
   );
 
   return (
-    <Card className={`p-6 ${errors.attributes ? 'border-red-300 ring-4 ring-red-50' : ''}`}>
-      <h3 className="text-lg font-semibold text-gray-800 mb-4 text-right">
+    <Card style={{ 
+      padding: '24px',
+      border: errors.attributes ? '1px solid #ff4d4f' : undefined
+    }}>
+      <Title level={4} style={{ 
+        marginBottom: '16px', 
+        textAlign: 'right',
+        fontSize: '18px',
+        fontWeight: 600
+      }}>
         {t('attributes') || 'תכונות'}
-      </h3>
+      </Title>
 
       {loading ? (
-        <div className="text-right py-4">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500 mr-auto"></div>
-          <p className="text-sm text-gray-600 mt-2 text-right">{t('loading') || 'טוען...'}</p>
+        <div style={{ textAlign: 'right', padding: '16px 0' }}>
+          <Spin size="small" />
+          <Text type="secondary" style={{ marginLeft: '8px', fontSize: '14px' }}>
+            {t('loading') || 'טוען...'}
+          </Text>
         </div>
       ) : attributes.length === 0 ? (
-        <p className="text-sm text-gray-500 text-right">{t('noAttributes') || 'אין תכונות זמינות'}</p>
+        <Text type="secondary" style={{ fontSize: '14px', textAlign: 'right', display: 'block' }}>
+          {t('noAttributes') || 'אין תכונות זמינות'}
+        </Text>
       ) : (
-        <div className="space-y-6">
-          {/* Step 1: Select which attributes to use */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3 text-right">
+            <Text strong style={{ 
+              display: 'block', 
+              fontSize: '14px', 
+              marginBottom: '12px',
+              textAlign: 'right'
+            }}>
               {t('selectAttributes') || 'בחר תכונות למוצר'}
-            </label>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {attributes.map(attribute => (
-                <button
-                  key={attribute.id}
-                  type="button"
-                  onClick={() => onToggleAttribute?.(attribute.id)}
-                  className={`px-4 py-2 rounded-lg transition-colors text-sm text-center ${isAttributeSelected?.(attribute.id)
-                    ? 'bg-primary-500 text-white hover:bg-primary-600'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                >
-                  {attribute.name}
-                  {isAttributeSelected?.(attribute.id) && (
-                    <X className="w-3.5 h-3.5 inline mr-1" />
-                  )}
-                </button>
-              ))}
+            </Text>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+              {attributes.map(attribute => {
+                const isSelected = isAttributeSelected?.(attribute.id);
+                return (
+                  <Tag
+                    key={attribute.id}
+                    closable={isSelected}
+                    onClose={(e) => {
+                      e.preventDefault();
+                      onToggleAttribute?.(attribute.id);
+                    }}
+                    color={isSelected ? 'blue' : 'default'}
+                    style={{ 
+                      cursor: 'pointer',
+                      padding: '4px 12px',
+                      fontSize: '14px',
+                      borderRadius: '6px'
+                    }}
+                    onClick={() => !isSelected && onToggleAttribute?.(attribute.id)}
+                  >
+                    {attribute.name}
+                  </Tag>
+                );
+              })}
             </div>
           </div>
 
-          {/* Step 2: Select terms for selected attributes */}
           {selectedAttributeIds.length > 0 && (
-            <div className="space-y-4 pt-4 border-t border-gray-200">
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '16px', 
+              paddingTop: '16px', 
+              borderTop: '1px solid #f0f0f0'
+            }}>
               {selectedAttributeIds.map(attributeId => {
                 const attribute = attributes.find(attr => attr.id === attributeId);
                 if (!attribute) return null;
@@ -92,96 +123,113 @@ const AttributesSection = ({
                 const isLoadingTerms = terms === undefined && !error;
 
                 return (
-                  <div key={attributeId} className="border-b border-gray-200 pb-4 last:border-0">
-                    <label className="block text-sm font-medium text-gray-700 mb-3 text-right">
+                  <div 
+                    key={attributeId} 
+                    style={{ 
+                      paddingBottom: '16px', 
+                      borderBottom: '1px solid #f0f0f0'
+                    }}
+                  >
+                    <Text strong style={{ 
+                      display: 'block', 
+                      fontSize: '14px', 
+                      marginBottom: '12px',
+                      textAlign: 'right'
+                    }}>
                       {attribute.name}
-                    </label>
+                    </Text>
                     {error ? (
-                      <div className="flex items-center gap-2 text-red-500 text-sm">
-                        <span>{t('failedToLoadTerms') || 'שגיאה בטעינת ערכים'}</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            // Reset terms state for this attribute to undefined to trigger re-fetch logic if needed
-                            // But loadAttributeTerms checks if undefined.
-                            // We need to force reload.
-                            // We can just call onRetryLoadTerms(attributeId) if we passed it.
-                            // Or just toggle it off and on? No that clears selection.
-                            onRetryLoadTerms?.(attributeId);
-                          }}
-                          className="underline hover:text-red-700"
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px',
+                        color: '#ff4d4f',
+                        fontSize: '14px'
+                      }}>
+                        <Text type="danger">{t('failedToLoadTerms') || 'שגיאה בטעינת ערכים'}</Text>
+                        <Button
+                          type="link"
+                          size="small"
+                          onClick={() => onRetryLoadTerms?.(attributeId)}
+                          style={{ padding: 0, height: 'auto' }}
                         >
                           {t('retry') || 'נסה שוב'}
-                        </button>
+                        </Button>
                       </div>
                     ) : isLoadingTerms ? (
-                      <div className="text-right py-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500 inline-block"></div>
-                        <p className="text-xs text-gray-500 inline mr-2">{t('loading') || 'טוען...'}</p>
+                      <div style={{ textAlign: 'right', padding: '8px 0' }}>
+                        <Spin size="small" />
+                        <Text type="secondary" style={{ marginLeft: '8px', fontSize: '12px' }}>
+                          {t('loading') || 'טוען...'}
+                        </Text>
                       </div>
                     ) : !terms || terms.length === 0 ? (
-                      <p className="text-xs text-gray-500 text-right">
+                      <Text type="secondary" style={{ fontSize: '12px', textAlign: 'right', display: 'block' }}>
                         {t('noTermsAvailable') || 'אין אפשרויות זמינות לתכונה זו'}
-                      </p>
+                      </Text>
                     ) : (
-                      <div className="flex flex-wrap gap-2">
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                         {terms.map(term => {
-                          // Check if this is a color attribute
+                          const isSelected = isTermSelected?.(attributeId, term.id);
                           const isColorAttribute = ['color', 'colour', 'צבע', 'colors', 'colours']
                             .some(keyword => attribute.name.toLowerCase().includes(keyword));
 
-                          // Simple color validation (can be enhanced)
-                          // We rely on the browser to ignore invalid background colors, but we need to decide strictly for UI
-                          const colorValue = term.slug; // Slug is usually English (e.g. 'blue', 'red')
-
-                          // If it's a color attribute, try to render a swatch
                           if (isColorAttribute) {
+                            const colorValue = term.slug;
                             return (
                               <button
                                 key={term.id}
                                 type="button"
                                 onClick={() => onToggleTerm?.(attributeId, term.id)}
-                                title={term.name} // Show name on hover
-                                className={`
-                                  w-8 h-8 rounded-full border-2 transition-all relative flex items-center justify-center
-                                  ${isTermSelected?.(attributeId, term.id)
-                                    ? 'border-primary-500 ring-2 ring-primary-200 scale-110'
-                                    : 'border-gray-200 hover:border-gray-300'
-                                  }
-                                `}
-                                style={{ backgroundColor: colorValue }}
+                                title={term.name}
+                                style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: '50%',
+                                  border: `2px solid ${isSelected ? '#1890ff' : '#d9d9d9'}`,
+                                  backgroundColor: colorValue,
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'all 0.2s',
+                                  transform: isSelected ? 'scale(1.1)' : 'scale(1)',
+                                  boxShadow: isSelected ? '0 0 0 2px rgba(24, 144, 255, 0.2)' : 'none'
+                                }}
                               >
-                                {isTermSelected?.(attributeId, term.id) && (
-                                  // Contrast check is complex, so we use a shadowed check icon or ensure visibility
-                                  <span className="bg-white rounded-full p-0.5 shadow-sm">
-                                    <X className="w-3 h-3 text-primary-600" />
+                                {isSelected && (
+                                  <span style={{
+                                    backgroundColor: '#fff',
+                                    borderRadius: '50%',
+                                    padding: '2px',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                                  }}>
+                                    <X style={{ fontSize: '12px', color: '#1890ff' }} />
                                   </span>
                                 )}
-                                {/* Fallback: If background color fails (invalid), the button might look empty. 
-                                    Ideally we'd detect this, but CSS fallback requires JS measurement or specific handling.
-                                    For now, this assumes slugs are valid colors. 
-                                    If user has "Gradient" or "Pattern", it won't work well without custom logic.
-                                */}
                               </button>
                             );
                           }
 
-                          // Default Text Button
                           return (
-                            <button
+                            <Tag
                               key={term.id}
-                              type="button"
-                              onClick={() => onToggleTerm?.(attributeId, term.id)}
-                              className={`px-4 py-2 rounded-lg transition-colors text-sm text-center ${isTermSelected?.(attributeId, term.id)
-                                ? 'bg-primary-500 text-white hover:bg-primary-600'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
+                              closable={isSelected}
+                              onClose={(e) => {
+                                e.preventDefault();
+                                onToggleTerm?.(attributeId, term.id);
+                              }}
+                              color={isSelected ? 'blue' : 'default'}
+                              style={{ 
+                                cursor: 'pointer',
+                                padding: '4px 12px',
+                                fontSize: '14px',
+                                borderRadius: '6px'
+                              }}
+                              onClick={() => !isSelected && onToggleTerm?.(attributeId, term.id)}
                             >
                               {term.name}
-                              {isTermSelected?.(attributeId, term.id) && (
-                                <X className="w-3.5 h-3.5 inline mr-1" />
-                              )}
-                            </button>
+                            </Tag>
                           );
                         })}
                       </div>
@@ -192,38 +240,34 @@ const AttributesSection = ({
             </div>
           )}
 
-          {/* Add Variation Button - Show when attributes and terms are selected */}
           {hasSelectedAttributes && hasSelectedTerms && onAddVariationClick && (
-            <div className="pt-4 border-t border-gray-200">
-              <button
-                type="button"
+            <div style={{ 
+              paddingTop: '16px', 
+              borderTop: '1px solid #f0f0f0'
+            }}>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
                 onClick={onAddVariationClick}
-                className="w-full inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+                block
+                size="large"
               >
-                <svg
-                  className="w-5 h-5 ml-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
                 {t('addVariation') || 'צור וריאציה'}
-              </button>
+              </Button>
             </div>
           )}
         </div>
       )}
 
       {errors.attributes && (
-        <p className="mt-2 text-sm text-red-600 text-right">
+        <Text type="danger" style={{ 
+          marginTop: '8px', 
+          fontSize: '14px', 
+          textAlign: 'right',
+          display: 'block'
+        }}>
           {errors.attributes.message}
-        </p>
+        </Text>
       )}
     </Card>
   );

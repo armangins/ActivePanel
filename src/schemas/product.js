@@ -1,6 +1,51 @@
 import { z } from 'zod';
 
-const priceSchema = z.union([z.string(), z.number()]).optional().transform(val => (val === '' || val === null || val === undefined) ? undefined : String(val));
+const priceSchema = z
+    .union([z.string(), z.number(), z.null()])
+    .transform(val => {
+        // Handle null, undefined, and empty string
+        if (val === '' || val === null || val === undefined) return undefined;
+        return String(val).trim();
+    })
+    .refine(val => val !== undefined && val !== '', {
+        message: 'יש להזין מחיר'
+    })
+    .refine(val => {
+        if (val === undefined) return true;
+        // Remove any non-numeric characters except decimal point and minus sign for validation
+        const sanitized = val.replace(/[^\d.-]/g, '');
+        const num = parseFloat(sanitized);
+        return !isNaN(num) && isFinite(num);
+    }, {
+        message: 'יש להזין מספר תקין'
+    })
+    .refine(val => {
+        if (val === undefined) return true;
+        // Re-sanitize for parsing in this refine, as previous refine only sanitized for its own check
+        const sanitizedVal = val.replace(/[^\d.-]/g, '');
+        const num = parseFloat(sanitizedVal);
+        return num >= 0 && num <= 999999999.99;
+    }, {
+        message: 'המחיר חייב להיות בין 0 ל-999,999,999.99'
+    })
+    .transform(val => {
+        if (val === undefined) return undefined;
+        // Final sanitization after validation passes
+        let sanitized = val.replace(/[^\d.-]/g, '');
+
+        // Prevent multiple decimal points
+        const parts = sanitized.split('.');
+        if (parts.length > 2) {
+            sanitized = parts[0] + '.' + parts.slice(1).join('');
+        }
+
+        // Ensure only 2 decimal places
+        if (parts.length === 2 && parts[1].length > 2) {
+            sanitized = parts[0] + '.' + parts[1].substring(0, 2);
+        }
+
+        return sanitized;
+    });
 
 export const productSchema = z.object({
     product_name: z.string().min(1, { message: 'נא להזין שם מוצר' }),
@@ -20,7 +65,7 @@ export const productSchema = z.object({
         if (!data.regular_price) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: 'מחיר רגיל חובה',
+                message: 'יש להזין מחיר',
                 path: ['regular_price']
             });
         }

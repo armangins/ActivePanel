@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { UserIcon as User } from '@heroicons/react/24/outline';
+import { UserOutlined as User } from '@ant-design/icons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { customersAPI } from '../../services/woocommerce';
 import { useCustomers } from '../../hooks/useCustomers';
-import { SearchInput, EmptyState, LoadingState, ErrorState, LoadingMoreIndicator } from '../ui';
+import { SearchInput, EmptyState, LoadingState, ErrorState, LoadingMoreIndicator, Card } from '../ui';
 import CustomerDetailsModal from './CustomerDetailsModal/CustomerDetailsModal';
 import CustomersHeader from './CustomersHeader';
 import CustomersGrid from './CustomersGrid';
@@ -63,7 +63,7 @@ const Customers = () => {
   // Show setup message if settings aren't configured
   if (!settingsLoading && !hasSettings) {
     return (
-      <div className="space-y-6" dir="rtl">
+      <div style={{ direction: 'rtl' }}>
         <SetupRequired
           title={t('configureWooCommerceToViewCustomers') || 'הגדר את WooCommerce כדי לראות לקוחות'}
           description={t('configureWooCommerceSettings') || 'כדי להתחיל, אנא הגדר את הגדרות WooCommerce שלך.'}
@@ -83,7 +83,7 @@ const Customers = () => {
 
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div style={{ direction: 'rtl' }}>
       {/* Header */}
       <CustomersHeader
         displayedCount={displayedCount}
@@ -93,16 +93,14 @@ const Customers = () => {
       />
 
       {/* Search Bar */}
-      <div className="card">
+      <Card style={{ marginTop: 24 }}>
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder={t('searchCustomers')}
           isRTL={isRTL}
         />
-      </div>
-
-
+      </Card>
 
       {/* Customers Grid */}
       {filteredCustomers.length === 0 ? (
@@ -117,7 +115,7 @@ const Customers = () => {
             formatCurrency={formatCurrency}
           />
           {/* Pagination */}
-          <div className="mt-6">
+          <div style={{ marginTop: 24 }}>
             <Pagination
               currentPage={page}
               totalPages={totalPages}

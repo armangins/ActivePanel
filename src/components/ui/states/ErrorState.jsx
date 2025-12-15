@@ -1,11 +1,10 @@
+import { Result, Button as AntButton } from 'antd';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import StatusMessage from './StatusMessage';
 
 /**
- * ErrorState Component
+ * ErrorState Component - Ant Design wrapper
  * 
- * Reusable error display component with retry option.
- * Wrapper around StatusMessage.
+ * Reusable error display component with retry option using Ant Design Result.
  */
 const ErrorState = ({ error, onRetry, title, showRetry = true, fullPage = false }) => {
   const { t } = useLanguage();
@@ -20,28 +19,38 @@ const ErrorState = ({ error, onRetry, title, showRetry = true, fullPage = false 
 
   const subMessage = t('checkSettings') || 'אנא בדוק את ההגדרות שלך ונסה שוב';
 
-  return (
-    <StatusMessage
-      type="error"
-      title={title}
-      message={
-        <>
-          <span className="block font-medium mb-2">{displayError || defaultMessage}</span>
-          <span className="block text-sm text-gray-500">{subMessage}</span>
-        </>
+  const content = (
+    <Result
+      status="error"
+      title={title || displayError || defaultMessage}
+      subTitle={subMessage}
+      extra={
+        showRetry && onRetry ? (
+          <AntButton type="primary" onClick={onRetry}>
+            {t('retry') || 'נסה שוב'}
+          </AntButton>
+        ) : null
       }
-      action={showRetry && onRetry && (
-        <button
-          onClick={onRetry}
-          className="btn-primary px-8 py-2.5 shadow-sm hover:shadow-md transition-all"
-        >
-          {t('retry')}
-        </button>
-      )}
-      fullPage={fullPage}
     />
   );
+
+  if (fullPage) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '60vh', 
+        padding: '24px' 
+      }}>
+        <div style={{ width: '100%', maxWidth: '600px' }}>
+          {content}
+        </div>
+      </div>
+    );
+  }
+
+  return content;
 };
 
 export default ErrorState;
-

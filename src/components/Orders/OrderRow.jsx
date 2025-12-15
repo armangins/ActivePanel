@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { CubeIcon as Package, MagnifyingGlassIcon as Search } from '@heroicons/react/24/outline';
+import { InboxOutlined as Package, SearchOutlined as Search } from '@ant-design/icons';
 import { OptimizedImage, Button } from '../ui';
 
 /**

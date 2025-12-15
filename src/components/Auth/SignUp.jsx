@@ -8,11 +8,11 @@ import { registerUser } from '../../services/auth';
 import { authAPI } from '../../services/api';
 import { validatePassword, checkRateLimit } from '../../utils/security';
 import {
-  EnvelopeIcon as Mail,
-  LockClosedIcon as Lock,
-  UserIcon as UserIcon,
-  ArrowPathIcon as Loader
-} from '@heroicons/react/24/outline';
+  MailOutlined as Mail,
+  LockOutlined as Lock,
+  UserOutlined as UserIcon,
+  ReloadOutlined as Loader
+} from '@ant-design/icons';
 import { Input } from '../ui/inputs';
 import { Button } from '../ui';
 import { GoogleAuthButton } from './GoogleAuthButton';
@@ -77,7 +77,7 @@ const SignUp = () => {
 
       // Use backend API
       const result = await authAPI.register(email, password, name);
-      login(result.user);
+      login(result.user, result.accessToken);
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'שגיאה בהרשמה. אנא נסה שוב.');

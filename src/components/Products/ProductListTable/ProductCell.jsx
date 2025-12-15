@@ -1,4 +1,4 @@
-import { CubeIcon as Package, ChevronDownIcon, ChevronRightIcon, ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { InboxOutlined as Package, DownOutlined as ChevronDownIcon, RightOutlined as ChevronRightIcon, LeftOutlined as ChevronLeftIcon } from '@ant-design/icons';
 import { UserAvatar, OptimizedImage } from '../../ui';
 import { validateImageUrl, sanitizeProductName, sanitizeAttributeValue } from '../utils/securityHelpers';
 

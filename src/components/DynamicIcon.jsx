@@ -1,23 +1,24 @@
 import React from 'react';
-import * as Icons from './icons';
 import { secureLog } from '../utils/logger';
+import * as AntIcons from '@ant-design/icons';
 
 /**
  * DynamicIcon Component
- * Renders an icon based on the provided name.
+ * Renders an Ant Design icon based on the provided name.
  * 
- * @param {string} name - The name of the icon component (e.g., 'DashboardIcon', 'SettingsIcon')
+ * @deprecated This component is deprecated. Use Ant Design icons directly instead.
+ * @param {string} name - The name of the Ant Design icon component (e.g., 'DashboardOutlined', 'SettingOutlined')
  * @param {object} props - Props to pass to the icon component
  */
 const DynamicIcon = ({ name, ...props }) => {
-    const IconComponent = Icons[name];
+    const IconComponent = AntIcons[name];
 
     if (!IconComponent) {
-        secureLog.warn(`Icon "${name}" not found in DynamicIcon registry.`);
+        secureLog.warn(`Icon "${name}" not found in Ant Design icons.`);
         return null;
     }
 
-    return <IconComponent {...props} />;
+    return React.createElement(IconComponent, props);
 };
 
 export default DynamicIcon;

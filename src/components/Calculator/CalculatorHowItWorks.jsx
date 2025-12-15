@@ -1,4 +1,4 @@
-import { Info } from '@heroicons/react/24/outline';
+import { InfoCircleOutlined as Info } from '@ant-design/icons';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 /**
@@ -30,6 +30,10 @@ const CalculatorHowItWorks = () => {
 };
 
 export default CalculatorHowItWorks;
+
+
+
+
 
 
 

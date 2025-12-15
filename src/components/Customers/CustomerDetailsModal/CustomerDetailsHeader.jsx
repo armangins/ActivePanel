@@ -1,4 +1,4 @@
-import { XMarkIcon as X } from '@heroicons/react/24/outline';
+import { CloseOutlined as X } from '@ant-design/icons';
 import { Button } from '../../ui';
 
 /**

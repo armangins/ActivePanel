@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { PlusIcon as Plus, XMarkIcon as X, RectangleStackIcon as Boxes } from '@heroicons/react/24/outline';
+import { PlusOutlined as Plus, CloseOutlined as X, AppstoreOutlined as Boxes } from '@ant-design/icons';
 import { Card, Button } from '../../../../ui';
 import VariationCard from '../../../VariationCard/VariationCard';
 

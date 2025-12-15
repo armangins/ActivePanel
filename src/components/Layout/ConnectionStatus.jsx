@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  SignalIcon as Wifi,
-  SignalSlashIcon as WifiOff,
-  ExclamationCircleIcon as AlertCircle
-} from '@heroicons/react/24/outline';
+  WifiOutlined as Wifi,
+  DisconnectOutlined as WifiOff,
+  ExclamationCircleOutlined as AlertCircle
+} from '@ant-design/icons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { testConnection } from '../../services/woocommerce';
 
@@ -41,40 +41,41 @@ const ConnectionStatus = () => {
     };
   }, [checkConnection]);
 
-  const getStatusColor = () => {
+  const getStatusConfig = () => {
     switch (status) {
       case 'connected':
-        return 'text-green-600 bg-green-50';
+        return { color: '#52c41a', bgColor: '#f6ffed', icon: <Wifi /> };
       case 'disconnected':
-        return 'text-gray-600 bg-gray-50';
+        return { color: '#8c8c8c', bgColor: '#fafafa', icon: <WifiOff /> };
       case 'error':
-        return 'text-orange-600 bg-orange-50';
+        return { color: '#ff4d4f', bgColor: '#fff2f0', icon: <WifiOff /> };
       default:
-        return 'text-yellow-600 bg-yellow-50';
+        return { color: '#faad14', bgColor: '#fffbe6', icon: <AlertCircle /> };
     }
   };
 
-  const getIcon = () => {
-    switch (status) {
-      case 'connected':
-        return <Wifi className="w-4 h-4" />;
-      case 'disconnected':
-      case 'error':
-        return <WifiOff className="w-4 h-4" />;
-      default:
-        return <AlertCircle className="w-4 h-4 animate-pulse" />;
-    }
-  };
+  const config = getStatusConfig();
 
   return (
     <div
-      className={`flex items-center flex-row-reverse space-x-2 px-3 py-1.5 rounded-lg text-sm font-medium ${getStatusColor()}`}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '6px 12px',
+        borderRadius: 8,
+        fontSize: 14,
+        fontWeight: 500,
+        color: config.color,
+        backgroundColor: config.bgColor,
+        cursor: 'pointer',
+        flexDirection: 'row-reverse'
+      }}
       title={status === 'error' ? t('clickToCheck') : message}
       onClick={checkConnection}
-      style={{ cursor: 'pointer' }}
     >
-      {getIcon()}
-      <span className="hidden md:inline">{message}</span>
+      {config.icon}
+      <span style={{ display: window.innerWidth >= 768 ? 'inline' : 'none' }}>{message}</span>
     </div>
   );
 };

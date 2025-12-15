@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { XMarkIcon as X, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { CloseOutlined as X, CheckCircleOutlined as CheckCircleIcon } from '@ant-design/icons';
 import { Button } from '../../ui';
 
 const CouponModalHeader = ({ coupon, currentStep, steps, onClose, t }) => {

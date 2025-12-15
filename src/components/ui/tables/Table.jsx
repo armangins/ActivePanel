@@ -1,28 +1,37 @@
+import { Table as AntTable } from 'antd';
+
 /**
- * Table Component
+ * Table Component - Ant Design wrapper
  * 
- * Reusable table container component.
+ * Reusable table container component using Ant Design Table.
  * 
- * @param {React.ReactNode} children - Table content
- * @param {string} className - Additional CSS classes
+ * Note: Ant Design Table uses a different API (columns + dataSource).
+ * For backward compatibility, this wrapper accepts children but recommends
+ * using columns and dataSource props directly.
  */
-const Table = ({ children, className = '' }) => {
+const Table = ({ children, className = '', columns, dataSource, ...props }) => {
+  // If columns and dataSource are provided, use Ant Design Table directly
+  if (columns && dataSource) {
+    return (
+      <AntTable
+        columns={columns}
+        dataSource={dataSource}
+        className={className}
+        {...props}
+      />
+    );
+  }
+
+  // Otherwise, render children (for backward compatibility during migration)
   return (
-    <div className={`overflow-x-auto ${className}`}>
-      <table className="min-w-full divide-y divide-gray-200">
+    <div className={className}>
+      <AntTable {...props}>
         {children}
-      </table>
+      </AntTable>
     </div>
   );
 };
 
 export default Table;
-
-
-
-
-
-
-
 
 

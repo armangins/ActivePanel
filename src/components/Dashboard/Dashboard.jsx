@@ -1,11 +1,12 @@
 import React, { Suspense, lazy } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useQueryClient } from '@tanstack/react-query';
-import { LoadingState, ErrorState } from '../ui';
+import { LoadingState, ErrorState, Card, SetupRequired } from '../ui';
 import { useDashboardLogic } from './hooks/useDashboardLogic';
 import { useDashboardSidebar } from './hooks/useDashboardSidebar';
 import { useSettings } from '../../contexts/SettingsContext';
 import { Link } from 'react-router-dom';
+import { Row, Col, Skeleton } from 'antd';
 
 
 // These are loaded immediately as they are above the fold or essential for the initial view
@@ -22,10 +23,9 @@ const DashboardSidebar = lazy(() => import('./DashboardSidebar'));
 
 // Placeholder UI shown while lazy-loaded components are being fetched
 const WidgetSkeleton = () => (
-  <div className="card animate-pulse h-full min-h-[300px]">
-    <div className="h-6 w-1/3 bg-gray-200 rounded mb-4"></div>
-    <div className="h-64 bg-gray-100 rounded"></div>
-  </div>
+  <Card>
+    <Skeleton active paragraph={{ rows: 8 }} />
+  </Card>
 );
 
 /**
@@ -40,9 +40,11 @@ const Dashboard = () => {
   const { t, formatCurrency, isRTL } = useLanguage();
   const queryClient = useQueryClient();
   const { settings, loading: settingsLoading } = useSettings();
-  
+
   // Check if WooCommerce settings are configured
-  const hasSettings = settings && settings.hasConsumerKey && settings.hasConsumerSecret;
+  const hasConsumerKey = settings?.hasConsumerKey || !!(settings?.consumerKey && settings.consumerKey.trim());
+  const hasConsumerSecret = settings?.hasConsumerSecret || !!(settings?.consumerSecret && settings.consumerSecret.trim());
+  const hasSettings = !!(settings && hasConsumerKey && hasConsumerSecret);
 
   // Custom Hook: useDashboardLogic
   // Handles all data fetching and state management for the dashboard
@@ -77,24 +79,12 @@ const Dashboard = () => {
   // 2. Show setup message if settings aren't configured
   if (!settingsLoading && !hasSettings) {
     return (
-      <div className="space-y-4 sm:space-y-6" dir="rtl">
+      <div style={{ direction: 'rtl' }}>
         <DashboardHeader t={t} isRTL={isRTL} />
-        <div className="card p-8 text-center">
-          <div className="max-w-md mx-auto">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-              {t('welcomeToDashboard') || 'ברוכים הבאים לדשבורד'}
-            </h2>
-            <p className="text-gray-600 mb-6">
-              {t('configureWooCommerceSettings') || 'כדי להתחיל, אנא הגדר את הגדרות WooCommerce שלך.'}
-            </p>
-            <Link
-              to="/settings"
-              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              {t('goToSettings') || 'עבור להגדרות'}
-            </Link>
-          </div>
-        </div>
+        <SetupRequired
+          title={t('welcomeToDashboard') || 'ברוכים הבאים לדשבורד'}
+          description={t('configureWooCommerceSettings') || 'כדי להתחיל, אנא הגדר את הגדרות WooCommerce שלך.'}
+        />
       </div>
     );
   }
@@ -117,19 +107,21 @@ const Dashboard = () => {
 
   // 4. Main Dashboard Render
   return (
-    <div className="space-y-4 sm:space-y-6" dir="rtl" data-onboarding="dashboard">
+    <div style={{ direction: 'rtl' }} data-onboarding="dashboard">
       {/* Displays the dashboard title and global actions */}
       <DashboardHeader t={t} isRTL={isRTL} />
 
       {/* Shown immediately. Displays cards for Revenue, Orders, Customers, etc. */}
       {loading || loadingSecondary ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="card animate-pulse">
-              <div className="h-24 bg-gray-200 rounded"></div>
-            </div>
+            <Col xs={24} sm={12} lg={6} key={i}>
+              <Card>
+                <Skeleton active paragraph={{ rows: 2 }} />
+              </Card>
+            </Col>
           ))}
-        </div>
+        </Row>
       ) : (
         <DashboardStats
           stats={stats}
@@ -143,20 +135,19 @@ const Dashboard = () => {
         />
       )}
       {/* Contains the Earnings Chart and Recent Orders list */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
+      <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
         {/* Column 1: Recent Orders List */}
-        {/* Takes 1/3 width on large screens. Shows the 5 most recent orders. */}
-        <div className="lg:col-span-1">
+        <Col xs={24} lg={8}>
           {loading ? (
             <WidgetSkeleton />
           ) : (
             <Suspense fallback={<WidgetSkeleton />}>
-              <div
-                className="card cursor-pointer hover:shadow-lg transition-shadow h-full"
+              <Card
+                hoverable
                 onClick={() => handleCardClick('recentOrders')}
+                style={{ height: '100%' }}
               >
-                <h2 className={`text-xl font-semibold text-gray-900 mb-4 ${'text-right'}`}>
+                <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 16, textAlign: 'right' }}>
                   {t('recentOrders')}
                 </h2>
                 <RecentOrdersTable
@@ -165,11 +156,11 @@ const Dashboard = () => {
                   t={t}
                   isRTL={isRTL}
                 />
-              </div>
+              </Card>
             </Suspense>
           )}
-        </div>
-        <div className="lg:col-span-2">
+        </Col>
+        <Col xs={24} lg={16}>
           {loading ? (
             <WidgetSkeleton />
           ) : (
@@ -183,8 +174,8 @@ const Dashboard = () => {
               />
             </Suspense>
           )}
-        </div>
-      </div>
+        </Col>
+      </Row>
 
       {/* Sidebar: Generic Dashboard Sidebar */}
       {sidebarProps.isOpen && (

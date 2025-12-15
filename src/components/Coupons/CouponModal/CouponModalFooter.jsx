@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRightIcon } from '@heroicons/react/24/outline';
+import { ArrowRightOutlined as ArrowRightIcon } from '@ant-design/icons';
 import { Button } from '../../ui';
 import { useLanguage } from '../../../contexts/LanguageContext';
 

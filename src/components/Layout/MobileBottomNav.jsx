@@ -1,13 +1,14 @@
-import { Link, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
-  Squares2X2Icon as LayoutDashboard, 
-  CubeIcon as Package, 
-  ShoppingCartIcon as ShoppingCart, 
-  UsersIcon as Users, 
-  Cog6ToothIcon as Settings,
-} from '@heroicons/react/24/outline';
+  AppstoreOutlined as LayoutDashboard, 
+  InboxOutlined as Package, 
+  ShoppingCartOutlined as ShoppingCart, 
+  UserOutlined as Users, 
+  SettingOutlined as Settings,
+} from '@ant-design/icons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import useNewOrdersCount from '../../hooks/useNewOrdersCount';
+import { Badge } from 'antd';
 
 /**
  * MobileBottomNav Component
@@ -18,68 +19,109 @@ import useNewOrdersCount from '../../hooks/useNewOrdersCount';
  */
 const MobileBottomNav = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { t } = useLanguage();
   const { newOrdersCount } = useNewOrdersCount();
 
   const navItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: t('dashboard') },
-    { path: '/products', icon: Package, label: t('products') },
+    { key: '/dashboard', icon: LayoutDashboard, label: t('dashboard') },
+    { key: '/products', icon: Package, label: t('products') },
     { 
-      path: '/orders', 
+      key: '/orders', 
       icon: ShoppingCart, 
       label: t('orders'),
       badge: newOrdersCount > 0 ? newOrdersCount : null,
     },
-    { path: '/customers', icon: Users, label: t('customers') },
-    { path: '/settings', icon: Settings, label: t('settings') },
+    { key: '/customers', icon: Users, label: t('customers') },
+    { key: '/settings', icon: Settings, label: t('settings') },
   ];
 
+  const handleClick = (key) => {
+    navigate(key);
+  };
+
   return (
-    <nav 
-      className="lg:hidden fixed bottom-0 left-0 right-0 w-full bg-white border-t border-gray-200 z-30 shadow-lg"
+    <div
       style={{
+        display: window.innerWidth < 1024 ? 'flex' : 'none',
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        width: '100%',
+        background: '#fff',
+        borderTop: '1px solid #f0f0f0',
+        zIndex: 1000,
         paddingBottom: 'env(safe-area-inset-bottom, 0)',
-        margin: 0,
-        width: '100%'
+        boxShadow: '0 -2px 8px rgba(0,0,0,0.1)'
       }}
     >
-      <div className="flex items-center justify-around h-16 w-full">
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-around', 
+        height: 64, 
+        width: '100%' 
+      }}>
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path || 
-                          (location.pathname.startsWith(item.path) && item.path !== '/dashboard');
+          const isActive = location.pathname === item.key || 
+                          (location.pathname.startsWith(item.key) && item.key !== '/dashboard');
           
           return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`
-                flex flex-col items-center justify-center flex-1 h-full
-                relative touch-manipulation
-                transition-colors duration-200
-                px-2
-                ${isActive ? 'text-primary-500' : 'text-gray-500'}
-              `}
+            <div
+              key={item.key}
+              onClick={() => handleClick(item.key)}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flex: 1,
+                height: '100%',
+                cursor: 'pointer',
+                color: isActive ? '#4560FF' : '#8c8c8c',
+                position: 'relative',
+                padding: '4px 8px'
+              }}
             >
-              <div className="relative flex items-center justify-center mb-0.5">
-                <Icon className="w-5 h-5" />
-                {item.badge && (
-                  <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                    {item.badge > 99 ? '99+' : item.badge}
-                  </span>
+              <div style={{ position: 'relative', marginBottom: 4 }}>
+                {item.badge ? (
+                  <Badge count={item.badge > 99 ? '99+' : item.badge} offset={[-5, 5]}>
+                    <Icon style={{ fontSize: 20 }} />
+                  </Badge>
+                ) : (
+                  <Icon style={{ fontSize: 20 }} />
                 )}
               </div>
-              <span className="text-[10px] font-medium leading-tight text-center max-w-full truncate px-1">
+              <span style={{ 
+                fontSize: 10, 
+                fontWeight: 500, 
+                textAlign: 'center',
+                maxWidth: '100%',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
                 {item.label}
               </span>
               {isActive && (
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-0.5 bg-primary-500 rounded-b-full" />
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: 48,
+                  height: 2,
+                  background: '#4560FF',
+                  borderRadius: '0 0 4px 4px'
+                }} />
               )}
-            </Link>
+            </div>
           );
         })}
       </div>
-    </nav>
+    </div>
   );
 };
 

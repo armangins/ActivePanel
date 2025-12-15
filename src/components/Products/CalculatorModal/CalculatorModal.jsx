@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { XMarkIcon as X, CalculatorIcon as CalculatorIcon } from '@heroicons/react/24/outline';
+import { CloseOutlined as X, CalculatorOutlined as CalculatorIcon } from '@ant-design/icons';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import Calculator from '../../Calculator/Calculator';
 import { Button } from '../../ui';

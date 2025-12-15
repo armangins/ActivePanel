@@ -1,5 +1,5 @@
 import { useState, lazy, Suspense, memo } from 'react';
-import { TagIcon as Tag } from '@heroicons/react/24/outline';
+import { TagOutlined as Tag } from '@ant-design/icons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { couponsAPI } from '../../services/woocommerce';
 import { useCoupons } from '../../hooks/useCoupons';
@@ -81,7 +81,7 @@ const Coupons = memo(() => {
   // PERFORMANCE: Show skeleton loading for better perceived performance
   if (loading && !allCoupons.length) {
     return (
-      <div className="space-y-6" dir="rtl">
+      <div style={{ direction: 'rtl' }}>
         <CouponsHeader
           totalCount={0}
           displayedCount={0}
@@ -108,7 +108,7 @@ const Coupons = memo(() => {
   }
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div style={{ direction: 'rtl' }}>
       <CouponsHeader
         totalCount={totalCoupons}
         displayedCount={filteredCoupons.length}
@@ -141,7 +141,7 @@ const Coupons = memo(() => {
             />
           </Suspense>
           {/* Pagination */}
-          <div className="mt-6">
+          <div style={{ marginTop: 24 }}>
             <Pagination
               currentPage={page}
               totalPages={totalPages}

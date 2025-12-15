@@ -1,223 +1,269 @@
-import { useState, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  CalculatorIcon as Calculator,
-  XMarkIcon as X,
-  ChevronLeftIcon as ChevronLeft,
-  ChevronRightIcon as ChevronRight
-} from '@heroicons/react/24/outline';
-import { DashboardIcon } from '../icons/DashboardIcon';
-import { ShoppingBagIcon } from '../icons/ShoppingBagIcon';
-import { ShoppingCartIcon } from '../icons/ShoppingCartIcon';
-import { UsersIcon } from '../icons/UsersIcon';
-import { SettingsIcon } from '../icons/SettingsIcon';
-import { BadgeDollarIcon } from '../icons/BadgeDollarIcon';
-import { FolderIcon } from '../icons/FolderIcon';
-import { UploadIcon } from '../icons/UploadIcon';
+  CalculatorOutlined as Calculator,
+  CloseOutlined as X,
+  EditOutlined,
+  DashboardOutlined,
+  ShoppingOutlined,
+  ShoppingCartOutlined,
+  TeamOutlined,
+  SettingOutlined,
+  DollarOutlined,
+  FolderOutlined,
+  UploadOutlined
+} from '@ant-design/icons';
 
 import { useLanguage } from '../../contexts/LanguageContext';
 import useNewOrdersCount from '../../hooks/useNewOrdersCount';
-import { Button } from '../ui';
+import { Layout, Menu, Badge, Typography, Drawer, Button as AntButton } from 'antd';
+const { Sider } = Layout;
+const { Text } = Typography;
 
-const SidebarMenuItem = ({ item, isActive, isExpanded, onClose }) => {
-  const iconRef = useRef(null);
-  const Icon = item.icon;
-  const hasBadge = item.badge !== undefined && item.badge > 0;
-
-  const handleMouseEnter = () => {
-    iconRef.current?.startAnimation?.();
-  };
-
-  const handleMouseLeave = () => {
-    iconRef.current?.stopAnimation?.();
-  };
-
-  // Determine onboarding data attribute
-  const getOnboardingAttr = () => {
-    if (item.onboardingTarget) {
-      return item.onboardingTarget;
-    }
-    // Fallback for settings
-    if (item.path === '/settings') {
-      return 'settings-nav';
-    }
-    return undefined;
-  };
-
-  return (
-    <Link
-      to={item.path}
-      data-onboarding={getOnboardingAttr()}
-      onClick={() => {
-        // Close sidebar on mobile when navigating
-        if (window.innerWidth < 1024) {
-          onClose();
-        }
-      }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className={`
-        sidebar-menu-item flex items-center ${isExpanded ? '' : 'justify-center'} gap-3 px-4 py-3 rounded-lg
-        transition-colors duration-200 relative font-regular
-        ${isActive
-          ? 'text-primary-500 active'
-          : 'text-gray-700'
-        }
-      `}
-      style={isActive ? { backgroundColor: '#EBF3FF' } : {}}
-      title={!isExpanded ? item.label : ''}
-    >
-      <div className="relative flex-shrink-0">
-        <Icon
-          ref={iconRef}
-          className="w-5 h-5"
-          style={isActive ? { color: '#4560FF' } : {}}
-        />
-        {item.isLoading && (
-          <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-        )}
-        {item.hasError && (
-          <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full"></span>
-        )}
-        {hasBadge && (
-          <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center z-10">
-            {item.badge > 99 ? '99+' : item.badge}
-          </span>
-        )}
-      </div>
-      {isExpanded && (
-        <span
-          className="text-right transition-opacity duration-300 opacity-100 flex-1 mr-2 font-regular"
-          style={isActive ? { color: '#4560FF' } : {}}
-        >
-          {item.label}
-        </span>
-      )}
-    </Link>
-  );
-};
-
-const Sidebar = ({ isOpen, onClose }) => {
+const Sidebar = ({ isOpen, onClose, onCollapseChange, isCollapsed: externalCollapsed }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { t, isRTL } = useLanguage();
-  const { newOrdersCount, resetCount, isLoading, hasError } = useNewOrdersCount();
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const { newOrdersCount, isLoading, hasError } = useNewOrdersCount();
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
+  const isCollapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
 
-  // Don't auto-reset when navigating to orders page - keep notifications until manually cleared
+  const [openKeys, setOpenKeys] = useState(() => {
+    // Open products submenu if we're on a products-related page
+    return location.pathname.startsWith('/products') ? ['/products'] : [];
+  });
 
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-
-  const handleMouseEnter = () => {
-    if (isCollapsed) {
-      setIsHovered(true);
+  // Update openKeys when location changes
+  useEffect(() => {
+    if (location.pathname.startsWith('/products')) {
+      setOpenKeys(['/products']);
     }
-  };
+  }, [location.pathname]);
 
-  const handleMouseLeave = () => {
-    if (isCollapsed) {
-      setIsHovered(false);
-    }
-  };
-
-  // Determine if sidebar should appear expanded (either not collapsed, or collapsed but hovered)
-  const isExpanded = !isCollapsed || isHovered;
 
   const menuItems = [
-    { path: '/dashboard', icon: DashboardIcon, label: t('dashboard') },
-    { path: '/products', icon: ShoppingBagIcon, label: t('products'), onboardingTarget: 'products-nav' },
-    {
-      path: '/orders',
-      icon: ShoppingCartIcon,
-      label: t('orders'),
-      badge: (!hasError && !isLoading) ? newOrdersCount : null,
-      isLoading: isLoading,
-      hasError: hasError,
-      onboardingTarget: 'orders-nav'
+    { 
+      key: '/dashboard', 
+      icon: <DashboardOutlined />, 
+      label: t('dashboard'),
+      'data-onboarding': 'dashboard-nav'
     },
-    { path: '/customers', icon: UsersIcon, label: t('customers') },
-    { path: '/coupons', icon: BadgeDollarIcon, label: t('coupons') },
-    { path: '/categories', icon: FolderIcon, label: t('categories') || 'Categories' },
-    { path: '/calculator', icon: Calculator, label: t('calculator') || 'מחשבון' },
-    { path: '/imports', icon: UploadIcon, label: t('imports') || 'ייבוא' },
-    { path: '/settings', icon: SettingsIcon, label: t('settings'), onboardingTarget: 'settings-nav' },
+    { 
+      key: '/products',
+      icon: <ShoppingOutlined />, 
+      label: t('products'),
+      'data-onboarding': 'products-nav',
+      children: [
+        {
+          key: '/products/list',
+          label: 'כל המוצרים'
+        },
+        {
+          key: '/products/add',
+          label: 'הוסף מוצר חדש'
+        }
+      ]
+    },
+    {
+      key: '/orders',
+      icon: <ShoppingCartOutlined />,
+      label: (
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {t('orders')}
+          {(!hasError && !isLoading && newOrdersCount > 0) && (
+            <Badge count={newOrdersCount > 99 ? '99+' : newOrdersCount} style={{ backgroundColor: '#ff4d4f' }} />
+          )}
+        </span>
+      ),
+      'data-onboarding': 'orders-nav'
+    },
+    { key: '/customers', icon: <TeamOutlined />, label: t('customers') },
+    { key: '/coupons', icon: <DollarOutlined />, label: t('coupons') },
+    { key: '/categories', icon: <FolderOutlined />, label: t('categories') || 'Categories' },
+    { key: '/calculator', icon: <Calculator />, label: t('calculator') || 'מחשבון' },
+    { key: '/imports', icon: <UploadOutlined />, label: t('imports') || 'ייבוא' },
+    { key: '/settings', icon: <SettingOutlined />, label: t('settings'), 'data-onboarding': 'settings-nav' },
   ];
 
-  return (
-    <>
-      {/* Mobile overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-          onClick={onClose}
-        />
+  const handleMenuClick = ({ key }) => {
+    // Map menu keys to actual routes
+    const routeMap = {
+      '/products/list': '/products',
+      '/products/add': '/products/add'
+    };
+    
+    const route = routeMap[key] || key;
+    navigate(route);
+    
+    // Close sidebar on mobile when navigating
+    if (window.innerWidth < 1024) {
+      onClose();
+    }
+  };
+
+  const sidebarContent = (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Mobile Close Button */}
+      {window.innerWidth < 1024 && (
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'flex-end',
+          padding: 16,
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          flexDirection: isRTL ? 'row-reverse' : 'row'
+        }}>
+          <AntButton
+            type="text"
+            size="small"
+            icon={<X />}
+            style={{ 
+              color: '#fff',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onClick={onClose}
+          />
+        </div>
       )}
 
-      {/* Sidebar */}
-      <aside
-        className={`
-          fixed lg:static inset-y-0 right-0 z-40
-          ${isExpanded ? 'w-64' : 'w-20'} bg-white border-l border-gray-200
-          transform transition-all duration-300 ease-in-out
-          ${isOpen ? 'translate-x-0 sidebar-open' : 'translate-x-full lg:translate-x-0 sidebar-closed'}
-          flex flex-col lg:z-auto
-        `}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        <div className={`flex items-center ${isExpanded ? 'justify-between' : 'justify-center'} p-6 border-b border-gray-200 flex-row-reverse`}>
-          <div className="flex items-center justify-end w-full flex-row-reverse">
-            <img
-              src="/logo.svg"
-              alt="ActivePanel"
-              className="w-full h-auto object-contain"
-            />
-          </div>
-          <div className="flex items-center flex-row-reverse gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleCollapse}
-              className="hidden lg:flex text-gray-500 hover:text-primary-500 hover:bg-gray-100"
-              title={isCollapsed ? t('expandSidebar') || 'Expand Sidebar' : t('collapseSidebar') || 'Collapse Sidebar'}
-            >
-              {isCollapsed ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden text-gray-500 hover:text-primary-500"
-              onClick={onClose}
-            >
-              <X className="w-6 h-6" />
-            </Button>
-          </div>
-        </div>
-
-        <nav className="flex-1 p-4 space-y-2 text-right">
-          {menuItems.map((item) => (
-            <SidebarMenuItem
-              key={item.path}
-              item={item}
-              isActive={location.pathname === item.path}
-              isExpanded={isExpanded}
-              onClose={onClose}
-            />
-          ))}
-        </nav>
-
-        {isExpanded && (
-          <div className="p-4 border-t border-gray-200 transition-opacity duration-300 opacity-100">
-            <div className="text-sm text-gray-500 text-right">
-              <p className="font-medium text-gray-700">{t('adminPanel')}</p>
-              <p className="text-xs mt-1">{t('version')} 1.0.0</p>
-            </div>
-          </div>
+      {/* Logo Section */}
+      <div style={{
+        padding: 0,
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: isCollapsed ? 'center' : (isRTL ? 'flex-end' : 'flex-start'),
+        minHeight: 64
+      }}>
+        {isCollapsed ? (
+          <img 
+            src="/logo.svg" 
+            alt="Logo" 
+            style={{ 
+              width: 40, 
+              height: 40,
+              objectFit: 'contain'
+            }} 
+          />
+        ) : (
+          <img 
+            src="/logo.svg" 
+            alt="Logo" 
+            style={{ 
+              height: 40,
+              width: 'auto',
+              objectFit: 'contain'
+            }} 
+          />
         )}
-      </aside>
-    </>
+      </div>
+
+      {/* Custom styles for menu active item */}
+      <style>{`
+        .ant-menu-dark .ant-menu-item-selected {
+          background-color: #007bff !important;
+        }
+        .ant-menu-dark .ant-menu-item-selected > * {
+          color: #fff !important;
+        }
+        .ant-menu-dark .ant-menu-item:hover {
+          background-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        .ant-menu-dark .ant-menu-submenu-title:hover {
+          background-color: rgba(255, 255, 255, 0.08) !important;
+        }
+      `}</style>
+      
+      {/* Menu */}
+      <Menu
+        mode="inline"
+        selectedKeys={[
+          location.pathname === '/products' ? '/products/list' : location.pathname
+        ]}
+        openKeys={openKeys}
+        onOpenChange={setOpenKeys}
+        items={menuItems}
+        onClick={handleMenuClick}
+        style={{ 
+          borderRight: 0,
+          flex: 1,
+          direction: isRTL ? 'rtl' : 'ltr',
+          background: 'transparent',
+          color: '#fff'
+        }}
+        inlineCollapsed={isCollapsed}
+        theme="dark"
+      />
+
+      {/* Footer - Custom Trigger */}
+      <div style={{ 
+        padding: '12px 16px', 
+        backgroundColor: '#0f172a',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        marginTop: 'auto',
+        flexDirection: isRTL ? 'row-reverse' : 'row'
+      }}>
+        {!isCollapsed && (
+          <>
+            <Text style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.8)', flex: 1 }}>
+              Custom trigger
+            </Text>
+            <EditOutlined style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 14 }} />
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Mobile: Use Drawer
+  if (isMobile) {
+    return (
+      <Drawer
+        title={null}
+        placement={isRTL ? 'right' : 'left'}
+        onClose={onClose}
+        open={isOpen}
+        width={256}
+        closable={false}
+        bodyStyle={{ padding: 0, background: '#1e293b' }}
+        style={{ zIndex: 1000 }}
+      >
+        {sidebarContent}
+      </Drawer>
+    );
+  }
+
+  // Desktop: Use Sider
+  return (
+    <Sider
+      trigger={null}
+      collapsible
+      collapsed={isCollapsed}
+      width={256}
+      collapsedWidth={80}
+      style={{
+        overflow: 'auto',
+        direction: isRTL ? 'rtl' : 'ltr',
+        background: '#1e293b'
+      }}
+      theme="dark"
+    >
+      {sidebarContent}
+    </Sider>
   );
 };
 

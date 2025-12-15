@@ -1,4 +1,4 @@
-import { TrashIcon as Trash2, PlusIcon as Plus } from '@heroicons/react/24/outline';
+import { DeleteOutlined as Trash2, PlusOutlined as Plus } from '@ant-design/icons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Input } from '../ui/inputs';
 import { Button } from '../ui';

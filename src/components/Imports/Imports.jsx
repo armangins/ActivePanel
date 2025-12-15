@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { ArrowUpTrayIcon, TableCellsIcon as FileSpreadsheet, CheckCircleIcon, ExclamationCircleIcon, ArrowDownTrayIcon as Download, PlusIcon as Plus, ArrowPathIcon as RefreshCw } from '@heroicons/react/24/outline';
+import React, { useState } from 'react';
+import { UploadOutlined, TableOutlined as FileSpreadsheet, CheckCircleOutlined, ExclamationCircleOutlined, DownloadOutlined, PlusOutlined as Plus, ReloadOutlined as RefreshCw } from '@ant-design/icons';
 import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { Tabs } from 'antd';
 import ProductBuilder from './ProductBuilder';
 import CSVImporter from './CSVImporter';
 import ValidationResults from './ValidationResults';
@@ -28,77 +29,66 @@ const Imports = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div style={{ direction: 'rtl' }}>
       {/* Header */}
-      <div className="flex items-center justify-between flex-row-reverse">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 text-right">
-            {t('imports') || 'ייבוא מוצרים'}
-          </h1>
-          <p className="text-gray-600 mt-2 text-right">
-            {t('importsDescription') || 'ייבוא ועדכון מוצרים מ-CSV, Excel או יצירה ידנית'}
-          </p>
-        </div>
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 30, fontWeight: 700, marginBottom: 8, textAlign: 'right' }}>
+          {t('imports') || 'ייבוא מוצרים'}
+        </h1>
+        <p style={{ color: '#666', textAlign: 'right' }}>
+          {t('importsDescription') || 'ייבוא ועדכון מוצרים מ-CSV, Excel או יצירה ידנית'}
+        </p>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8 flex-row-reverse" aria-label="Tabs">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <Button
-                key={tab.id}
-                variant="ghost"
-                onClick={() => setActiveTab(tab.id)}
-                className={`
-                  flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors rounded-none hover:bg-transparent
-                  ${activeTab === tab.id
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }
-                `}
-              >
-                <Icon className="w-[18px] h-[18px]" />
-                {tab.label}
-              </Button>
-            );
-          })}
-        </nav>
-      </div>
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={tabs.map(tab => ({
+          key: tab.id,
+          label: (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {React.createElement(tab.icon, { style: { fontSize: 16 } })}
+              {tab.label}
+            </span>
+          ),
+          children: (
+            <div style={{ marginTop: 24 }}>
+              {tab.id === 'builder' && (
+                <ProductBuilder
+                  onValidation={handleValidation}
+                  onProductsGenerated={handleProductsGenerated}
+                />
+              )}
 
-      {/* Tab Content */}
-      <div className="mt-6">
-        {activeTab === 'builder' && (
-          <ProductBuilder
-            onValidation={handleValidation}
-            onProductsGenerated={handleProductsGenerated}
-          />
-        )}
+              {tab.id === 'csv' && (
+                <CSVImporter
+                  mode="import"
+                  onValidation={handleValidation}
+                  onProductsGenerated={handleProductsGenerated}
+                />
+              )}
 
-        {activeTab === 'csv' && (
-          <CSVImporter
-            onValidation={handleValidation}
-            onProductsGenerated={handleProductsGenerated}
-          />
-        )}
-
-        {activeTab === 'update' && (
-          <div className="card">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 text-right">
-              {t('updateMode') || 'עדכון מוצרים קיימים'}
-            </h2>
-            <p className="text-gray-600 mb-6 text-right">
-              {t('updateModeDescription') || 'העלה קובץ CSV עם SKU או ID כדי לעדכן מחירים ומלאי'}
-            </p>
-            <CSVImporter
-              mode="update"
-              onValidation={handleValidation}
-              onProductsGenerated={handleProductsGenerated}
-            />
-          </div>
-        )}
-      </div>
+              {tab.id === 'update' && (
+                <div>
+                  <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 16, textAlign: 'right' }}>
+                    {t('updateMode') || 'עדכון מוצרים קיימים'}
+                  </h2>
+                  <p style={{ color: '#666', marginBottom: 24, textAlign: 'right' }}>
+                    {t('updateModeDescription') || 'העלה קובץ CSV עם SKU או ID כדי לעדכן מחירים ומלאי'}
+                  </p>
+                  <CSVImporter
+                    mode="update"
+                    onValidation={handleValidation}
+                    onProductsGenerated={handleProductsGenerated}
+                  />
+                </div>
+              )}
+            </div>
+          ),
+        }))}
+        direction="rtl"
+      />
 
       {/* Validation Results */}
       {validationResults && (

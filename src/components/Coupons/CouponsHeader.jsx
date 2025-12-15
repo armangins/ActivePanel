@@ -1,6 +1,8 @@
-import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { PlusOutlined } from '@ant-design/icons';
 import { SearchInput, Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { Row, Col, Typography } from 'antd';
+const { Title, Text } = Typography;
 
 /**
  * CouponsHeader Component
@@ -26,33 +28,37 @@ const CouponsHeader = ({
   t,
 }) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <div>
-        <h1 className={`text-2xl font-bold text-gray-900 ${'text-right'}`}>
-          {t('coupons') || 'Coupons'}
-        </h1>
-        <p className={`text-sm text-gray-600 mt-1 ${'text-right'}`}>
-          {t('displayingCoupons') || 'Displaying'} {displayedCount} {t('of') || 'of'} {totalCount} {t('coupons') || 'coupons'}
-        </p>
-      </div>
+    <Row gutter={[16, 16]} justify="space-between" align="middle">
+      <Col xs={24} md={12}>
+        <div style={{ textAlign: 'right' }}>
+          <Title level={2} style={{ marginBottom: 8 }}>
+            {t('coupons') || 'Coupons'}
+          </Title>
+          <Text type="secondary">
+            {t('displayingCoupons') || 'Displaying'} {displayedCount} {t('of') || 'of'} {totalCount} {t('coupons') || 'coupons'}
+          </Text>
+        </div>
+      </Col>
 
-      <div className={`flex flex-col sm:flex-row gap-3 ${'sm:flex-row-reverse'}`}>
-        <SearchInput
-          value={searchQuery}
-          onChange={onSearchChange}
-          placeholder={t('searchCoupons') || 'Search coupons by code or description...'}
-          isRTL={isRTL}
-        />
-        <Button
-          onClick={onCreateCoupon}
-          variant="primary"
-          className={`flex items-center ${'flex-row-reverse space-x-reverse'} justify-center`}
-        >
-          <PlusIcon className="w-[18px] h-[18px]" />
-          <span>{t('createCoupon') || 'Create Coupon'}</span>
-        </Button>
-      </div>
-    </div>
+      <Col xs={24} md={12}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flexDirection: isRTL ? 'column-reverse' : 'column' }}>
+          <SearchInput
+            value={searchQuery}
+            onChange={onSearchChange}
+            placeholder={t('searchCoupons') || 'Search coupons by code or description...'}
+            isRTL={isRTL}
+          />
+          <Button
+            onClick={onCreateCoupon}
+            variant="primary"
+            style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', flexDirection: isRTL ? 'row-reverse' : 'row' }}
+          >
+            <PlusOutlined />
+            <span>{t('createCoupon') || 'Create Coupon'}</span>
+          </Button>
+        </div>
+      </Col>
+    </Row>
   );
 };
 

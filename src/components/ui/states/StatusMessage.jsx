@@ -1,23 +1,16 @@
 import React from 'react';
+import { Result, Card } from 'antd';
 import {
-    ExclamationCircleIcon,
-    CubeIcon,
-    CheckCircleIcon,
-    InformationCircleIcon
-} from '@heroicons/react/24/outline';
-import Card from '../cards/Card';
+    ExclamationCircleOutlined,
+    InboxOutlined,
+    CheckCircleOutlined,
+    InfoCircleOutlined
+} from '@ant-design/icons';
 
 /**
- * StatusMessage Component
+ * StatusMessage Component - Ant Design wrapper
  * 
- * A reusable, centered component for displaying status messages (errors, empty states, success).
- * 
- * @param {string} type - 'error', 'empty', 'success', 'info'
- * @param {string} title - Main title text
- * @param {string} message - Description text
- * @param {React.Component} icon - Custom icon component (optional)
- * @param {React.ReactNode} action - Action button/element (optional)
- * @param {boolean} fullPage - Whether to center on the full page
+ * A reusable, centered component for displaying status messages using Ant Design Result.
  */
 const StatusMessage = ({
     type = 'info',
@@ -27,77 +20,85 @@ const StatusMessage = ({
     action,
     fullPage = false
 }) => {
-
-    // Configuration based on type
-    const config = {
-        error: {
-            icon: ExclamationCircleIcon,
-            color: 'text-orange-500',
-            bgColor: 'bg-orange-50',
-            borderColor: 'border-orange-100'
-        },
-        empty: {
-            icon: CubeIcon,
-            color: 'text-gray-400',
-            bgColor: 'bg-gray-50',
-            borderColor: 'border-gray-100'
-        },
-        success: {
-            icon: CheckCircleIcon,
-            color: 'text-green-500',
-            bgColor: 'bg-green-50',
-            borderColor: 'border-green-100'
-        },
-        info: {
-            icon: InformationCircleIcon,
-            color: 'text-blue-500',
-            bgColor: 'bg-blue-50',
-            borderColor: 'border-blue-100'
-        }
+    // Map types to Ant Design Result status
+    const statusMap = {
+        error: 'error',
+        empty: 'info',
+        success: 'success',
+        info: 'info',
     };
 
-    const currentConfig = config[type] || config.info;
-    const Icon = CustomIcon || currentConfig.icon;
+    // Default icons
+    const defaultIcons = {
+        error: <ExclamationCircleOutlined style={{ fontSize: 64, color: '#ff4d4f' }} />,
+        empty: <InboxOutlined style={{ fontSize: 64, color: '#d9d9d9' }} />,
+        success: <CheckCircleOutlined style={{ fontSize: 64, color: '#52c41a' }} />,
+        info: <InfoCircleOutlined style={{ fontSize: 64, color: '#1890ff' }} />,
+    };
+
+    const status = statusMap[type] || 'info';
+    // Handle icon - ensure it's always a React element
+    let iconElement = defaultIcons[type];
+    if (CustomIcon) {
+        if (React.isValidElement(CustomIcon)) {
+            iconElement = CustomIcon;
+        } else if (typeof CustomIcon === 'function') {
+            iconElement = <CustomIcon />;
+        }
+    }
+
+    // Handle action - ensure it's always a valid React element or array
+    // Ant Design Result's extra prop accepts ReactNode (element, array, or null)
+    let actionElement = null;
+    if (action !== null && action !== undefined) {
+        if (React.isValidElement(action)) {
+            actionElement = action;
+        } else if (Array.isArray(action)) {
+            // Filter out invalid elements
+            const validActions = action.filter(item => React.isValidElement(item));
+            actionElement = validActions.length > 0 ? validActions : null;
+        } else if (typeof action === 'function' && action.prototype && action.prototype.render) {
+            // It's a class component
+            const ActionComponent = action;
+            actionElement = <ActionComponent />;
+        } else if (typeof action === 'function') {
+            // It's a function component
+            const ActionComponent = action;
+            actionElement = <ActionComponent />;
+        }
+    }
 
     const content = (
-        <Card className="h-full flex flex-col justify-center">
-            <div className="flex flex-col items-center justify-center text-center py-12 px-6">
-                <div className={`p-4 rounded-full ${currentConfig.bgColor} mb-6`}>
-                    <Icon className={`w-12 h-12 ${currentConfig.color}`} />
-                </div>
-
-                {title && (
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">
-                        {title}
-                    </h3>
-                )}
-
-                {message && (
-                    <div className="text-lg text-gray-600 mb-6 max-w-md mx-auto leading-relaxed">
-                        {message}
-                    </div>
-                )}
-
-                {action && (
-                    <div className="mt-2">
-                        {action}
-                    </div>
-                )}
-            </div>
-        </Card>
+        <Result
+            status={status}
+            icon={iconElement}
+            title={title}
+            subTitle={message}
+            extra={actionElement || undefined}
+        />
     );
 
     if (fullPage) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh] p-6">
-                <div className="w-full max-w-lg">
+            <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                minHeight: '60vh', 
+                padding: '24px' 
+            }}>
+                <div style={{ width: '100%', maxWidth: '600px' }}>
                     {content}
                 </div>
             </div>
         );
     }
 
-    return content;
+    return (
+        <Card>
+            {content}
+        </Card>
+    );
 };
 
 export default StatusMessage;

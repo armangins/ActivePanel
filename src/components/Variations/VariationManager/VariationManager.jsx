@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useVariations, useDeleteVariation } from '../../../hooks/useVariations';
 import VariationsList from '../VariationsList';
 import { Button } from '../../ui';
-import { PlusIcon } from '@heroicons/react/24/outline';
+import { PlusOutlined as PlusIcon } from '@ant-design/icons';
 import { secureLog } from '../../../utils/logger';
 
 /**

@@ -1,7 +1,8 @@
 import { memo } from 'react';
-import { PackageIcon, LayersIcon } from '../../../../icons';
-import { CheckCircleIcon as CheckCircle } from '@heroicons/react/24/outline';
+import { Radio, Typography } from 'antd';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
+
+const { Text } = Typography;
 
 /**
  * ProductTypeSelector Component
@@ -28,21 +29,18 @@ const ProductTypeSelector = ({
   const typeOptions = [
     {
       value: 'simple',
-      icon: PackageIcon,
       label: t('simple') || 'פשוט',
-      description: t('simpleProductDesc') || 'מוצר יחיד',
       helpText: t('simpleProductDescFull') || 'מוצר פשוט עם מחיר ומלאי יחיד. מתאים למוצרים ללא אפשרויות שונות.',
     },
     {
       value: 'variable',
-      icon: LayersIcon,
       label: t('variable') || 'משתנה',
-      description: t('variableProductDesc') || 'וריאציות',
       helpText: t('variableProductDescFull') || 'מוצר משתנה מאפשר יצירת וריאציות שונות (גודל, צבע וכו\')  <br/> עם מחירים ומלאי שונים לכל וריאציה.',
     },
   ];
 
-  const handleTypeSelect = (type) => {
+  const handleTypeSelect = (e) => {
+    const type = e.target.value;
     if (!disabled && productType !== type) {
       onTypeChange(type);
     }
@@ -52,70 +50,101 @@ const ProductTypeSelector = ({
 
   return (
     <div className={className}>
-      <label className="block text-sm font-medium text-gray-700 mb-2 text-right">
-        {t('productType') || 'סוג מוצר'} <span className="text-orange-500">*</span>
+      <label style={{ 
+        display: 'block', 
+        fontSize: '14px', 
+        fontWeight: 500, 
+        color: '#374151', 
+        marginBottom: '8px',
+        textAlign: 'right'
+      }}>
+        {t('productType') || 'סוג מוצר'} <span style={{ color: '#f97316' }}>*</span>
       </label>
 
-      <div className="grid grid-cols-2 gap-3">
-        {typeOptions.map((option) => {
-          const Icon = option.icon;
-          const isSelected = productType === option.value;
+      <style>{`
+        .product-type-selector .ant-radio-group {
+          display: flex !important;
+          width: 100%;
+          border-radius: 6px;
+          overflow: hidden;
+          border: 1px solid #d9d9d9;
+        }
+        .product-type-selector .ant-radio-button-wrapper {
+          flex: 1;
+          text-align: center;
+          border: none !important;
+          border-radius: 0 !important;
+          margin: 0 !important;
+          padding: 6px 12px;
+          height: 32px;
+          line-height: 20px;
+          font-size: 14px;
+        }
+        .product-type-selector .ant-radio-button-wrapper:not(:last-child) {
+          border-right: 1px solid #d9d9d9 !important;
+        }
+        .product-type-selector .ant-radio-button-wrapper:first-child {
+          border-top-left-radius: 6px !important;
+          border-bottom-left-radius: 6px !important;
+        }
+        .product-type-selector .ant-radio-button-wrapper:last-child {
+          border-top-right-radius: 6px !important;
+          border-bottom-right-radius: 6px !important;
+        }
+        .product-type-selector .ant-radio-button-wrapper-checked {
+          background-color: #1890ff !important;
+          color: #fff !important;
+          border-color: #1890ff !important;
+        }
+        .product-type-selector .ant-radio-button-wrapper-checked:not(:last-child) {
+          border-right-color: #d9d9d9 !important;
+        }
+        .product-type-selector .ant-radio-button-wrapper:not(.ant-radio-button-wrapper-checked) {
+          background-color: #fff !important;
+          color: #000 !important;
+        }
+        .product-type-selector .ant-radio-button-wrapper:hover:not(.ant-radio-button-wrapper-disabled) {
+          color: ${productType === typeOptions[0].value && typeOptions[0].value === 'simple' ? '#fff' : productType === typeOptions[1].value && typeOptions[1].value === 'variable' ? '#fff' : '#1890ff'} !important;
+        }
+      `}</style>
 
-          return (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => handleTypeSelect(option.value)}
-              disabled={disabled}
-              className={`
-                p-4 border-2 rounded-lg transition-all text-right 
-                flex flex-col items-center gap-2
-                ${isSelected
-                  ? 'border-primary-500 bg-primary-50 text-primary-700'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                }
-                ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-              `.trim()}
-              dir="rtl"
-              aria-pressed={isSelected}
-              aria-label={`${option.label}: ${option.description}`}
+      <div className="product-type-selector">
+        <Radio.Group
+          value={productType}
+          onChange={handleTypeSelect}
+          disabled={disabled}
+          optionType="button"
+          buttonStyle="solid"
+          size="small"
+        >
+          {typeOptions.map((option) => (
+            <Radio.Button 
+              key={option.value} 
+              value={option.value}
             >
-              <Icon
-                size={32}
-                className={isSelected ? 'text-primary-600' : 'text-gray-400'}
-                autoplay={isSelected}
-                isAnimated={true}
-              />
-
-              <div className="flex flex-col items-center gap-1">
-                <span className="font-semibold text-sm">{option.label}</span>
-                <span className="text-xs text-gray-500 text-center">
-                  {option.description}
-                </span>
-              </div>
-
-              {isSelected && (
-                <div
-                  className="w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center"
-                  aria-hidden="true"
-                >
-                  <CheckCircle className="w-3.5 h-3.5 text-white" />
-                </div>
-              )}
-            </button>
-          );
-        })}
+              {option.label}
+            </Radio.Button>
+          ))}
+        </Radio.Group>
       </div>
 
       {showHelpText && selectedOption && (
-        <p className="text-xs text-orange-500 mt-2 text-right font-title" role="note">
+        <Text 
+          type="secondary" 
+          style={{ 
+            fontSize: '12px', 
+            marginTop: '8px', 
+            display: 'block',
+            textAlign: 'right'
+          }}
+        >
           {selectedOption.helpText.split('<br/>').map((line, index, array) => (
             <span key={index}>
               {line}
               {index < array.length - 1 && <br />}
             </span>
           ))}
-        </p>
+        </Text>
       )}
     </div>
   );

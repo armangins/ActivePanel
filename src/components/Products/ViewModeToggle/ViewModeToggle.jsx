@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Squares2X2Icon as Grid3x3, ListBulletIcon as List } from '@heroicons/react/24/outline';
+import { AppstoreOutlined as Grid3x3, UnorderedListOutlined as List } from '@ant-design/icons';
 import { Button } from '../../ui';
 
 const ViewModeToggle = memo(({ viewMode, onViewModeChange, t }) => {

@@ -1,33 +1,35 @@
-import StatusMessage from './StatusMessage';
-import { CubeIcon as Package } from '@heroicons/react/24/outline';
+import { Empty } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
+import React from 'react';
 
 /**
- * EmptyState Component
+ * EmptyState Component - Ant Design wrapper
  * 
- * Reusable empty state display component.
- * Wrapper around StatusMessage.
+ * Reusable empty state display component using Ant Design Empty.
  */
 const EmptyState = ({
   message,
   description,
-  icon = Package,
+  icon: Icon,
   action,
   isRTL = true
 }) => {
+  const iconElement = Icon ? (React.isValidElement(Icon) ? Icon : <Icon />) : <InboxOutlined style={{ fontSize: 64, color: '#d9d9d9' }} />;
+  
   return (
-    <StatusMessage
-      type="empty"
-      message={
+    <Empty
+      image={iconElement}
+      styles={{ image: { height: 64 } }}
+      description={
         <>
-          <span className="block font-medium text-lg mb-1">{message}</span>
-          {description && <span className="block text-sm text-gray-500">{description}</span>}
+          {message && <div style={{ fontSize: 16, fontWeight: 500, marginBottom: 8 }}>{message}</div>}
+          {description && <div style={{ fontSize: 14, color: '#8c8c8c' }}>{description}</div>}
         </>
       }
-      icon={icon}
-      action={action}
-    />
+    >
+      {action}
+    </Empty>
   );
 };
 
 export default EmptyState;
-

@@ -10,11 +10,11 @@ const ProductFilters = ({
     <div>
       {/* Clear Filters Button */}
       {hasActiveFilters && (
-        <div className={`flex items-center ${'justify-start'} mb-2`}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', marginBottom: 8 }}>
           <Button
             variant="ghost"
             onClick={onClearFilters}
-            className="text-sm text-primary-500 hover:text-primary-600 font-medium p-0 h-auto hover:bg-transparent"
+            style={{ fontSize: 14, padding: 0, height: 'auto' }}
           >
             {t('clearFilters')}
           </Button>

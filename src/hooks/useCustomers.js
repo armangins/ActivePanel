@@ -18,13 +18,13 @@ export const customerKeys = {
 // Fetch customers list
 export const useCustomers = (filters = {}) => {
   const { hasSettings } = useWooCommerceSettings();
-  
+
   return useQuery({
     queryKey: customerKeys.list(filters),
     queryFn: () => customersAPI.list({
       page: filters.page || 1,
       per_page: filters.per_page || PER_PAGE,
-      _fields: filters._fields || 'id,first_name,last_name,username,email,avatar_url,billing,shipping,date_created,orders_count,total_spent',
+      _fields: filters._fields || 'id,first_name,last_name,username,email,billing,date_created,orders_count,total_spent',
       ...filters,
     }),
     enabled: hasSettings, // Only fetch if settings are configured
@@ -35,7 +35,7 @@ export const useCustomers = (filters = {}) => {
 // Fetch all customers (for client-side filtering)
 export const useAllCustomers = () => {
   const { hasSettings } = useWooCommerceSettings();
-  
+
   return useQuery({
     queryKey: [...customerKeys.all, 'all'],
     queryFn: async () => {
@@ -63,7 +63,7 @@ export const useAllCustomers = () => {
 // Fetch single customer
 export const useCustomer = (id) => {
   const { hasSettings } = useWooCommerceSettings();
-  
+
   return useQuery({
     queryKey: customerKeys.detail(id),
     queryFn: () => customersAPI.get(id),
@@ -75,7 +75,7 @@ export const useCustomer = (id) => {
 // Fetch total customers count
 export const useCustomersTotalCount = () => {
   const { hasSettings } = useWooCommerceSettings();
-  
+
   return useQuery({
     queryKey: customerKeys.totalCount(),
     queryFn: () => customersAPI.getTotalCount(),

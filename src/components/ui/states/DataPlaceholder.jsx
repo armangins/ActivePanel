@@ -1,50 +1,49 @@
-import { ArrowPathIcon, CloudArrowUpIcon as Cloud } from '@heroicons/react/24/outline';
+import { Spin, Empty } from 'antd';
+import { CloudUploadOutlined } from '@ant-design/icons';
+import React from 'react';
 
 /**
- * DataPlaceholder Component
+ * DataPlaceholder Component - Ant Design wrapper
  * 
- * A beautiful placeholder component to show when data is loading or on its way
- * Use this when there's a connection issue or data is being fetched
+ * A placeholder component to show when data is loading or on its way.
  */
 const DataPlaceholder = ({ 
   message, 
   subMessage,
-  icon: Icon = Cloud,
+  icon: Icon,
   showSpinner = false 
 }) => {
+  const iconElement = Icon ? (React.isValidElement(Icon) ? Icon : <Icon />) : <CloudUploadOutlined style={{ fontSize: 64, color: '#d9d9d9' }} />;
+  
   return (
-    <div className="flex flex-col items-center justify-center p-8 text-center" dir="rtl">
-      <div className="relative mb-4">
-        {showSpinner ? (
-          <ArrowPathIcon className="w-12 h-12 text-primary-500 animate-spin" />
-        ) : (
-          <div className="relative">
-            <Icon className="w-16 h-16 text-gray-300" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <ArrowPathIcon className="w-6 h-6 text-primary-500 animate-spin" />
-            </div>
-          </div>
-        )}
-      </div>
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      padding: 32,
+      textAlign: 'center',
+      direction: 'rtl'
+    }}>
+      {showSpinner ? (
+        <Spin size="large" style={{ marginBottom: 16 }} />
+      ) : (
+        <div style={{ marginBottom: 16 }}>
+          {iconElement}
+        </div>
+      )}
       
-      <h3 className="text-lg font-semibold text-gray-700 mb-2">
+      <h3 style={{ fontSize: 18, fontWeight: 600, color: '#666', marginBottom: 8 }}>
         {message || 'הנתונים בדרך'}
       </h3>
       
       {subMessage && (
-        <p className="text-sm text-gray-500 max-w-md">
+        <p style={{ fontSize: 14, color: '#8c8c8c', maxWidth: 400 }}>
           {subMessage}
         </p>
       )}
-      
-      <div className="mt-6 flex gap-2">
-        <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse"></div>
-        <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-        <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-      </div>
     </div>
   );
 };
 
 export default DataPlaceholder;
-

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Input } from '../../ui/inputs';
-import { InformationCircleIcon } from '@heroicons/react/24/outline';
+import { InfoCircleOutlined as InformationCircleIcon } from '@ant-design/icons';
 import { useLanguage } from '../../../contexts/LanguageContext';
 
 // Simple tooltip component with portal to prevent clipping

@@ -1,40 +1,51 @@
-import { MagnifyingGlassIcon as Search } from '@heroicons/react/24/outline';
-import Input from './Input';
+import { Input, Space, Button } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 
 /**
- * SearchInput Component
+ * SearchInput Component - Ant Design wrapper
  * 
- * Reusable search input component with icon.
- * Uses the new dynamic Input component internally.
- * 
- * @param {string} value - Current search value
- * @param {Function} onChange - Change handler
- * @param {string} placeholder - Placeholder text
- * @param {boolean} isRTL - Whether layout is right-to-left
- * @param {string} className - Additional CSS classes
+ * Reusable search input component using Space.Compact to avoid deprecation warnings.
  */
 const SearchInput = ({ 
   value, 
   onChange, 
   onFocus,
+  onSearch,
   placeholder = 'Search...', 
   isRTL = true,
-  className = '' 
+  className = '',
+  allowClear = true
 }) => {
+  const handleSearch = () => {
+    if (onSearch) {
+      onSearch(value);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
-    <Input
-      type="text"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      onFocus={onFocus}
-      placeholder={placeholder}
-      leftIcon={Search}
-      variant="filled"
-      containerClassName={className}
-      isRTL={isRTL}
-    />
+    <Space.Compact style={{ width: '100%', direction: isRTL ? 'rtl' : 'ltr' }} className={className}>
+      <Input
+        value={value}
+        onChange={(e) => onChange && onChange(e.target.value)}
+        onFocus={onFocus}
+        onKeyPress={handleKeyPress}
+        placeholder={placeholder}
+        allowClear={allowClear}
+        style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+      />
+      <Button 
+        type="primary" 
+        icon={<SearchOutlined />}
+        onClick={handleSearch}
+      />
+    </Space.Compact>
   );
 };
 
 export default SearchInput;
-

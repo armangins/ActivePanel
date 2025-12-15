@@ -17,6 +17,20 @@ export const SettingsProvider = ({ children }) => {
         try {
             setLoading(true);
             const data = await settingsAPI.get();
+            
+            // Debug logging in development
+            if (import.meta.env.DEV) {
+                secureLog.debug('Settings fetched from backend:', {
+                    data,
+                    hasData: !!data,
+                    dataKeys: data ? Object.keys(data) : [],
+                    consumerKey: data?.consumerKey ? '***' + data.consumerKey.slice(-4) : 'missing',
+                    consumerSecret: data?.consumerSecret ? '***' + data.consumerSecret.slice(-4) : 'missing',
+                    hasConsumerKey: data?.hasConsumerKey,
+                    hasConsumerSecret: data?.hasConsumerSecret
+                });
+            }
+            
             // Handle null settings (new users) gracefully
             setSettings(data || null);
             setError(null);

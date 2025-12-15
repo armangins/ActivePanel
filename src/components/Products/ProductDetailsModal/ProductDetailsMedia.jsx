@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { CubeIcon as Package } from '@heroicons/react/24/outline';
+import { InboxOutlined as Package } from '@ant-design/icons';
 
 /**
  * ProductDetailsMedia Component

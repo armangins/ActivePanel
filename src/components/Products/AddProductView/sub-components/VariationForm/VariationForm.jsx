@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { ArrowPathIcon as Loader, SparklesIcon as Sparkles } from '@heroicons/react/24/outline';
+import { ReloadOutlined as Loader, ThunderboltOutlined as Sparkles } from '@ant-design/icons';
 import { Input } from '../../../../ui/inputs';
 import { Button } from '../../../../ui';
 import { ImageUpload } from '../';
@@ -212,6 +212,7 @@ const VariationForm = ({
               onChange={(e) => handleFieldChange('sku', e.target.value)}
               placeholder={t('enterSKU') || 'הכנס SKU'}
               containerClassName="flex-1"
+              size="lg"
               disabled={disabled}
               className={skuError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
             />
@@ -236,6 +237,7 @@ const VariationForm = ({
         <div>
           <Input
             label={t('stockQuantity') || 'כמות במלאי'}
+            size="lg"
             type="number"
             value={formData.stock_quantity || ''}
             onChange={(e) => handleFieldChange('stock_quantity', e.target.value)}

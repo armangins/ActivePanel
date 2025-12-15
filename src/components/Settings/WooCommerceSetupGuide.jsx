@@ -2,23 +2,23 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import {
-  CheckCircleIcon,
-  XCircleIcon,
-  KeyIcon,
-  GlobeAltIcon,
-  ShieldCheckIcon,
-  ExclamationTriangleIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-  ArrowRightIcon,
-  DocumentTextIcon,
-  LockClosedIcon,
-  UserIcon,
-  PhotoIcon,
-  LinkIcon,
-  ClipboardDocumentIcon,
-  ClipboardDocumentCheckIcon
-} from '@heroicons/react/24/outline';
+  CheckCircleOutlined as CheckCircleIcon,
+  CloseCircleOutlined as XCircleIcon,
+  KeyOutlined as KeyIcon,
+  GlobalOutlined as GlobeAltIcon,
+  SafetyOutlined as ShieldCheckIcon,
+  ExclamationCircleOutlined as ExclamationTriangleIcon,
+  DownOutlined as ChevronDownIcon,
+  UpOutlined as ChevronUpIcon,
+  ArrowRightOutlined as ArrowRightIcon,
+  FileTextOutlined as DocumentTextIcon,
+  LockOutlined as LockClosedIcon,
+  UserOutlined as UserIcon,
+  ImageOutlined as PhotoIcon,
+  LinkOutlined as LinkIcon,
+  CopyOutlined as ClipboardDocumentIcon,
+  CheckOutlined as ClipboardDocumentCheckIcon
+} from '@ant-design/icons';
 import { Button } from '../ui';
 
 const WooCommerceSetupGuide = () => {

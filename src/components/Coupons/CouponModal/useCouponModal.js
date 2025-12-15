@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { TagIcon as Tag, UsersIcon as Users, CubeIcon as Package } from '@heroicons/react/24/outline';
+import { TagOutlined as Tag, UserOutlined as Users, InboxOutlined as Package } from '@ant-design/icons';
 import { couponsAPI, productsAPI, categoriesAPI } from '../../../services/woocommerce';
 import { couponSchema } from '../../../schemas/coupon';
 import { secureLog } from '../../../utils/logger';

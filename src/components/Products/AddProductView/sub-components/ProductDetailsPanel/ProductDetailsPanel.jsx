@@ -1,7 +1,8 @@
 import { memo } from 'react';
-import { useFormContext } from 'react-hook-form';
-import { SparklesIcon as Sparkles } from '@heroicons/react/24/outline';
-import { Card } from '../../../../ui';
+import { useFormContext, Controller } from 'react-hook-form';
+import { BulbOutlined, LoadingOutlined } from '@ant-design/icons';
+import { Button as AntButton, Space, Row, Col, Typography } from 'antd';
+import { Card, Button } from '../../../../ui';
 import { Input } from '../../../../ui/inputs';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
 import { useProductPricing } from './hooks/useProductPricing';
@@ -64,11 +65,13 @@ const ProductDetailsPanel = ({
   onImproveDescription,
   onCalculatorClick,
   onScheduleClick,
+  scheduleDates,
   saving = false,
 }) => {
-  const { t } = useLanguage();
-  const { register, watch, formState: { errors } } = useFormContext();
+  const { t, isRTL } = useLanguage();
+  const { register, watch, formState: { errors }, control } = useFormContext();
   const formData = watch(); // Watch all fields to pass down to sub-components
+  const { Text } = Typography;
 
   const {
     handleFieldChange,
@@ -80,8 +83,20 @@ const ProductDetailsPanel = ({
 
 
   return (
-    <Card className="p-6">
-      <div className="space-y-6">
+    <Card
+
+      styles={{
+        body: {
+          display: 'flex',
+          flexDirection: 'column',
+          flexWrap: 'wrap',
+          gap: '0px',
+          paddingLeft: '24px',
+          paddingRight: '24px'
+        }
+      }}
+    >
+      <Space direction="vertical" size={32} style={{ width: '100%' }}>
         {/* Product Type */}
         <ProductTypeSelector
           productType={productType}
@@ -89,25 +104,74 @@ const ProductDetailsPanel = ({
           disabled={saving}
         />
 
-        {/* Product Name */}
-        <div>
-          <Input
-            label={t('productName')}
-            type="text"
-            placeholder={t('enterProductName') || 'Enter product name'}
-            error={errors.product_name?.message}
-            maxLength={20}
-            required
-            helperText={t('max20CharactersNote') || 'Do not exceed 20 characters when entering the product name.'}
-            autoComplete="off"
-            testId="product-name-input"
-            {...register('product_name')}
-          />
-        </div>
+        {/* Product Name and SKU */}
+        <Row gutter={16}>
+          <Col span={12}>
+            <Controller
+              name="product_name"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  label={t('productName')}
+                  type="text"
+                  placeholder={"הכנס שם מוצר"}
+                  error={errors.product_name?.message}
+                  maxLength={20}
+                  required
+                  autoComplete="off"
+                  testId="product-name-input"
+                  size="lg"
+                  allowSpecialChars={false}
+                />
+              )}
+            />
+          </Col>
+
+          <Col span={12}>
+            <Text strong style={{ display: 'block', fontSize: '14px', marginBottom: '8px', textAlign: 'right' }}>
+              {t('sku')}
+            </Text>
+            <div style={{ position: 'relative' }}>
+              <Input
+                id="input-sku"
+                type="text"
+                value={formData.sku || ''}
+                onChange={(value) => handleFieldChange('sku', value.target.value)}
+                placeholder={t('enterSKU') || 'Enter SKU'}
+                size="lg"
+                testId="sku-input"
+                style={{ paddingLeft: '40px' }}
+                allowSpecialChars={false}
+              />
+              <AntButton
+                type="text"
+                icon={
+                  generatingSKU ? (
+                    <LoadingOutlined spin />
+                  ) : (
+                    <BulbOutlined />
+                  )
+                }
+                onClick={() => onGenerateSKU?.()}
+                disabled={generatingSKU}
+                style={{
+                  position: 'absolute',
+                  left: '8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  zIndex: 1,
+                  color: generatingSKU ? '#bfbfbf' : '#1890ff'
+                }}
+                title={t('createWithAI') || 'צור בעזרת AI'}
+              />
+            </div>
+          </Col>
+        </Row>
 
         {/* Category */}
         <CategorySelector
-          value={formData.categories?.[0]}
+          value={formData.categories || []}
           categories={categories}
           error={errors.categories?.message}
           onChange={(value) => handleFieldChange('categories', value)}
@@ -119,8 +183,10 @@ const ProductDetailsPanel = ({
           errors={errors}
           onRegularPriceChange={(value) => handleRegularPriceChange(value, selectedDiscount)}
           onSalePriceChange={(value) => handleFieldChange('sale_price', value)}
+          onStockChange={(value) => handleFieldChange('stock_quantity', value)}
           onCalculatorClick={onCalculatorClick}
           onScheduleClick={onScheduleClick}
+          scheduleDates={scheduleDates}
         />
 
         {/* Discount Selector */}
@@ -129,18 +195,6 @@ const ProductDetailsPanel = ({
           regularPrice={formData.regular_price}
           onDiscountSelect={handleDiscountSelect}
           onClear={handleDiscountClear}
-        />
-
-        {/* SKU and Stock Quantity */}
-        <SkuAndStockFields
-          formData={formData}
-          errors={errors}
-          onSkuChange={(value) => handleFieldChange('sku', value)}
-          onStockChange={(value) => handleFieldChange('stock_quantity', value)}
-          onManageStockChange={(checked) => handleFieldChange('manage_stock', checked)}
-          onStockStatusChange={(value) => handleFieldChange('stock_status', value)}
-          onGenerateSKU={() => onGenerateSKU?.()}
-          generatingSKU={generatingSKU}
         />
 
         {/* Short Description */}
@@ -159,10 +213,9 @@ const ProductDetailsPanel = ({
           isImproving={improvingDescription}
           error={errors.description?.message}
         />
-      </div>
+      </Space>
     </Card>
   );
 };
 
 export default memo(ProductDetailsPanel);
-

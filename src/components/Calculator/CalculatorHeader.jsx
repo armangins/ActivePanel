@@ -1,5 +1,8 @@
-import { CalculatorIcon as CalculatorIcon } from '@heroicons/react/24/outline';
+import { CalculatorOutlined as CalculatorIcon } from '@ant-design/icons';
+import { Typography, Space } from 'antd';
 import { useLanguage } from '../../contexts/LanguageContext';
+
+const { Title, Text } = Typography;
 
 /**
  * CalculatorHeader Component
@@ -10,17 +13,24 @@ const CalculatorHeader = () => {
   const { t } = useLanguage();
 
   return (
-    <div className="flex items-center justify-between">
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 text-right">
+        <Title level={2} style={{ margin: 0, textAlign: 'right' }}>
           {t('smartPricingCalculator') || 'מחשבון מחיר חכם'}
-        </h1>
-        <p className="text-sm text-gray-600 mt-1 text-right">
+        </Title>
+        <Text type="secondary" style={{ display: 'block', marginTop: 8, textAlign: 'right' }}>
           {t('pricingCalculatorDesc') || 'קבע מחירי מכירה מדויקים על בסיס עלויות אמיתיות ושולי רווח רצויים'}
-        </p>
+        </Text>
       </div>
-      <div className="bg-primary-100 p-4 rounded-lg">
-        <CalculatorIcon className="w-8 h-8 text-primary-600" />
+      <div style={{ 
+        backgroundColor: '#e6f4ff', 
+        padding: 16, 
+        borderRadius: 8,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <CalculatorIcon style={{ fontSize: 32, color: '#1890ff' }} />
       </div>
     </div>
   );

@@ -8,4 +8,6 @@ export * from './useCategories';
 export { default as useCostInput } from './useCostInput';
 export { default as usePagination } from './usePagination';
 export { default as useFiltering } from './useFiltering';
+export { useCenteredMessage } from './useCenteredMessage';
 export { default as useNewOrdersCount } from './useNewOrdersCount';
+export { useAuthErrorHandler } from './useAuthErrorHandler';

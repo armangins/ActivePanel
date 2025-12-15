@@ -1,67 +1,91 @@
-import { useLanguage } from '../../contexts/LanguageContext';
+import { useState, useEffect } from 'react';
+import { Typography } from 'antd';
+import { MoonOutlined } from '@ant-design/icons';
 import { Button } from '../ui';
+
+const { Title, Text } = Typography;
 
 /**
  * Login Welcome Panel Component
  * 
- * Displays welcome message and community information on the login page.
+ * Displays welcome message and branding on the login page.
  * Only visible on large screens.
  */
 const LoginWelcomePanel = () => {
-  const { t } = useLanguage();
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsLargeScreen(window.innerWidth >= 1024);
+    };
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  if (!isLargeScreen) return null;
 
   return (
-    <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary-500 rounded-full blur-3xl"></div>
-      </div>
-
+    <div style={{
+      display: 'flex',
+      flex: 1,
+      background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
       {/* Grid Pattern */}
       <div
-        className="absolute inset-0 opacity-5"
         style={{
+          position: 'absolute',
+          inset: 0,
+          opacity: 0.05,
           backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
           backgroundSize: '50px 50px'
         }}
       />
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col justify-center p-12 text-white">
-        <h2 className="text-4xl font-bold mb-6">
-          {t('welcomeToCommunity') || 'ברוכים הבאים לקהילה שלנו'}
-        </h2>
-
-        <p className="text-lg text-gray-300 mb-12 leading-relaxed">
-        ActivePanel הפכו את ניהול חנויות האיקומרס שלכם לנוחה, מהירה ויעילה מאי פעם. הצטרפו עוד היום למאות עסקים שבחרו לעבוד חכם ולצמוח אתנו.
-        </p>
-
-
-        {/* User Avatars */}
-        <div className="flex items-center gap-4 mb-8">
-        <p className="text-gray-300">
-    הצטרפו למאות עסקים שכבר בחרו Active Panel 
-          </p>
-          <div className="flex -space-x-3">
-            {['א', 'ב', 'ג', 'ד'].map((letter, index) => {
-              const colors = [
-                'from-blue-400 to-blue-600',
-                'from-purple-400 to-purple-600',
-                'from-pink-400 to-pink-600',
-                'from-green-400 to-green-600',
-              ];
-              return (
-                <div
-                  key={index}
-                  className={`w-12 h-12 rounded-full bg-gradient-to-br ${colors[index]} border-2 border-white flex items-center justify-center text-white font-semibold`}
-                >
-                  {letter}
-                </div>
-              );
-            })}
+      <div style={{
+        position: 'relative',
+        zIndex: 10,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+        padding: '48px',
+        color: '#fff',
+        width: 'fit-content',
+        textAlign: 'right'
+      }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, marginBottom: 48 }}>
+          <div style={{
+            display: 'flex',
+            gap: 4,
+            alignItems: 'flex-end'
+          }}>
+            <div style={{ width: 4, height: 12, backgroundColor: '#fff', borderRadius: 2 }}></div>
+            <div style={{ width: 4, height: 18, backgroundColor: '#fff', borderRadius: 2 }}></div>
+            <div style={{ width: 4, height: 24, backgroundColor: '#fff', borderRadius: 2 }}></div>
           </div>
-        
+          <Title level={3} style={{ color: '#fff', margin: 0, fontSize: 24, fontWeight: 700 }}>
+            Active Panel
+          </Title>
+        </div>
+
+        {/* Description */}
+        <Text style={{ fontSize: 16, color: 'rgba(255, 255, 255, 0.8)', lineHeight: 1.6 }}>
+        Active Panel
+      פלטפורמת ניהול החנויות המובילה, הצטרפו למאות עסקים שכבר בחרו נכון 
+             </Text>
+
+        {/* Dark Mode Toggle */}
+        <div style={{ position: 'absolute', bottom: 24, right: 24 }}>
+          <Button
+            type="text"
+            icon={<MoonOutlined style={{ color: '#fff' }} />}
+            style={{ color: '#fff' }}
+          />
         </div>
       </div>
     </div>
@@ -69,6 +93,8 @@ const LoginWelcomePanel = () => {
 };
 
 export default LoginWelcomePanel;
+
+
 
 
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrashIcon as Trash2 } from '@heroicons/react/24/outline';
+import { DeleteOutlined as Trash2 } from '@ant-design/icons';
 import { Button } from '../../ui';
 import { useLanguage } from '../../../contexts/LanguageContext';
 

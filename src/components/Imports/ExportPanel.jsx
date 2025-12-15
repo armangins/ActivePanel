@@ -1,4 +1,4 @@
-import { ArrowDownTrayIcon as Download, TableCellsIcon as FileSpreadsheet } from '@heroicons/react/24/outline';
+import { DownloadOutlined as Download, FileTextOutlined as FileSpreadsheet } from '@ant-design/icons';
 import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { generateWooCommerceCSV, downloadCSV } from '../../utils/csvProcessor';

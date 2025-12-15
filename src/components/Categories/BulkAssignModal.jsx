@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { XMarkIcon as X, ArrowPathIcon as Loader, CheckIcon as Check, CubeIcon as Package } from '@heroicons/react/24/outline';
+import { CloseOutlined as X, ReloadOutlined as Loader, CheckOutlined as Check, InboxOutlined as Package } from '@ant-design/icons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { categoriesAPI, productsAPI } from '../../services/woocommerce';
 import SearchInput from '../ui/inputs/SearchInput';

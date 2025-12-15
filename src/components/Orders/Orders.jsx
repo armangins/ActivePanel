@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CubeIcon as Package } from '@heroicons/react/24/outline';
+import { InboxOutlined as Package } from '@ant-design/icons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { ordersAPI } from '../../services/woocommerce';
 import { useOrders } from '../../hooks/useOrders';
-import { SearchInput, EmptyState, LoadingState, ErrorState } from '../ui';
+import { SearchInput, EmptyState, LoadingState, ErrorState, Card } from '../ui';
+import { Select, Row, Col } from 'antd';
 import Pagination from '../ui/Pagination/Pagination';
 import OrderDetailsModal from './OrderDetailsModal/OrderDetailsModal';
 import OrdersHeader from './OrdersHeader';
@@ -132,7 +133,7 @@ const Orders = () => {
   // Show setup message if settings aren't configured
   if (!settingsLoading && !hasSettings) {
     return (
-      <div className="space-y-6" dir="rtl">
+      <div style={{ direction: 'rtl' }}>
         <SetupRequired
           title={t('configureWooCommerceToViewOrders') || 'הגדר את WooCommerce כדי לראות הזמנות'}
           description={t('configureWooCommerceSettings') || 'כדי להתחיל, אנא הגדר את הגדרות WooCommerce שלך.'}
@@ -146,7 +147,7 @@ const Orders = () => {
   }
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div style={{ direction: 'rtl' }}>
       {/* Header */}
       <OrdersHeader
         displayedCount={orders.length}
@@ -163,32 +164,34 @@ const Orders = () => {
       />
 
       {/* Filters */}
-      <div className="card">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <SearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder={t('searchOrders')}
-            isRTL={isRTL}
-          />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="input-field"
-            dir="rtl"
-          >
-            <option value="all">{t('allStatuses')}</option>
-            <option value="pending">{t('pending')}</option>
-            <option value="processing">{t('processing')}</option>
-            <option value="on-hold">{t('onHold')}</option>
-            <option value="completed">{t('completed')}</option>
-            <option value="cancelled">{t('cancelled')}</option>
-            <option value="refunded">{t('refunded')}</option>
-          </select>
-        </div>
-      </div>
-
-
+      <Card style={{ marginTop: 24 }}>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} md={12}>
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder={t('searchOrders')}
+              isRTL={isRTL}
+            />
+          </Col>
+          <Col xs={24} md={12}>
+            <Select
+              value={statusFilter}
+              onChange={setStatusFilter}
+              style={{ width: '100%' }}
+              dir="rtl"
+            >
+              <Select.Option value="all">{t('allStatuses')}</Select.Option>
+              <Select.Option value="pending">{t('pending')}</Select.Option>
+              <Select.Option value="processing">{t('processing')}</Select.Option>
+              <Select.Option value="on-hold">{t('onHold')}</Select.Option>
+              <Select.Option value="completed">{t('completed')}</Select.Option>
+              <Select.Option value="cancelled">{t('cancelled')}</Select.Option>
+              <Select.Option value="refunded">{t('refunded')}</Select.Option>
+            </Select>
+          </Col>
+        </Row>
+      </Card>
 
       {/* Orders Table */}
       {loading ? (
@@ -207,7 +210,7 @@ const Orders = () => {
           />
 
           {/* Pagination */}
-          <div className="mt-6">
+          <div style={{ marginTop: 24 }}>
             <Pagination
               currentPage={page}
               totalPages={totalPages}

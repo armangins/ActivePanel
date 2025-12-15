@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { CalculatorIcon as CalculatorIcon } from '@heroicons/react/24/outline';
-import { CubeIcon as Package, TruckIcon as Truck, CreditCardIcon as CreditCard } from '@heroicons/react/24/outline';
+import { CalculatorOutlined as CalculatorIcon } from '@ant-design/icons';
+import { InboxOutlined as Package, TruckOutlined as Truck, CreditCardOutlined as CreditCard } from '@ant-design/icons';
 import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CalculatorHeader from './CalculatorHeader';

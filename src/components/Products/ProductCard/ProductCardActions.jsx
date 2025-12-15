@@ -1,5 +1,4 @@
-import { Trash2Icon, MoveLeftIcon } from '../../icons';
-import { Button } from '../../ui';
+import { DeleteOutlined as Trash2Icon, EditOutlined as MoveLeftIcon } from '@ant-design/icons';
 
 const ProductCardActions = ({
     onEdit,
@@ -8,27 +7,92 @@ const ProductCardActions = ({
     deleteLabel,
 }) => {
     return (
-        <div className="flex pt-2 mt-auto w-full justify-start">
-            <div className={`flex flex-row-reverse gap-2`}>
-                <Button
-                    onClick={onEdit}
-                    className="h-10 px-3 !text-primary-500 !hover:bg-primary-50 border border-gray-200 flex items-center gap-2"
-                    title={editLabel}
-                    variant="ghost"
-                >
-                    <MoveLeftIcon className="w-5 h-5" />
-                    <span className="font-medium">עריכה</span>
-                </Button>
-                <Button
-                    onClick={onDelete}
-                    className="w-10 h-10 !text-orange-600 !hover:bg-orange-50 border border-gray-200"
-                    title={deleteLabel}
-                    variant="ghost"
-                    size="icon"
-                >
-                    <Trash2Icon className="w-5 h-5" />
-                </Button>
-            </div>
+        <div style={{ 
+            display: 'flex', 
+            alignItems: 'stretch',
+            paddingTop: '8px', 
+            marginTop: 'auto', 
+            width: '100%',
+            borderTop: '1px solid #e0e0e0',
+            minHeight: '48px'
+        }}>
+            {/* Edit Button */}
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit && onEdit(e);
+                }}
+                style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    padding: '12px',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#007bff',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                    fontSize: '14px',
+                    transition: 'background-color 0.2s ease',
+                    height: '100%',
+                    minHeight: '48px'
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+                title={editLabel}
+            >
+                <MoveLeftIcon style={{ width: '18px', height: '18px', flexShrink: 0 }} />
+                <span style={{ whiteSpace: 'nowrap' }}>עריכה</span>
+            </button>
+
+            {/* Vertical Separator */}
+            <div style={{
+                width: '1px',
+                backgroundColor: '#e0e0e0',
+                alignSelf: 'stretch',
+                flexShrink: 0
+            }} />
+
+            {/* Delete Button */}
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete && onDelete(e);
+                }}
+                style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    padding: '12px',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#007bff',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                    fontSize: '14px',
+                    transition: 'background-color 0.2s ease',
+                    height: '100%',
+                    minHeight: '48px'
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+                title={deleteLabel}
+            >
+                <Trash2Icon style={{ width: '18px', height: '18px', flexShrink: 0 }} />
+                <span style={{ whiteSpace: 'nowrap' }}>מחיקה</span>
+            </button>
         </div>
     );
 };

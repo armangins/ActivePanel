@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { CubeIcon as Package } from '@heroicons/react/24/outline';
+import { InboxOutlined as Package } from '@ant-design/icons';
 import { OptimizedImage } from '../../ui';
 
 const ProductCardImage = ({
@@ -30,22 +30,35 @@ const ProductCardImage = ({
     }, [thumbnailImages, allImages]);
 
     return (
-        <div className="w-full">
+        <div style={{ width: '100%' }}>
             {/* Main Image */}
-            <div className="w-full aspect-square relative bg-gray-100">
+            <div style={{ 
+                width: '100%', 
+                position: 'relative', 
+                backgroundColor: '#f3f4f6',
+                borderTopLeftRadius: '12px',
+                borderTopRightRadius: '12px',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}>
                 {currentMainImage ? (
                     <OptimizedImage
                         src={currentMainImage}
                         alt={productName}
-                        className="w-full h-full object-cover"
-                        // PERFORMANCE: Resize images for list view (300x300)
-                        resize={true}
-                        width={300}
-                        height={300}
+                        style={{ width: '100%', height: 'auto', objectFit: 'contain', display: 'block' }}
+                        resize={false}
                     />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                        <Package className="w-12 h-12 text-gray-400" />
+                    <div style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center' 
+                    }}>
+                        <Package style={{ width: '48px', height: '48px', color: '#9ca3af' }} />
                     </div>
                 )}
             </div>
@@ -53,7 +66,12 @@ const ProductCardImage = ({
             {/* Gallery Thumbnails */}
             {/* PERFORMANCE: Only show thumbnails if there are images (lazy render) */}
             {thumbnailImages.length > 0 && (
-                <div className="px-2 pb-2 pt-1 flex gap-1 overflow-x-auto">
+                <div style={{ 
+                    padding: '4px 8px 8px 8px', 
+                    display: 'flex', 
+                    gap: '4px', 
+                    overflowX: 'auto' 
+                }}>
                     {/* PERFORMANCE: Limit to 3 thumbnails initially for faster rendering */}
                     {thumbnailImages.slice(0, 3).map((thumbnailImage, index) => {
                         // Check if this thumbnail corresponds to the currently selected main image
@@ -63,16 +81,38 @@ const ProductCardImage = ({
                             <div
                                 key={`${thumbnailImage}-${index}`}
                                 onClick={(e) => handleThumbnailClick(e, index)}
-                                className={`flex-shrink-0 w-12 h-12 rounded overflow-hidden cursor-pointer transition-all relative bg-gray-50 ${isSelected
-                                    ? 'border-2 border-primary-500 ring-2 ring-primary-200'
-                                    : 'border border-gray-200 hover:border-primary-500 hover:opacity-90'
-                                    }`}
+                                style={{
+                                    flexShrink: 0,
+                                    width: '48px',
+                                    height: '48px',
+                                    borderRadius: '4px',
+                                    overflow: 'hidden',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    position: 'relative',
+                                    backgroundColor: '#f9fafb',
+                                    border: isSelected ? '2px solid #4560FF' : '1px solid #e5e7eb',
+                                    boxShadow: isSelected ? '0 0 0 2px rgba(69, 96, 255, 0.2)' : 'none',
+                                    opacity: isSelected ? 1 : 0.9,
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!isSelected) {
+                                        e.currentTarget.style.borderColor = '#4560FF';
+                                        e.currentTarget.style.opacity = '1';
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!isSelected) {
+                                        e.currentTarget.style.borderColor = '#e5e7eb';
+                                        e.currentTarget.style.opacity = '0.9';
+                                    }
+                                }}
                                 title={`Click to view this image`}
                             >
                                 <OptimizedImage
                                     src={thumbnailImage}
                                     alt={`${productName} - Gallery ${index + 1}`}
-                                    className="w-full h-full object-cover"
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                     // PERFORMANCE: Resize thumbnails (48x48 for 12x12 grid)
                                     resize={true}
                                     width={48}
@@ -82,8 +122,18 @@ const ProductCardImage = ({
                         );
                     })}
                     {thumbnailImages.length > 3 && (
-                        <div className="flex-shrink-0 w-12 h-12 rounded border border-gray-200 bg-gray-100 flex items-center justify-center">
-                            <span className="text-xs text-gray-500">+{thumbnailImages.length - 3}</span>
+                        <div style={{ 
+                            flexShrink: 0, 
+                            width: '48px', 
+                            height: '48px', 
+                            borderRadius: '4px', 
+                            border: '1px solid #e5e7eb', 
+                            backgroundColor: '#f3f4f6', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center' 
+                        }}>
+                            <span style={{ fontSize: '12px', color: '#6b7280' }}>+{thumbnailImages.length - 3}</span>
                         </div>
                     )}
                 </div>

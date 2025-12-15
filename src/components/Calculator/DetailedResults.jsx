@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DocumentDuplicateIcon as Copy, CheckIcon as Check, PlusIcon as Plus } from '@heroicons/react/24/outline';
+import { CopyOutlined as Copy, CheckOutlined as Check, PlusOutlined as Plus } from '@ant-design/icons';
 import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 

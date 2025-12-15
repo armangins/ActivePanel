@@ -1,9 +1,11 @@
-import { XMarkIcon as X, CubeIcon as Package } from '@heroicons/react/24/outline';
+import { CloseOutlined as X, InboxOutlined as Package } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { DataPlaceholder, Button } from '../ui';
 import { formatRelativeDate } from '../../utils/dateHelpers';
 import { getCustomerName } from '../../utils/orderHelpers';
+import { Popover, List, Typography, Space, Divider } from 'antd';
+const { Text } = Typography;
 
 /**
  * Notification Dropdown Component

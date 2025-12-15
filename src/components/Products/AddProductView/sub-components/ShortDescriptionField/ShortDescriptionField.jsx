@@ -1,5 +1,9 @@
-import { SparklesIcon as Sparkles } from '@heroicons/react/24/outline';
+import { BulbOutlined } from '@ant-design/icons';
+import { Input, Button, Typography } from 'antd';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
+
+const { TextArea } = Input;
+const { Text } = Typography;
 
 /**
  * ShortDescriptionField Component
@@ -11,19 +15,27 @@ const ShortDescriptionField = ({ value, onChange, onImprove, isImproving }) => {
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2 text-right">
+      <Text strong style={{ display: 'block', marginBottom: 8, textAlign: 'right' }}>
         {t('shortDescription') || 'תיאור קצר'}
-      </label>
-      <div className="relative">
-        <textarea
+      </Text>
+      <div style={{ position: 'relative' }}>
+        <TextArea
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={t('enterShortDescription') || 'הכנס תיאור קצר'}
-          className="input-field min-h-[80px] resize-none text-right"
-          dir="rtl"
+          autoSize={{ minRows: 3, maxRows: 6 }}
+          size="large"
+          style={{ direction: 'rtl', textAlign: 'right', paddingLeft: '40px' }}
         />
-        <button
-          type="button"
+        <Button
+          type="text"
+          icon={
+            isImproving ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+            ) : (
+              <BulbOutlined />
+            )
+          }
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -32,23 +44,18 @@ const ShortDescriptionField = ({ value, onChange, onImprove, isImproving }) => {
             }
           }}
           disabled={isImproving || !value.trim()}
-          className={`absolute left-2 top-2 p-1.5 rounded-lg transition-colors z-10 ${
-            isImproving || !value.trim()
-              ? 'text-gray-400 cursor-not-allowed' 
-              : 'text-primary-600 hover:bg-primary-50 hover:text-primary-700 cursor-pointer'
-          }`}
+          style={{
+            position: 'absolute',
+            left: '8px',
+            top: '8px',
+            zIndex: 1,
+            color: isImproving || !value.trim() ? '#d9d9d9' : '#1890ff'
+          }}
           title={t('createWithAI') || 'צור בעזרת AI'}
-        >
-          {isImproving ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-          ) : (
-            <Sparkles className="w-4 h-4" />
-          )}
-        </button>
+        />
       </div>
     </div>
   );
 };
 
 export default ShortDescriptionField;
-

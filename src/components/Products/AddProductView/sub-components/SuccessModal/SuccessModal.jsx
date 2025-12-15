@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircleIcon } from '@heroicons/react/24/outline';
+import { CheckCircleOutlined as CheckCircleIcon } from '@ant-design/icons';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
 
 /**

@@ -6,15 +6,11 @@ export { default as StatCard } from './cards/StatCard';
 
 // Modals
 export { default as Modal } from './modals/Modal';
-export { default as ModalHeader } from './modals/ModalHeader';
-export { default as ModalBody } from './modals/ModalBody';
-export { default as ModalFooter } from './modals/ModalFooter';
+// Note: ModalHeader, ModalBody, ModalFooter are deprecated - use Ant Design Modal props directly
 
 // Tables
 export { default as Table } from './tables/Table';
-export { default as TableHeader } from './tables/TableHeader';
-export { default as TableRow } from './tables/TableRow';
-export { default as TableCell } from './tables/TableCell';
+// Note: TableHeader, TableRow, TableCell are deprecated - use Ant Design Table columns/dataSource API
 export { default as OptimizedImage } from './OptimizedImage/OptimizedImage';
 
 // States

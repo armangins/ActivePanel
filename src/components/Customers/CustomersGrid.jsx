@@ -11,23 +11,51 @@ import CustomerCard from './CustomerCard';
  * @param {Function} t - Translation function
  */
 const CustomersGrid = ({ customers, onCustomerClick, isRTL, t, formatCurrency }) => {
+  const gridId = `customers-grid-${Math.random().toString(36).substr(2, 9)}`;
+  
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {customers.map((customer) => (
-        <CustomerCard
-          key={customer.id}
-          customer={customer}
-          onClick={() => onCustomerClick(customer)}
-          isRTL={isRTL}
-          t={t}
-          formatCurrency={formatCurrency}
-        />
-      ))}
-    </div>
+    <>
+      <style>{`
+        #${gridId} {
+          display: grid;
+          grid-template-columns: repeat(1, 1fr);
+          gap: 24px;
+          width: 100%;
+        }
+        
+        @media (min-width: 768px) {
+          #${gridId} {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+        
+        @media (min-width: 1024px) {
+          #${gridId} {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+      `}</style>
+      <div id={gridId}>
+        {customers.map((customer) => (
+          <CustomerCard
+            key={customer.id}
+            customer={customer}
+            onClick={() => onCustomerClick(customer)}
+            isRTL={isRTL}
+            t={t}
+            formatCurrency={formatCurrency}
+          />
+        ))}
+      </div>
+    </>
   );
 };
 
 export default CustomersGrid;
+
+
+
+
 
 
 

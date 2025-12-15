@@ -1,11 +1,14 @@
 import React from 'react';
+import { Card, Space, Tag, Typography, Avatar } from 'antd';
 import {
-    CurrencyDollarIcon as DollarSign,
-    ShoppingCartIcon as ShoppingCart,
-    UsersIcon as Users,
-    CubeIcon as Package,
-    ExclamationTriangleIcon as AlertTriangle
-} from '@heroicons/react/24/outline';
+    DollarOutlined as DollarSign,
+    ShoppingCartOutlined as ShoppingCart,
+    UserOutlined as Users,
+    InboxOutlined as Package,
+    ExclamationCircleOutlined as AlertTriangle
+} from '@ant-design/icons';
+
+const { Text, Title } = Typography;
 
 export const getSidebarTitle = (type, t, monthData) => {
     if (!type) return '';
@@ -77,12 +80,12 @@ export const getSidebarRenderItem = (type, t) => {
     // Helper for low stock status
     const getStockStatus = (product) => {
         if (product.stock_status === 'outofstock') {
-            return { text: t('outOfStock') || 'אזל מהמלאי', color: 'text-orange-600', bg: 'bg-orange-50' };
+            return { text: t('outOfStock') || 'אזל מהמלאי', color: 'error' };
         }
         if (product.manage_stock && product.stock_quantity !== null) {
-            return { text: `${product.stock_quantity} ${t('inStock') || 'במלאי'}`, color: 'text-orange-600', bg: 'bg-orange-50' };
+            return { text: `${product.stock_quantity} ${t('inStock') || 'במלאי'}`, color: 'warning' };
         }
-        return { text: t('lowStock') || 'מלאי נמוך', color: 'text-orange-600', bg: 'bg-orange-50' };
+        return { text: t('lowStock') || 'מלאי נמוך', color: 'warning' };
     };
 
     return (item, formatCurrency) => {
@@ -91,63 +94,75 @@ export const getSidebarRenderItem = (type, t) => {
             case 'orders':
             case 'recentOrders':
             case 'chartOrders':
+                const statusColors = {
+                    completed: 'success',
+                    processing: 'processing',
+                    pending: 'default'
+                };
                 return (
-                    <div className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-medium text-gray-900 mb-1">
+                    <Card 
+                        size="small" 
+                        hoverable
+                        style={{ marginBottom: 8 }}
+                    >
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            <Text strong style={{ fontSize: 14 }}>
                                 {t('order') || 'הזמנה'} #{item.id}
-                            </h3>
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className={`text-xs px-2 py-1 rounded-full ${item.status === 'completed' ? 'bg-green-50 text-green-600' :
-                                    item.status === 'processing' ? 'bg-blue-50 text-blue-600' :
-                                        'bg-gray-50 text-gray-600'
-                                    } font-medium`}>
+                            </Text>
+                            <Space size={8}>
+                                <Tag color={statusColors[item.status] || 'default'}>
                                     {item.status || 'pending'}
-                                </span>
-                                <span className="text-xs text-gray-500">
+                                </Tag>
+                                <Text type="secondary" style={{ fontSize: 12 }}>
                                     {new Date(item.date_created).toLocaleDateString('he-IL')}
-                                </span>
-                            </div>
-                            <p className="text-sm font-semibold text-gray-900">
+                                </Text>
+                            </Space>
+                            <Text strong style={{ fontSize: 14 }}>
                                 {formatCurrency(item.total)}
-                            </p>
+                            </Text>
                         </div>
-                    </div>
+                    </Card>
                 );
             case 'customers':
                 return (
-                    <div className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="flex-shrink-0">
-                            <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                                <Users className="w-5 h-5 text-primary-600" />
-                            </div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-medium text-gray-900 mb-1">
-                                {item.first_name || item.last_name
-                                    ? `${item.first_name || ''} ${item.last_name || ''}`.trim()
-                                    : item.username || item.email || `${t('customer') || 'לקוח'} #${item.id}`}
-                            </h3>
-                            {item.email && (
-                                <p className="text-xs text-gray-500 mb-1">{item.email}</p>
-                            )}
-                            {item.username && item.username !== item.email && (
-                                <p className="text-xs text-gray-500 mb-1">@{item.username}</p>
-                            )}
-                            <div className="flex items-center gap-3 mt-2">
-                                {item.orders_count !== undefined && (
-                                    <span className="text-xs text-gray-600">
-                                        {item.orders_count} {t('orders') || 'הזמנות'}
-                                    </span>
+                    <Card size="small" hoverable style={{ marginBottom: 8 }}>
+                        <Space size={16} style={{ width: '100%' }}>
+                            <Avatar 
+                                size={48} 
+                                icon={<Users />} 
+                                style={{ backgroundColor: '#e6f4ff', color: '#1890ff', flexShrink: 0 }}
+                            />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <Text strong style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>
+                                    {item.first_name || item.last_name
+                                        ? `${item.first_name || ''} ${item.last_name || ''}`.trim()
+                                        : item.username || item.email || `${t('customer') || 'לקוח'} #${item.id}`}
+                                </Text>
+                                {item.email && (
+                                    <Text type="secondary" style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>
+                                        {item.email}
+                                    </Text>
                                 )}
-                                {item.total_spent !== undefined && item.total_spent > 0 && (
-                                    <span className="text-xs text-gray-600">
-                                        {formatCurrency(item.total_spent)} {t('totalSpent') || 'סה"כ הוצא'}
-                                    </span>
+                                {item.username && item.username !== item.email && (
+                                    <Text type="secondary" style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>
+                                        @{item.username}
+                                    </Text>
                                 )}
+                                <Space size={12} style={{ marginTop: 8 }}>
+                                    {item.orders_count !== undefined && (
+                                        <Text type="secondary" style={{ fontSize: 12 }}>
+                                            {item.orders_count} {t('orders') || 'הזמנות'}
+                                        </Text>
+                                    )}
+                                    {item.total_spent !== undefined && item.total_spent > 0 && (
+                                        <Text type="secondary" style={{ fontSize: 12 }}>
+                                            {formatCurrency(item.total_spent)} {t('totalSpent') || 'סה"כ הוצא'}
+                                        </Text>
+                                    )}
+                                </Space>
                             </div>
-                        </div>
-                    </div>
+                        </Space>
+                    </Card>
                 );
             case 'products':
             case 'topSellers':
@@ -161,53 +176,57 @@ export const getSidebarRenderItem = (type, t) => {
                 const stockStatus = type === 'lowStock' ? getStockStatus(item) : null;
 
                 return (
-                    <div className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="flex-shrink-0">
+                    <Card size="small" hoverable style={{ marginBottom: 8 }}>
+                        <Space size={16} style={{ width: '100%' }}>
                             <img
                                 src={imageUrl}
                                 alt={item.name}
-                                className="w-16 h-16 object-cover rounded-lg"
+                                style={{ 
+                                    width: 64, 
+                                    height: 64, 
+                                    objectFit: 'cover', 
+                                    borderRadius: 8,
+                                    flexShrink: 0
+                                }}
                                 onError={(e) => {
                                     e.target.src = '/placeholder-product.png';
                                 }}
                             />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-medium text-gray-900 mb-1 truncate">
-                                {item.name}
-                            </h3>
-                            <div className="flex items-center gap-2 mb-2">
-                                {stockStatus ? (
-                                    <span className={`text-xs px-2 py-1 rounded-full ${stockStatus.bg} ${stockStatus.color} font-medium`}>
-                                        {stockStatus.text}
-                                    </span>
-                                ) : (
-                                    <>
-                                        {item.sold_quantity !== undefined && (
-                                            <span className="text-xs text-gray-500">
-                                                {t('sold') || 'נמכר'}: {item.sold_quantity}
-                                            </span>
-                                        )}
-                                        {item.order_count !== undefined && (
-                                            <span className="text-xs text-gray-500">
-                                                {t('orders') || 'הזמנות'}: {item.order_count}
-                                            </span>
-                                        )}
-                                    </>
-                                )}
-                                {item.sku && (
-                                    <span className="text-xs text-gray-500">
-                                        SKU: {item.sku}
-                                    </span>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <Text strong style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>
+                                    {item.name}
+                                </Text>
+                                <Space size={8} wrap style={{ marginBottom: 8 }}>
+                                    {stockStatus ? (
+                                        <Tag color={stockStatus.color}>{stockStatus.text}</Tag>
+                                    ) : (
+                                        <>
+                                            {item.sold_quantity !== undefined && (
+                                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                                    {t('sold') || 'נמכר'}: {item.sold_quantity}
+                                                </Text>
+                                            )}
+                                            {item.order_count !== undefined && (
+                                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                                    {t('orders') || 'הזמנות'}: {item.order_count}
+                                                </Text>
+                                            )}
+                                        </>
+                                    )}
+                                    {item.sku && (
+                                        <Text type="secondary" style={{ fontSize: 12 }}>
+                                            SKU: {item.sku}
+                                        </Text>
+                                    )}
+                                </Space>
+                                {item.price && (
+                                    <Text strong style={{ fontSize: 14 }}>
+                                        {formatCurrency(item.price)}
+                                    </Text>
                                 )}
                             </div>
-                            {item.price && (
-                                <p className="text-sm font-semibold text-gray-900">
-                                    {formatCurrency(item.price)}
-                                </p>
-                            )}
-                        </div>
-                    </div>
+                        </Space>
+                    </Card>
                 );
             default:
                 return null;

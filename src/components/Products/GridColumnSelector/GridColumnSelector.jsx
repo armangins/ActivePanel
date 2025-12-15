@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, memo } from 'react';
-import { ChevronDownIcon as ChevronDown } from '@heroicons/react/24/outline';
+import { DownOutlined as ChevronDown } from '@ant-design/icons';
 import { Button } from '../../ui';
 
 const GridColumnSelector = memo(({

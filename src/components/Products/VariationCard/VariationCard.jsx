@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { CubeIcon as Package } from '@heroicons/react/24/outline';
+import { InboxOutlined as Package } from '@ant-design/icons';
 import { OptimizedImage } from '../../ui';
 
 const VariationCard = memo(({

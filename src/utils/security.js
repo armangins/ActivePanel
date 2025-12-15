@@ -13,9 +13,27 @@ import DOMPurify from 'dompurify';
  */
 export const sanitizeInput = (input) => {
   if (typeof input !== 'string') return input;
+  // Use DOMPurify for robust sanitization of simple text
+  return DOMPurify.sanitize(input).trim();
+};
 
-  // Use DOMPurify for robust sanitization
-  return DOMPurify.sanitize(input.trim()).trim();
+/**
+ * Sanitize HTML content for safe rendering
+ * Used when dangerouslySetInnerHTML is absolutely necessary
+ * @param {string} content - HTML content
+ * @returns {string} Sanitized HTML
+ */
+export const sanitizeHTML = (content) => {
+  if (!content) return '';
+
+  if (typeof content !== 'string') return content;
+
+  return DOMPurify.sanitize(content, {
+    USE_PROFILES: { html: true }, // Only allow HTML
+    FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'link', 'style', 'input', 'form'],
+    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onmouseout'],
+    ADD_ATTR: ['target', 'rel'] // Allow links to open in new tab
+  });
 };
 
 /**

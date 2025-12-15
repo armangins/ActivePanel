@@ -1,40 +1,26 @@
 import { useState, useEffect } from 'react';
-import { PhotoIcon } from '@heroicons/react/24/outline';
+import { Image } from 'antd';
+import { PictureOutlined } from '@ant-design/icons';
 import { validateImageUrl } from '../../Products/utils/securityHelpers';
 
 /**
- * OptimizedImage Component
+ * OptimizedImage Component - Ant Design wrapper
  * 
- * PERFORMANCE: Optimized image component with lazy loading and resizing support
- * - Lazy loads images below the fold
- * - Supports image resizing via query parameters
- * - Shows skeleton placeholder while loading
+ * Optimized image component with lazy loading and resizing support using Ant Design Image.
  */
 const OptimizedImage = ({ 
     src, 
     alt, 
     className = '', 
     placeholderClassName = '',
-    // PERFORMANCE: Optional image resizing for list views
     width,
     height,
     resize = false
 }) => {
-    const [isLoaded, setIsLoaded] = useState(false);
     const [hasError, setHasError] = useState(false);
-
-    const handleLoad = () => {
-        setIsLoaded(true);
-    };
-
-    const handleError = () => {
-        setHasError(true);
-        setIsLoaded(true); // Stop showing loading state
-    };
 
     // SECURITY: Validate image URL to prevent XSS via malicious URLs
     // PERFORMANCE: Resize image URL if resize prop is true
-    // WooCommerce supports image resizing via query parameters
     const getOptimizedImageUrl = (originalUrl) => {
         if (!originalUrl) return null;
         
@@ -63,38 +49,36 @@ const OptimizedImage = ({
     useEffect(() => {
         if (optimizedSrc && hasError) {
             setHasError(false);
-            setIsLoaded(false);
         }
     }, [optimizedSrc, hasError]);
 
-    return (
-        <div className={`relative overflow-hidden ${className} ${!isLoaded ? 'bg-gray-100 animate-pulse' : ''}`}>
-            {/* Placeholder / Loading State */}
-            {!isLoaded && !hasError && (
-                <div className={`absolute inset-0 flex items-center justify-center ${placeholderClassName}`}>
-                    <PhotoIcon className="w-6 h-6 text-gray-300" />
-                </div>
-            )}
+    if (hasError || !optimizedSrc) {
+        return (
+            <div className={className} style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                backgroundColor: '#f5f5f5',
+                minHeight: height || 100,
+                minWidth: width || 100
+            }}>
+                <PictureOutlined style={{ fontSize: 32, color: '#d9d9d9' }} />
+            </div>
+        );
+    }
 
-            {/* Error State */}
-            {hasError ? (
-                <div className={`absolute inset-0 flex items-center justify-center bg-gray-50 ${placeholderClassName}`}>
-                    <PhotoIcon className="w-8 h-8 text-gray-300" />
-                </div>
-            ) : (
-                /* Actual Image */
-                <img
-                    src={optimizedSrc}
-                    alt={alt}
-                    loading="lazy"
-                    decoding="async"
-                    onLoad={handleLoad}
-                    onError={handleError}
-                    className={`w-full h-full object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'
-                        }`}
-                />
-            )}
-        </div>
+    return (
+        <Image
+            src={optimizedSrc}
+            alt={alt}
+            width={width}
+            height={height}
+            className={className}
+            loading="lazy"
+            preview={false}
+            fallback="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiNkOWQ5ZDkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7wn5CgPC90ZXh0Pjwvc3ZnPg=="
+            onError={() => setHasError(true)}
+        />
     );
 };
 

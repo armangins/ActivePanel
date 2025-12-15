@@ -1,23 +1,25 @@
-import { ArrowPathIcon as Loader } from '@heroicons/react/24/outline';
+import { Spin } from 'antd';
 
 /**
- * LoadingMoreIndicator Component
+ * LoadingMoreIndicator Component - Ant Design wrapper
  * 
- * Reusable loading indicator for pagination/infinite scroll.
- * 
- * @param {boolean} isRTL - Whether layout is right-to-left
- * @param {string} message - Optional custom loading message
+ * Reusable loading indicator for pagination/infinite scroll using Ant Design Spin.
  */
 const LoadingMoreIndicator = ({ isRTL = true, message }) => {
   return (
-    <div className={`flex items-center justify-center py-8 ${isRTL ? 'text-right' : 'text-left'}`}>
-      <div className="flex items-center gap-3">
-        <Loader className="w-5 h-5 animate-spin text-primary-500" />
-        <span className="text-sm text-gray-600">{message || 'Loading...'}</span>
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      padding: '32px 0',
+      textAlign: isRTL ? 'right' : 'left'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <Spin size="small" />
+        <span style={{ fontSize: 14, color: '#666' }}>{message || 'Loading...'}</span>
       </div>
     </div>
   );
 };
 
 export default LoadingMoreIndicator;
-

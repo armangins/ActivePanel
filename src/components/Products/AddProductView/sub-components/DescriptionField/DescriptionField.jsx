@@ -1,5 +1,9 @@
-import { SparklesIcon as Sparkles } from '@heroicons/react/24/outline';
+import { BulbOutlined } from '@ant-design/icons';
+import { Input, Button, Typography } from 'antd';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
+
+const { TextArea } = Input;
+const { Text } = Typography;
 
 /**
  * DescriptionField Component
@@ -8,7 +12,7 @@ import { useLanguage } from '../../../../../contexts/LanguageContext';
  */
 const DescriptionField = ({ value, onChange, onImprove, isImproving, error }) => {
   const { t } = useLanguage();
-  
+
   const wordCount = value.trim().split(/\s+/).filter(word => word.length > 0).length;
 
   const handleChange = (e) => {
@@ -21,19 +25,28 @@ const DescriptionField = ({ value, onChange, onImprove, isImproving, error }) =>
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2 text-right">
+      <Text strong style={{ display: 'block', marginBottom: 8, textAlign: 'right' }}>
         {t('description')}
-      </label>
-      <div className="relative">
-        <textarea
+      </Text>
+      <div style={{ position: 'relative' }}>
+        <TextArea
           value={value}
           onChange={handleChange}
           placeholder={t('enterDetailedDescription') || 'הכנס תיאור מפורט יותר של המוצר'}
-          className={`input-field min-h-[150px] resize-none text-right  ${error ? 'border-orange-500' : ''}`}
-          dir="rtl"
+          autoSize={{ minRows: 5, maxRows: 10 }}
+          size="large"
+          status={error ? 'error' : ''}
+          style={{ direction: 'rtl', textAlign: 'right', paddingLeft: '40px' }}
         />
-        <button
-          type="button"
+        <Button
+          type="text"
+          icon={
+            isImproving ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+            ) : (
+              <BulbOutlined />
+            )
+          }
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -42,29 +55,26 @@ const DescriptionField = ({ value, onChange, onImprove, isImproving, error }) =>
             }
           }}
           disabled={isImproving || !value.trim()}
-          className={`absolute left-2 top-2 p-1.5 rounded-lg transition-colors z-10 ${
-            isImproving || !value.trim()
-              ? 'text-gray-400 cursor-not-allowed' 
-              : 'text-primary-600 hover:bg-primary-50 hover:text-primary-700 cursor-pointer'
-          }`}
+          style={{
+            position: 'absolute',
+            left: '8px',
+            top: '8px',
+            zIndex: 1,
+            color: isImproving || !value.trim() ? '#d9d9d9' : '#1890ff'
+          }}
           title={t('createWithAI') || 'צור בעזרת AI'}
-        >
-          {isImproving ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-          ) : (
-            <Sparkles className="w-4 h-4" />
-          )}
-        </button>
+        />
       </div>
       {error && (
-        <p className="text-orange-500 text-xs mt-1 text-right">{error}</p>
+        <Text type="danger" style={{ fontSize: 12, marginTop: 4, display: 'block', textAlign: 'right' }}>
+          {error}
+        </Text>
       )}
-      <p className="text-xs text-gray-500 mt-1 text-right">
+      <Text type="secondary" style={{ fontSize: 12, marginTop: 4, display: 'block', textAlign: 'right' }}>
         {wordCount}/400 {t('words') || 'מילים'}
-      </p>
+      </Text>
     </div>
   );
 };
 
 export default DescriptionField;
-

@@ -71,7 +71,8 @@ export const useAddProductViewModel = () => {
             date_on_sale_from: '',
             date_on_sale_to: ''
         },
-        mode: 'onChange'
+        mode: 'onTouched',
+        reValidateMode: 'onChange'
     });
 
     const {
@@ -233,19 +234,19 @@ export const useAddProductViewModel = () => {
                 date_on_sale_from: '',
                 date_on_sale_to: ''
             });
-            
+
             // Clear variations
             clearVariations();
             clearPendingVariations();
             clearDeletedVariations();
-            
+
             // Clear selected attributes
             setSelectedAttributeIds([]);
             setSelectedAttributeTerms({});
-            
+
             // Reset product type to simple
             setProductType('simple');
-            
+
             // Reset additional UI state
             setSelectedDiscount('');
             setScheduleDates({
@@ -254,10 +255,10 @@ export const useAddProductViewModel = () => {
             });
             setShowCalculatorModal(false);
             setShowScheduleModal(false);
-            
+
             // Reset variation form data
             resetVariationForm();
-            
+
             // Clear any form errors
             methods.clearErrors();
         }
@@ -266,11 +267,11 @@ export const useAddProductViewModel = () => {
     // Handler to go to products page with the created product
     const handleGoToProducts = useCallback(async () => {
         setShowSuccessModal(false);
-        
+
         // Invalidate all products queries to ensure the new product appears in the list
         // This will trigger a refetch when the Products component mounts
         queryClient.invalidateQueries({ queryKey: productKeys.all });
-        
+
         if (createdProductId) {
             navigate(`/products?view=${createdProductId}`);
         } else {
@@ -586,7 +587,7 @@ export const useAddProductViewModel = () => {
                     // Clear pending and deleted variations
                     clearPendingVariations();
                     clearDeletedVariations();
-                    
+
                     // Reload variations to get latest state
                     await loadVariations(createdProductId);
                 } catch (variationError) {

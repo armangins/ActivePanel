@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { VariationsList } from '../../Variations';
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { DownOutlined as ChevronDownIcon, UpOutlined as ChevronUpIcon } from '@ant-design/icons';
 
 /**
  * ProductDetailsOrganization Component

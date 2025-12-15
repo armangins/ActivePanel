@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrashIcon as Trash2, XMarkIcon as X, PhotoIcon as ImageIcon, ArrowDownTrayIcon as Save, PlusIcon as Plus } from '@heroicons/react/24/outline';
+import { DeleteOutlined as Trash2, CloseOutlined as X, ImageOutlined as ImageIcon, DownloadOutlined as Save, PlusOutlined as Plus } from '@ant-design/icons';
 import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { productsAPI } from '../../services/woocommerce';

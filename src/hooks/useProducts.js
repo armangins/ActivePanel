@@ -19,13 +19,13 @@ export const productKeys = {
 // Fetch products list
 export const useProducts = (filters = {}) => {
   const { hasSettings } = useWooCommerceSettings();
-  
+
   return useQuery({
     queryKey: productKeys.list(filters),
     queryFn: () => productsAPI.list({
       page: filters.page || 1,
       per_page: filters.per_page || PER_PAGE,
-      _fields: filters._fields || 'id,name,type,status,stock_status,stock_quantity,price,regular_price,sale_price,images,categories,sku',
+      _fields: filters._fields || 'id,name,type,status,stock_status,stock_quantity,price,regular_price,sale_price,images,categories,sku,attributes,variations',
       ...filters,
     }),
     enabled: hasSettings, // Only fetch if settings are configured
@@ -36,7 +36,7 @@ export const useProducts = (filters = {}) => {
 // Fetch products list with infinite scroll
 export const useInfiniteProducts = (filters = {}) => {
   const { hasSettings } = useWooCommerceSettings();
-  
+
   return useInfiniteQuery({
     queryKey: productKeys.list({ ...filters, type: 'infinite' }),
     queryFn: ({ pageParam = 1 }) => productsAPI.list({
@@ -67,7 +67,7 @@ export const useInfiniteProducts = (filters = {}) => {
 // Fetch all products (for client-side filtering)
 export const useAllProducts = () => {
   const { hasSettings } = useWooCommerceSettings();
-  
+
   return useQuery({
     queryKey: [...productKeys.all, 'all'],
     queryFn: async () => {
@@ -95,7 +95,7 @@ export const useAllProducts = () => {
 // Fetch single product
 export const useProduct = (id) => {
   const { hasSettings } = useWooCommerceSettings();
-  
+
   return useQuery({
     queryKey: productKeys.detail(id),
     queryFn: () => productsAPI.get(id),
@@ -107,7 +107,7 @@ export const useProduct = (id) => {
 // Fetch total products count
 export const useProductsTotalCount = () => {
   const { hasSettings } = useWooCommerceSettings();
-  
+
   return useQuery({
     queryKey: productKeys.totalCount(),
     queryFn: () => productsAPI.getTotalCount(),
@@ -119,7 +119,7 @@ export const useProductsTotalCount = () => {
 // Fetch low stock products
 export const useLowStockProducts = (threshold = 2) => {
   const { hasSettings } = useWooCommerceSettings();
-  
+
   return useQuery({
     queryKey: [...productKeys.lowStock(), threshold],
     queryFn: () => productsAPI.getLowStockProducts(threshold),

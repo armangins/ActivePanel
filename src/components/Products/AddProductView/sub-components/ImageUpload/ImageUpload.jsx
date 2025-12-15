@@ -1,145 +1,171 @@
-import { memo, useState } from 'react';
-import { XMarkIcon as X, ArrowUpTrayIcon as Upload, ArrowPathIcon as Loader } from '@heroicons/react/24/outline';
+import { memo, useState, useEffect } from 'react';
+import { Upload, Modal, message, Progress, Flex, Typography, theme } from 'antd';
+import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
 import { mediaAPI } from '../../../../../services/woocommerce';
+import { useCenteredMessage } from '../../../../../hooks/useCenteredMessage';
 
 /**
  * ImageUpload Component
  * 
- * A smart and reusable single image upload component with:
- * - Image preview
- * - Upload progress indicator
- * - Remove image functionality
- * - Error handling
- * - RTL support
- * - Customizable sizing and styling
+ * Reusable single image upload component using Ant Design Pictures Wall style.
  * 
  * @param {Object} value - Current image object { id, src, url, etc. } or null
  * @param {function} onChange - Callback when image changes (receives image object or null)
  * @param {string} label - Label text (optional)
  * @param {boolean} required - Whether upload is required
- * @param {string} size - Size variant: 'sm', 'md', 'lg' (default: 'md')
  * @param {string} className - Additional CSS classes
- * @param {string} inputId - Unique ID for the file input (optional, auto-generated)
  * @param {boolean} disabled - Whether upload is disabled
- * @param {function} onError - Custom error handler (optional)
  */
 const ImageUpload = ({
   value,
   onChange,
   label,
   required = false,
-  size = 'md',
   className = '',
-  inputId,
   disabled = false,
-  onError,
 }) => {
   const { t } = useLanguage();
-  const [uploading, setUploading] = useState(false);
-  const [localInputId] = useState(() => inputId || `image-upload-${Math.random().toString(36).substr(2, 9)}`);
+  const [loading, setLoading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState('');
+  const [previewTitle, setPreviewTitle] = useState('');
 
-  // Size variants
-  const sizeClasses = {
-    sm: 'w-24 h-24',
-    md: 'w-32 h-32',
-    lg: 'w-48 h-48',
+  // Use message hook for context-aware messages
+  const [messageApi, contextHolder] = useCenteredMessage();
+
+
+  const [fileList, setFileList] = useState([]);
+
+  // Sync fileList with value prop
+  useEffect(() => {
+    const propImages = value ? [{
+      uid: value.id || '-1',
+      name: 'image',
+      status: 'done',
+      url: value.src || value.url || value.source_url,
+    }] : [];
+
+    setFileList(prev => {
+      // Keep locally uploading files
+      const uploadingFiles = prev.filter(f => f.status === 'uploading');
+      // If we have a newly uploaded value (done), it replaces the uploading one.
+      // If value is null, we might still be uploading, but usually value updates after success.
+      return [...propImages, ...uploadingFiles].slice(0, 1); // Ensure max 1
+    });
+  }, [value]);
+
+  const handleCancel = () => setPreviewOpen(false);
+
+  const handlePreview = async (file) => {
+    if (!file.url && !file.preview) {
+      file.preview = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file.originFileObj);
+        reader.onload = () => resolve(reader.result);
+      });
+    }
+    setPreviewImage(file.url || file.preview);
+    setPreviewOpen(true);
+    setPreviewTitle(file.name || 'Image Preview');
   };
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Reset input value to allow uploading the same file again
-    e.target.value = '';
-
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const uploadedImage = await mediaAPI.upload(formData);
-      onChange?.(uploadedImage);
-    } catch (error) {
-      const errorMessage = error?.message || t('imageUploadFailed') || 'העלאת תמונה נכשלה';
-      if (onError) {
-        onError(error, errorMessage);
-      } else {
-        alert(errorMessage);
-      }
-    } finally {
-      setUploading(false);
+  const handleChange = ({ fileList: newFileList }) => {
+    setFileList(newFileList);
+    // If list is empty, it means the image was removed
+    if (newFileList.length === 0) {
+      onChange?.(null);
     }
   };
 
-  const handleRemove = () => {
-    onChange?.(null);
+  const customRequest = async ({ file, onSuccess, onError, onProgress }) => {
+    setLoading(true);
+    try {
+      onProgress({ percent: 0 });
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const interval = setInterval(() => {
+        onProgress({ percent: 50 });
+      }, 100);
+
+      const uploadedImage = await mediaAPI.upload(formData);
+
+      clearInterval(interval);
+      onProgress({ percent: 100 });
+
+      setLoading(false);
+      onSuccess(uploadedImage);
+      onChange?.(uploadedImage);
+      messageApi.success(t('imageUploaded') || 'הועלה בהצלחה');
+    } catch (error) {
+      setLoading(false);
+      onError(error);
+      const errorMessage = error?.message || t('imageUploadFailed') || 'העלאה נכשלה';
+      messageApi.error(errorMessage);
+    }
   };
 
-  const imageSrc = value?.src || value?.url || value?.source_url;
+  const uploadButton = (
+    <button style={{ border: 0, background: 'none' }} type="button">
+      {loading ? <LoadingOutlined /> : <PlusOutlined />}
+      <div style={{ marginTop: 8 }}>{t('upload') || 'העלאה'}</div>
+    </button>
+  );
+
+  // Use theme tokens for consistent styling
+  const { token } = theme.useToken();
+
+  const itemRender = (originNode, file, fileList, actions) => {
+    if (file.status === 'uploading') {
+      return (
+        <div className="ant-upload-list-item ant-upload-list-item-uploading" style={{ height: '100%', padding: '8px', border: `1px dashed ${token.colorBorder}`, borderRadius: token.borderRadiusLG }}>
+          <Flex vertical align="center" justify="center" style={{ height: '100%', width: '100%' }}>
+            <Typography.Text style={{ marginBottom: 8, fontSize: 14, color: token.colorPrimary }}>
+              מעלה...
+            </Typography.Text>
+            <Progress percent={file.percent} size="small" showInfo={false} strokeColor={token.colorPrimary} />
+          </Flex>
+        </div>
+      );
+    }
+    return originNode;
+  };
 
   return (
     <div className={className}>
+      {contextHolder}
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2 text-right">
+        <div className="mb-2 text-right font-medium text-gray-700">
           {label}
-          {required && <span className="text-orange-500 ml-1">*</span>}
-        </label>
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </div>
       )}
 
-      {imageSrc ? (
-        <div className={`relative ${sizeClasses[size] || sizeClasses.md} border-2 border-gray-200 rounded-lg overflow-hidden`}>
-          <img
-            src={imageSrc}
-            alt={label || 'Image'}
-            className="w-full h-full object-cover"
-          />
-          {!disabled && (
-            <button
-              type="button"
-              onClick={handleRemove}
-              className="absolute top-1 right-1 bg-orange-500 text-white rounded-full p-1 hover:bg-orange-600 transition-colors"
-              aria-label={t('removeImage') || 'הסר תמונה'}
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className={`border-2 border-dashed border-gray-300 rounded-lg p-4 ${sizeClasses[size] || sizeClasses.md} flex items-center justify-center`}>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-            id={localInputId}
-            disabled={disabled || uploading}
-          />
-          <label
-            htmlFor={localInputId}
-            className={`cursor-pointer w-full h-full flex flex-col items-center justify-center ${disabled || uploading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-          >
-            {uploading ? (
-              <>
-                <Loader className="w-6 h-6 animate-spin text-primary-500 mb-2" />
-                <span className="text-sm text-gray-600">{t('uploading') || 'מעלה...'}</span>
-              </>
-            ) : (
-              <>
-                <Upload className="w-6 h-6 text-gray-400 mb-2" />
-                <span className="text-sm text-gray-600">{t('uploadImage') || 'העלה תמונה'}</span>
-              </>
-            )}
-          </label>
-        </div>
-      )}
+      <div className="flex justify-end dir-rtl">
+        <Upload
+          listType="picture-card"
+          fileList={fileList}
+          onPreview={handlePreview}
+          onChange={handleChange}
+          customRequest={customRequest}
+          disabled={disabled || loading}
+          maxCount={1}
+          showUploadList={{
+            showPreviewIcon: true,
+            showRemoveIcon: !disabled,
+          }}
+          itemRender={itemRender}
+        >
+          {fileList.length >= 1 ? null : uploadButton}
+        </Upload>
+      </div>
+
+      <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancel}>
+        <img alt="example" style={{ width: '100%' }} src={previewImage} />
+      </Modal>
     </div>
   );
 };
 
 export default memo(ImageUpload);
-
-
-
-
-

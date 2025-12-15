@@ -1,6 +1,5 @@
-import { XMarkIcon as X } from '@heroicons/react/24/outline';
-import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from '../../ui';
-import { Input } from '../../ui/inputs';
+import { Modal, Button } from 'antd';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 /**
  * DeleteConfirmModal Component
@@ -16,74 +15,37 @@ import { Input } from '../../ui/inputs';
  * @param {Function} t - Translation function
  */
 const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, productName, isRTL, t }) => {
-  if (!isOpen) return null;
-
   const handleConfirm = () => {
     onConfirm();
     onClose();
   };
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-[100]"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4">
-        <div
-          className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
-          onClick={(e) => e.stopPropagation()}
-          dir="rtl"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              {t('confirmDelete') || 'Confirm Delete'}
-            </h3>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
-              aria-label={t('close') || 'Close'}
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
-
-          {/* Content */}
-          <div className="mb-6">
-            <p className="text-gray-700">
-              {t('deleteProductConfirm') || 'Are you sure you want to delete this product?'}
-            </p>
-            {productName && (
-              <p className="text-sm font-medium text-gray-900 mt-2">
-                {productName}
-              </p>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className={`flex gap-3 ${'flex-row-reverse'} justify-end`}>
-            <Button
-              variant="secondary"
-              onClick={onClose}
-            >
-              {t('cancel') || 'Cancel'}
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleConfirm}
-            >
-              {t('yes') || 'Yes'}
-            </Button>
-          </div>
-        </div>
+    <Modal
+      open={isOpen}
+      onCancel={onClose}
+      title={t('confirmDelete') || 'Confirm Delete'}
+      footer={[
+        <Button key="cancel" onClick={onClose}>
+          {t('cancel') || 'Cancel'}
+        </Button>,
+        <Button key="confirm" type="primary" onClick={handleConfirm}>
+          {t('yes') || 'Yes'}
+        </Button>
+      ]}
+      width={400}
+    >
+      <div>
+        <p style={{ marginBottom: productName ? 8 : 0 }}>
+          {t('deleteProductConfirm') || 'Are you sure you want to delete this product?'}
+        </p>
+        {productName && (
+          <p style={{ fontWeight: 500, color: '#262626' }}>
+            {productName}
+          </p>
+        )}
       </div>
-    </>
+    </Modal>
   );
 };
 

@@ -84,7 +84,7 @@ const Categories = () => {
   }
 
   return (
-    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
       <CategoriesHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -135,6 +135,10 @@ const Categories = () => {
 };
 
 export default Categories;
+
+
+
+
 
 
 

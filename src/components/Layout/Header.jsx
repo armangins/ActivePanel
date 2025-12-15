@@ -1,21 +1,28 @@
 import {
-  Bars3Icon as Menu,
-  BellIcon as Bell,
-  ArrowPathIcon as RefreshCw
-} from '@heroicons/react/24/outline';
-import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+  MenuOutlined as Menu,
+  BellOutlined as Bell,
+  ReloadOutlined as RefreshCw,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined
+} from '@ant-design/icons';
+import { Button } from 'antd';
+import { useState, useCallback, useEffect } from 'react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import ConnectionStatus from './ConnectionStatus';
 import NotificationDropdown from './NotificationDropdown';
 import UserMenuDropdown from './UserMenuDropdown';
-import { UserAvatar, Button } from '../ui';
+import { SearchInput, UserAvatar } from '../ui';
 import { refreshAllData } from '../../utils/refreshHelpers';
 import useNewOrdersCount from '../../hooks/useNewOrdersCount';
 import OrderDetailsModal from '../Orders/OrderDetailsModal/OrderDetailsModal';
 
-const Header = ({ onMenuClick }) => {
+const Header = ({ onMenuClick, onCollapseToggle, isCollapsed }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -25,11 +32,61 @@ const Header = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const { newOrdersCount, newOrders, removeOrder, clearAllNotifications, markAsRead, markAsUnread, markAllAsRead, isLoading, hasError } = useNewOrdersCount();
 
+  // Sync local search state with URL params
+  useEffect(() => {
+    const currentSearch = searchParams.get('search') || '';
+    if (currentSearch !== searchQuery) {
+      setSearchQuery(currentSearch);
+    }
+  }, [searchParams]);
+
+  // Debounced search update
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const currentSearchParam = searchParams.get('search') || '';
+
+      // Only update if changed
+      if (searchQuery !== currentSearchParam) {
+        if (location.pathname !== '/products') {
+          if (searchQuery.trim()) {
+            navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+          }
+        } else {
+          const newParams = new URLSearchParams(searchParams);
+          if (searchQuery) {
+            newParams.set('search', searchQuery);
+          } else {
+            newParams.delete('search');
+          }
+          setSearchParams(newParams, { replace: true });
+        }
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, navigate, location.pathname, searchParams, setSearchParams]);
+
   // Handlers
   const handleLogout = useCallback(async () => {
-    await logout();
-    navigate('/login');
+    // Close menu first to prevent UI issues
     setShowUserMenu(false);
+
+    try {
+      // Wait for logout to complete (clears tokens, calls API, etc.)
+      await logout();
+
+      // Navigate to login page after logout completes
+      // Use replace: true to prevent back button from going back to authenticated pages
+      navigate('/login', { replace: true });
+    } catch (error) {
+      // Ensure menu is closed even on error
+      setShowUserMenu(false);
+
+      // Still navigate to login page to ensure user is logged out from UI perspective
+      // The AuthContext logout function already clears local state in finally block
+      // This ensures the user is logged out even if the API call fails
+      navigate('/login', { replace: true });
+    }
   }, [logout, navigate]);
 
   const handleMenuToggle = useCallback(() => {
@@ -74,104 +131,205 @@ const Header = ({ onMenuClick }) => {
   }, [newOrders, selectedOrder, markAsRead]);
 
   return (
-    <header className="bg-white border-b border-gray-200 px-3 sm:px-4 md:px-6 py-3 md:py-4 sticky top-0 z-40">
-      <div className="flex items-center flex-row-reverse justify-between gap-2 sm:gap-4">
-        <div className="flex items-center gap-2 sm:gap-4 flex-1 flex-row-reverse min-w-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onMenuClick}
-            className="lg:hidden text-gray-600 hover:text-primary-500 -m-2"
-            aria-label={t('menu') || 'תפריט'}
-          >
-            <Menu className="w-6 h-6" />
-          </Button>
+    <header style={{
+      backgroundColor: '#fff',
+      borderBottom: '1px solid #e5e7eb',
+      padding: 0,
+      position: 'sticky',
+      top: 0,
+      zIndex: 10
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 16,
+        flexDirection: isRTL ? 'row-reverse' : 'row',
+        padding: '0 16px',
+        direction: isRTL ? 'rtl' : 'ltr'
+      }}>
+        {/* Mobile menu button */}
+        <Button
+          type="text"
+          icon={<Menu />}
+          onClick={onMenuClick}
+          style={{
+            display: window.innerWidth < 1024 ? 'flex' : 'none',
+            fontSize: '16px',
+            width: 64,
+            height: 64
+          }}
+        />
 
-          {/* Spacer to keep layout consistent if needed, or just remove search */}
-          <div className="hidden sm:flex flex-1 max-w-md"></div>
+        {/* User Menu - Profile */}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={handleMenuToggle}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '8px 16px 8px 0',
+              borderRight: isRTL ? 'none' : '1px solid #e5e7eb',
+              borderLeft: isRTL ? '1px solid #e5e7eb' : 'none',
+              background: 'none',
+              borderTop: 'none',
+              borderBottom: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f9fafb';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+            aria-label="User menu"
+          >
+            <UserAvatar
+              src={user?.picture}
+              alt={user?.name || 'User'}
+              name={user?.name}
+              size="md"
+            />
+            <div style={{
+              display: window.innerWidth >= 768 ? 'block' : 'none',
+              textAlign: isRTL ? 'right' : 'left'
+            }}>
+              <p style={{ fontSize: '14px', fontWeight: 500, color: '#111827', margin: 0 }}>
+                {user?.name || t('adminUser')}
+              </p>
+              <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>
+                {user?.email || 'admin@example.com'}
+              </p>
+            </div>
+          </button>
+          <UserMenuDropdown
+            isOpen={showUserMenu}
+            onClose={handleBackdropClick}
+            user={user}
+            onLogout={handleLogout}
+          />
         </div>
 
-        <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-row-reverse flex-shrink-0">
-          {/* Connection Status - Hidden on mobile */}
-          <div className="hidden md:block">
-            <ConnectionStatus />
-          </div>
+        {/* Refresh */}
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          style={{
+            padding: '8px',
+            color: '#6b7280',
+            background: 'none',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: isRefreshing ? 'not-allowed' : 'pointer',
+            opacity: isRefreshing ? 0.5 : 1,
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={(e) => {
+            if (!isRefreshing) {
+              e.currentTarget.style.backgroundColor = '#f3f4f6';
+              e.currentTarget.style.color = '#4560FF';
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.color = '#6b7280';
+          }}
+          title={t('refresh') || 'רענון'}
+        >
+          <RefreshCw style={{ fontSize: '20px' }} spin={isRefreshing} />
+        </button>
 
-          {/* Refresh - Smaller on mobile */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="text-gray-600 hover:text-primary-500 hover:bg-primary-50"
-            title={t('refresh') || 'רענון'}
-            aria-label={t('refresh') || 'רענון'}
+        {/* Notifications - Bell */}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={handleNotificationClick}
+            style={{
+              position: 'relative',
+              padding: '8px',
+              color: '#6b7280',
+              background: 'none',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f3f4f6';
+              e.currentTarget.style.color = '#4560FF';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = '#6b7280';
+            }}
           >
-            <RefreshCw className={`w-5 h-5 sm:w-6 sm:h-6 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </Button>
+            <Bell style={{ fontSize: '20px' }} />
+            {newOrdersCount > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                backgroundColor: '#f97316',
+                color: '#fff',
+                fontSize: '12px',
+                fontWeight: 700,
+                borderRadius: '50%',
+                width: '20px',
+                height: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                {newOrdersCount > 99 ? '99+' : newOrdersCount}
+              </span>
+            )}
+          </button>
+          <NotificationDropdown
+            isOpen={showNotifications}
+            onClose={handleBackdropClick}
+            orders={newOrders}
+            isLoading={isLoading}
+            hasError={hasError}
+            onOrderClick={handleOrderClick}
+            onMarkAsRead={markAsRead}
+            onMarkAsUnread={markAsUnread}
+            onRemoveOrder={removeOrder}
+            onMarkAllAsRead={markAllAsRead}
+            onClearAll={clearAllNotifications}
+            formatCurrency={formatCurrency}
+          />
+        </div>
 
-          {/* Notifications */}
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleNotificationClick}
-              className="relative text-gray-600 hover:text-primary-500 hover:bg-primary-50"
-              aria-label={t('notifications') || 'התראות'}
-            >
-              <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
-              {newOrdersCount > 0 && (
-                <span className="absolute top-0 left-0 bg-orange-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {newOrdersCount > 99 ? '99+' : newOrdersCount}
-                </span>
-              )}
-            </Button>
-            <NotificationDropdown
-              isOpen={showNotifications}
-              onClose={handleBackdropClick}
-              orders={newOrders}
-              isLoading={isLoading}
-              hasError={hasError}
-              onOrderClick={handleOrderClick}
-              onMarkAsRead={markAsRead}
-              onMarkAsUnread={markAsUnread}
-              onRemoveOrder={removeOrder}
-              onMarkAllAsRead={markAllAsRead}
-              onClearAll={clearAllNotifications}
-              formatCurrency={formatCurrency}
-            />
-          </div>
+        {/* Search */}
+        <div style={{ maxWidth: '400px' }}>
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder={t('search')}
+            isRTL={isRTL}
+          />
+        </div>
 
-          {/* User Menu - Compact on mobile */}
-          <div className="relative">
-            <Button
-              variant="ghost"
-              onClick={handleMenuToggle}
-              className="flex items-center gap-2 sm:gap-3 pr-2 sm:pr-4 pl-0 border-r border-gray-200 hover:bg-gray-50 rounded-lg p-2 h-auto"
-              aria-label={t('userMenu') || 'תפריט משתמש'}
-            >
-              <UserAvatar
-                src={user?.picture}
-                alt={user?.name || 'User'}
-                name={user?.name}
-                size="md"
-              />
-              <div className="hidden lg:block text-right">
-                <p className="text-sm font-medium text-gray-900">
-                  {user?.name || t('adminUser')}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {user?.email || 'admin@example.com'}
-                </p>
-              </div>
-            </Button>
-            <UserMenuDropdown
-              isOpen={showUserMenu}
-              onClose={handleBackdropClick}
-              user={user}
-              onLogout={handleLogout}
-            />
-          </div>
+        {/* Spacer to push toggle to the right */}
+        <div style={{ flex: 1 }} />
+
+        {/* Desktop collapse toggle */}
+        <Button
+          type="text"
+          icon={isCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+          onClick={onCollapseToggle}
+          style={{
+            display: window.innerWidth >= 1024 ? 'flex' : 'none',
+            fontSize: '16px',
+            width: 64,
+            height: 64
+          }}
+        />
+
+        {/* Connection Status - Hidden or moved to end */}
+        <div style={{ display: 'none' }}>
+          <ConnectionStatus />
         </div>
       </div>
 

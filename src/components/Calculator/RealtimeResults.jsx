@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState } from 'react';
-import { CheckCircleIcon, DocumentDuplicateIcon as Copy, CheckIcon as Check } from '@heroicons/react/24/outline';
+import { CheckCircleOutlined as CheckCircleIcon, CopyOutlined as Copy, CheckOutlined as Check } from '@ant-design/icons';
 import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 

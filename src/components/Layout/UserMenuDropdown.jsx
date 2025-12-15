@@ -1,4 +1,4 @@
-import { ArrowRightOnRectangleIcon as LogOut } from '@heroicons/react/24/outline';
+import { LogoutOutlined as LogOut } from '@ant-design/icons';
 import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -13,33 +13,107 @@ const UserMenuDropdown = ({
   user,
   onLogout,
 }) => {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
 
   if (!isOpen) return null;
+
+  const handleDropdownClick = (e) => {
+    // Prevent backdrop from closing dropdown when clicking inside
+    e.stopPropagation();
+  };
+
+  const handleLogoutClick = (e) => {
+    // Stop propagation to prevent backdrop from closing dropdown before logout completes
+    e.stopPropagation();
+    e.preventDefault();
+    // Close dropdown first to prevent UI issues
+    onClose();
+    // Call logout handler (which is async and will handle navigation)
+    onLogout();
+  };
 
   return (
     <>
       <div
-        className="fixed inset-0 z-40"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 40
+        }}
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-        <div className="px-4 py-3 border-b border-gray-200">
-          <p className="text-sm font-medium text-gray-900 text-right">
+      <div
+        onClick={handleDropdownClick}
+        style={{
+          position: 'absolute',
+          [isRTL ? 'right' : 'left']: 0,
+          marginTop: '8px',
+          width: '224px',
+          backgroundColor: '#ffffff',
+          borderRadius: '8px',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+          border: '1px solid #e5e7eb',
+          paddingTop: '8px',
+          paddingBottom: '8px',
+          zIndex: 50
+        }}
+      >
+        <div style={{
+          padding: '12px 16px',
+          borderBottom: '1px solid #e5e7eb'
+        }}>
+          <p style={{
+            fontSize: '14px',
+            fontWeight: 500,
+            color: '#111827',
+            textAlign: 'right',
+            margin: 0
+          }}>
             {user?.name || t('adminUser')}
           </p>
-          <p className="text-xs text-gray-500 text-right">
+          <p style={{
+            fontSize: '12px',
+            color: '#6b7280',
+            textAlign: 'right',
+            margin: 0
+          }}>
             {user?.email || 'admin@mail.com'}
           </p>
         </div>
         <Button
-          onClick={onLogout}
+          onClick={handleLogoutClick}
           variant="ghost"
-          className="w-full flex items-center justify-start gap-2 px-4 py-3 text-sm text-orange-600 hover:bg-orange-50 hover:text-orange-700 transition-colors text-right rounded-none rounded-b-lg h-auto"
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '12px 16px',
+            fontSize: '14px',
+            color: '#ea580c',
+            textAlign: 'right',
+            borderRadius: '0 0 8px 8px',
+            height: 'auto',
+            border: 'none',
+            background: 'transparent',
+            cursor: 'pointer',
+            transition: 'background-color 0.2s, color 0.2s'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#fff7ed';
+            e.currentTarget.style.color = '#c2410c';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.color = '#ea580c';
+          }}
         >
-          <LogOut className="w-4 h-4" />
-          <span className="font-medium">{t('logout') || 'התנתק'}</span>
+          <LogOut style={{ width: '16px', height: '16px' }} />
+          <span style={{ fontWeight: 500 }}>{t('logout') || 'התנתק'}</span>
         </Button>
       </div>
     </>

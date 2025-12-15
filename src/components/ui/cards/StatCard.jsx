@@ -1,19 +1,11 @@
-import { ArrowTrendingUpIcon as TrendingUp, ArrowTrendingDownIcon as TrendingDown } from '@heroicons/react/24/outline';
-import Card from './Card';
+import React from 'react';
+import { Card, Statistic } from 'antd';
+import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 
 /**
- * StatCard Component
+ * StatCard Component - Ant Design wrapper
  * 
- * Reusable statistic card component with icon, value, and trend indicator.
- * 
- * @param {string} title - Card title
- * @param {string|number} value - Value to display
- * @param {string} change - Optional change percentage (e.g., "+12.5%")
- * @param {React.Component} icon - Icon component from heroicons
- * @param {string} trend - Trend direction: 'up' or 'down'
- * @param {boolean} isRTL - Whether the layout is right-to-left
- * @param {Function} onClick - Optional click handler
- * @param {string} iconBgColor - Background color for the icon (default: '#21C55E')
+ * Reusable statistic card component using Ant Design Card and Statistic.
  */
 const StatCard = ({ 
   title, 
@@ -28,49 +20,76 @@ const StatCard = ({
   const isPositive = trend === 'up';
   
   return (
-    <Card onClick={onClick} hover={!!onClick}>
-      <div className="p-6">
-        {/* Top Section: Trend on left, Title in middle, Icon on right */}
-        <div className={`flex items-center justify-between mb-4 gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          {/* Left: Trend Indicator */}
+    <Card 
+      hoverable={!!onClick}
+      onClick={onClick}
+      style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+    >
+      <div style={{ padding: 0 }}>
+        {/* Top Section: Trend, Title, Icon */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          marginBottom: 16,
+          gap: 16,
+          flexDirection: isRTL ? 'row-reverse' : 'row'
+        }}>
+          {/* Trend Indicator */}
           {change && (
-            <div className="flex-shrink-0">
-              <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} ${
-                isPositive ? 'text-green-600' : 'text-orange-600'
-              }`}>
-                {isPositive ? (
-                  <TrendingUp className="w-5 h-5" />
-                ) : (
-                  <TrendingDown className="w-5 h-5" />
-                )}
-                <span className={`text-sm font-medium ${isRTL ? 'mr-1' : 'ml-1'}`}>
-                  {change}
-                </span>
+            <div style={{ flexShrink: 0 }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center',
+                flexDirection: isRTL ? 'row-reverse' : 'row',
+                color: isPositive ? '#52c41a' : '#ff4d4f',
+                gap: 4
+              }}>
+                {isPositive ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+                <span style={{ fontSize: 14, fontWeight: 500 }}>{change}</span>
               </div>
             </div>
           )}
           
-          {/* Middle: Title */}
-          <div className="flex-1 min-w-0">
-            <p className={`text-sm font-bold text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
+          {/* Title */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ 
+              fontSize: 14, 
+              fontWeight: 700, 
+              color: '#666',
+              textAlign: isRTL ? 'right' : 'left',
+              margin: 0
+            }}>
               {title}
             </p>
           </div>
           
-          {/* Right: Icon */}
-          <div className="flex-shrink-0">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: iconBgColor }}>
-              <Icon className="w-6 h-6 text-white" />
+          {/* Icon */}
+          {Icon && (
+            <div style={{ 
+              width: 48, 
+              height: 48, 
+              borderRadius: 12, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              backgroundColor: iconBgColor,
+              flexShrink: 0
+            }}>
+              {React.isValidElement(Icon) ? Icon : <Icon style={{ fontSize: 24, color: '#fff' }} />}
             </div>
-          </div>
+          )}
         </div>
         
         {/* Value */}
-        <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
-          <p className="text-3xl font-regular text-gray-900">
-            {value}
-          </p>
-        </div>
+        <Statistic
+          value={value}
+          valueStyle={{ 
+            fontSize: 30, 
+            fontWeight: 400,
+            textAlign: isRTL ? 'right' : 'left'
+          }}
+        />
       </div>
     </Card>
   );

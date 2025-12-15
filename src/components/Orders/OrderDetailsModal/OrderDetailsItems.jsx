@@ -1,4 +1,4 @@
-import { CubeIcon } from '@heroicons/react/24/outline';
+import { InboxOutlined as CubeIcon } from '@ant-design/icons';
 
 /**
  * OrderDetailsItems Component

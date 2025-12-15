@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { XMarkIcon as X, PlusIcon as Plus, ArrowPathIcon as Loader } from '@heroicons/react/24/outline';
+import { CloseOutlined as X, PlusOutlined as Plus, ReloadOutlined as Loader } from '@ant-design/icons';
 import { Card, Button } from '../../../../ui';
 import VariationForm from '../VariationForm/VariationForm';
 import { useLanguage } from '../../../../../contexts/LanguageContext';

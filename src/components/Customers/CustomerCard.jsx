@@ -1,5 +1,5 @@
 import { memo, useCallback } from 'react';
-import { EnvelopeIcon as Mail, PhoneIcon as Phone, MapPinIcon as MapPin, UserIcon as User, ShoppingBagIcon as ShoppingBag, TruckIcon as Truck } from '@heroicons/react/24/outline';
+import { MailOutlined as Mail, PhoneOutlined as Phone, EnvironmentOutlined as MapPin, UserOutlined as User, ShoppingOutlined as ShoppingBag, TruckOutlined as Truck } from '@ant-design/icons';
 import { format } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
 import { useOrders, orderKeys } from '../../hooks/useOrders';
@@ -56,42 +56,88 @@ const CustomerCard = ({ customer, onClick, formatCurrency, t }) => {
   };
   const shippingMethod = lastOrder?.shipping_lines?.[0]?.method_title;
 
+  const getStatusStyle = (status) => {
+    if (status === 'completed') {
+      return { backgroundColor: '#dcfce7', color: '#166534' };
+    } else if (status === 'processing') {
+      return { backgroundColor: '#dbeafe', color: '#1e40af' };
+    } else {
+      return { backgroundColor: '#f3f4f6', color: '#1f2937' };
+    }
+  };
+
   return (
     <div
       ref={ref}
-      className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow"
+      onClick={onClick}
+      style={{
+        backgroundColor: '#fff',
+        borderRadius: '8px',
+        border: '1px solid #e5e7eb',
+        padding: '20px',
+        cursor: 'pointer',
+        transition: 'box-shadow 0.2s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = 'none';
+      }}
     >
-      <div className={`flex items-start gap-4`}>
-        <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-          <User className="w-6 h-6 text-primary-600" />
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+        <div style={{ 
+          width: '48px', 
+          height: '48px', 
+          backgroundColor: '#e0e7ff', 
+          borderRadius: '50%', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          flexShrink: 0 
+        }}>
+          <User style={{ width: '24px', height: '24px', color: '#4560FF' }} />
         </div>
-        <div className="flex-1 min-w-0">
-          <h3 className={`text-lg font-semibold text-gray-900 truncate`}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h3 style={{ 
+            fontSize: '18px', 
+            fontWeight: 600, 
+            color: '#111827', 
+            overflow: 'hidden', 
+            textOverflow: 'ellipsis', 
+            whiteSpace: 'nowrap' 
+          }}>
             {customer.first_name} {customer.last_name}
           </h3>
-          <p className={`text-sm text-gray-500 truncate`}>
+          <p style={{ 
+            fontSize: '14px', 
+            color: '#6b7280', 
+            overflow: 'hidden', 
+            textOverflow: 'ellipsis', 
+            whiteSpace: 'nowrap' 
+          }}>
             {customer.username}
           </p>
         </div>
       </div>
 
-      <div className={`mt-4 space-y-2`}>
+      <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {customer.email && (
-          <div className={`flex items-center text-sm text-gray-600`}>
-            <Mail className={`w-4 h-4 mr-2 text-gray-400 flex-shrink-0`} />
-            <span className="truncate">{customer.email}</span>
+          <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', color: '#4b5563' }}>
+            <Mail style={{ width: '16px', height: '16px', marginRight: '8px', color: '#9ca3af', flexShrink: 0 }} />
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{customer.email}</span>
           </div>
         )}
         {customer.billing?.phone && (
-          <div className={`flex items-center text-sm text-gray-600`}>
-            <Phone className={`w-4 h-4 mr-2 text-gray-400 flex-shrink-0`} />
+          <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', color: '#4b5563' }}>
+            <Phone style={{ width: '16px', height: '16px', marginRight: '8px', color: '#9ca3af', flexShrink: 0 }} />
             <span>{customer.billing.phone}</span>
           </div>
         )}
         {customer.billing?.city && (
-          <div className={`flex items-center text-sm text-gray-600`}>
-            <MapPin className={`w-4 h-4 mr-2 text-gray-400 flex-shrink-0`} />
-            <span className="truncate">
+          <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', color: '#4b5563' }}>
+            <MapPin style={{ width: '16px', height: '16px', marginRight: '8px', color: '#9ca3af', flexShrink: 0 }} />
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {customer.billing.city}, {customer.billing.country}
             </span>
           </div>
@@ -99,42 +145,48 @@ const CustomerCard = ({ customer, onClick, formatCurrency, t }) => {
       </div>
 
       {/* Order History Summary */}
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <h4 className={`text-sm font-medium text-gray-900 mb-2`}>
+      <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+        <h4 style={{ fontSize: '14px', fontWeight: 500, color: '#111827', marginBottom: '8px' }}>
           Recent Orders
         </h4>
         {isLoadingOrders ? (
-          <div className="space-y-2">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {[1, 2].map(i => (
-              <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />
+              <div key={i} style={{ height: '32px', backgroundColor: '#f3f4f6', borderRadius: '4px' }} />
             ))}
           </div>
         ) : ordersData?.data?.length > 0 ? (
-          <div className="space-y-2">
-            {ordersData.data.map(order => (
-              <div key={order.id} className={`flex items-center justify-between text-xs`}>
-                <div className={`flex items-center gap-2`}>
-                  <ShoppingBag className="w-3 h-3 text-gray-400" />
-                  <span className="text-gray-600">#{order.id}</span>
-                  <span className="text-gray-400">•</span>
-                  <span className="text-gray-500">{format(new Date(order.date_created), 'MMM d, yyyy')}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {ordersData.data.map(order => {
+              const statusStyle = getStatusStyle(order.status);
+              return (
+                <div key={order.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <ShoppingBag style={{ width: '12px', height: '12px', color: '#9ca3af' }} />
+                    <span style={{ color: '#4b5563' }}>#{order.id}</span>
+                    <span style={{ color: '#9ca3af' }}>•</span>
+                    <span style={{ color: '#6b7280' }}>{format(new Date(order.date_created), 'MMM d, yyyy')}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ 
+                      padding: '2px 6px', 
+                      borderRadius: '9999px', 
+                      fontSize: '10px', 
+                      fontWeight: 500,
+                      ...statusStyle
+                    }}>
+                      {order.status}
+                    </span>
+                    <span style={{ fontWeight: 500, color: '#111827' }}>
+                      {formatCurrency ? formatCurrency(order.total) : order.total}
+                    </span>
+                  </div>
                 </div>
-                <div className={`flex items-center gap-2`}>
-                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                    order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                    {order.status}
-                  </span>
-                  <span className="font-medium text-gray-900">
-                    {formatCurrency ? formatCurrency(order.total) : order.total}
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
-          <p className={`text-xs text-gray-500 ${'text-right'}`}>
+          <p style={{ fontSize: '12px', color: '#6b7280', textAlign: 'right' }}>
             {t('noOrders') || 'No orders found'}
           </p>
         )}
@@ -142,16 +194,26 @@ const CustomerCard = ({ customer, onClick, formatCurrency, t }) => {
 
       {/* Shipping Method */}
       {shippingMethod && (
-        <div className={`mt-3 pt-3 border-t border-gray-200 flex items-center gap-2 text-xs text-gray-600 ${'flex-row-reverse'}`}>
-          <Truck className="w-3.5 h-3.5 text-gray-400" />
-          <span className="font-medium">{t('shippingMethod') || 'Shipping'}:</span>
-          <span className="truncate">{shippingMethod}</span>
+        <div style={{ 
+          marginTop: '12px', 
+          paddingTop: '12px', 
+          borderTop: '1px solid #e5e7eb', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '8px', 
+          fontSize: '12px', 
+          color: '#4b5563',
+          flexDirection: 'row-reverse'
+        }}>
+          <Truck style={{ width: '14px', height: '14px', color: '#9ca3af' }} />
+          <span style={{ fontWeight: 500 }}>{t('shippingMethod') || 'Shipping'}:</span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shippingMethod}</span>
         </div>
       )}
 
       {customer.date_created && (
-        <div className={`mt-4 pt-4 border-t border-gray-200`}>
-          <p className="text-xs text-gray-500">
+        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+          <p style={{ fontSize: '12px', color: '#6b7280' }}>
             {format(new Date(customer.date_created), 'MMM yyyy')}
           </p>
         </div>

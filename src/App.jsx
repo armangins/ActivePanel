@@ -1,129 +1,136 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { LanguageProvider } from './contexts/LanguageContext';
-import { AuthProvider } from './contexts/AuthContext';
+import { Layout, Spin } from 'antd';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
-// import { OnboardingProvider } from './contexts/OnboardingContext'; // DISABLED: Onboarding disabled
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
-import ProtectedRoute from './components/Auth/ProtectedRoute';
-import { LoadingState } from './components/ui';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
-import MobileBottomNav from './components/Layout/MobileBottomNav';
-// import OnboardingTour from './components/Onboarding/OnboardingTour'; // DISABLED: Onboarding disabled
+import Dashboard from './components/Dashboard/Dashboard';
+import Products from './components/Products/Products/Products';
+import AddProductView from './components/Products/AddProductView';
+import Orders from './components/Orders/Orders';
+import Customers from './components/Customers/Customers';
+import Settings from './components/Settings/Settings';
+import Login from './components/Auth/Login';
+import OAuthCallback from './components/Auth/OAuthCallback';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
 
-// Lazy load components for code splitting
-const Login = lazy(() => import('./components/Auth/Login'));
-const SignUp = lazy(() => import('./components/Auth/SignUp'));
-const OAuthCallback = lazy(() => import('./components/Auth/OAuthCallback'));
-const ThankYou = lazy(() => import('./components/Auth/ThankYou'));
-const Dashboard = lazy(() => import('./components/Dashboard/Dashboard'));
-const Products = lazy(() => import('./components/Products/Products/Products'));
-const Orders = lazy(() => import('./components/Orders/Orders'));
-const Customers = lazy(() => import('./components/Customers/Customers'));
-const Coupons = lazy(() => import('./components/Coupons/Coupons'));
-const Categories = lazy(() => import('./components/Categories/Categories'));
-const Calculator = lazy(() => import('./components/Calculator/Calculator'));
-const Imports = lazy(() => import('./components/Imports/Imports'));
-const Settings = lazy(() => import('./components/Settings/Settings'));
-const WooCommerceSetupGuide = lazy(() => import('./components/Settings/WooCommerceSetupGuide'));
-const AddProductView = lazy(() => import('./components/Products/AddProductView'));
-const ChatAssistant = lazy(() => import('./components/AI/ChatAssistant'));
-const EditVariationView = lazy(() => import('./components/Products/EditVariationView/EditVariationView'));
+const { Content } = Layout;
 
-function App() {
-  // Sidebar closed by default on mobile, open on desktop
+function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth >= 1024;
     }
     return true;
   });
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isRTL } = useLanguage();
+  const { isAuthenticated, loading } = useAuth();
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 1024;
+    }
+    return false;
+  });
 
-  // Handle window resize to update sidebar state
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setSidebarOpen(true);
-      } else {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (mobile) {
         setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
       }
     };
-
-    // Initial check
-    handleResize();
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        backgroundColor: '#f9fafb'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <Spin size="large" />
+          <p style={{ marginTop: '16px', color: '#6b7280' }}>טוען...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Routes>
+      {/* Public routes - no layout */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/oauth/callback" element={<OAuthCallback />} />
+      <Route path="/auth/callback" element={<OAuthCallback />} />
+      
+      {/* Protected routes - with layout */}
+      <Route
+        path="/*"
+        element={
+          <ProtectedRoute>
+            <Layout style={{ minHeight: '100vh', direction: isRTL ? 'rtl' : 'ltr' }} dir={isRTL ? 'rtl' : 'ltr'}>
+              <Sidebar 
+                isOpen={sidebarOpen} 
+                onClose={() => setSidebarOpen(false)}
+                onCollapseChange={setIsCollapsed}
+                isCollapsed={isCollapsed}
+              />
+              <Layout>
+                <Header 
+                  onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+                  onCollapseToggle={() => setIsCollapsed(!isCollapsed)}
+                  isCollapsed={isCollapsed}
+                />
+                <Content style={{ margin: '24px 16px', padding: 24, minHeight: 280, background: '#fff', borderRadius: 8, direction: isRTL ? 'rtl' : 'ltr' }}>
+                  <Routes>
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/products" element={<Products />} />
+                    <Route path="/products/add" element={<AddProductView />} />
+                    <Route path="/products/edit/:id" element={<AddProductView />} />
+                    <Route path="/orders" element={<Orders />} />
+                    <Route path="/customers" element={<Customers />} />
+                    <Route path="/settings" element={<Settings />} />
+                  </Routes>
+                </Content>
+              </Layout>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  );
+}
+
+function App() {
   return (
     <ErrorBoundary>
-      <LanguageProvider>
-        <AuthProvider>
-          <SettingsProvider>
-            {/* <OnboardingProvider> DISABLED: Onboarding disabled */}
+      <AuthProvider>
+        <SettingsProvider>
+          <LanguageProvider>
             <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-              <Suspense fallback={<LoadingState />}>
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<SignUp />} />
-                  <Route path="/auth/callback" element={<OAuthCallback />} />
-                  <Route path="/thank-you" element={<ThankYou />} />
-                  <Route
-                    path="/*"
-                    element={
-                      <ProtectedRoute>
-                        <div className="flex h-screen bg-gray-50 overflow-hidden relative">
-                          <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-                          <div className={`flex-1 flex flex-col overflow-hidden min-w-0 w-full transition-all duration-300 ${sidebarOpen ? 'lg:mr-0' : 'mr-0'}`}>
-                            <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-                            <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 md:p-6 main-content-padding">
-                              <Suspense fallback={<LoadingState />}>
-                                <Routes>
-                                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                                  <Route path="/dashboard" element={<Dashboard />} />
-                                  <Route path="/products" element={<Products />} />
-                                  <Route path="/orders" element={<Orders />} />
-                                  <Route path="/customers" element={<Customers />} />
-                                  <Route path="/coupons" element={<Coupons />} />
-                                  <Route path="/categories" element={<Categories />} />
-                                  <Route path="/calculator" element={<Calculator />} />
-                                  <Route path="/imports" element={<Imports />} />
-                                  <Route path="/settings" element={<Settings />} />
-                                  <Route path="/settings/woocommerce-setup" element={<WooCommerceSetupGuide />} />
-                                  <Route path="/products/add" element={<AddProductView />} />
-                                  <Route path="/products/edit/:id" element={<AddProductView />} />
-                                  <Route path="/products/:id/variations/:variationId/edit" element={<EditVariationView />} />
-                                </Routes>
-                              </Suspense>
-                            </main>
-                          </div>
-                        </div>
-                        {/* Mobile Bottom Navigation */}
-                        <MobileBottomNav />
-                        {/* Global AI Chat Assistant - Available on all pages */}
-                        <Suspense fallback={null}>
-                          <ChatAssistant />
-                        </Suspense>
-                        {/* Interactive Onboarding Tour - DISABLED */}
-                        {/* <OnboardingTour /> */}
-                      </ProtectedRoute>
-                    }
-                  />
-                </Routes>
-              </Suspense>
+              <AppContent />
             </Router>
-            {/* </OnboardingProvider> DISABLED: Onboarding disabled */}
-          </SettingsProvider>
-        </AuthProvider>
-      </LanguageProvider>
+          </LanguageProvider>
+        </SettingsProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }
 
 export default App;
-
-// Force rebuild
-
 

@@ -1,6 +1,6 @@
-import { useState, memo, lazy, Suspense } from 'react';
-import { TrashIcon as Trash2, PencilIcon as Edit, ClipboardDocumentIcon as Copy, CheckCircleIcon as CheckCircle } from '@heroicons/react/24/outline';
-import { Button } from '../ui';
+import { useState, memo, useMemo, useCallback } from 'react';
+import { Table, Button as AntButton, Space, Tag, message } from 'antd';
+import { DeleteOutlined as Trash2, EditOutlined as Edit, CopyOutlined as Copy, CheckCircleOutlined as CheckCircle } from '@ant-design/icons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CouponsTableSkeleton from './CouponsTableSkeleton';
 import { getDiscountText, formatExpiryDate, getStatusConfig } from './utils/couponHelpers';
@@ -25,149 +25,139 @@ import { secureLog } from '../../utils/logger';
 const CouponsTable = memo(({ coupons, onEdit, onDelete, formatCurrency, isRTL, t, isLoading = false }) => {
   const [copiedCode, setCopiedCode] = useState(null);
 
-  const handleCopyCode = async (code) => {
-    // SECURITY: Validate code exists and is a string
+  const handleCopyCode = useCallback(async (code) => {
     if (!code || typeof code !== 'string') {
       secureLog.warn('Invalid coupon code for copying:', code);
       return;
     }
     
-    // Copy the original code (not sanitized) - sanitization is only for display
-    // The clipboard API handles the raw text safely
     const codeToCopy = code.trim();
     if (!codeToCopy) return;
     
     try {
       await navigator.clipboard.writeText(codeToCopy);
-      // Store original code for comparison (not sanitized)
       setCopiedCode(codeToCopy);
+      message.success(t('codeCopied') || 'Code copied!');
       setTimeout(() => setCopiedCode(null), 2000);
     } catch (err) {
-      // Failed to copy - log securely
       secureLog.warn('Failed to copy coupon code:', err);
+      message.error(t('copyFailed') || 'Failed to copy code');
     }
-  };
+  }, [t]);
+
+  // Filter valid coupons
+  const validCoupons = useMemo(() => {
+    return coupons ? coupons.filter(coupon => validateCoupon(coupon)) : [];
+  }, [coupons]);
+
+  // Define columns
+  const columns = useMemo(() => [
+    {
+      title: t('code') || 'Code',
+      key: 'code',
+      align: isRTL ? 'right' : 'left',
+      render: (_, coupon) => {
+        const sanitizedCode = sanitizeCouponCode(coupon.code);
+        const originalCode = coupon.code ? coupon.code.trim() : '';
+        return (
+          <Space size={8}>
+            <code style={{ fontSize: 14, fontFamily: 'monospace', backgroundColor: '#f5f5f5', padding: '4px 8px', borderRadius: 4 }}>
+              {sanitizedCode}
+            </code>
+            <AntButton
+              type="text"
+              size="small"
+              icon={copiedCode === originalCode ? <CheckCircle style={{ color: '#52c41a' }} /> : <Copy />}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCopyCode(coupon.code);
+              }}
+              title={t('copyCode') || 'Copy code'}
+            />
+          </Space>
+        );
+      }
+    },
+    {
+      title: t('discount') || 'Discount',
+      key: 'discount',
+      align: isRTL ? 'right' : 'left',
+      render: (_, coupon) => getDiscountText(coupon, formatCurrency)
+    },
+    {
+      title: t('usageLimit') || 'Usage Limit',
+      key: 'usageLimit',
+      align: isRTL ? 'right' : 'left',
+      render: (_, coupon) => coupon.usage_limit ? coupon.usage_limit : t('unlimited') || 'Unlimited'
+    },
+    {
+      title: t('used') || 'Used',
+      key: 'used',
+      align: isRTL ? 'right' : 'left',
+      render: (_, coupon) => coupon.usage_count || 0
+    },
+    {
+      title: t('expiryDate') || 'Expiry Date',
+      key: 'expiryDate',
+      align: isRTL ? 'right' : 'left',
+      render: (_, coupon) => formatExpiryDate(coupon.date_expires, t)
+    },
+    {
+      title: t('status') || 'Status',
+      key: 'status',
+      align: isRTL ? 'right' : 'left',
+      render: (_, coupon) => {
+        const statusConfig = getStatusConfig(coupon.status);
+        return (
+          <Tag color={statusConfig.isActive ? 'success' : 'default'}>
+            {t(statusConfig.label) || (statusConfig.isActive ? 'Active' : 'Inactive')}
+          </Tag>
+        );
+      }
+    },
+    {
+      title: t('actions') || 'Actions',
+      key: 'actions',
+      align: isRTL ? 'right' : 'left',
+      render: (_, coupon) => (
+        <Space size={8} style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+          <AntButton
+            type="text"
+            icon={<Edit />}
+            onClick={() => onEdit(coupon)}
+            style={{ color: '#1890ff' }}
+            title={t('editCoupon') || 'Edit coupon'}
+          />
+          <AntButton
+            type="text"
+            icon={<Trash2 />}
+            onClick={() => onDelete(coupon.id)}
+            danger
+            title={t('deleteCoupon') || 'Delete coupon'}
+          />
+        </Space>
+      )
+    }
+  ], [isRTL, t, formatCurrency, onEdit, onDelete, copiedCode, handleCopyCode]);
 
   // Show skeleton while loading
-  if (isLoading && (!coupons || coupons.length === 0)) {
+  if (isLoading && validCoupons.length === 0) {
     return <CouponsTableSkeleton count={10} />;
   }
 
-  if (!coupons || coupons.length === 0) {
+  if (validCoupons.length === 0) {
     return null;
   }
-  
-  // SECURITY: Filter out invalid coupons
-  const validCoupons = coupons.filter(coupon => validateCoupon(coupon));
 
   return (
-    <div className="card overflow-x-auto">
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-gray-200">
-            <th className={`py-3 px-4 text-sm font-semibold text-gray-700 ${'text-right'}`}>
-              {t('code') || 'Code'}
-            </th>
-            <th className={`py-3 px-4 text-sm font-semibold text-gray-700 ${'text-right'}`}>
-              {t('discount') || 'Discount'}
-            </th>
-            <th className={`py-3 px-4 text-sm font-semibold text-gray-700 ${'text-right'}`}>
-              {t('usageLimit') || 'Usage Limit'}
-            </th>
-            <th className={`py-3 px-4 text-sm font-semibold text-gray-700 ${'text-right'}`}>
-              {t('used') || 'Used'}
-            </th>
-            <th className={`py-3 px-4 text-sm font-semibold text-gray-700 ${'text-right'}`}>
-              {t('expiryDate') || 'Expiry Date'}
-            </th>
-            <th className={`py-3 px-4 text-sm font-semibold text-gray-700 ${'text-right'}`}>
-              {t('status') || 'Status'}
-            </th>
-            <th className={`py-3 px-4 text-sm font-semibold text-gray-700 ${'text-right'}`}>
-              {t('actions') || 'Actions'}
-            </th>
-          </tr>
-        </thead>
-        <tbody className={isLoading ? 'opacity-50 transition-opacity duration-200' : ''}>
-          <Suspense fallback={<CouponsTableSkeleton count={validCoupons.length} />}>
-            {validCoupons.map((coupon) => {
-              // SECURITY: Sanitize coupon code for display (HTML escaping)
-              const sanitizedCode = sanitizeCouponCode(coupon.code);
-              const statusConfig = getStatusConfig(coupon.status);
-              // Use original code for comparison (trimmed)
-              const originalCode = coupon.code ? coupon.code.trim() : '';
-              
-              return (
-                <tr key={coupon.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2 flex-row">
-                      <code className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
-                        {sanitizedCode}
-                      </code>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent row click
-                          handleCopyCode(coupon.code);
-                        }}
-                        className="text-gray-400 hover:text-primary-500"
-                        title={t('copyCode') || 'Copy code'}
-                      >
-                        {copiedCode === originalCode ? (
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </td>
-                  <td className={`py-3 px-4 text-sm ${'text-right'}`}>
-                    {getDiscountText(coupon, formatCurrency)}
-                  </td>
-                  <td className={`py-3 px-4 text-sm ${'text-right'}`}>
-                    {coupon.usage_limit ? coupon.usage_limit : t('unlimited') || 'Unlimited'}
-                  </td>
-                  <td className={`py-3 px-4 text-sm ${'text-right'}`}>
-                    {coupon.usage_count || 0}
-                  </td>
-                  <td className={`py-3 px-4 text-sm ${'text-right'}`}>
-                    {formatExpiryDate(coupon.date_expires, t)}
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className={`px-2 py-1 text-xs font-medium rounded ${statusConfig.className}`}>
-                      {t(statusConfig.label) || (statusConfig.isActive ? 'Active' : 'Inactive')}
-                    </span>
-                  </td>
-              <td className="py-3 px-4">
-                <div className={`flex items-center gap-2 ${'flex-row-reverse'}`}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEdit(coupon)}
-                    className="text-primary-500 hover:bg-primary-50"
-                    title={t('editCoupon') || 'Edit coupon'}
-                  >
-                    <Edit className="w-[18px] h-[18px]" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onDelete(coupon.id)}
-                    className="text-orange-600 hover:bg-orange-50"
-                    title={t('deleteCoupon') || 'Delete coupon'}
-                  >
-                    <Trash2 className="w-[18px] h-[18px]" />
-                  </Button>
-                </div>
-              </td>
-                </tr>
-              );
-            })}
-          </Suspense>
-        </tbody>
-      </table>
-    </div>
+    <Table
+      columns={columns}
+      dataSource={validCoupons}
+      rowKey="id"
+      pagination={false}
+      loading={isLoading}
+      scroll={{ x: true }}
+    />
   );
 });
 

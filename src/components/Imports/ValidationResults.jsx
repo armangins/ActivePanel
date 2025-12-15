@@ -1,4 +1,4 @@
-import { CheckCircleIcon, ExclamationCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { CheckCircleOutlined as CheckCircleIcon, ExclamationCircleOutlined as ExclamationCircleIcon, CloseCircleOutlined as XCircleIcon } from '@ant-design/icons';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const ValidationResults = ({ results }) => {
@@ -107,6 +107,10 @@ const ValidationResults = ({ results }) => {
 };
 
 export default ValidationResults;
+
+
+
+
 
 
 

@@ -8,25 +8,38 @@ const ProductCardPrice = ({
     offLabel,
 }) => {
     return (
-        <div className={`flex items-center flex-row-reverse justify-end gap-2 pt-3 border-t border-gray-200 flex-wrap`}>
+        <div style={{ 
+            display: 'flex', 
+            alignItems: 'baseline', 
+            flexDirection: 'row', 
+            justifyContent: 'flex-start', 
+            gap: '8px', 
+            marginTop: '8px',
+            flexWrap: 'wrap' 
+        }}>
             {salePrice ? (
                 <>
-                    <p className="text-2xl font-regular text-primary-500">
+                    <p style={{ fontSize: '16px', fontFamily: 'inherit', color: '#374151', fontWeight: 500, margin: 0 }}>
                         {salePrice}
                     </p>
                     {regularPrice && (
-                        <p className="text-sm text-gray-400 line-through">
+                        <p style={{ fontSize: '14px', color: '#9ca3af', textDecoration: 'line-through', margin: 0 }}>
                             {regularPrice}
                         </p>
                     )}
                     {discountPercentage > 0 && (
-                        <span className="px-2 py-1 text-xs font-bold text-white bg-orange-500 rounded">
-                            {discountPercentage}% {offLabel}
+                        <span style={{ 
+                            fontSize: '14px', 
+                            fontWeight: 500, 
+                            color: '#10b981',
+                            marginLeft: '4px'
+                        }}>
+                            {discountPercentage}% {offLabel || 'off'}
                         </span>
                     )}
                 </>
             ) : (
-                <p className="text-2xl font-regular text-gray-900">
+                <p style={{ fontSize: '16px', fontFamily: 'inherit', color: '#374151', fontWeight: 500, margin: 0 }}>
                     {displayPrice}
                 </p>
             )}

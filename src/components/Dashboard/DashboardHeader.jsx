@@ -8,16 +8,23 @@ import { useLanguage } from '../../contexts/LanguageContext';
  * @param {Function} t - Translation function
  * @param {boolean} isRTL - Whether the layout is right-to-left
  */
+import { Typography } from 'antd';
+const { Title, Text } = Typography;
+
 const DashboardHeader = ({ t, isRTL }) => {
   return (
-    <div className={'text-right'} data-onboarding="dashboard-header">
-      <h1 className="text-3xl font-bold text-gray-900">{t('dashboard')}</h1>
-      <p className="text-gray-600 mt-1">{t('welcome')}</p>
+    <div style={{ textAlign: 'right' }} data-onboarding="dashboard-header">
+      <Title level={1} style={{ marginBottom: 8 }}>{t('dashboard')}</Title>
+      <Text type="secondary">{t('welcome')}</Text>
     </div>
   );
 };
 
 export default DashboardHeader;
+
+
+
+
 
 
 

@@ -15,6 +15,7 @@ export default defineConfig({
   },
   server: {
     port: 3001,
+    host: '127.0.0.1',
     open: true,
     proxy: {
       '/api': {
@@ -36,9 +37,9 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['@heroicons/react'],
+          'antd-vendor': ['antd', '@ant-design/icons'],
           'chart-vendor': ['recharts'],
-          'utils-vendor': ['date-fns', 'lodash'],
+          'utils-vendor': ['date-fns', 'lodash', 'dayjs'],
           'query-vendor': ['@tanstack/react-query'],
         },
         // Optimize chunk file names
