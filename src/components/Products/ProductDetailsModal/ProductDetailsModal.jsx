@@ -3,13 +3,12 @@ import { Modal, Tabs } from 'antd';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useVariations } from '../../../hooks/useVariations';
 import { useProduct } from '../../../hooks/useProducts';
-import { Button } from '../../ui';
 import ProductDetailsHeader from './ProductDetailsHeader';
 import ProductDetailsBasicInfo from './ProductDetailsBasicInfo';
 import ProductDetailsPricing from './ProductDetailsPricing';
 import ProductDetailsMedia from './ProductDetailsMedia';
 import ProductDetailsOrganization from './ProductDetailsOrganization';
-import ProductDetailsDescription from './ProductDetailsDescription';
+import ProductDetailsDescription from './ProductDetailsDescription.jsx';
 
 /**
  * ProductDetailsModal Component

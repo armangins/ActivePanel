@@ -90,6 +90,8 @@ const ProductImagesSection = ({
       const uploadedImage = await mediaAPI.upload(formData);
 
       onSuccess(uploadedImage);
+      // Trigger update in parent component to add the image to formData
+      onUpload([uploadedImage]);
       messageApi.success(t('imageUploaded') || 'הועלה בהצלחה');
     } catch (error) {
       onError(error);

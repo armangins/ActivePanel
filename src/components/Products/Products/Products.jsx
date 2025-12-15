@@ -18,7 +18,7 @@ import {
 
 // Components
 // Lazy load modals to reduce initial bundle size
-const ProductDetailsModal = lazy(() => import('../ProductDetailsModal/ProductDetailsModal'));
+const ProductDetailsModal = lazy(() => import('../ProductDetailsModal/ProductDetailsModal.jsx'));
 const DeleteConfirmationModal = lazy(() => import('../DeleteConfirmationModal/DeleteConfirmationModal'));
 const BulkDeleteConfirmationModal = lazy(() => import('../BulkDeleteConfirmationModal/BulkDeleteConfirmationModal'));
 
@@ -92,10 +92,10 @@ const Products = () => {
     const viewProductId = searchParams.get('view');
     if (viewProductId && !selectedProduct && !isDetailsOpen) {
       const productId = parseInt(viewProductId);
-      
+
       // First, try to find in already loaded products
       const productToView = allProducts.find(p => p.id === productId);
-      
+
       if (productToView) {
         setSelectedProduct(productToView);
         setIsDetailsOpen(true);
@@ -160,7 +160,7 @@ const Products = () => {
       }
 
       setProductToDelete(null);
-      
+
       // Show success toast
       message.success(t('productDeletedSuccessfully') || `המוצר "${productToDelete.name}" נמחק בהצלחה`);
     } catch (err) {
@@ -185,7 +185,7 @@ const Products = () => {
       const idsArray = Array.from(selectedProductIds);
       const count = idsArray.length;
       const wasViewingDeletedProduct = selectedProduct && selectedProductIds.has(selectedProduct.id);
-      
+
       await productsAPI.bulkDelete(idsArray);
 
       // Clear selection
@@ -201,14 +201,14 @@ const Products = () => {
       refetch();
 
       setShowBulkDeleteModal(false);
-      
+
       // Show success toast
       const successMessage = t('productsDeletedSuccessfully')?.replace('{count}', count) || `${count} מוצר(ים) נמחקו בהצלחה`;
       message.success(successMessage);
     } catch (err) {
       secureLog.error('Bulk delete error:', err);
       setShowBulkDeleteModal(false);
-      
+
       // Show error toast
       message.error(t('bulkDeleteFailed') || `שגיאה במחיקת המוצרים: ${err.message || t('error')}`);
     }

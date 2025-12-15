@@ -679,7 +679,7 @@ export const useAddProductViewModel = () => {
         return handleSubmit(
             (data) => {
                 console.log('Form validation passed. submitting...', data);
-                onSubmit(data, status);
+                return onSubmit(data, status);
             },
             (errors) => {
                 console.error('Form validation failed:', errors);
