@@ -1,4 +1,4 @@
-import { sanitizeHTML } from '../../../../utils/security';
+import { sanitizeHTML } from '../../../utils/security';
 
 /**
  * ProductDetailsDescription Component

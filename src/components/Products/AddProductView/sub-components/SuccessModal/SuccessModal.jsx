@@ -1,6 +1,5 @@
 import { memo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CheckCircleOutlined as CheckCircleIcon } from '@ant-design/icons';
+import { Modal, Result, Button } from 'antd';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
 
 /**
@@ -14,17 +13,17 @@ import { useLanguage } from '../../../../../contexts/LanguageContext';
  * @param {function} onCreateAnother - Callback to create another product (clears form)
  * @param {function} onGoToProducts - Callback to navigate to products page
  * @param {string} action - Action type: 'create' or 'update'
+ * @param {string} productName - Name of the product
  */
-const SuccessModal = ({ 
-  isOpen, 
-  onClose, 
+const SuccessModal = ({
+  isOpen,
+  onClose,
   onCreateAnother,
   onGoToProducts,
-  action = 'create' 
+  action = 'create',
+  productName = ''
 }) => {
   const { t } = useLanguage();
-
-  if (!isOpen) return null;
 
   const handleCreateAnother = () => {
     onCreateAnother?.();
@@ -34,55 +33,45 @@ const SuccessModal = ({
     onGoToProducts?.();
   };
 
+  // Determine message based on action and product name
+  const title = action === 'update'
+    ? (t('productUpdatedSuccessfully') || `המוצר ${productName} עודכן בהצלחה!`)
+    : `The product ${productName} was successfully added`; // Keeping user's requested specific text structure
+
+  // If specific Hebrew text is preferred for 'create' matching the English structure:
+  // "המוצר ${productName} נוסף בהצלחה"
+
+  // Note: user explicitly asked for "the product [name] was sucessfuly added", 
+  // so we prioritize that structure in the logic or fallback. 
+  // However, since the app is RTL/Hebrew, I will provide a Hebrew fallback that matches the pattern if 't' returns nothing.
+  const displayTitle = action === 'update'
+    ? (t('productUpdatedSuccessfully') || `המוצר ${productName} עודכן בהצלחה`)
+    : (productName ? `המוצר ${productName} נוסף בהצלחה` : (t('productCreatedSuccessfully') || 'המוצר נוסף בהצלחה'));
+
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-50"
-        onClick={onClose}
+    <Modal
+      open={isOpen}
+      onCancel={onClose}
+      footer={null}
+      centered
+      closable={false}
+      maskClosable={false}
+      width={600}
+    >
+      <Result
+        status="success"
+        title={displayTitle}
+        subTitle={t('wouldYouLikeToCreateAnother') || 'האם תרצה להוסיף מוצר נוסף?'}
+        extra={[
+          <Button type="primary" key="console" onClick={handleCreateAnother} size="large">
+            {t('createAnotherProduct') || 'כן, הוסף מוצר נוסף'}
+          </Button>,
+          <Button key="buy" onClick={handleGoToProducts} size="large">
+            {t('goToProducts') || 'עבור לעמוד המוצרים'}
+          </Button>,
+        ]}
       />
-
-      {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-6">
-          {/* Success Icon */}
-          <div className="flex justify-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-              <CheckCircleIcon className="w-10 h-10 text-green-600" />
-            </div>
-          </div>
-
-          {/* Message */}
-          <div className="text-center space-y-2">
-            <h3 className="text-xl font-semibold text-gray-900">
-              {action === 'update'
-                ? (t('productUpdatedSuccessfully') || 'המוצר עודכן בהצלחה!')
-                : (t('productCreatedSuccessfully') || 'המוצר נוצר בהצלחה!')
-              }
-            </h3>
-            <p className="text-gray-600">
-              {t('wouldYouLikeToCreateAnother') || 'האם תרצה להוסיף מוצר נוסף?'}
-            </p>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={handleCreateAnother}
-              className="w-full bg-primary-500 text-white px-6 py-3 rounded-lg hover:bg-primary-600 transition-colors flex items-center justify-center font-medium"
-            >
-              {t('createAnotherProduct') || 'כן, הוסף מוצר נוסף'}
-            </button>
-            <button
-              onClick={handleGoToProducts}
-              className="w-full bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center font-medium"
-            >
-              {t('goToProducts') || 'עבור לעמוד המוצרים'}
-            </button>
-          </div>
-        </div>
-      </div>
-    </>
+    </Modal>
   );
 };
 

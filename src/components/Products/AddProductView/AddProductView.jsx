@@ -165,6 +165,7 @@ const AddProductView = () => {
         onCreateAnother={vm.handleCreateAnotherProduct}
         onGoToProducts={vm.handleGoToProducts}
         action={vm.isEditMode ? 'update' : 'create'}
+        productName={vm.formData.product_name}
       />
 
       {/* Edit Variation Modal */}
