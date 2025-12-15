@@ -4,7 +4,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { Card } from '../../../../ui';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
 import { mediaAPI } from '../../../../../services/woocommerce';
-import { useCenteredMessage } from '../../../../../hooks/useCenteredMessage';
+import { useMessage } from '../../../../../contexts/MessageContext';
 
 /**
  * ProductImagesSection Component
@@ -24,79 +24,71 @@ const ProductImagesSection = ({
   maxImages = 12,
 }) => {
   const { t } = useLanguage();
+  const messageApi = useMessage();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
   const [previewTitle, setPreviewTitle] = useState('');
 
-  // Use message hook for context-aware messages with automatic centering
-  const [messageApi, contextHolder] = useCenteredMessage();
   const [fileList, setFileList] = useState([]);
 
-  // Sync fileList with images prop
-  useEffect(() => {
-    // Only update if the images prop has changed effectively (ignoring local temporary uploads)
-    // We filter out any currently uploading files from the incoming prop sync to avoid overwriting them
-    // But since the prop update usually comes AFTER upload success, we can merge.
-
-    const formattedImages = images.map((img) => ({
-      uid: img.id.toString(),
-      name: img.name || `Image ${img.id}`,
-      status: 'done',
-      url: img.src,
-    }));
-
-    setFileList(prev => {
-      // Keep locally uploading files that aren't in the new prop list yet
-      const uploadingFiles = prev.filter(f => f.status === 'uploading');
-      // Combine prop images with currently uploading ones
-      // Note: This matches the requirement to show progress. 
-      // Once upload completes, the parent updates 'images', and it will replace the 'uploading' entry here.
-      return [...formattedImages, ...uploadingFiles];
+  // Utility function for image preview
+  const getBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
     });
+
+  useEffect(() => {
+    setFileList((images || []).map(img => ({
+      uid: img.id || Math.random().toString(),
+      name: img.name || 'Image',
+      status: 'done',
+      url: img.src || img.url,
+      // Store original ID for removal
+      id: img.id
+    })));
   }, [images]);
 
   const handleCancel = () => setPreviewOpen(false);
 
   const handlePreview = async (file) => {
     if (!file.url && !file.preview) {
-      file.preview = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file.originFileObj);
-        reader.onload = () => resolve(reader.result);
-      });
+      file.preview = await getBase64(file.originFileObj);
     }
     setPreviewImage(file.url || file.preview);
     setPreviewOpen(true);
-    setPreviewTitle(file.name || file.url.substring(file.url.lastIndexOf('/') + 1));
+    // Fixed: Correct property access for preview title
+    setPreviewTitle(file.name || (file.url ? file.url.substring(file.url.lastIndexOf('/') + 1) : 'Preview'));
   };
 
-  const handleChange = ({ fileList: newFileList, file }) => {
+  const handleChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
-    if (file.status === 'removed') {
-      onRemove?.(Number(file.uid));
-    }
+    // We don't trigger onUpload/onChange here as we handle uploads via customRequest
   };
 
+  const handleRemove = (file) => {
+    // If the file has an ID (was successfully uploaded), invoke the onRemove callback
+    if (file.id) {
+      onRemove(file.id);
+    }
+    return true; // Allow removal from the UI list
+  };
+
+  // Custom request to handle direct uploads
   const customRequest = async ({ file, onSuccess, onError, onProgress }) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
     try {
-      // Show artificial progress since axios might be too fast or opaque for small files
-      // or to give immediate feedback before the request starts
-      onProgress({ percent: 0 });
-
-      const formData = new FormData();
-      formData.append('file', file);
-
-      // Simulate progress for better UX on fast connections or while waiting for server
-      const interval = setInterval(() => {
-        onProgress({ percent: 50 });
-      }, 100);
+      // Create a dummy file in the list temporarily (handled by Ant Design)
+      // Call parent onUpload which handles the API call
+      // Note: We're adapting the single-file API of customRequest to our multi-file handler
+      // Ideally, onUpload should return the uploaded file or promise
 
       const uploadedImage = await mediaAPI.upload(formData);
 
-      clearInterval(interval);
-      onProgress({ percent: 100 });
-
-      onUpload?.([uploadedImage]);
       onSuccess(uploadedImage);
       messageApi.success(t('imageUploaded') || 'הועלה בהצלחה');
     } catch (error) {
@@ -134,7 +126,6 @@ const ProductImagesSection = ({
 
   return (
     <Card className="p-6">
-      {contextHolder}
       <h3 className="text-lg font-semibold text-gray-800 mb-4 text-right">
         {t('uploadImages')}
       </h3>
@@ -145,6 +136,7 @@ const ProductImagesSection = ({
           fileList={fileList}
           onPreview={handlePreview}
           onChange={handleChange}
+          onRemove={handleRemove}
           customRequest={customRequest}
           multiple={true}
           maxCount={maxImages}

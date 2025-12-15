@@ -670,12 +670,22 @@ export const useAddProductViewModel = () => {
     }, [id, isEditMode, productType, pendingVariations, deletedVariationIds, t, clearPendingVariations, clearDeletedVariations, loadVariations, selectedAttributeTerms, attributes, attributeTerms, methods]);
 
     const handleSave = useCallback(async (status = 'draft') => {
+        console.log('handleSave called with status:', status);
         // Update status in form first so validation runs against the correct status
         setValue('status', status);
 
         // Wait for state update/render cycle if needed, but synchronous setValue should work with RHF
         // Trigger validation and submit
-        return handleSubmit((data) => onSubmit(data, status))();
+        return handleSubmit(
+            (data) => {
+                console.log('Form validation passed. submitting...', data);
+                onSubmit(data, status);
+            },
+            (errors) => {
+                console.error('Form validation failed:', errors);
+                // Optionally show a general toast here if needed
+            }
+        )();
     }, [handleSubmit, onSubmit, setValue]);
 
     return {

@@ -4,6 +4,7 @@ import { Layout, Spin } from 'antd';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
+import { MessageProvider } from './contexts/MessageContext';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
@@ -55,10 +56,10 @@ function AppContent() {
   // Show loading state while checking authentication
   if (loading) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#f9fafb'
       }}>
@@ -76,21 +77,21 @@ function AppContent() {
       <Route path="/login" element={<Login />} />
       <Route path="/oauth/callback" element={<OAuthCallback />} />
       <Route path="/auth/callback" element={<OAuthCallback />} />
-      
+
       {/* Protected routes - with layout */}
       <Route
         path="/*"
         element={
           <ProtectedRoute>
             <Layout style={{ minHeight: '100vh', direction: isRTL ? 'rtl' : 'ltr' }} dir={isRTL ? 'rtl' : 'ltr'}>
-              <Sidebar 
-                isOpen={sidebarOpen} 
+              <Sidebar
+                isOpen={sidebarOpen}
                 onClose={() => setSidebarOpen(false)}
                 onCollapseChange={setIsCollapsed}
                 isCollapsed={isCollapsed}
               />
               <Layout>
-                <Header 
+                <Header
                   onMenuClick={() => setSidebarOpen(!sidebarOpen)}
                   onCollapseToggle={() => setIsCollapsed(!isCollapsed)}
                   isCollapsed={isCollapsed}
@@ -122,9 +123,11 @@ function App() {
       <AuthProvider>
         <SettingsProvider>
           <LanguageProvider>
-            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-              <AppContent />
-            </Router>
+            <MessageProvider>
+              <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <AppContent />
+              </Router>
+            </MessageProvider>
           </LanguageProvider>
         </SettingsProvider>
       </AuthProvider>

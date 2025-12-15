@@ -7,9 +7,8 @@ const priceSchema = z
         if (val === '' || val === null || val === undefined) return undefined;
         return String(val).trim();
     })
-    .refine(val => val !== undefined && val !== '', {
-        message: 'יש להזין מחיר'
-    })
+    // Removed mandatory check here. Validation is handled in superRefine based on status.
+    // Removed mandatory check here. Validation is handled in superRefine based on status.
     .refine(val => {
         if (val === undefined) return true;
         // Remove any non-numeric characters except decimal point and minus sign for validation

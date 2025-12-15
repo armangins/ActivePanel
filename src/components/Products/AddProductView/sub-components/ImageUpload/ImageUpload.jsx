@@ -1,9 +1,17 @@
 import { memo, useState, useEffect } from 'react';
-import { Upload, Modal, message, Progress, Flex, Typography, theme } from 'antd';
+import { Upload, Modal, Progress, Flex, Typography, theme } from 'antd';
 import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
 import { mediaAPI } from '../../../../../services/woocommerce';
-import { useCenteredMessage } from '../../../../../hooks/useCenteredMessage';
+import { useMessage } from '../../../../../contexts/MessageContext';
+
+const getBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
 
 /**
  * ImageUpload Component
@@ -26,65 +34,53 @@ const ImageUpload = ({
   disabled = false,
 }) => {
   const { t } = useLanguage();
+  const messageApi = useMessage();
   const [loading, setLoading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
   const [previewTitle, setPreviewTitle] = useState('');
 
-  // Use message hook for context-aware messages
-  const [messageApi, contextHolder] = useCenteredMessage();
-
-
   const [fileList, setFileList] = useState([]);
 
-  // Sync fileList with value prop
   useEffect(() => {
-    const propImages = value ? [{
-      uid: value.id || '-1',
-      name: 'image',
-      status: 'done',
-      url: value.src || value.url || value.source_url,
-    }] : [];
-
-    setFileList(prev => {
-      // Keep locally uploading files
-      const uploadingFiles = prev.filter(f => f.status === 'uploading');
-      // If we have a newly uploaded value (done), it replaces the uploading one.
-      // If value is null, we might still be uploading, but usually value updates after success.
-      return [...propImages, ...uploadingFiles].slice(0, 1); // Ensure max 1
-    });
+    if (value) {
+      setFileList([{
+        uid: value.id || '-1',
+        name: value.name || 'Image',
+        status: 'done',
+        url: value.src || value.url || value.source_url,
+      }]);
+    } else {
+      setFileList([]);
+    }
   }, [value]);
 
   const handleCancel = () => setPreviewOpen(false);
 
   const handlePreview = async (file) => {
     if (!file.url && !file.preview) {
-      file.preview = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file.originFileObj);
-        reader.onload = () => resolve(reader.result);
-      });
+      file.preview = await getBase64(file.originFileObj);
     }
     setPreviewImage(file.url || file.preview);
     setPreviewOpen(true);
-    setPreviewTitle(file.name || 'Image Preview');
+    setPreviewTitle(file.name || file.url.substring(file.url.lastIndexOf('/') + 1));
   };
 
   const handleChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
     // If list is empty, it means the image was removed
     if (newFileList.length === 0) {
-      onChange?.(null);
+      onChange(null);
     }
   };
 
   const customRequest = async ({ file, onSuccess, onError, onProgress }) => {
     setLoading(true);
-    try {
-      onProgress({ percent: 0 });
-      const formData = new FormData();
-      formData.append('file', file);
+    const formData = new FormData();
+    formData.append('file', file);
 
+    try {
+      // Simulate progress
       const interval = setInterval(() => {
         onProgress({ percent: 50 });
       }, 100);
@@ -109,7 +105,7 @@ const ImageUpload = ({
   const uploadButton = (
     <button style={{ border: 0, background: 'none' }} type="button">
       {loading ? <LoadingOutlined /> : <PlusOutlined />}
-      <div style={{ marginTop: 8 }}>{t('upload') || 'העלאה'}</div>
+      <div style={{ marginTop: 8 }}>{t('upload') || 'כאן בוחרים קבצים'}</div>
     </button>
   );
 
@@ -122,7 +118,7 @@ const ImageUpload = ({
         <div className="ant-upload-list-item ant-upload-list-item-uploading" style={{ height: '100%', padding: '8px', border: `1px dashed ${token.colorBorder}`, borderRadius: token.borderRadiusLG }}>
           <Flex vertical align="center" justify="center" style={{ height: '100%', width: '100%' }}>
             <Typography.Text style={{ marginBottom: 8, fontSize: 14, color: token.colorPrimary }}>
-              מעלה...
+              תמונה מעלה...
             </Typography.Text>
             <Progress percent={file.percent} size="small" showInfo={false} strokeColor={token.colorPrimary} />
           </Flex>
@@ -134,7 +130,6 @@ const ImageUpload = ({
 
   return (
     <div className={className}>
-      {contextHolder}
       {label && (
         <div className="mb-2 text-right font-medium text-gray-700">
           {label}
