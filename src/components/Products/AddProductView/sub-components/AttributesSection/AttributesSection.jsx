@@ -44,12 +44,12 @@ const AttributesSection = ({
   );
 
   return (
-    <Card style={{ 
+    <Card style={{
       padding: '24px',
       border: errors.attributes ? '1px solid #ff4d4f' : undefined
     }}>
-      <Title level={4} style={{ 
-        marginBottom: '16px', 
+      <Title level={4} style={{
+        marginBottom: '16px',
         textAlign: 'right',
         fontSize: '18px',
         fontWeight: 600
@@ -71,9 +71,9 @@ const AttributesSection = ({
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           <div>
-            <Text strong style={{ 
-              display: 'block', 
-              fontSize: '14px', 
+            <Text strong style={{
+              display: 'block',
+              fontSize: '14px',
               marginBottom: '12px',
               textAlign: 'right'
             }}>
@@ -91,7 +91,7 @@ const AttributesSection = ({
                       onToggleAttribute?.(attribute.id);
                     }}
                     color={isSelected ? 'blue' : 'default'}
-                    style={{ 
+                    style={{
                       cursor: 'pointer',
                       padding: '4px 12px',
                       fontSize: '14px',
@@ -107,11 +107,11 @@ const AttributesSection = ({
           </div>
 
           {selectedAttributeIds.length > 0 && (
-            <div style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              gap: '16px', 
-              paddingTop: '16px', 
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+              paddingTop: '16px',
               borderTop: '1px solid #f0f0f0'
             }}>
               {selectedAttributeIds.map(attributeId => {
@@ -123,25 +123,25 @@ const AttributesSection = ({
                 const isLoadingTerms = terms === undefined && !error;
 
                 return (
-                  <div 
-                    key={attributeId} 
-                    style={{ 
-                      paddingBottom: '16px', 
+                  <div
+                    key={attributeId}
+                    style={{
+                      paddingBottom: '16px',
                       borderBottom: '1px solid #f0f0f0'
                     }}
                   >
-                    <Text strong style={{ 
-                      display: 'block', 
-                      fontSize: '14px', 
+                    <Text strong style={{
+                      display: 'block',
+                      fontSize: '14px',
                       marginBottom: '12px',
                       textAlign: 'right'
                     }}>
                       {attribute.name}
                     </Text>
                     {error ? (
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
                         gap: '8px',
                         color: '#ff4d4f',
                         fontSize: '14px'
@@ -201,10 +201,14 @@ const AttributesSection = ({
                                   <span style={{
                                     backgroundColor: '#fff',
                                     borderRadius: '50%',
-                                    padding: '2px',
+                                    width: '16px',
+                                    height: '16px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
                                     boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
                                   }}>
-                                    <X style={{ fontSize: '12px', color: '#1890ff' }} />
+                                    <X style={{ fontSize: '10px', color: '#1890ff' }} />
                                   </span>
                                 )}
                               </button>
@@ -220,7 +224,7 @@ const AttributesSection = ({
                                 onToggleTerm?.(attributeId, term.id);
                               }}
                               color={isSelected ? 'blue' : 'default'}
-                              style={{ 
+                              style={{
                                 cursor: 'pointer',
                                 padding: '4px 12px',
                                 fontSize: '14px',
@@ -241,8 +245,8 @@ const AttributesSection = ({
           )}
 
           {hasSelectedAttributes && hasSelectedTerms && onAddVariationClick && (
-            <div style={{ 
-              paddingTop: '16px', 
+            <div style={{
+              paddingTop: '16px',
               borderTop: '1px solid #f0f0f0'
             }}>
               <Button
@@ -260,9 +264,9 @@ const AttributesSection = ({
       )}
 
       {errors.attributes && (
-        <Text type="danger" style={{ 
-          marginTop: '8px', 
-          fontSize: '14px', 
+        <Text type="danger" style={{
+          marginTop: '8px',
+          fontSize: '14px',
           textAlign: 'right',
           display: 'block'
         }}>

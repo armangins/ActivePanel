@@ -1,5 +1,5 @@
 import { memo, useState, useEffect } from 'react';
-import { Upload, Modal, message, Progress, Flex, Typography, theme } from 'antd';
+import { Upload, Modal, message, Progress, Flex, Typography, theme, Alert } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Card } from '../../../../ui';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
@@ -152,9 +152,22 @@ const ProductImagesSection = ({
         <img alt="example" style={{ width: '100%' }} src={previewImage} />
       </Modal>
 
-      <p className="text-xs text-gray-500 mt-4 text-right">
-        <span className="font-semibold">{t('highlyRecommended')}:</span> {t('useWebPFormat')}.
-      </p>
+      <div style={{ marginTop: 16 }}>
+        <Alert
+          message={
+            <div style={{ fontSize: '13px' }}>
+              <span style={{ fontWeight: 600 }}>{t('allowedFiles') || 'קבצים מותרים'}: </span>
+              JPG, PNG, WebP
+              <br />
+              <span style={{ fontWeight: 600, color: token.colorPrimary }}>{t('recommendation') || 'המלצה'}: </span>
+              {t('useWebPFormat') || 'מומלץ להשתמש ב-WebP לביצועים טובים יותר'}
+            </div>
+          }
+          type="info"
+          showIcon
+          style={{ direction: 'rtl', textAlign: 'right' }}
+        />
+      </div>
     </Card>
   );
 };

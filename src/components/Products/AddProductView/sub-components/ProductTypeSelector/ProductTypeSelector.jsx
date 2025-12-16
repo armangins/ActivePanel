@@ -50,11 +50,11 @@ const ProductTypeSelector = ({
 
   return (
     <div className={className}>
-      <label style={{ 
-        display: 'block', 
-        fontSize: '14px', 
-        fontWeight: 500, 
-        color: '#374151', 
+      <label style={{
+        display: 'block',
+        fontSize: '14px',
+        fontWeight: 500,
+        color: '#374151',
         marginBottom: '8px',
         textAlign: 'right'
       }}>
@@ -103,8 +103,11 @@ const ProductTypeSelector = ({
           background-color: #fff !important;
           color: #000 !important;
         }
-        .product-type-selector .ant-radio-button-wrapper:hover:not(.ant-radio-button-wrapper-disabled) {
-          color: ${productType === typeOptions[0].value && typeOptions[0].value === 'simple' ? '#fff' : productType === typeOptions[1].value && typeOptions[1].value === 'variable' ? '#fff' : '#1890ff'} !important;
+        .product-type-selector .ant-radio-button-wrapper-checked:hover {
+          color: #fff !important;
+        }
+        .product-type-selector .ant-radio-button-wrapper:not(.ant-radio-button-wrapper-checked):hover {
+          color: #1890ff !important;
         }
       `}</style>
 
@@ -118,8 +121,8 @@ const ProductTypeSelector = ({
           size="small"
         >
           {typeOptions.map((option) => (
-            <Radio.Button 
-              key={option.value} 
+            <Radio.Button
+              key={option.value}
               value={option.value}
             >
               {option.label}
@@ -129,11 +132,11 @@ const ProductTypeSelector = ({
       </div>
 
       {showHelpText && selectedOption && (
-        <Text 
-          type="secondary" 
-          style={{ 
-            fontSize: '12px', 
-            marginTop: '8px', 
+        <Text
+          type="secondary"
+          style={{
+            fontSize: '12px',
+            marginTop: '8px',
             display: 'block',
             textAlign: 'right'
           }}
