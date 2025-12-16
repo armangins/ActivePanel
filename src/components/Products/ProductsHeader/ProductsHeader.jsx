@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusOutlined as Plus, FilterOutlined as SlidersHorizontal, DeleteOutlined as Trash } from '@ant-design/icons';
+import {
+  PlusOutlined as Plus,
+  FilterOutlined as SlidersHorizontal,
+  DeleteOutlined as Trash,
+  AppstoreOutlined,
+  BarsOutlined
+} from '@ant-design/icons';
 import { Button } from '../../ui';
 import FiltersModal from '../FiltersModal/FiltersModal';
-import ViewModeToggle from '../ViewModeToggle/ViewModeToggle';
 import GridColumnSelector from '../GridColumnSelector/GridColumnSelector';
-import { Typography, Badge, Popover } from 'antd';
+import { Typography, Badge, Popover, Segmented } from 'antd';
 const { Title, Text } = Typography;
 
 const ProductsHeader = memo(({
@@ -68,10 +73,13 @@ const ProductsHeader = memo(({
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexDirection: isRTL ? 'row-reverse' : 'row', width: '100%', minWidth: 0, gap: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexDirection: isRTL ? 'row-reverse' : 'row', flexShrink: 0 }}>
         {/* View Mode Toggle */}
-        <ViewModeToggle
-          viewMode={viewMode}
-          onViewModeChange={onViewModeChange}
-          t={t}
+        <Segmented
+          value={viewMode}
+          onChange={onViewModeChange}
+          options={[
+            { value: 'list', icon: <BarsOutlined /> },
+            { value: 'grid', icon: <AppstoreOutlined /> },
+          ]}
         />
 
         {/* Grid Columns Selector - Only show when grid view is active */}

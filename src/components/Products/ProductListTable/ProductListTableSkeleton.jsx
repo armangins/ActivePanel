@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { Skeleton, theme } from 'antd';
 
 /**
  * ProductListTableSkeleton Component
@@ -7,70 +8,90 @@ import { memo } from 'react';
  * Shows animated placeholders while products are loading
  */
 const ProductListTableSkeleton = memo(({ count = 16 }) => {
+  const { token } = theme.useToken();
+
+  const containerStyle = {
+    backgroundColor: token.colorBgContainer,
+    borderRadius: token.borderRadiusLG,
+    border: `1px solid ${token.colorBorderSecondary}`,
+    overflow: 'hidden'
+  };
+
+  const headerCellStyle = {
+    padding: '12px 16px',
+    backgroundColor: token.colorFillQuaternary,
+    borderBottom: `1px solid ${token.colorBorderSecondary}`
+  };
+
+  const cellStyle = {
+    padding: '12px 16px',
+    borderBottom: `1px solid ${token.colorBorderSecondary}`
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full table-auto">
+    <div style={containerStyle}>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           {/* Header Skeleton */}
-          <thead className="bg-gray-50">
+          <thead>
             <tr>
-              <th className="py-3 px-4 w-12 text-center">
-                <div className="h-4 w-4 bg-gray-200 rounded animate-pulse mx-auto"></div>
+              <th style={{ ...headerCellStyle, width: 48, textAlign: 'center' }}>
+                <Skeleton.Button active size="small" style={{ width: 16, height: 16 }} />
               </th>
-              <th className="py-3 px-4 text-right">
-                <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+              <th style={{ ...headerCellStyle, textAlign: 'right' }}>
+                <Skeleton.Input active size="small" style={{ width: 100, height: 16 }} />
               </th>
-              <th className="py-3 px-4 text-right">
-                <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+              <th style={{ ...headerCellStyle, textAlign: 'right' }}>
+                <Skeleton.Input active size="small" style={{ width: 80, height: 16 }} />
               </th>
-              <th className="py-3 px-4 text-right">
-                <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+              <th style={{ ...headerCellStyle, textAlign: 'right' }}>
+                <Skeleton.Input active size="small" style={{ width: 60, height: 16 }} />
               </th>
-              <th className="py-3 px-4 text-right">
-                <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+              <th style={{ ...headerCellStyle, textAlign: 'right' }}>
+                <Skeleton.Input active size="small" style={{ width: 60, height: 16 }} />
               </th>
-              <th className="py-3 px-4 text-right">
-                <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+              <th style={{ ...headerCellStyle, textAlign: 'right' }}>
+                <Skeleton.Input active size="small" style={{ width: 80, height: 16 }} />
               </th>
-              <th className="py-3 px-4 w-16"></th>
+              <th style={{ ...headerCellStyle, width: 64 }}></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody>
             {Array.from({ length: count }).map((_, index) => (
-              <tr key={`skeleton-row-${index}`} className="animate-pulse">
+              <tr key={`skeleton-row-${index}`}>
                 {/* Checkbox */}
-                <td className="py-3 px-4 w-12 text-center">
-                  <div className="h-4 w-4 bg-gray-200 rounded mx-auto"></div>
+                <td style={{ ...cellStyle, textAlign: 'center' }}>
+                  <Skeleton.Button active size="small" style={{ width: 16, height: 16 }} />
                 </td>
                 {/* Product */}
-                <td className="py-3 px-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg flex-shrink-0"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                <td style={cellStyle}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <Skeleton.Button active style={{ width: 48, height: 48, borderRadius: 8 }} />
+                    <div style={{ flex: 1 }}>
+                      <Skeleton.Input active size="small" style={{ width: '75%', height: 16, marginBottom: 8 }} />
+                      <Skeleton.Input active size="small" style={{ width: '50%', height: 12 }} />
                     </div>
                   </div>
                 </td>
                 {/* Category */}
-                <td className="py-3 px-4">
-                  <div className="h-4 bg-gray-200 rounded w-20"></div>
+                <td style={cellStyle}>
+                  <Skeleton.Input active size="small" style={{ width: 80, height: 16 }} />
                 </td>
                 {/* Price */}
-                <td className="py-3 px-4">
-                  <div className="h-4 bg-gray-200 rounded w-16"></div>
+                <td style={cellStyle}>
+                  <Skeleton.Input active size="small" style={{ width: 60, height: 16 }} />
                 </td>
                 {/* Sale Price */}
-                <td className="py-3 px-4">
-                  <div className="h-4 bg-gray-200 rounded w-12"></div>
+                <td style={cellStyle}>
+                  <Skeleton.Input active size="small" style={{ width: 50, height: 16 }} />
                 </td>
                 {/* Stock */}
-                <td className="py-3 px-4">
-                  <div className="h-4 bg-gray-200 rounded w-16"></div>
+                <td style={cellStyle}>
+                  <Skeleton.Input active size="small" style={{ width: 60, height: 16 }} />
                 </td>
                 {/* Actions */}
-                <td className="py-3 px-4 w-16">
-                  <div className="h-6 w-6 bg-gray-200 rounded mx-auto"></div>
+                <td style={cellStyle}>
+                  <Skeleton.Button active size="small" style={{ width: 24, height: 24 }} />
                 </td>
               </tr>
             ))}

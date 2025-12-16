@@ -1,4 +1,8 @@
-import { Button } from '../../ui';
+import { Button, Typography, Flex, theme } from 'antd';
+import { CloseOutlined, ExportOutlined } from '@ant-design/icons';
+
+const { Title } = Typography;
+
 /**
  * ProductDetailsHeader Component
  * 
@@ -11,37 +15,42 @@ import { Button } from '../../ui';
  * @param {Function} t - Translation function
  */
 const ProductDetailsHeader = ({ product, onClose, isRTL, t }) => {
+  const { token } = theme.useToken();
+
   return (
-    <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-      <h2
-        className={`text-2xl font-bold text-gray-900 ${'text-right'
-          }`}
-      >
-        {t('productDetails') || t('products')}
-      </h2>
-      <div className={`flex items-center ${'flex-row-reverse'} gap-3`}>
-        {product.permalink && (
+    <div style={{
+      padding: '16px 24px',
+      borderBottom: `1px solid ${token.colorBorderSecondary}`,
+      direction: isRTL ? 'rtl' : 'ltr'
+    }}>
+      <Flex justify="space-between" align="center" style={{ flexDirection: isRTL ? 'row' : 'row-reverse' }}>
+        <Flex gap="small" align="center" style={{ flexDirection: isRTL ? 'row' : 'row-reverse' }}>
           <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => window.open(product.permalink, '_blank')}
-          >
-            {t('viewOnSite')}
-          </Button>
-        )}
-        <Button
-          onClick={onClose}
-          variant="ghost"
-          size="sm"
-          className="text-gray-500 hover:text-gray-700"
-        >
-          {t('cancel')}
-        </Button>
-      </div>
+            onClick={onClose}
+            type="text"
+            icon={<CloseOutlined />}
+            aria-label={t('close')}
+          />
+          <Title level={4} style={{ margin: 0 }}>
+            {t('productDetails') || t('products')}
+          </Title>
+        </Flex>
+
+        <div style={{ display: 'flex', gap: 12 }}>
+          {product.permalink && (
+            <Button
+              type="default"
+              icon={<ExportOutlined />}
+              onClick={() => window.open(product.permalink, '_blank')}
+            >
+              {t('viewOnSite')}
+            </Button>
+          )}
+        </div>
+      </Flex>
     </div>
   );
 };
 
 export default ProductDetailsHeader;
-
 

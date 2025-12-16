@@ -34,6 +34,7 @@ const AttributesSection = ({
   attributeErrors,
   onRetryLoadTerms,
   onAddVariationClick, // New prop for creating variations
+  onGenerateVariations, // New prop for generating all variations
 }) => {
   const { t } = useLanguage();
   const { formState: { errors } } = useFormContext();
@@ -106,157 +107,38 @@ const AttributesSection = ({
             </div>
           </div>
 
-          {selectedAttributeIds.length > 0 && (
+          {hasSelectedAttributes && onAddVariationClick && (
             <div style={{
+              paddingTop: '16px',
+              borderTop: '1px solid #f0f0f0',
               display: 'flex',
-              flexDirection: 'column',
-              gap: '16px',
-              paddingTop: '16px',
-              borderTop: '1px solid #f0f0f0'
+              gap: '12px',
+              flexDirection: 'row'
             }}>
-              {selectedAttributeIds.map(attributeId => {
-                const attribute = attributes.find(attr => attr.id === attributeId);
-                if (!attribute) return null;
-
-                const terms = attributeTerms[attributeId];
-                const error = attributeErrors?.[attributeId];
-                const isLoadingTerms = terms === undefined && !error;
-
-                return (
-                  <div
-                    key={attributeId}
-                    style={{
-                      paddingBottom: '16px',
-                      borderBottom: '1px solid #f0f0f0'
-                    }}
-                  >
-                    <Text strong style={{
-                      display: 'block',
-                      fontSize: '14px',
-                      marginBottom: '12px',
-                      textAlign: 'right'
-                    }}>
-                      {attribute.name}
-                    </Text>
-                    {error ? (
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        color: '#ff4d4f',
-                        fontSize: '14px'
-                      }}>
-                        <Text type="danger">{t('failedToLoadTerms') || 'שגיאה בטעינת ערכים'}</Text>
-                        <Button
-                          type="link"
-                          size="small"
-                          onClick={() => onRetryLoadTerms?.(attributeId)}
-                          style={{ padding: 0, height: 'auto' }}
-                        >
-                          {t('retry') || 'נסה שוב'}
-                        </Button>
-                      </div>
-                    ) : isLoadingTerms ? (
-                      <div style={{ textAlign: 'right', padding: '8px 0' }}>
-                        <Spin size="small" />
-                        <Text type="secondary" style={{ marginLeft: '8px', fontSize: '12px' }}>
-                          {t('loading') || 'טוען...'}
-                        </Text>
-                      </div>
-                    ) : !terms || terms.length === 0 ? (
-                      <Text type="secondary" style={{ fontSize: '12px', textAlign: 'right', display: 'block' }}>
-                        {t('noTermsAvailable') || 'אין אפשרויות זמינות לתכונה זו'}
-                      </Text>
-                    ) : (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {terms.map(term => {
-                          const isSelected = isTermSelected?.(attributeId, term.id);
-                          const isColorAttribute = ['color', 'colour', 'צבע', 'colors', 'colours']
-                            .some(keyword => attribute.name.toLowerCase().includes(keyword));
-
-                          if (isColorAttribute) {
-                            const colorValue = term.slug;
-                            return (
-                              <button
-                                key={term.id}
-                                type="button"
-                                onClick={() => onToggleTerm?.(attributeId, term.id)}
-                                title={term.name}
-                                style={{
-                                  width: '32px',
-                                  height: '32px',
-                                  borderRadius: '50%',
-                                  border: `2px solid ${isSelected ? '#1890ff' : '#d9d9d9'}`,
-                                  backgroundColor: colorValue,
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  transition: 'all 0.2s',
-                                  transform: isSelected ? 'scale(1.1)' : 'scale(1)',
-                                  boxShadow: isSelected ? '0 0 0 2px rgba(24, 144, 255, 0.2)' : 'none'
-                                }}
-                              >
-                                {isSelected && (
-                                  <span style={{
-                                    backgroundColor: '#fff',
-                                    borderRadius: '50%',
-                                    width: '16px',
-                                    height: '16px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                                  }}>
-                                    <X style={{ fontSize: '10px', color: '#1890ff' }} />
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          }
-
-                          return (
-                            <Tag
-                              key={term.id}
-                              closable={isSelected}
-                              onClose={(e) => {
-                                e.preventDefault();
-                                onToggleTerm?.(attributeId, term.id);
-                              }}
-                              color={isSelected ? 'blue' : 'default'}
-                              style={{
-                                cursor: 'pointer',
-                                padding: '4px 12px',
-                                fontSize: '14px',
-                                borderRadius: '6px'
-                              }}
-                              onClick={() => !isSelected && onToggleTerm?.(attributeId, term.id)}
-                            >
-                              {term.name}
-                            </Tag>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {hasSelectedAttributes && hasSelectedTerms && onAddVariationClick && (
-            <div style={{
-              paddingTop: '16px',
-              borderTop: '1px solid #f0f0f0'
-            }}>
+              {onGenerateVariations && (
+                <Button
+                  variant="secondary"
+                  icon={<div style={{ marginRight: '8px' }}>✨</div>}
+                  onClick={onGenerateVariations}
+                  size="lg"
+                  style={{
+                    flex: 1,
+                    background: 'linear-gradient(to right, #e6f7ff, #bae7ff)',
+                    borderColor: '#1890ff',
+                    color: '#096dd9'
+                  }}
+                >
+                  {t('generateVariations') || 'צור את כל הוריאציות'}
+                </Button>
+              )}
               <Button
-                type="primary"
+                type="dashed"
                 icon={<PlusOutlined />}
                 onClick={onAddVariationClick}
-                block
-                size="large"
+                size="lg"
+                style={{ flex: 1 }}
               >
-                {t('addVariation') || 'צור וריאציה'}
+                {t('addVariation') || 'הוסף וריאציה ידנית'}
               </Button>
             </div>
           )}

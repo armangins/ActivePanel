@@ -1,4 +1,5 @@
 import { memo, useCallback } from 'react';
+import { theme } from 'antd';
 import ProductCardImage from './ProductCardImage';
 import ProductCardInfo from './ProductCardInfo';
 import ProductCardActions from './ProductCardActions';
@@ -24,7 +25,6 @@ const ProductCard = memo(({
   editLabel,
   deleteLabel,
   offLabel,
-  isRTL
 }) => {
   // Optimize callbacks to only recreate when product ID changes, not entire object
   const productId = product.id;
@@ -43,26 +43,31 @@ const ProductCard = memo(({
     onDelete && onDelete(product);
   }, [onDelete, productId, product]);
 
+  const { token } = theme.useToken();
+
   return (
     <div
       style={{
-        backgroundColor: '#f9fafb',
-        borderRadius: '12px',
-        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+        backgroundColor: token.colorBgContainer,
+        borderRadius: token.borderRadiusLG,
+        border: `1px solid ${token.colorBorderSecondary}`,
+        boxShadow: token.boxShadowTertiary,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         cursor: 'pointer',
-        transition: 'box-shadow 0.2s ease',
+        transition: 'all 0.2s ease',
         height: '100%',
         minWidth: 0,
         width: '100%'
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+        e.currentTarget.style.boxShadow = token.boxShadow;
+        e.currentTarget.style.borderColor = token.colorBorder;
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
+        e.currentTarget.style.boxShadow = token.boxShadowTertiary;
+        e.currentTarget.style.borderColor = token.colorBorderSecondary;
       }}
       onClick={handleCardClick}
     >
@@ -74,7 +79,17 @@ const ProductCard = memo(({
       />
 
       {/* Product Info */}
-      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1, backgroundColor: '#fff', gap: '8px', minWidth: 0, overflow: 'hidden' }}>
+      <div style={{
+        padding: token.padding,
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        backgroundColor: token.colorBgContainer,
+        gap: token.marginXS,
+        minWidth: 0,
+        borderTop: `1px solid ${token.colorBorderSecondary}`,
+        overflow: 'hidden'
+      }}>
         <ProductCardInfo
           productName={productName}
           stockStatus={stockStatus}

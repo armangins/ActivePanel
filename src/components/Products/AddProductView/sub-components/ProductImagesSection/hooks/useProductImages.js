@@ -36,11 +36,21 @@ export const useProductImages = () => {
       const allNewImages = [...newlyUploadedImages, ...preUploadedImages];
 
       // Format to common structure
-      const formattedNewImages = allNewImages.map(img => ({
-        id: img.id,
-        src: img.source_url || img.url || img.src,
-        name: img.title?.rendered || img.filename || img.name || 'Image'
-      }));
+      const formattedNewImages = allNewImages.map(img => {
+        // Handle potential nested response structure (e.g. { data: { ... } } or { image: { ... } })
+        const data = img.data || img.image || img;
+
+        // Debug log for image structure
+        if (!data.id || (!data.source_url && !data.url && !data.src)) {
+          secureLog.warn('Potential invalid image structure:', img);
+        }
+
+        return {
+          id: data.id,
+          src: data.source_url || data.url || data.src,
+          name: data.title?.rendered || data.filename || data.name || 'Image'
+        };
+      }).filter(img => img.id); // Filter out failed/invalid images
 
       const updatedImages = [...currentImages, ...formattedNewImages];
       onUpdate?.(updatedImages);

@@ -1,28 +1,26 @@
+import { Typography, theme } from 'antd';
 import { sanitizeHTML } from '../../../utils/security';
+
+const { Title } = Typography;
 
 /**
  * ProductDetailsDescription Component
- * 
- * Displays product description (short or full) with HTML content support.
- * Uses centralized security utility to sanitize HTML and prevent XSS attacks.
- * 
- * @param {String} title - Section title
- * @param {String} content - HTML content to display
- * @param {Boolean} isRTL - Whether the layout is right-to-left
  */
 const ProductDetailsDescription = ({ title, content, isRTL }) => {
-  // Sanitize HTML content to prevent XSS attacks
+  const { token } = theme.useToken();
   const sanitizedContent = sanitizeHTML(content || '');
 
   return (
-    <div>
-      <p className={`font-medium text-gray-700 ${'text-right'}`}>
-        {title}
-      </p>
+    <div style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+      <Title level={5} style={{ marginBottom: 16 }}>{title}</Title>
       <div
-        className="prose prose-sm max-w-none text-gray-800"
+        className="product-description-content" // Hook for global styles if needed, or rely on inherit
         dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-        dir="rtl"
+        style={{
+          color: token.colorText,
+          fontSize: token.fontSize,
+          lineHeight: token.lineHeight
+        }}
       />
     </div>
   );

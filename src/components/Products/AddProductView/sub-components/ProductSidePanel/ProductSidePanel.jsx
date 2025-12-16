@@ -18,7 +18,7 @@ const ProductSidePanel = ({
     loadingAttributes, onToggleAttribute, onToggleTerm, isAttributeSelected, isTermSelected,
     // Variations
     variations, pendingVariations, loadingVariations, isEditMode, id,
-    onAddVariationClick, onVariationClick, onDeletePendingVariation, onDeleteVariation,
+    onAddVariationClick, onVariationClick, onDeletePendingVariation, onDeleteVariation, onGenerateVariations,
     // Utils
     formatCurrency, isRTL, t, status,
     // Modals State
@@ -43,8 +43,8 @@ const ProductSidePanel = ({
                 maxImages={12}
             />
 
-            {/* Variations Section - Show directly under images when variations exist */}
-            {productType === 'variable' && (variations.length > 0 || pendingVariations.length > 0) && (
+            {/* Variations Section - Show when product is variable */}
+            {productType === 'variable' && (
                 <VariationsSection
                     variations={variations}
                     pendingVariations={pendingVariations}
@@ -60,35 +60,15 @@ const ProductSidePanel = ({
                 />
             )}
 
-            {/* Attributes Selection - Show after images/variations */}
-            {productType === 'variable' && (
-                <AttributesSection
-                    attributes={attributes}
-                    attributeTerms={attributeTerms}
-                    selectedAttributeIds={selectedAttributeIds}
-                    selectedAttributeTerms={selectedAttributeTerms}
-                    loading={loadingAttributes}
-                    onToggleAttribute={onToggleAttribute}
-                    onToggleTerm={onToggleTerm}
-                    isAttributeSelected={isAttributeSelected}
-                    isTermSelected={isTermSelected}
-                    attributeErrors={attributeErrors}
-                    onRetryLoadTerms={onRetryLoadTerms}
-                    onAddVariationClick={onAddVariationClick}
-                    t={t}
-                />
-            )}
-
             {/* Calculator Modal */}
-            {showCalculatorModal && (
-                <CalculatorModal
-                    onClose={() => setShowCalculatorModal(false)}
-                    onSetPrice={(price) => {
-                        setFormData(prev => ({ ...prev, regular_price: price.toString() }));
-                        setShowCalculatorModal(false);
-                    }}
-                />
-            )}
+            <CalculatorModal
+                isOpen={showCalculatorModal}
+                onClose={() => setShowCalculatorModal(false)}
+                onSetPrice={(price) => {
+                    setFormData(prev => ({ ...prev, regular_price: price.toString() }));
+                    setShowCalculatorModal(false);
+                }}
+            />
 
             {/* Schedule Modal */}
             <ScheduleModal

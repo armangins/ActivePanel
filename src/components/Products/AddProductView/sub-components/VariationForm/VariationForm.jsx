@@ -1,28 +1,17 @@
 import { memo } from 'react';
 import { ReloadOutlined as Loader, ThunderboltOutlined as Sparkles } from '@ant-design/icons';
-import { Input } from '../../../../ui/inputs';
-import { Button } from '../../../../ui';
+import { Input, InputNumber, Select, Button, Tag, Space, Typography, Row, Col, Flex, Divider, Tooltip } from 'antd';
 import { ImageUpload } from '../';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
+
+const { Text } = Typography;
+const { Option } = Select;
 
 /**
  * VariationForm Component
  * 
  * Shared form component for creating and editing variations.
- * Contains all the form fields: attributes, prices, SKU, stock, and image.
- * 
- * @param {Object} formData - Variation form data
- * @param {function} onFormDataChange - Callback when form data changes
- * @param {Array} selectedAttributeIds - IDs of selected attributes
- * @param {Array} attributes - All available attributes
- * @param {Object} attributeTerms - Terms for each attribute
- * @param {boolean} generatingSKU - Whether SKU is being generated
- * @param {function} onGenerateSKU - Callback to generate SKU
- * @param {string} parentProductName - Parent product name (for SKU generation)
- * @param {string} parentSku - Parent product SKU
- * @param {Array} existingVariationSkus - Array of SKUs from other variations (excluding current)
- * @param {string|number} currentVariationId - ID of current variation (for edit mode, to exclude from duplicate check)
- * @param {boolean} disabled - Whether form is disabled
+ * Uses strict Ant Design components.
  */
 const VariationForm = ({
   formData,
@@ -37,8 +26,10 @@ const VariationForm = ({
   existingVariationSkus = [],
   currentVariationId = null,
   disabled = false,
+  onToggleAttribute,
+  isAttributeSelected,
 }) => {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
 
   // Validate SKU for duplicates
   const getSkuValidationError = () => {
@@ -51,7 +42,6 @@ const VariationForm = ({
     }
 
     // Check against other variations
-    // existingVariationSkus should already exclude the current variation in edit mode
     const hasDuplicate = existingVariationSkus.some(sku => {
       return sku && sku.trim() === currentSku;
     });
@@ -83,179 +73,248 @@ const VariationForm = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Attributes Selection */}
-      {selectedAttributeIds.length > 0 ? (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3 text-right">
-            {t('selectVariationAttributes') || 'בחר תכונות לוריאציה'} <span className="text-orange-500">*</span>
-          </label>
-          <div className="grid grid-cols-2 gap-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }} dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Attribute Selection Area */}
+      <div>
+
+        {onToggleAttribute && (
+          <Flex wrap="wrap" gap="small" justify="start" style={{ marginBottom: '16px' }}>
+            <Text type="secondary" style={{ padding: '4px 0', fontSize: '13px' }}>
+              {selectedAttributeIds.length === 0
+                ? (t('clickToAddAttribute') || 'בחר תכונות :')
+                : (t('addMore') || 'הוסף עוד:')}
+            </Text>
+            {attributes.map(attr => {
+              const isSelected = selectedAttributeIds.includes(attr.id);
+              if (isSelected) return null;
+              return (
+                <Button
+                  key={attr.id}
+                  size="small"
+                  onClick={() => onToggleAttribute(attr.id)}
+                  icon={<span>+</span>}
+                  type="dashed"
+                >
+                  {attr.name}
+                </Button>
+              );
+            })}
+
+          </Flex>
+        )}
+
+        {selectedAttributeIds.length > 0 ? (
+          <Row gutter={[16, 16]}>
             {selectedAttributeIds
               .filter(attrId => {
                 const attribute = attributes.find(attr => attr.id === attrId);
-                const terms = attributeTerms[attrId];
-                return attribute && terms && terms.length > 0;
+                return !!attribute;
               })
               .map((attributeId, index, array) => {
                 const attribute = attributes.find(attr => attr.id === attributeId);
-                const terms = attributeTerms[attributeId]; // We know it exists from filter
+                const terms = attributeTerms[attributeId] || [];
 
                 const isColor = ['color', 'colour', 'צבע', 'colors', 'colours'].some(k => attribute.name.toLowerCase().includes(k));
                 const isSingle = array.length === 1;
+                const span = isColor || isSingle ? 24 : 12;
 
                 return (
-                  <div key={attributeId} className={isColor || isSingle ? 'col-span-2' : ''}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2 text-right">
-                      {attribute.name}
-                    </label>
+                  <Col xs={24} sm={span} key={attributeId}>
+                    <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                      <Text strong>{attribute.name}</Text>
+
+
+                    </div>
+                    {onToggleAttribute && (
+                      <Button
+                        type="link"
+                        danger
+                        size="small"
+                        style={{ padding: 0 }}
+                        onClick={() => onToggleAttribute(attributeId)}
+                      >
+                        {t('remove') || 'הסר'}
+                      </Button>
+                    )}
 
                     {isColor ? (
-                      <div className="flex flex-wrap gap-2">
+                      <Flex wrap="wrap" gap="small" justify="start">
                         {terms.map(term => {
                           const isSelected = formData.attributes?.[attributeId] === term.id;
                           const colorValue = term.slug;
 
                           return (
-                            <button
-                              key={term.id}
-                              type="button"
-                              onClick={() => handleAttributeChange(attributeId, term.id)}
-                              title={term.name}
-                              className={`
-                                w-10 h-10 rounded-full border-2 transition-all relative flex items-center justify-center
-                                ${isSelected
-                                  ? 'border-primary-500 ring-2 ring-primary-200 scale-110'
-                                  : 'border-gray-200 hover:border-gray-300'
-                                }
-                              `}
-                              style={{ backgroundColor: colorValue }}
-                              disabled={disabled}
-                            >
-                              {isSelected && (
-                                <span className="bg-white rounded-full p-0.5 shadow-sm">
-                                  <span className="block w-2.5 h-2.5 bg-primary-600 rounded-full" />
-                                </span>
-                              )}
-                            </button>
+                            <Tooltip title={term.name} key={term.id}>
+                              <div
+                                onClick={() => !disabled && handleAttributeChange(attributeId, term.id)}
+                                style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: '50%',
+                                  backgroundColor: colorValue,
+                                  border: `2px solid ${isSelected ? '#1890ff' : '#d9d9d9'}`,
+                                  cursor: disabled ? 'not-allowed' : 'pointer',
+                                  position: 'relative',
+                                  boxShadow: isSelected ? '0 0 0 2px rgba(24, 144, 255, 0.2)' : 'none',
+                                  transform: isSelected ? 'scale(1.1)' : 'scale(1)',
+                                  transition: 'all 0.2s',
+                                }}
+                              >
+                                {isSelected && (
+                                  <div style={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    width: '10px',
+                                    height: '10px',
+                                    backgroundColor: '#fff',
+                                    borderRadius: '50%',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                                  }} />
+                                )}
+                              </div>
+                            </Tooltip>
                           );
                         })}
-                      </div>
+                      </Flex>
                     ) : (
-                      <select
-                        value={formData.attributes?.[attributeId] || ''}
-                        onChange={(e) => handleAttributeChange(attributeId, e.target.value)}
-                        className="input-field text-right w-full"
-                        dir="rtl"
+                      <Select
+                        style={{ width: '100%' }}
+                        placeholder={t('select') || 'בחר...'}
+                        value={formData.attributes?.[attributeId] || undefined}
+                        onChange={(value) => handleAttributeChange(attributeId, value)}
                         disabled={disabled}
+                        align="right"
+                        dir={isRTL ? 'rtl' : 'ltr'}
                       >
-                        <option value="">{t('select') || 'בחר...'}</option>
                         {terms.map(term => (
-                          <option key={term.id} value={term.id}>{term.name}</option>
+                          <Option key={term.id} value={term.id}>{term.name}</Option>
                         ))}
-                      </select>
+                      </Select>
                     )}
-                  </div>
+                  </Col>
                 );
               })}
+          </Row>
+        ) : (
+          <div style={{
+            padding: '32px',
+            textAlign: 'center',
+            border: '1px dashed #d9d9d9',
+            borderRadius: '8px',
+            backgroundColor: '#fafafa'
+          }}>
+            <Text type="secondary">
+              {t('selectAttributesAbove') || 'אנא בחר תכונות מהרשימה למעלה כדי להתחיל'}
+            </Text>
           </div>
-        </div>
-      ) : (
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-800 text-right">
-            {t('selectAttributesFirst') || 'אנא בחר תכונות למוצר תחילה'}
-          </p>
-        </div>
-      )}
+        )}
+      </div>
+
+      <Divider style={{ margin: '0' }} />
 
       {/* Price Fields */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Input
-            label={t('regularPrice') || 'מחיר רגיל'}
-            type="number"
-            value={formData.regular_price || ''}
-            onChange={(e) => handleFieldChange('regular_price', e.target.value)}
+      <Row gutter={[16, 16]}>
+        <Col xs={24} sm={12}>
+          <Text strong style={{ display: 'block', marginBottom: '8px', textAlign: 'right' }}>
+            {t('regularPrice') || 'מחיר רגיל'} <span style={{ color: '#ff4d4f' }}>*</span>
+          </Text>
+          <InputNumber
+            style={{ width: '100%' }}
+            value={formData.regular_price}
+            onChange={(value) => handleFieldChange('regular_price', value)}
             placeholder="0.00"
-            step="0.01"
-            min="0"
-            prefix="₪"
-            required
+            min={0}
+            step={0.01}
+            addonAfter="₪"
             disabled={disabled}
+            size="large"
           />
-        </div>
-        <div>
-          <Input
-            label={t('salePrice') || 'מחיר מבצע'}
-            type="number"
-            value={formData.sale_price || ''}
-            onChange={(e) => handleFieldChange('sale_price', e.target.value)}
+        </Col>
+        <Col xs={24} sm={12}>
+          <Text strong style={{ display: 'block', marginBottom: '8px', textAlign: 'right' }}>
+            {t('salePrice') || 'מחיר מבצע'}
+          </Text>
+          <InputNumber
+            style={{ width: '100%' }}
+            value={formData.sale_price}
+            onChange={(value) => handleFieldChange('sale_price', value)}
             placeholder="0.00"
-            step="0.01"
-            min="0"
-            prefix="₪"
+            min={0}
+            step={0.01}
+            addonAfter="₪"
             disabled={disabled}
+            size="large"
           />
-        </div>
-      </div>
+        </Col>
+      </Row>
 
       {/* SKU and Stock */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2 text-right">
+      <Row gutter={[16, 16]}>
+        <Col xs={24} sm={12}>
+          <Text strong style={{ display: 'block', marginBottom: '8px', textAlign: 'right' }}>
             {t('sku') || 'מק״ט'}
-          </label>
-          <div className="flex gap-2">
-            <Input
-              type="text"
-              value={formData.sku || ''}
-              onChange={(e) => handleFieldChange('sku', e.target.value)}
-              placeholder={t('enterSKU') || 'הכנס SKU'}
-              containerClassName="flex-1"
-              size="lg"
-              disabled={disabled}
-              className={skuError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              size="icon"
-              onClick={() => onGenerateSKU?.()}
-              disabled={disabled || generatingSKU}
-              className="px-3 w-auto"
-              title={t('createWithAI') || 'צור בעזרת AI'}
-            >
-              {generatingSKU ? <Loader className="w-[18px] h-[18px] animate-spin" /> : <Sparkles className="w-[18px] h-[18px]" />}
-            </Button>
-          </div>
-          {skuError && (
-            <p className="text-xs text-red-500 mt-1 text-right">
-              {skuError}
-            </p>
-          )}
-        </div>
-        <div>
+          </Text>
           <Input
-            label={t('stockQuantity') || 'כמות במלאי'}
-            size="lg"
-            type="number"
-            value={formData.stock_quantity || ''}
-            onChange={(e) => handleFieldChange('stock_quantity', e.target.value)}
-            placeholder="0"
-            min="0"
+            value={formData.sku}
+            onChange={(e) => handleFieldChange('sku', e.target.value)}
+            placeholder={t('enterSKU') || 'הכנס SKU'}
             disabled={disabled}
+            status={skuError ? 'error' : ''}
+            size="large"
+            style={{ width: '100%' }}
+            suffix={
+              <Tooltip title={t('createWithAI') || 'צור בעזרת AI'}>
+                <Button
+                  type="text"
+                  size="small"
+                  onClick={() => onGenerateSKU?.()}
+                  disabled={disabled || generatingSKU}
+                  icon={generatingSKU ? <Loader spin /> : <Sparkles />}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    padding: 0,
+                    height: 'auto',
+                    color: '#1890ff',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                />
+              </Tooltip>
+            }
           />
-        </div>
-      </div>
+          {skuError && <Text type="danger" style={{ fontSize: '12px' }}>{skuError}</Text>}
+        </Col>
+        <Col xs={24} sm={12}>
+          <Text strong style={{ display: 'block', marginBottom: '8px', textAlign: 'right' }}>
+            {t('stockQuantity') || 'כמות במלאי'}
+          </Text>
+          <InputNumber
+            style={{ width: '100%' }}
+            value={formData.stock_quantity}
+            onChange={(value) => handleFieldChange('stock_quantity', value)}
+            placeholder="0"
+            min={0}
+            disabled={disabled}
+            size="large"
+          />
+        </Col>
+      </Row>
 
       {/* Image Upload */}
-      <ImageUpload
-        label={t('variationImage') || 'תמונת וריאציה'}
-        value={formData.image}
-        onChange={(image) => handleFieldChange('image', image)}
-        disabled={disabled}
-      />
-    </div >
+      <Flex vertical gap="small" align="start">
+        <Text strong>
+          {t('variationImage') || 'תמונת וריאציה'}
+        </Text>
+        <ImageUpload
+          value={formData.image}
+          onChange={(image) => handleFieldChange('image', image)}
+          disabled={disabled}
+        />
+      </Flex>
+    </div>
   );
 };
 

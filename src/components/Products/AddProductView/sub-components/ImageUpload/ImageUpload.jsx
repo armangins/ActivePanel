@@ -15,15 +15,6 @@ const getBase64 = (file) =>
 
 /**
  * ImageUpload Component
- * 
- * Reusable single image upload component using Ant Design Pictures Wall style.
- * 
- * @param {Object} value - Current image object { id, src, url, etc. } or null
- * @param {function} onChange - Callback when image changes (receives image object or null)
- * @param {string} label - Label text (optional)
- * @param {boolean} required - Whether upload is required
- * @param {string} className - Additional CSS classes
- * @param {boolean} disabled - Whether upload is disabled
  */
 const ImageUpload = ({
   value,
@@ -32,6 +23,7 @@ const ImageUpload = ({
   required = false,
   className = '',
   disabled = false,
+  uploadButtonType // New prop to customize upload button if needed
 }) => {
   const { t } = useLanguage();
   const messageApi = useMessage();
@@ -41,6 +33,7 @@ const ImageUpload = ({
   const [previewTitle, setPreviewTitle] = useState('');
 
   const [fileList, setFileList] = useState([]);
+  const { token } = theme.useToken();
 
   useEffect(() => {
     if (value) {
@@ -102,15 +95,12 @@ const ImageUpload = ({
     }
   };
 
-  const uploadButton = (
+  const defaultUploadButton = (
     <button style={{ border: 0, background: 'none' }} type="button">
       {loading ? <LoadingOutlined /> : <PlusOutlined />}
-      <div style={{ marginTop: 8 }}>{t('upload') || 'כאן בוחרים קבצים'}</div>
+      <div style={{ marginTop: 8 }}>{t('upload') || 'בחר תמונות'}</div>
     </button>
   );
-
-  // Use theme tokens for consistent styling
-  const { token } = theme.useToken();
 
   const itemRender = (originNode, file, fileList, actions) => {
     if (file.status === 'uploading') {
@@ -131,13 +121,15 @@ const ImageUpload = ({
   return (
     <div className={className}>
       {label && (
-        <div className="mb-2 text-right font-medium text-gray-700">
-          {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+        <div style={{ marginBottom: 8, textAlign: 'right' }}>
+          <Typography.Text strong>
+            {label}
+            {required && <span style={{ color: token.colorError, marginLeft: 4 }}>*</span>}
+          </Typography.Text>
         </div>
       )}
 
-      <div className="flex justify-end dir-rtl">
+      <Flex justify="flex-end" style={{ direction: 'rtl' }}>
         <Upload
           listType="picture-card"
           fileList={fileList}
@@ -152,9 +144,9 @@ const ImageUpload = ({
           }}
           itemRender={itemRender}
         >
-          {fileList.length >= 1 ? null : uploadButton}
+          {fileList.length >= 1 ? null : defaultUploadButton}
         </Upload>
-      </div>
+      </Flex>
 
       <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancel}>
         <img alt="example" style={{ width: '100%' }} src={previewImage} />

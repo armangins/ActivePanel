@@ -1,21 +1,14 @@
 import { memo, useState, useEffect } from 'react';
-import { Upload, Modal, message, Progress, Flex, Typography, theme, Alert } from 'antd';
+import { Upload, Modal, Progress, Flex, Typography, theme, Alert, Card } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import { Card } from '../../../../ui';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
 import { mediaAPI } from '../../../../../services/woocommerce';
 import { useMessage } from '../../../../../contexts/MessageContext';
 
+const { Title } = Typography;
+
 /**
  * ProductImagesSection Component
- * 
- * Manages product images using Ant Design's Pictures Wall pattern.
- * Supports multiple image uploads, preview, and removal.
- * 
- * @param {Array} images - Array of image objects { id, src, name }
- * @param {function} onUpload - Callback when files are uploaded (receives FileList)
- * @param {function} onRemove - Callback to remove an image (receives imageId)
- * @param {number} maxImages - Maximum number of images allowed (default: 12)
  */
 const ProductImagesSection = ({
   images = [],
@@ -30,6 +23,7 @@ const ProductImagesSection = ({
   const [previewTitle, setPreviewTitle] = useState('');
 
   const [fileList, setFileList] = useState([]);
+  const { token } = theme.useToken();
 
   // Utility function for image preview
   const getBase64 = (file) =>
@@ -63,57 +57,60 @@ const ProductImagesSection = ({
     setPreviewTitle(file.name || (file.url ? file.url.substring(file.url.lastIndexOf('/') + 1) : 'Preview'));
   };
 
+  const beforeUpload = (file) => {
+    const isLt2M = file.size / 1024 / 1024 < 2;
+    if (!isLt2M) {
+      messageApi.warning(t('largeFileWarning') || 'הקובץ גדול מ-2MB, העלאה עלולה להיות איטית. מומלץ להשתמש ב-WebP.');
+    }
+    return true; // Allow upload but warn
+  };
+
   const handleChange = ({ fileList: newFileList }) => {
+    console.log('ProductImagesSection: handleChange', newFileList);
     setFileList(newFileList);
-    // We don't trigger onUpload/onChange here as we handle uploads via customRequest
   };
 
   const handleRemove = (file) => {
-    // If the file has an ID (was successfully uploaded), invoke the onRemove callback
+    console.log('ProductImagesSection: handleRemove', file);
     if (file.id) {
       onRemove(file.id);
     }
-    return true; // Allow removal from the UI list
+    return true;
   };
 
   // Custom request to handle direct uploads
   const customRequest = async ({ file, onSuccess, onError, onProgress }) => {
+    console.log('ProductImagesSection: customRequest started', file);
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      // Create a dummy file in the list temporarily (handled by Ant Design)
-      // Call parent onUpload which handles the API call
-      // Note: We're adapting the single-file API of customRequest to our multi-file handler
-      // Ideally, onUpload should return the uploaded file or promise
-
+      console.log('ProductImagesSection: calling mediaAPI.upload');
       const uploadedImage = await mediaAPI.upload(formData);
+      console.log('ProductImagesSection: mediaAPI.upload success', uploadedImage);
 
       onSuccess(uploadedImage);
-      // Trigger update in parent component to add the image to formData
       onUpload([uploadedImage]);
       messageApi.success(t('imageUploaded') || 'הועלה בהצלחה');
     } catch (error) {
+      console.error('ProductImagesSection: upload failed', error);
       onError(error);
       const errorMessage = error?.message || t('imageUploadFailed') || 'העלאה נכשלה';
       messageApi.error(errorMessage);
     }
   };
 
-  const uploadButton = (
+  const defaultUploadButton = (
     <button style={{ border: 0, background: 'none' }} type="button">
       <PlusOutlined />
       <div style={{ marginTop: 8 }}>{t('upload') || 'העלאה'}</div>
     </button>
   );
 
-  // Use theme tokens for consistent styling
-  const { token } = theme.useToken();
-
   const itemRender = (originNode, file, fileList, actions) => {
     if (file.status === 'uploading') {
       return (
-        <div className="ant-upload-list-item ant-upload-list-item-uploading" style={{ height: '100%', padding: '8px', border: `1px dashed ${token.colorBorder}`, borderRadius: token.borderRadiusLG }}>
+        <div style={{ height: '100%', padding: '8px', border: `1px dashed ${token.colorBorder}`, borderRadius: token.borderRadiusLG }}>
           <Flex vertical align="center" justify="center" style={{ height: '100%', width: '100%' }}>
             <Typography.Text style={{ marginBottom: 8, fontSize: 14, color: token.colorPrimary }}>
               מעלה...
@@ -127,12 +124,12 @@ const ProductImagesSection = ({
   };
 
   return (
-    <Card className="p-6">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4 text-right">
-        {t('uploadImages')}
-      </h3>
+    <Card styles={{ body: { padding: 24 } }}>
+      <Title level={4} style={{ marginBottom: 24, textAlign: 'right' }}>
+        תמונות מוצר
+      </Title>
 
-      <div className="dir-rtl">
+      <div style={{ direction: 'rtl' }}>
         <Upload
           listType="picture-card"
           fileList={fileList}
@@ -140,11 +137,12 @@ const ProductImagesSection = ({
           onChange={handleChange}
           onRemove={handleRemove}
           customRequest={customRequest}
+          beforeUpload={beforeUpload}
           multiple={true}
           maxCount={maxImages}
           itemRender={itemRender}
         >
-          {fileList.length >= maxImages ? null : uploadButton}
+          {fileList.length >= maxImages ? null : defaultUploadButton}
         </Upload>
       </div>
 

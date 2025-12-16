@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Slider, Typography, Flex, InputNumber, theme } from 'antd';
+
+const { Text } = Typography;
 
 const FiltersModalPriceRange = ({
     minPrice,
@@ -10,114 +13,65 @@ const FiltersModalPriceRange = ({
     t,
     isRTL
 }) => {
-    // Use state for slider values - initialize with current filter values or range bounds
-    const [sliderMin, setSliderMin] = useState(() => {
-        return minPrice ? parseFloat(minPrice) : actualMin;
-    });
-    const [sliderMax, setSliderMax] = useState(() => {
-        return maxPrice ? parseFloat(maxPrice) : actualMax;
-    });
+    const { token } = theme.useToken();
 
-    // Update slider values when price range changes or filters are cleared
-    useEffect(() => {
-        if (minPrice === '') {
-            setSliderMin(actualMin);
-        } else {
-            const numValue = parseFloat(minPrice);
-            if (!isNaN(numValue)) {
-                setSliderMin(numValue);
-            }
-        }
-    }, [minPrice, actualMin]);
+    // Antd Slider uses [min, max] array
+    const [range, setRange] = useState([actualMin, actualMax]);
 
     useEffect(() => {
-        if (maxPrice === '') {
-            setSliderMax(actualMax);
-        } else {
-            const numValue = parseFloat(maxPrice);
-            if (!isNaN(numValue)) {
-                setSliderMax(numValue);
-            }
-        }
-    }, [maxPrice, actualMax]);
+        const start = minPrice !== '' ? parseFloat(minPrice) : actualMin;
+        const end = maxPrice !== '' ? parseFloat(maxPrice) : actualMax;
+        setRange([start, end]);
+    }, [minPrice, maxPrice, actualMin, actualMax]);
 
-    const handleMinPriceChange = (value) => {
-        const numValue = parseFloat(value);
-        if (numValue >= actualMin && numValue <= parseFloat(sliderMax)) {
-            setSliderMin(value);
-            onMinPriceChange(value);
-        }
+    const handleSliderChange = (value) => {
+        setRange(value);
     };
 
-    const handleMaxPriceChange = (value) => {
-        const numValue = parseFloat(value);
-        if (numValue <= actualMax && numValue >= parseFloat(sliderMin)) {
-            setSliderMax(value);
-            onMaxPriceChange(value);
-        }
+    const handleAfterChange = (value) => {
+        onMinPriceChange(value[0]);
+        onMaxPriceChange(value[1]);
     };
 
     return (
-        <div>
-            <label className={`block text-sm font-medium text-gray-700 mb-2`} style={{ textAlign: 'right' }}>
+        <div style={{ textAlign: 'right' }}>
+            <Text strong style={{ display: 'block', marginBottom: 12 }}>
                 {t('priceRange') || t('price')}
-            </label>
+            </Text>
 
-            {/* Range Sliders */}
-            <div className="space-y-4">
-                {/* Min Price Slider */}
-                <div>
-                    <div className={`flex items-center flex-row-reverse justify-between mb-2`}>
-                        <span className="text-xs text-gray-500">{t('minPrice')}</span>
-                        <span className="text-xs font-medium text-gray-700">{sliderMin}</span>
-                    </div>
-                    <input
-                        type="range"
-                        min={actualMin}
-                        max={actualMax}
-                        value={sliderMin}
-                        onChange={(e) => handleMinPriceChange(e.target.value)}
-                        className={`w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-500 direction-rtl`}
-                        dir="rtl"
-                        style={{
-                            background: isRTL
-                                ? `linear-gradient(to left, #4560FF 0%, #4560FF ${((sliderMin - actualMin) / (actualMax - actualMin)) * 100}%, #e5e7eb ${((sliderMin - actualMin) / (actualMax - actualMin)) * 100}%, #e5e7eb 100%)`
-                                : `linear-gradient(to right, #4560FF 0%, #4560FF ${((sliderMin - actualMin) / (actualMax - actualMin)) * 100}%, #e5e7eb ${((sliderMin - actualMin) / (actualMax - actualMin)) * 100}%, #e5e7eb 100%)`
-                        }}
-                    />
-                </div>
+            <Slider
+                range
+                min={actualMin}
+                max={actualMax}
+                value={range}
+                onChange={handleSliderChange}
+                onAfterChange={handleAfterChange}
+                tooltip={{ formatter: (value) => `${value}` }}
+                trackStyle={[{ backgroundColor: token.colorPrimary }]}
+                handleStyle={[
+                    { borderColor: token.colorPrimary, backgroundColor: token.colorBgContainer },
+                    { borderColor: token.colorPrimary, backgroundColor: token.colorBgContainer }
+                ]}
+            />
 
-                {/* Max Price Slider */}
-                <div>
-                    <div className={`flex items-center flex-row-reverse justify-between mb-2`}>
-                        <span className="text-xs text-gray-500">{t('maxPrice')}</span>
-                        <span className="text-xs font-medium text-gray-700">{sliderMax}</span>
-                    </div>
-                    <input
-                        type="range"
-                        min={actualMin}
-                        max={actualMax}
-                        value={sliderMax}
-                        onChange={(e) => handleMaxPriceChange(e.target.value)}
-                        className={`w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-500 direction-rtl`}
-                        dir="rtl"
-                        style={{
-                            background: isRTL
-                                ? `linear-gradient(to left, #e5e7eb 0%, #e5e7eb ${((sliderMax - actualMin) / (actualMax - actualMin)) * 100}%, #4560FF ${((sliderMax - actualMin) / (actualMax - actualMin)) * 100}%, #4560FF 100%)`
-                                : `linear-gradient(to right, #e5e7eb 0%, #e5e7eb ${((sliderMax - actualMin) / (actualMax - actualMin)) * 100}%, #4560FF ${((sliderMax - actualMin) / (actualMax - actualMin)) * 100}%, #4560FF 100%)`
-                        }}
-                    />
-                </div>
+            <Flex justify="space-between" align="center" style={{ marginTop: 16 }}>
+                <Flex vertical align="center" gap={4}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>{t('minPrice')}</Text>
+                    <Text strong>{range[0]}</Text>
+                </Flex>
 
-                {/* Price Display */}
-                <div className={`flex items-center flex-row-reverse justify-between text-sm text-gray-600 pt-2 border-t border-gray-200`}>
-                    <span>{actualMin}</span>
-                    <span className="font-medium text-gray-900">
-                        {isRTL ? `${sliderMax} - ${sliderMin}` : `${sliderMin} - ${sliderMax}`}
-                    </span>
-                    <span>{actualMax}</span>
-                </div>
-            </div>
+                <Text type="secondary">-</Text>
+
+                <Flex vertical align="center" gap={4}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>{t('maxPrice')}</Text>
+                    <Text strong>{range[1]}</Text>
+                </Flex>
+            </Flex>
+
+            <Flex justify="space-between" style={{ marginTop: 8 }}>
+                <Text type="secondary" style={{ fontSize: 11 }}>{actualMin}</Text>
+                <Text type="secondary" style={{ fontSize: 11 }}>{actualMax}</Text>
+            </Flex>
         </div>
     );
 };

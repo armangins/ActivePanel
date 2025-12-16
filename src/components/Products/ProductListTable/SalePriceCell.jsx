@@ -1,20 +1,25 @@
+import { Typography, theme } from 'antd';
 import { hasSalePrice, getSalePrice } from './utils/priceHelpers';
+
+const { Text } = Typography;
 
 /**
  * SalePriceCell Component
- * 
- * Displays the product sale price if available.
- * Shows "-" if no sale price exists or if product is variable type.
- * 
- * @param {Object} product - Product object
- * @param {Function} formatCurrency - Function to format currency values
  */
 const SalePriceCell = ({ product, formatCurrency }) => {
+  const { token } = theme.useToken();
+
+  const cellStyle = {
+    padding: '12px 16px',
+    textAlign: 'right',
+    borderBottom: `1px solid ${token.colorBorderSecondary}`
+  };
+
   // Variable products show price range in PriceCell, so hide sale price
   if (product.type === 'variable') {
     return (
-      <td className="py-3 px-4 text-right">
-        <span className="text-sm text-gray-400">-</span>
+      <td style={cellStyle}>
+        <Text type="secondary" style={{ fontSize: 14 }}>-</Text>
       </td>
     );
   }
@@ -22,13 +27,13 @@ const SalePriceCell = ({ product, formatCurrency }) => {
   const salePriceValue = getSalePrice(product);
 
   return (
-    <td className="py-3 px-4 text-right">
+    <td style={cellStyle}>
       {salePriceValue ? (
-        <span className="text-sm font-medium text-gray-900">
+        <Text strong style={{ fontSize: 14 }}>
           {formatCurrency(salePriceValue)}
-        </span>
+        </Text>
       ) : (
-        <span className="text-sm text-gray-400">-</span>
+        <Text type="secondary" style={{ fontSize: 14 }}>-</Text>
       )}
     </td>
   );

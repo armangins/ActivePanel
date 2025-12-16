@@ -1,21 +1,13 @@
 import { memo } from 'react';
 import { PlusOutlined as Plus, CloseOutlined as X, AppstoreOutlined as Boxes } from '@ant-design/icons';
-import { Card, Button } from '../../../../ui';
+import { Card, Button, Typography, Row, Col, Empty, Spin, Badge, Flex, Popconfirm, Tooltip } from 'antd';
 import VariationCard from '../../../VariationCard/VariationCard';
 
+const { Title, Text } = Typography;
+
 /**
- * 
- * @param {Array} variations - Saved variations from API
- * @param {Array} pendingVariations - Local variations not yet saved
- * @param {boolean} loading - Whether variations are being loaded
- * @param {boolean} isEditMode - Whether in edit mode (enables click to edit)
- * @param {function} onAddClick - Callback when "Add Variation" is clicked
- * @param {function} onVariationClick - Callback when variation card is clicked (edit mode only)
- * @param {function} onDeletePending - Callback to delete a pending variation
- * @param {function} onDeleteVariation - Callback to delete a saved variation (edit mode only)
- * @param {function} formatCurrency - Currency formatter function
- * @param {boolean} isRTL - RTL layout flag
- * @param {function} t - Translation function
+ * VariationsSection Component
+ * Refactored to use standard Ant Design components
  */
 const VariationsSection = ({
   variations = [],
@@ -32,122 +24,124 @@ const VariationsSection = ({
 }) => {
   const hasVariations = variations.length > 0 || pendingVariations.length > 0;
 
-  return (
-    <Card className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 flex-row-reverse">
-        <div className="flex items-center gap-2 flex-row-reverse">
-          <Boxes className="w-5 h-5 text-gray-600" />
-          <h3 className="text-lg font-semibold text-gray-800 text-right">
-            {t('variations') || 'וריאציות'}
-          </h3>
-        </div>
-        <Button
-          variant="primary"
-          onClick={onAddClick}
-          icon={Plus}
-          className="flex-row-reverse"
-        >
-          {t('addVariation') || 'הוסף וריאציה'}
-        </Button>
-      </div>
+  // Render a single variation item (pending or saved)
+  const renderVariationItem = (variation, isPending) => {
+    // Map properties for pending variations to match expected structure
+    const displayVariation = isPending ? {
+      ...variation,
+      name: variation.attributes?.map(attr => `${attr.name}: ${attr.option}`).join(', ') || 'וריאציה חדשה',
+      price: variation.regular_price,
+      regular_price: variation.regular_price,
+      sale_price: variation.sale_price,
+      sku: variation.sku,
+      stock_quantity: variation.stock_quantity,
+      stock_status: variation.stock_status || 'instock',
+      image: variation.image ? {
+        src: variation.image.src || variation.image.url || variation.image.source_url
+      } : null
+    } : variation;
 
-      {/* Content */}
-      {loading ? (
-        <div className="text-right py-4">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500 ml-auto"></div>
-          <p className="text-sm text-gray-600 mt-2 text-right">{t('loading') || 'טוען...'}</p>
-        </div>
-      ) : !hasVariations ? (
-        <div className="text-center py-8">
-          <p className="text-sm text-gray-500 text-right mb-4">
-            {t('noVariationsYet') || 'אין וריאציות עדיין. לחץ על "הוסף וריאציה" כדי להתחיל.'}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-3 gap-3">
-          {/* Pending Variations */}
-          {pendingVariations.map((variation) => (
-            <div
-              key={variation.id}
-              className="relative group cursor-pointer"
-              onClick={() => onVariationClick?.(variation)}
-            >
-              <VariationCard
-                variation={{
-                  ...variation,
-                  name: variation.attributes?.map(attr => `${attr.name}: ${attr.option}`).join(', ') || 'וריאציה חדשה',
-                  price: variation.regular_price,
-                  regular_price: variation.regular_price,
-                  sale_price: variation.sale_price,
-                  sku: variation.sku,
-                  stock_quantity: variation.stock_quantity,
-                  stock_status: variation.stock_status || 'instock',
-                  image: variation.image ? {
-                    src: variation.image.src || variation.image.url || variation.image.source_url
-                  } : null
+    const content = (
+      <div
+        onClick={() => onVariationClick?.(variation)}
+        style={{ cursor: 'pointer', position: 'relative', height: '100%' }}
+      >
+        <VariationCard
+          variation={displayVariation}
+          formatCurrency={formatCurrency}
+          isRTL={isRTL}
+          t={t}
+        />
+
+        {/* Delete Button */}
+        {(isPending || isEditMode) && (
+          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}>
+            {isPending ? (
+              <Button
+                type="text"
+                size="small"
+                shape="circle"
+                icon={<X />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeletePending?.(variation.id);
                 }}
-                formatCurrency={formatCurrency}
-                isRTL={isRTL}
-                t={t}
+                style={{ backgroundColor: 'rgba(255,255,255,0.8)', color: '#ff4d4f' }}
               />
-              {/* Delete button for pending variations */}
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+            ) : (
+              <Popconfirm
+                title={t('deleteVariation') || 'מחק וריאציה'}
+                description={t('confirmDeleteVariation') || 'האם אתה בטוח שברצונך למחוק וריאציה זו?'}
+                onConfirm={(e) => {
+                  e.stopPropagation();
+                  onDeleteVariation?.(variation.id);
+                }}
+                onCancel={(e) => e.stopPropagation()}
+                okText={t('yes') || 'כן'}
+                cancelText={t('no') || 'לא'}
+              >
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeletePending?.(variation.id);
-                  }}
-                  className="bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-600 shadow-sm backdrop-blur-sm h-7 w-7 rounded-full"
-                  title={t('deleteVariation') || 'מחק וריאציה'}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-              {/* Pending badge */}
-              <div className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-md font-medium shadow-sm">
-                {t('pending') || 'ממתין'}
-              </div>
-            </div>
-          ))}
+                  type="text"
+                  size="small"
+                  shape="circle"
+                  icon={<X />}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ backgroundColor: 'rgba(255,255,255,0.8)', color: '#ff4d4f' }}
+                />
+              </Popconfirm>
+            )}
+          </div>
+        )}
+      </div>
+    );
 
-          {/* Saved Variations */}
-          {variations.map((variation) => (
-            <div
-              key={variation.id}
-              className="relative group cursor-pointer"
-              onClick={() => onVariationClick?.(variation)}
-            >
-              <VariationCard
-                variation={variation}
-                formatCurrency={formatCurrency}
-                isRTL={isRTL}
-                t={t}
-              />
-              {/* Delete button for saved variations (edit mode only) */}
-              {isEditMode && (
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (window.confirm(t('confirmDeleteVariation') || 'האם אתה בטוח שברצונך למחוק וריאציה זו?')) {
-                        onDeleteVariation?.(variation.id);
-                      }
-                    }}
-                    className="bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-600 shadow-sm backdrop-blur-sm h-7 w-7 rounded-full"
-                    title={t('deleteVariation') || 'מחק וריאציה'}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+    return (
+      <Col xs={24} sm={12} md={8} key={variation.id}>
+        {isPending ? (
+          <Badge.Ribbon text={t('pending') || 'ממתין'} color="gold">
+            {content}
+          </Badge.Ribbon>
+        ) : (
+          content
+        )}
+      </Col>
+    );
+  };
+
+  return (
+    <Card
+      bodyStyle={{ padding: '24px' }}
+      title={
+        <Flex justify="space-between" align="center" style={{ flexDirection: 'row' }}>
+          <Flex align="center" gap="small" style={{ flexDirection: 'row' }}>
+            <Boxes style={{ fontSize: '20px', color: '#595959' }} />
+            <Title level={4} style={{ margin: 0 }}>וריאציות</Title>
+          </Flex>
+          <Button type="primary" onClick={onAddClick}>
+            {t('addVariation') || 'צור וריאציה'}
+          </Button>
+        </Flex>
+      }
+    >
+      {loading ? (
+        <Flex justify="center" align="center" vertical style={{ padding: '32px' }}>
+          <Spin size="large" />
+          <Text type="secondary" style={{ marginTop: '16px' }}>{t('loading') || 'טוען...'}</Text>
+        </Flex>
+      ) : !hasVariations ? (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={
+            <Text type="secondary">
+              {t('noVariationsYet') || 'אין לכם וריאציות עדיין, לחצו על הוסף וריאציה כדי להתחיל'}
+            </Text>
+          }
+        />
+      ) : (
+        <Row gutter={[16, 16]}>
+          {pendingVariations.map(variation => renderVariationItem(variation, true))}
+          {variations.map(variation => renderVariationItem(variation, false))}
+        </Row>
       )}
     </Card>
   );

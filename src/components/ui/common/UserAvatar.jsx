@@ -7,12 +7,12 @@ import { useState, useEffect } from 'react';
  * 
  * Displays user profile picture with fallback placeholder using Ant Design Avatar.
  */
-const UserAvatar = ({ 
-  src, 
-  alt = 'User', 
+const UserAvatar = ({
+  src,
+  alt = 'User',
   name,
   size = 'md', // 'sm', 'md', 'lg', 'xl' or number
-  className = '' 
+  className = ''
 }) => {
   const [imageError, setImageError] = useState(false);
 
@@ -31,8 +31,8 @@ const UserAvatar = ({
     setImageError(false);
   }, [src]);
 
-  // Validate src - must be a non-empty string URL
-  const isValidPicture = src && typeof src === 'string' && src.trim().length > 0 && src.startsWith('http');
+  // Validate src - must be a non-empty string URL (allow http, data uri, relative paths)
+  const isValidPicture = src && typeof src === 'string' && src.trim().length > 0;
 
   // If no valid src or error, show placeholder
   if (!isValidPicture || imageError) {

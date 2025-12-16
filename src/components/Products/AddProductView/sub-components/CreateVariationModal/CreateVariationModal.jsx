@@ -1,29 +1,13 @@
 import { memo } from 'react';
-import { CloseOutlined as X, PlusOutlined as Plus, ReloadOutlined as Loader } from '@ant-design/icons';
-import { Card, Button } from '../../../../ui';
+import { PlusOutlined as Plus } from '@ant-design/icons';
+import { Button, Modal, Typography, Flex } from 'antd';
 import VariationForm from '../VariationForm/VariationForm';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
 
+const { Text, Title } = Typography;
+
 /**
  * CreateVariationModal Component
- * 
- * Modal for creating a new product variation.
- * Uses the shared VariationForm component for the form fields.
- * 
- * @param {boolean} isOpen - Whether modal is open
- * @param {function} onClose - Callback to close modal
- * @param {Object} formData - Variation form data
- * @param {function} onFormDataChange - Callback when form data changes
- * @param {Array} selectedAttributeIds - IDs of selected attributes
- * @param {Array} attributes - All available attributes
- * @param {Object} attributeTerms - Terms for each attribute
- * @param {boolean} creating - Whether variation is being created
- * @param {boolean} generatingSKU - Whether SKU is being generated
- * @param {function} onGenerateSKU - Callback to generate SKU
- * @param {string} parentProductName - Parent product name (for SKU generation)
- * @param {string} parentSku - Parent product SKU
- * @param {Array} existingVariationSkus - Array of SKUs from other variations
- * @param {function} onSubmit - Callback when form is submitted
  */
 const CreateVariationModal = ({
   isOpen,
@@ -39,6 +23,8 @@ const CreateVariationModal = ({
   parentProductName,
   parentSku,
   existingVariationSkus = [],
+  onToggleAttribute,
+  isAttributeSelected,
   onSubmit,
 }) => {
   const { t, isRTL } = useLanguage();
@@ -59,70 +45,59 @@ const CreateVariationModal = ({
   const canSubmit = selectedAttributeIds.length > 0 && !creating && !hasSkuError;
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-[100]"
-        onClick={() => !creating && onClose()}
-      />
-
-      {/* Modal */}
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4" dir={isRTL ? 'rtl' : 'ltr'}>
-        <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
-          <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
-            <h3 className="text-xl font-semibold text-gray-800 text-right">
-              {t('addVariation') || 'הוסף וריאציה'}
-            </h3>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => !creating && onClose()}
-              className="text-gray-400 hover:text-gray-600"
-              disabled={creating}
-              aria-label={t('close') || 'סגור'}
-            >
-              <X className="w-6 h-6" />
-            </Button>
-          </div>
-
-          <VariationForm
-            formData={formData}
-            onFormDataChange={onFormDataChange}
-            selectedAttributeIds={selectedAttributeIds}
-            attributes={attributes}
-            attributeTerms={attributeTerms}
-            generatingSKU={generatingSKU}
-            onGenerateSKU={onGenerateSKU}
-            parentProductName={parentProductName}
-            parentSku={parentSku}
-            existingVariationSkus={existingVariationSkus}
+    <Modal
+      open={isOpen}
+      onCancel={() => !creating && onClose()}
+      title={
+        <div style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+          <Title level={4} style={{ margin: 0 }}>{t('addVariation') || 'הוסף וריאציה'}</Title>
+        </div>
+      }
+      footer={
+        <Flex gap="small" justify="start">
+          <Button
+            key="cancel"
+            onClick={onClose}
             disabled={creating}
-          />
-
-          {/* Action Buttons */}
-          <div className={`flex gap-3 pt-4 border-t border-gray-200 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
-            <Button
-              variant="primary"
-              onClick={handleSubmit}
-              disabled={!canSubmit}
-              isLoading={creating}
-              icon={Plus}
-              className="flex-1"
-            >
-              {creating ? (t('creating') || 'יוצר...') : (t('createVariation') || 'צור וריאציה')}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={onClose}
-              disabled={creating}
-              className="px-6"
-            >
-              {t('cancel') || 'ביטול'}
-            </Button>
-          </div>
-        </Card>
+          >
+            {t('cancel') || 'ביטול'}
+          </Button>
+          <Button
+            key="submit"
+            type="primary"
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            loading={creating}
+            icon={<Plus />}
+          >
+            {creating ? (t('creating') || 'יוצר...') : (t('createVariation') || 'צור וריאציה')}
+          </Button>
+        </Flex>
+      }
+      width={700}
+      centered
+      maskClosable={!creating}
+      closable={!creating}
+      destroyOnClose
+    >
+      <div style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+        <VariationForm
+          formData={formData}
+          onFormDataChange={onFormDataChange}
+          selectedAttributeIds={selectedAttributeIds}
+          attributes={attributes}
+          attributeTerms={attributeTerms}
+          generatingSKU={generatingSKU}
+          onGenerateSKU={onGenerateSKU}
+          parentProductName={parentProductName}
+          parentSku={parentSku}
+          existingVariationSkus={existingVariationSkus}
+          onToggleAttribute={onToggleAttribute}
+          isAttributeSelected={isAttributeSelected}
+          disabled={creating}
+        />
       </div>
-    </>
+    </Modal>
   );
 };
 

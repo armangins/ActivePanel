@@ -1,93 +1,48 @@
 
+import { Descriptions, Tag, Typography, theme } from 'antd';
+import { CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
+
+const { Text, Title } = Typography;
+
 /**
  * ProductDetailsPricing Component
- * 
- * Displays pricing information:
- * - Regular price
- * - Sale price
- * - Stock status and quantity
- * 
- * @param {Object} product - Product object
- * @param {Function} formatCurrency - Function to format currency values
- * @param {Boolean} isRTL - Whether the layout is right-to-left
- * @param {Function} t - Translation function
  */
 const ProductDetailsPricing = ({ product, formatCurrency, isRTL, t }) => {
   const stockStatus = product.stock_status || 'instock';
-  // Use only regular_price - do not use 'price' field as it may include tax calculations
   const regularPrice = product.regular_price || null;
   const salePrice = product.sale_price || null;
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h3 className={`text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
-          {t('pricing') || 'Pricing'}
-        </h3>
-        
-        <div className="space-y-3">
-          {/* Regular Price */}
-          <div>
-            <label className={`block text-sm font-medium text-gray-700 mb-1 ${'text-right'}`}>
-              {t('price')} <span className="text-orange-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={regularPrice ? formatCurrency(parseFloat(regularPrice)) : ''}
-              readOnly
-              className="input-field"
-              dir="rtl"
-            />
-          </div>
+    <div>
+      <Title level={5} style={{ marginBottom: 16 }}>{t('pricing') || 'Pricing'}</Title>
 
-          {/* Sale Price */}
-          <div>
-            <label className={`block text-sm font-medium text-gray-700 mb-1 ${'text-right'}`}>
-              {t('salePrice')}
-            </label>
-            <input
-              type="text"
-              value={salePrice ? formatCurrency(parseFloat(salePrice)) : ''}
-              readOnly
-              className="input-field"
-              dir="rtl"
-            />
-          </div>
+      <Descriptions column={1} layout="vertical" size="small">
+        <Descriptions.Item label={t('price')}>
+          <Text strong>{regularPrice ? formatCurrency(parseFloat(regularPrice)) : '-'}</Text>
+        </Descriptions.Item>
 
-          {/* Stock Status */}
-          <div>
-            <label className={`block text-sm font-medium text-gray-700 mb-1 ${'text-right'}`}>
-              {t('status')}
-            </label>
-            {stockStatus === 'instock' ? (
-              <div className={`flex items-center gap-2 ${'flex-row-reverse'}`}>
-                <span className="text-sm font-medium text-gray-700">
-                  {t('inStock')}
-                </span>
-                <span className="w-2 h-2 rounded-full bg-green-500"></span>
-              </div>
-            ) : (
-              <span className="text-sm font-medium text-orange-600">
-                {t('outOfStock')}
-              </span>
-            )}
-          </div>
+        <Descriptions.Item label={t('salePrice')}>
+          <Text type={salePrice ? 'success' : 'secondary'}>
+            {salePrice ? formatCurrency(parseFloat(salePrice)) : '-'}
+          </Text>
+        </Descriptions.Item>
 
-          {/* Stock Quantity */}
-          <div>
-            <label className={`block text-sm font-medium text-gray-700 mb-1 ${'text-right'}`}>
-              {t('stockQuantity')}
-            </label>
-            <input
-              type="text"
-              value={product.stock_quantity ?? '-'}
-              readOnly
-              className="input-field"
-              dir="rtl"
-            />
-          </div>
-        </div>
-      </div>
+        <Descriptions.Item label={t('status')}>
+          {stockStatus === 'instock' ? (
+            <Tag icon={<CheckCircleFilled />} color="success">
+              {t('inStock')}
+            </Tag>
+          ) : (
+            <Tag icon={<CloseCircleFilled />} color="error">
+              {t('outOfStock')}
+            </Tag>
+          )}
+        </Descriptions.Item>
+
+        <Descriptions.Item label={t('stockQuantity')}>
+          <Text>{product.stock_quantity ?? '-'}</Text>
+        </Descriptions.Item>
+      </Descriptions>
     </div>
   );
 };

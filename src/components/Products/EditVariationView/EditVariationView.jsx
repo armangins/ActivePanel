@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowRightOutlined as ArrowRightIcon, SaveOutlined as FloppyDiskIcon, CloseOutlined as X } from '@ant-design/icons';
+import { ArrowRightOutlined as ArrowRightIcon, SaveOutlined as FloppyDiskIcon, CloseOutlined as X, LoadingOutlined } from '@ant-design/icons';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import { variationsAPI, attributesAPI, productsAPI } from '../../../services/woocommerce';
-import { Card, Breadcrumbs, Button } from '../../ui';
-import { Input } from '../../ui/inputs';
+import { variationsAPI, attributesAPI } from '../../../services/woocommerce';
+import { Card, Button, Input, InputNumber, Select, Typography, Flex, Breadcrumb, Spin, Alert, Divider, theme, Image, Tag, Space } from 'antd';
+
+const { Title, Text } = Typography;
+const { Option } = Select;
 
 const EditVariationView = () => {
-  const { t, isRTL, formatCurrency } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
   const { id, variationId } = useParams();
+  const { token } = theme.useToken();
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [variation, setVariation] = useState(null);
@@ -157,20 +161,18 @@ const EditVariationView = () => {
     }));
   };
 
-
-
   const isTermSelected = (attributeId, termId) => {
     return formData.attributes[attributeId] === termId;
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">{t('loading') || 'טוען...'}</p>
-        </div>
-      </div>
+      <Flex justify="center" align="center" style={{ minHeight: '100vh', backgroundColor: token.colorBgLayout }}>
+        <Flex vertical align="center" gap="middle">
+          <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
+          <Text type="secondary">{t('loading') || 'טוען...'}</Text>
+        </Flex>
+      </Flex>
     );
   }
 
@@ -184,213 +186,225 @@ const EditVariationView = () => {
     : '';
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div style={{ minHeight: '100vh', backgroundColor: token.colorBgLayout, padding: 24, direction: isRTL ? 'rtl' : 'ltr' }}>
       {/* Breadcrumbs */}
-      <Breadcrumbs
+      <Breadcrumb
         items={[
-          t('dashboard'),
-          t('products'),
+          { title: t('dashboard') },
+          { title: t('products') },
           {
-            label: variation?.parent_name || t('product'),
-            onClick: () => navigate(`/products/edit/${id}`)
+            title: variation?.parent_name || t('product'),
+            onClick: () => navigate(`/products/edit/${id}`),
+            className: 'cursor-pointer hover:text-primary-500'
           },
-          t('editVariation') || 'ערוך וריאציה'
+          { title: t('editVariation') || 'ערוך וריאציה' }
         ]}
+        style={{ marginBottom: 24 }}
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 flex-row-reverse">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 text-right">
+      <Flex justify="space-between" align="center" style={{ marginBottom: 24, flexDirection: isRTL ? 'row' : 'row-reverse' }}>
+        <Button
+          icon={<ArrowRightIcon rotate={isRTL ? 180 : 0} />}
+          onClick={() => navigate(`/products/edit/${id}`)}
+          type="text"
+        >
+          {t('back') || 'חזור'}
+        </Button>
+        <div style={{ textAlign: isRTL ? 'right' : 'left' }}>
+          <Title level={2} style={{ margin: 0 }}>
             {t('editVariation') || 'ערוך וריאציה'}
-          </h1>
+          </Title>
           {attributesText && (
-            <p className="text-sm text-gray-600 mt-1 text-right">{attributesText}</p>
+            <Text type="secondary">{attributesText}</Text>
           )}
         </div>
-        <Button
-          variant="ghost"
-          onClick={() => navigate(`/products/edit/${id}`)}
-          className="flex items-center gap-2 text-gray-700 hover:text-primary-600 hover:bg-gray-100 flex-row-reverse"
-        >
-          <ArrowRightIcon className={`w-[18px] h-[18px] ${isRTL ? 'rotate-180' : ''}`} />
-          <span>{t('back') || 'חזור'}</span>
-        </Button>
-      </div>
+      </Flex>
 
-      <div className="max-w-2xl mx-auto">
-        <Card className="p-6">
-          <div className="space-y-6">
+      <div style={{ maxWidth: 800, margin: '0 auto' }}>
+        <Card bodyStyle={{ padding: 24 }}>
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
             {/* Variation Image */}
             {formData.image && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 text-right">
+                <Text strong style={{ display: 'block', marginBottom: 8, textAlign: 'right' }}>
                   {t('image') || 'תמונה'}
-                </label>
-                <div className="w-32 h-32 border border-gray-200 rounded-lg overflow-hidden">
-                  <img
+                </Text>
+                <div style={{ width: 128, height: 128, border: `1px solid ${token.colorBorderSecondary}`, borderRadius: token.borderRadiusLG, overflow: 'hidden' }}>
+                  <Image
                     src={formData.image.src || formData.image.url}
                     alt={attributesText}
-                    className="w-full h-full object-cover"
+                    width="100%"
+                    height="100%"
+                    style={{ objectFit: 'cover' }}
+                    preview={false}
                   />
                 </div>
               </div>
             )}
 
             {/* Regular Price */}
-            <Input
-              label={t('regularPrice')}
-              required
-              type="number"
-              value={formData.regular_price}
-              onChange={(e) => setFormData(prev => ({ ...prev, regular_price: e.target.value }))}
-              placeholder="0.00"
-              step="0.01"
-              min="0"
-              className="text-right"
-            />
+            <div>
+              <Text strong style={{ display: 'block', marginBottom: 8, textAlign: 'right' }}>{t('regularPrice')}</Text>
+              <Input
+                prefix={isRTL ? null : '₪'}
+                suffix={isRTL ? '₪' : null}
+                value={formData.regular_price}
+                onChange={(e) => setFormData(prev => ({ ...prev, regular_price: e.target.value }))}
+                placeholder="0.00"
+                type="number"
+                step="0.01"
+                min="0"
+                style={{ width: '100%' }}
+              />
+            </div>
 
             {/* Sale Price */}
-            <Input
-              label={t('salePrice')}
-              type="number"
-              value={formData.sale_price}
-              onChange={(e) => setFormData(prev => ({ ...prev, sale_price: e.target.value }))}
-              placeholder="0.00"
-              step="0.01"
-              min="0"
-              className="text-right"
-            />
+            <div>
+              <Text strong style={{ display: 'block', marginBottom: 8, textAlign: 'right' }}>{t('salePrice')}</Text>
+              <Input
+                prefix={isRTL ? null : '₪'}
+                suffix={isRTL ? '₪' : null}
+                value={formData.sale_price}
+                onChange={(e) => setFormData(prev => ({ ...prev, sale_price: e.target.value }))}
+                placeholder="0.00"
+                type="number"
+                step="0.01"
+                min="0"
+                style={{ width: '100%' }}
+              />
+            </div>
 
             {/* SKU */}
-            <Input
-              label={t('sku')}
-              type="text"
-              value={formData.sku}
-              onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
-              placeholder={t('sku') || 'SKU'}
-              className="text-right"
-            />
+            <div>
+              <Text strong style={{ display: 'block', marginBottom: 8, textAlign: 'right' }}>{t('sku')}</Text>
+              <Input
+                value={formData.sku}
+                onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
+                placeholder={t('sku') || 'SKU'}
+                style={{ width: '100%' }}
+              />
+            </div>
 
             {/* Stock Status */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 text-right">
+              <Text strong style={{ display: 'block', marginBottom: 8, textAlign: 'right' }}>
                 {t('stockStatus')}
-              </label>
-              <select
+              </Text>
+              <Select
                 value={formData.stock_status}
-                onChange={(e) => setFormData(prev => ({ ...prev, stock_status: e.target.value }))}
-                className="input-field text-right w-full"
-                dir="rtl"
+                onChange={(value) => setFormData(prev => ({ ...prev, stock_status: value }))}
+                style={{ width: '100%' }}
               >
-                <option value="instock">{t('inStock')}</option>
-                <option value="outofstock">{t('outOfStock')}</option>
-                <option value="onbackorder">{t('onBackorder')}</option>
-              </select>
+                <Option value="instock">{t('inStock')}</Option>
+                <Option value="outofstock">{t('outOfStock')}</Option>
+                <Option value="onbackorder">{t('onBackorder')}</Option>
+              </Select>
             </div>
 
             {/* Stock Quantity */}
-            <Input
-              label={t('stockQuantity')}
-              type="number"
-              value={formData.stock_quantity}
-              onChange={(e) => setFormData(prev => ({ ...prev, stock_quantity: e.target.value }))}
-              placeholder="0"
-              min="0"
-              className="text-right"
-            />
+            <div>
+              <Text strong style={{ display: 'block', marginBottom: 8, textAlign: 'right' }}>{t('stockQuantity')}</Text>
+              <Input
+                value={formData.stock_quantity}
+                onChange={(e) => setFormData(prev => ({ ...prev, stock_quantity: e.target.value }))}
+                placeholder="0"
+                type="number"
+                min="0"
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            <Divider />
 
             {/* Attributes Section */}
-            <div className="border-t border-gray-200 pt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-4 text-right">
+            <div>
+              <Text strong style={{ display: 'block', marginBottom: 16, textAlign: 'right' }}>
                 {t('attributes') || 'תכונות'}
-              </label>
+              </Text>
 
               {loadingAttributes ? (
-                <div className="text-right py-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500 inline-block"></div>
-                  <p className="text-sm text-gray-600 inline mr-2">{t('loading') || 'טוען...'}</p>
-                </div>
+                <Flex justify="center" align="center" style={{ padding: 16 }}>
+                  <Spin />
+                  <Text type="secondary" style={{ marginLeft: 8 }}>{t('loading') || 'טוען...'}</Text>
+                </Flex>
               ) : attributes.length === 0 ? (
-                <p className="text-sm text-gray-500 text-right">{t('noAttributes') || 'אין תכונות זמינות'}</p>
+                <Text type="secondary" style={{ display: 'block', textAlign: 'right' }}>{t('noAttributes') || 'אין תכונות זמינות'}</Text>
               ) : (
-                <div className="space-y-6">
-                  {/* Select attributes and terms */}
+                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                   {attributes.map(attribute => {
                     const terms = attributeTerms[attribute.id];
                     const isLoadingTerms = terms === undefined;
                     const selectedTermId = formData.attributes[attribute.id];
 
                     return (
-                      <div key={attribute.id} className="border-b border-gray-200 pb-4 last:border-0">
-                        <label className="block text-sm font-medium text-gray-700 mb-3 text-right">
+                      <div key={attribute.id}>
+                        <Text style={{ display: 'block', marginBottom: 8, textAlign: 'right' }}>
                           {attribute.name}
-                        </label>
+                        </Text>
                         {isLoadingTerms ? (
-                          <div className="text-right py-2">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500 inline-block"></div>
-                            <p className="text-xs text-gray-500 inline mr-2">{t('loading') || 'טוען...'}</p>
-                          </div>
+                          <Flex align="center" justify="end" gap="small">
+                            <Spin size="small" />
+                            <Text type="secondary">{t('loading')}</Text>
+                          </Flex>
                         ) : !terms || terms.length === 0 ? (
-                          <p className="text-xs text-gray-500 text-right">
+                          <Text type="secondary" style={{ display: 'block', textAlign: 'right' }}>
                             {t('noTermsAvailable') || 'אין אפשרויות זמינות לתכונה זו'}
-                          </p>
+                          </Text>
                         ) : (
-                          <div className="flex flex-wrap gap-2">
-                            {terms.map(term => (
-                              <Button
-                                key={term.id}
-                                type="button"
-                                onClick={() => toggleAttributeTerm(attribute.id, term.id)}
-                                variant={isTermSelected(attribute.id, term.id) ? 'primary' : 'secondary'}
-                                className={`px-4 py-2 rounded-lg transition-colors text-sm text-center h-auto ${isTermSelected(attribute.id, term.id)
-                                  ? 'bg-primary-500 text-white hover:bg-primary-600'
-                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-transparent'
-                                  }`}
-                              >
-                                {term.name}
-                                {isTermSelected(attribute.id, term.id) && (
-                                  <X className="w-3.5 h-3.5 inline mr-1" />
-                                )}
-                              </Button>
-                            ))}
-                          </div>
+                          <Flex wrap="wrap" gap="small" justify="end">
+                            {terms.map(term => {
+                              const isSelected = isTermSelected(attribute.id, term.id);
+                              return (
+                                <Tag.CheckableTag
+                                  key={term.id}
+                                  checked={isSelected}
+                                  onChange={() => toggleAttributeTerm(attribute.id, term.id)}
+                                  style={{
+                                    padding: '4px 12px',
+                                    fontSize: 14,
+                                    border: `1px solid ${isSelected ? token.colorPrimary : token.colorBorder}`,
+                                    backgroundColor: isSelected ? token.colorPrimaryBg : 'transparent'
+                                  }}
+                                >
+                                  {term.name}
+                                  {isSelected && <X style={{ marginRight: 4, marginLeft: 0 }} />}
+                                </Tag.CheckableTag>
+                              );
+                            })}
+                          </Flex>
                         )}
                       </div>
                     );
                   })}
-                </div>
+                </Space>
               )}
             </div>
 
             {/* Error Message */}
             {errors.submit && (
-              <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                <p className="text-orange-800 text-sm text-right">{errors.submit}</p>
-              </div>
+              <Alert message={errors.submit} type="error" showIcon />
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-3 flex-row-reverse pt-4">
+            <Flex justify="start" gap="small" style={{ flexDirection: 'row-reverse' }}>
               <Button
-                variant="primary"
+                type="primary"
                 onClick={handleSave}
-                disabled={saving}
-                isLoading={saving}
-                className="px-6"
-                icon={FloppyDiskIcon}
+                loading={saving}
+                icon={<FloppyDiskIcon />}
+                size="large"
               >
                 {t('save')}
               </Button>
               <Button
-                variant="outline"
                 onClick={() => navigate(`/products/edit/${id}`)}
-                className="px-6"
+                size="large"
               >
                 {t('cancel') || 'ביטול'}
               </Button>
-            </div>
-          </div>
+            </Flex>
+          </Space>
         </Card>
       </div>
     </div>

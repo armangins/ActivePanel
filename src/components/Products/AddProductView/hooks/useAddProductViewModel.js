@@ -9,7 +9,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { productSchema } from '../../../../schemas/product';
 import { useProductData, useAttributes, useVariations, useProductImages } from './';
-import { buildProductData, cleanVariationData } from '../utils/productBuilders';
+import { buildProductData, buildVariationData, cleanVariationData } from '../utils/productBuilders';
+import { generateCombinations } from '../utils/variationUtils';
 import { productKeys } from '../../../../hooks/useProducts';
 
 export const useAddProductViewModel = () => {
@@ -22,7 +23,6 @@ export const useAddProductViewModel = () => {
 
     // Dynamically determine if we're in edit mode based on URL parameter
     const isEditMode = Boolean(id);
-
     // UI State (modals, etc.)
     const [showScheduleModal, setShowScheduleModal] = useState(false);
     const [scheduleDates, setScheduleDates] = useState({
@@ -488,16 +488,88 @@ export const useAddProductViewModel = () => {
         setImprovingDescription(true);
         try {
             const improved = await improveText(formData.description, 'description', formData.product_name || '');
-            const cleaned = improved.replace(/<[^>]*>/g, '').trim();
-            const words = cleaned.split(/\s+/).filter(word => word.length > 0);
-            const limitedWords = words.slice(0, 400).join(' ');
-            setFormData(prev => ({ ...prev, description: limitedWords }));
+            const cleaned = improved
+                .replace(/<[^>]*>/g, '')
+                .replace(/&[a-zA-Z0-9#]+;/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            setFormData(prev => ({ ...prev, description: cleaned }));
         } catch (error) {
             secureLog.error('Error improving description', error);
         } finally {
             setImprovingDescription(false);
         }
     }, [formData.description, formData.product_name, setFormData]);
+
+    const handleGenerateVariations = useCallback(async () => {
+        // Validate at least one attribute is selected with terms
+        const hasSelection = Object.values(selectedAttributeTerms).some(terms => terms && terms.length > 0);
+        if (!hasSelection) {
+            alert(t('selectAttributesToGenerate') || 'אנא בחר תכונות וערכים כדי לייצר וריאציות');
+            return;
+        }
+
+        const combinations = generateCombinations(attributes, selectedAttributeTerms, attributeTerms);
+
+        if (combinations.length === 0) {
+            return;
+        }
+
+        const newVariations = [];
+        // Current variations (saved + pending) used for checking duplicates
+        const currentVariations = [...variations, ...pendingVariations];
+
+        // Helper to normalize attributes for comparison
+        const normalizeAttributes = (attrs) => {
+            if (!attrs) return '';
+            // If attrs is an array (from API or buildVariationData)
+            if (Array.isArray(attrs)) {
+                return attrs.map(attr => `${attr.id}:${attr.option_id || attr.option}`).sort().join('|');
+            }
+            // If attrs is an object (from combo.attributes)
+            if (typeof attrs === 'object') {
+                return Object.entries(attrs).map(([attrId, termId]) => `${attrId}:${termId}`).sort().join('|');
+            }
+            return '';
+        };
+
+        for (const combo of combinations) {
+            const normalizedComboAttrs = normalizeAttributes(combo.attributes);
+
+            // Check for duplicates based on normalized attributes
+            const isDuplicate = currentVariations.some(existing => {
+                const normalizedExistingAttrs = normalizeAttributes(existing.attributes);
+                return normalizedComboAttrs === normalizedExistingAttrs;
+            });
+
+            if (!isDuplicate) {
+                const variationFormDataMock = {
+                    attributes: combo.attributes,
+                    regular_price: formData.regular_price || '',
+                    sale_price: formData.sale_price || '',
+                    sku: '', // Will be generated or left empty
+                    stock_quantity: formData.stock_quantity || '',
+                    image: null
+                };
+
+                // Build the data structure expected by pending list and API
+                const builtVariation = {
+                    ...buildVariationData({
+                        variationFormData: variationFormDataMock,
+                        attributes,
+                        attributeTerms,
+                        isNew: true // Indicate it's a new variation being built
+                    }),
+                    id: `temp-gen-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+                };
+                newVariations.push(builtVariation);
+            }
+        }
+
+        if (newVariations.length > 0) {
+            setPendingVariations(prev => [...prev, ...newVariations]);
+        }
+    }, [attributes, selectedAttributeTerms, attributeTerms, variations, pendingVariations, formData, t, setPendingVariations]);
 
 
 
@@ -703,7 +775,7 @@ export const useAddProductViewModel = () => {
         variations, pendingVariations, deletedVariationIds, loadingVariations, showCreateVariationModal, showEditVariationModal, editingVariationId, creatingVariation, variationFormData, setVariations, setPendingVariations, setShowCreateVariationModal, setShowEditVariationModal, setEditingVariationId, setVariationFormData, loadVariations, resetVariationForm, handleDeletePendingVariation, handleDeleteVariation, clearDeletedVariations, createVariation, updateVariation, clearPendingVariations, clearVariations,
         uploadingImage, handleImageUpload, removeImage,
         categories, loadingProduct, loadProduct,
-        handleCreateVariation, handleEditVariation, handleUpdateVariation, handleProductTypeChange,
+        handleCreateVariation, handleEditVariation, handleUpdateVariation, handleProductTypeChange, handleGenerateVariations,
         handleDiscountSelect, handleDiscountClear, handleGenerateSKU, handleGenerateVariationSKU, handleImproveShortDescription, handleImproveDescription,
         handleSave,
         methods // Expose RHF methods to the view

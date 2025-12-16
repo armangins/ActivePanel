@@ -1,17 +1,15 @@
 import { useState, useCallback, useMemo } from 'react';
 import { InboxOutlined as Package } from '@ant-design/icons';
+import { Image, Flex, Typography, theme } from 'antd';
+
+const { Title, Text } = Typography;
 
 /**
  * ProductDetailsMedia Component
- * 
- * Displays product media with interactive gallery feature.
- * Supports clicking thumbnails to swap with main image.
- * 
- * @param {Object} product - Product object
- * @param {Boolean} isRTL - Whether the layout is right-to-left
- * @param {Function} t - Translation function
  */
 const ProductDetailsMedia = ({ product, isRTL, t }) => {
+  const { token } = theme.useToken();
+
   // Extract all image URLs from product
   const allImages = useMemo(() => {
     if (!product?.images || product.images.length === 0) return [];
@@ -24,67 +22,80 @@ const ProductDetailsMedia = ({ product, isRTL, t }) => {
   // Get current main image
   const currentMainImage = allImages[selectedImageIndex] || null;
 
-  // Get thumbnail images (all images except the currently selected one)
+  // Get thumbnail images (all images except the currently selected one) - Actually keeping all thumbnails is better for navigation, but following existing logic
   const thumbnailImages = useMemo(() => {
-    return allImages.filter((_, index) => index !== selectedImageIndex);
-  }, [allImages, selectedImageIndex]);
+    // Show all images in thumbnails strip for better UX, highlight selected
+    return allImages;
+  }, [allImages]);
 
   // Handle thumbnail click to swap images
-  const handleThumbnailClick = useCallback((thumbnailIndex) => {
-    // Find the actual index in allImages array for the clicked thumbnail
-    const clickedImageUrl = thumbnailImages[thumbnailIndex];
-    const actualIndex = allImages.findIndex(img => img === clickedImageUrl);
-    if (actualIndex !== -1) {
-      setSelectedImageIndex(actualIndex);
-    }
-  }, [thumbnailImages, allImages]);
+  const handleThumbnailClick = useCallback((index) => {
+    setSelectedImageIndex(index);
+  }, []);
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h3 className={`text-sm font-medium text-gray-700 mb-2 ${'text-right'}`}>
-          {t('media') || 'Media'}
-        </h3>
-        
-        {/* Main Image */}
-        <div className="w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center aspect-square mb-2">
-          {currentMainImage ? (
-            <img
-              src={currentMainImage}
-              alt={product.name || 'Product image'}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <Package className="w-16 h-16 text-gray-300" />
-          )}
-        </div>
+    <div>
+      <Title level={5} style={{ marginBottom: 16 }}>{t('media') || 'Media'}</Title>
 
-        {/* Gallery Thumbnails */}
-        {thumbnailImages.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {thumbnailImages.slice(0, 6).map((thumbnailImage, index) => (
+      {/* Main Image */}
+      <div style={{
+        width: '100%',
+        aspectRatio: '1',
+        borderRadius: token.borderRadiusLG,
+        overflow: 'hidden',
+        border: `1px solid ${token.colorBorderSecondary}`,
+        backgroundColor: token.colorBgLayout,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16
+      }}>
+        {currentMainImage ? (
+          <Image
+            src={currentMainImage}
+            alt={product.name || 'Product image'}
+            width="100%"
+            height="100%"
+            style={{ objectFit: 'cover' }}
+          />
+        ) : (
+          <Package style={{ fontSize: 64, color: token.colorTextQuaternary }} />
+        )}
+      </div>
+
+      {/* Gallery Thumbnails */}
+      {thumbnailImages.length > 0 && (
+        <Flex gap="small" style={{ overflowX: 'auto', paddingBottom: 8 }}>
+          {thumbnailImages.map((thumbnailImage, index) => {
+            const isSelected = selectedImageIndex === index;
+            return (
               <div
                 key={`${thumbnailImage}-${index}`}
                 onClick={() => handleThumbnailClick(index)}
-                className="flex-shrink-0 w-16 h-16 rounded border border-gray-200 overflow-hidden cursor-pointer hover:border-primary-500 hover:opacity-90 transition-all"
+                style={{
+                  flexShrink: 0,
+                  width: 64,
+                  height: 64,
+                  borderRadius: token.borderRadius,
+                  border: `2px solid ${isSelected ? token.colorPrimary : token.colorBorder}`,
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  opacity: isSelected ? 1 : 0.7,
+                  transition: 'all 0.3s'
+                }}
                 title={t('clickToView') || 'Click to view this image'}
               >
                 <img
                   src={thumbnailImage}
                   alt={`${product.name || 'Product'} - Gallery ${index + 1}`}
-                  className="w-full h-full object-cover"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   loading="lazy"
                 />
               </div>
-            ))}
-            {thumbnailImages.length > 6 && (
-              <div className="flex-shrink-0 w-16 h-16 rounded border border-gray-200 bg-gray-100 flex items-center justify-center">
-                <span className="text-xs text-gray-500">+{thumbnailImages.length - 6}</span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+            );
+          })}
+        </Flex>
+      )}
     </div>
   );
 };

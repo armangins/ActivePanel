@@ -1,24 +1,20 @@
-import { InboxOutlined as Package, DownOutlined as ChevronDownIcon, RightOutlined as ChevronRightIcon, LeftOutlined as ChevronLeftIcon } from '@ant-design/icons';
+import { InboxOutlined as Package, DownOutlined, RightOutlined, LeftOutlined } from '@ant-design/icons';
+import { Button, Typography, theme, Flex } from 'antd';
 import { UserAvatar, OptimizedImage } from '../../ui';
 import { validateImageUrl, sanitizeProductName, sanitizeAttributeValue } from '../utils/securityHelpers';
 
+const { Text } = Typography;
+
 /**
  * ProductCell Component
- * 
- * Displays product image, name, and variation details in a table cell.
- * Image appears first, then product name with variations below (right-aligned in RTL).
- * 
- * @param {Object} product - Product object
- * @param {Boolean} isRTL - Whether the layout is right-to-left
- * @param {Function} t - Translation function
- * @param {Boolean} isExpanded - Whether the row is expanded
- * @param {Function} onToggleExpand - Callback to toggle expansion
  */
 const ProductCell = ({ product, isRTL, t, isExpanded, onToggleExpand }) => {
+  const { token } = theme.useToken();
+
   // SECURITY: Validate and sanitize image URL
   const rawImageUrl = product.images && product.images.length > 0 ? product.images[0].src : null;
   const imageUrl = rawImageUrl ? validateImageUrl(rawImageUrl) : null;
-  
+
   // SECURITY: Sanitize product name to prevent XSS
   const productName = sanitizeProductName(product.name || t('productName'));
   const isVariable = product.type === 'variable';
@@ -53,55 +49,66 @@ const ProductCell = ({ product, isRTL, t, isExpanded, onToggleExpand }) => {
   const variationDetails = getVariationDetails();
 
   return (
-    <td className="py-3 px-4 text-right">
-      <div className={`flex items-start ${'justify-start'} gap-3`}>
+    <td style={{ padding: '12px 16px', borderBottom: `1px solid ${token.colorBorderSecondary}` }}>
+      <Flex align="start" gap={12} style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
         {isVariable && (
-          <button
+          <Button
+            type="text"
+            size="small"
+            shape="circle"
             onClick={(e) => {
               e.stopPropagation();
               onToggleExpand && onToggleExpand();
             }}
-            className="mt-3 p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+            icon={isExpanded ?
+              <DownOutlined style={{ fontSize: 12, color: token.colorTextSecondary }} /> :
+              (isRTL ? <LeftOutlined style={{ fontSize: 12, color: token.colorTextSecondary }} /> : <RightOutlined style={{ fontSize: 12, color: token.colorTextSecondary }} />)
+            }
             title={isExpanded ? t('collapse') || 'Collapse' : t('expand') || 'Expand'}
-          >
-            {isExpanded ? (
-              <ChevronDownIcon className="w-4 h-4 text-gray-500" />
-            ) : (
-              isRTL ? <ChevronLeftIcon className="w-4 h-4 text-gray-500" /> : <ChevronRightIcon className="w-4 h-4 text-gray-500" />
-            )}
-          </button>
+            style={{ marginTop: 12 }}
+          />
         )}
 
-        <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 relative">
+        <div style={{
+          width: 48,
+          height: 48,
+          flexShrink: 0,
+          borderRadius: token.borderRadiusLG,
+          overflow: 'hidden',
+          backgroundColor: token.colorFillQuaternary,
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
           {imageUrl ? (
             <OptimizedImage
               src={imageUrl}
               alt={productName}
-              className="w-full h-full object-cover"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               // PERFORMANCE: Resize images for list view (48x48 for table cells)
               resize={true}
               width={48}
               height={48}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Package className="w-5 h-5 text-gray-400" />
-            </div>
+            <Package style={{ fontSize: 20, color: token.colorTextQuaternary }} />
           )}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-gray-900 mb-1">{productName}</div>
+
+        <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
+          <Text strong style={{ fontSize: 14, display: 'block', marginBottom: 4 }}>{productName}</Text>
           {variationDetails && variationDetails.length > 0 && (
-            <div className="space-y-1">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {variationDetails.map((detail, index) => (
-                <div key={index} className="text-xs text-gray-500">
+                <Text key={index} type="secondary" style={{ fontSize: 12, display: 'block' }}>
                   {detail}
-                </div>
+                </Text>
               ))}
             </div>
           )}
         </div>
-      </div>
+      </Flex>
     </td>
   );
 };

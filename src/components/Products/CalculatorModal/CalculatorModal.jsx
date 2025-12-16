@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { CloseOutlined as X, CalculatorOutlined as CalculatorIcon } from '@ant-design/icons';
+import { Modal } from 'antd';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import Calculator from '../../Calculator/Calculator';
 import { Button } from '../../ui';
@@ -10,7 +11,7 @@ import { Button } from '../../ui';
  * Modal wrapper for the Smart Pricing Calculator
  * Allows setting the calculated price back to the product form
  */
-const CalculatorModal = ({ onClose, onSetPrice }) => {
+const CalculatorModal = ({ isOpen, onClose, onSetPrice }) => {
   const { t, formatCurrency } = useLanguage();
   const [calculatedPrice, setCalculatedPrice] = useState(null);
   const calculatorRef = useRef(null);
@@ -30,64 +31,49 @@ const CalculatorModal = ({ onClose, onSetPrice }) => {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[100] overflow-y-auto">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="flex items-center justify-center p-0 sm:p-4">
-        <div className="relative bg-white sm:rounded-lg shadow-xl w-full h-full sm:h-auto sm:max-h-[90vh] max-w-4xl overflow-y-auto">
-          {/* Header */}
-          <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <CalculatorIcon className="w-6 h-6 text-primary-500" />
-                {t('smartPricing') || 'מחיר חכם'}
-              </h2>
-              {calculatedPrice && (
-                <Button
-                  type="button"
-                  onClick={() => {
-                    if (calculatedPrice) {
-                      onSetPrice(calculatedPrice.toFixed(2));
-                    }
-                  }}
-                  variant="ghost"
-                  className="text-sm text-primary-600 bg-primary-50 hover:bg-primary-100 font-medium h-auto py-2"
-                >
-                  {t('useThisPrice') || 'השתמש במחיר זה'}
-                </Button>
-              )}
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-              aria-label={t('close') || 'סגור'}
-            >
-              <X className="w-5 h-5" />
-            </Button>
+    <Modal
+      open={isOpen}
+      onCancel={onClose}
+      title={
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-3">
+            <span className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <CalculatorIcon className="w-6 h-6 text-primary-500" />
+              {t('smartPricing') || 'מחיר חכם'}
+            </span>
+            {calculatedPrice && (
+              <Button
+                type="button"
+                onClick={() => {
+                  if (calculatedPrice) {
+                    onSetPrice(calculatedPrice.toFixed(2));
+                  }
+                }}
+                variant="ghost"
+                className="text-sm text-primary-600 bg-primary-50 hover:bg-primary-100 font-medium h-auto py-1 px-3"
+              >
+                {t('useThisPrice') || 'השתמש במחיר זה'}
+              </Button>
+            )}
           </div>
-
-          {/* Content */}
-          <div className="p-6">
-            <Calculator
-              ref={calculatorRef}
-              isModalMode={true}
-              onUsePrice={(price) => {
-                onSetPrice(price);
-                onClose();
-              }}
-            />
-          </div>
-
         </div>
+      }
+      footer={null}
+      width={900}
+      centered
+      destroyOnClose
+    >
+      <div className="py-4">
+        <Calculator
+          ref={calculatorRef}
+          isModalMode={true}
+          onUsePrice={(price) => {
+            onSetPrice(price);
+            onClose();
+          }}
+        />
       </div>
-    </div>
+    </Modal>
   );
 };
 

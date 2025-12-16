@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Tabs } from 'antd';
+import { Modal, Tabs, Row, Col, theme, Card } from 'antd';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useVariations } from '../../../hooks/useVariations';
 import { useProduct } from '../../../hooks/useProducts';
@@ -12,16 +12,10 @@ import ProductDetailsDescription from './ProductDetailsDescription.jsx';
 
 /**
  * ProductDetailsModal Component
- * 
- * Main modal component for displaying product details in a read-only view.
- * Handles loading variations for variable products and coordinates all detail sections.
- * 
- * @param {Object} initialProduct - Product object from list (partial data)
- * @param {Function} onClose - Callback to close the modal
- * @param {Function} formatCurrency - Function to format currency values
  */
 const ProductDetailsModal = ({ product: initialProduct, onClose, formatCurrency }) => {
   const { t, isRTL } = useLanguage();
+  const { token } = theme.useToken();
   const [activeTab, setActiveTab] = useState('general');
 
   // Fetch full product details to get description and short_description
@@ -43,73 +37,79 @@ const ProductDetailsModal = ({ product: initialProduct, onClose, formatCurrency 
 
   const variations = variationsData?.data || [];
 
-
-
   if (!product) return null;
+
+  const contentStyle = {
+    backgroundColor: token.colorBgContainer,
+    border: `1px solid ${token.colorBorderSecondary}`,
+    borderRadius: token.borderRadiusLG,
+    padding: 24,
+    height: '100%'
+  };
 
   const tabItems = [
     {
       key: 'general',
       label: t('general') || 'General',
       children: (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, direction: isRTL ? 'rtl' : 'ltr' }}>
+        <Row gutter={[24, 24]} style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
           {/* Left Column - Basic Info and Pricing */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {/* Basic Info Section */}
-            <div style={{ backgroundColor: '#fff', border: '1px solid #d9d9d9', borderRadius: 8, padding: 16 }}>
-              <ProductDetailsBasicInfo
-                product={product}
-                isRTL={isRTL}
-                t={t}
-              />
-            </div>
+          <Col xs={24} md={12}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <div style={contentStyle}>
+                <ProductDetailsBasicInfo
+                  product={product}
+                  isRTL={isRTL}
+                  t={t}
+                />
+              </div>
 
-            {/* Pricing Section */}
-            <div style={{ backgroundColor: '#fff', border: '1px solid #d9d9d9', borderRadius: 8, padding: 16 }}>
-              <ProductDetailsPricing
-                product={product}
-                formatCurrency={formatCurrency}
-                isRTL={isRTL}
-                t={t}
-              />
+              <div style={contentStyle}>
+                <ProductDetailsPricing
+                  product={product}
+                  formatCurrency={formatCurrency}
+                  isRTL={isRTL}
+                  t={t}
+                />
+              </div>
             </div>
-          </div>
+          </Col>
 
           {/* Right Column - Media and Organization */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {/* Media Section */}
-            <div style={{ backgroundColor: '#fff', border: '1px solid #d9d9d9', borderRadius: 8, padding: 16 }}>
-              <ProductDetailsMedia
-                product={product}
-                isRTL={isRTL}
-                t={t}
-              />
-            </div>
+          <Col xs={24} md={12}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <div style={contentStyle}>
+                <ProductDetailsMedia
+                  product={product}
+                  isRTL={isRTL}
+                  t={t}
+                />
+              </div>
 
-            {/* Organization Section (Variations) */}
-            <div style={{ backgroundColor: '#fff', border: '1px solid #d9d9d9', borderRadius: 8, padding: 16 }}>
-              <ProductDetailsOrganization
-                product={product}
-                isRTL={isRTL}
-                t={t}
-                formatCurrency={formatCurrency}
-                variations={variations}
-                loadingVariations={loadingVariations}
-                variationsError={variationsError?.message || null}
-              />
+              <div style={contentStyle}>
+                <ProductDetailsOrganization
+                  product={product}
+                  isRTL={isRTL}
+                  t={t}
+                  formatCurrency={formatCurrency}
+                  variations={variations}
+                  loadingVariations={loadingVariations}
+                  variationsError={variationsError?.message || null}
+                />
+              </div>
             </div>
-          </div>
-        </div>
+          </Col>
+        </Row>
       ),
     },
     {
       key: 'description',
       label: t('description') || 'Description',
       children: (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, direction: isRTL ? 'rtl' : 'ltr' }}>
           {/* Short Description */}
           {product.short_description && (
-            <div style={{ backgroundColor: '#fff', border: '1px solid #d9d9d9', borderRadius: 8, padding: 16 }}>
+            <div style={contentStyle}>
               <ProductDetailsDescription
                 title={t('shortDescription')}
                 content={product.short_description}
@@ -120,7 +120,7 @@ const ProductDetailsModal = ({ product: initialProduct, onClose, formatCurrency 
 
           {/* Full Description */}
           {product.description && (
-            <div style={{ backgroundColor: '#fff', border: '1px solid #d9d9d9', borderRadius: 8, padding: 16 }}>
+            <div style={contentStyle}>
               <ProductDetailsDescription
                 title={t('description')}
                 content={product.description}
@@ -131,8 +131,8 @@ const ProductDetailsModal = ({ product: initialProduct, onClose, formatCurrency 
 
           {/* Empty State */}
           {!product.short_description && !product.description && (
-            <div style={{ backgroundColor: '#fff', border: '1px solid #d9d9d9', borderRadius: 8, padding: 32, textAlign: 'center' }}>
-              <p style={{ color: '#8c8c8c' }}>{t('noDescription') || 'No description available'}</p>
+            <div style={{ ...contentStyle, textAlign: 'center', padding: 32 }}>
+              <p style={{ color: token.colorTextSecondary }}>{t('noDescription') || 'No description available'}</p>
             </div>
           )}
         </div>
@@ -144,18 +144,27 @@ const ProductDetailsModal = ({ product: initialProduct, onClose, formatCurrency 
     <Modal
       open={!!product}
       onCancel={onClose}
-      title={t('productDetails') || t('products')}
+      title={null}
       footer={null}
       width={1200}
       style={{ top: 20 }}
-      styles={{ body: { padding: 0, maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' } }}
+      styles={{
+        body: { padding: 0, maxHeight: 'calc(100vh - 40px)', overflowY: 'auto' },
+        content: { padding: 0, borderRadius: token.borderRadiusLG, overflow: 'hidden' }
+      }}
+      closeIcon={null}
     >
+      <ProductDetailsHeader
+        product={product}
+        onClose={onClose}
+        isRTL={isRTL}
+        t={t}
+      />
       <Tabs
         activeKey={activeTab}
         onChange={setActiveTab}
         items={tabItems}
         style={{ padding: '0 24px 24px' }}
-
       />
     </Modal>
   );

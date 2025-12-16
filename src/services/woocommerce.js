@@ -29,6 +29,7 @@ const ERROR_MESSAGES = {
 };
 
 const handleError = (error) => {
+  console.log('woocommerce.js handleError called with:', error.message);
   if (error.request && !error.response) {
     const networkError = new Error('Unable to connect to the server. Please check your internet connection.');
     networkError.code = 'NETWORK_ERROR';
@@ -48,11 +49,11 @@ const handleError = (error) => {
 
     if (data?.message) {
       // SECURITY: Sanitize error message to prevent sensitive data exposure
-      const sanitizedMessage = process.env.NODE_ENV === 'development' 
-        ? data.message 
+      const sanitizedMessage = process.env.NODE_ENV === 'development'
+        ? data.message
         : (data.message.includes('API') || data.message.includes('credentials') || data.message.includes('key')
-            ? 'An error occurred while processing your request.'
-            : data.message);
+          ? 'An error occurred while processing your request.'
+          : data.message);
       const err = new Error(sanitizedMessage);
       err.code = data.code || 'API_ERROR';
       err.status = status;
@@ -62,11 +63,11 @@ const handleError = (error) => {
     if (data?.error) {
       // SECURITY: Sanitize error message
       const errorText = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
-      const sanitizedMessage = process.env.NODE_ENV === 'development' 
-        ? errorText 
+      const sanitizedMessage = process.env.NODE_ENV === 'development'
+        ? errorText
         : (errorText.includes('API') || errorText.includes('credentials') || errorText.includes('key')
-            ? 'An error occurred while processing your request.'
-            : errorText);
+          ? 'An error occurred while processing your request.'
+          : errorText);
       const err = new Error(sanitizedMessage);
       err.code = data.code || 'API_ERROR';
       err.status = status;
@@ -523,10 +524,19 @@ export const attributesAPI = {
 export const mediaAPI = {
   upload: async (formData) => {
     try {
+      console.log('mediaAPI.upload: Starting upload request to /media');
       // Backend should handle media upload to WP
-      const response = await api.post('/media', formData);
+      const response = await api.post('/media', formData, {
+        timeout: 180000, // 180s timeout (3 mins) to handle slow WP servers
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          console.log(`mediaAPI.upload: Progress ${percentCompleted}%`);
+        }
+      });
+      console.log('mediaAPI.upload: Response received', response.status);
       return response.data;
     } catch (error) {
+      console.error('mediaAPI.upload: Caught error', error);
       handleError(error);
     }
   },
@@ -662,8 +672,8 @@ export const couponsAPI = {
         // Validate and sanitize email restrictions
         email_restrictions: couponData.email_restrictions && Array.isArray(couponData.email_restrictions)
           ? couponData.email_restrictions
-              .filter(email => typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
-              .map(email => email.trim().toLowerCase())
+            .filter(email => typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+            .map(email => email.trim().toLowerCase())
           : undefined,
         // Ensure arrays contain only positive integers
         product_ids: couponData.product_ids && Array.isArray(couponData.product_ids)
@@ -679,7 +689,7 @@ export const couponsAPI = {
           ? couponData.exclude_product_categories.filter(id => Number.isInteger(id) && id > 0)
           : undefined,
       };
-      
+
       const response = await api.post('/coupons', sanitizedData);
       return response.data;
     } catch (error) {
@@ -697,8 +707,8 @@ export const couponsAPI = {
         // Validate and sanitize email restrictions
         email_restrictions: couponData.email_restrictions !== undefined && Array.isArray(couponData.email_restrictions)
           ? couponData.email_restrictions
-              .filter(email => typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
-              .map(email => email.trim().toLowerCase())
+            .filter(email => typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+            .map(email => email.trim().toLowerCase())
           : undefined,
         // Ensure arrays contain only positive integers
         product_ids: couponData.product_ids !== undefined && Array.isArray(couponData.product_ids)
@@ -714,7 +724,7 @@ export const couponsAPI = {
           ? couponData.exclude_product_categories.filter(id => Number.isInteger(id) && id > 0)
           : undefined,
       };
-      
+
       const response = await api.put(`/coupons/${id}`, sanitizedData);
       return response.data;
     } catch (error) {

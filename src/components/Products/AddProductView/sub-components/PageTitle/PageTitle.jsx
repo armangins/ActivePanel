@@ -1,50 +1,33 @@
 import { memo } from 'react';
+import { Typography, Flex, theme } from 'antd';
+
+const { Title, Text } = Typography;
 
 /**
  * PageTitle Component
- * 
- * A flexible and reusable page title component with support for:
- * 
- * @param {string|ReactNode} title - Main page title (required)
- * @param {string|ReactNode} subtitle - Optional subtitle/description text
- * @param {ReactNode|Array<ReactNode>} actions - Optional action buttons/links (single or array)
- * @param {string} className - Additional CSS classes for the container
- * @param {string} titleClassName - Additional CSS classes for the title
- * @param {string} subtitleClassName - Additional CSS classes for the subtitle
- * @param {string} actionsClassName - Additional CSS classes for the actions container
- * @param {boolean} reverseLayout - If true, uses flex-row-reverse instead of flex-row (default: false)
- * @param {string} size - Title size: 'sm', 'md', 'lg', 'xl' (default: 'lg')
- * @param {boolean} alignRight - If true, aligns title to right (default: true for RTL)
- * @param {string} spacing - Bottom margin: 'none', 'sm', 'md', 'lg' (default: 'lg')
  */
 const PageTitle = ({
   title,
   subtitle,
   actions,
-  className = '',
-  titleClassName = '',
-  subtitleClassName = '',
-  actionsClassName = '',
   reverseLayout = false,
   size = 'lg',
-  alignRight = true,
   spacing = 'lg',
 }) => {
-  // Size variants for title
-  const sizeClasses = {
-    sm: 'text-lg',
-    md: 'text-xl',
-    lg: 'text-2xl',
-    xl: 'text-3xl',
+  // Size variants for title mapped to Antd Title levels
+  const sizeLevel = {
+    sm: 5,
+    md: 4,
+    lg: 2,
+    xl: 1,
   };
 
-  // Spacing variants for bottom margin
-  const spacingClasses = {
-    none: '',
-    sm: 'mb-3',
-    md: 'mb-4',
-    lg: 'mb-6',
-    xl: 'mb-8',
+  const marginBottomMap = {
+    none: 0,
+    sm: 12,
+    md: 16,
+    lg: 24,
+    xl: 32,
   };
 
   // Normalize actions to array (handle single action, array of actions, or null)
@@ -59,55 +42,50 @@ const PageTitle = ({
 
   return (
     <div
-      className={`
-        flex items-center justify-between
-        ${reverseLayout ? 'flex-row-reverse' : 'flex-row'}
-        ${spacingClasses[spacing] || spacingClasses.lg}
-        ${className}
-      `.trim()}
+      style={{
+        marginBottom: marginBottomMap[spacing] ?? 24,
+        display: 'flex',
+        flexDirection: reverseLayout ? 'row-reverse' : 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 16,
+        width: '100%',
+        flexWrap: 'wrap'
+      }}
     >
-      {/* Title Section - Flexible width, allows text wrapping */}
-      <div className="flex-1 min-w-0">
+      {/* Title Section */}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
         {title && (
-          <h1
-            className={`
-              ${sizeClasses[size] || sizeClasses.lg}
-              font-bold text-gray-900
-              ${alignRight ? 'text-right' : 'text-left'}
-              ${titleClassName}
-            `.trim()}
+          <Title
+            level={sizeLevel[size] || 2}
+            style={{ margin: 0 }}
           >
             {title}
-          </h1>
+          </Title>
         )}
         {subtitle && (
-          <p
-            className={`
-              text-sm text-gray-600 mt-1
-              ${alignRight ? 'text-right' : 'text-left'}
-              ${subtitleClassName}
-            `.trim()}
+          <Text
+            type="secondary"
+            style={{ marginTop: 4, display: 'block' }}
           >
             {subtitle}
-          </p>
+          </Text>
         )}
       </div>
 
-      {/* Actions Section - Auto-wraps when needed, proper spacing */}
+      {/* Actions Section */}
       {actionsArray.length > 0 && (
-        <div
-          className={`
-            flex items-center gap-2 flex-wrap
-            ${reverseLayout ? 'justify-start' : 'justify-end'}
-            ${actionsClassName}
-          `.trim()}
+        <Flex
+          gap="small"
+          wrap="wrap"
+          justify={reverseLayout ? 'flex-start' : 'flex-end'}
         >
           {actionsArray.map((action, index) => (
             <div key={action?.key || index}>
               {action}
             </div>
           ))}
-        </div>
+        </Flex>
       )}
     </div>
   );

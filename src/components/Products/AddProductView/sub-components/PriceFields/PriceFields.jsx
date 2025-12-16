@@ -81,7 +81,7 @@ const PriceFields = ({
     <>
       <Row gutter={16}>
         {/* Regular Price */}
-        <Col span={8}>
+        <Col xs={24} md={8}>
           <div>
             <Input
               label={t('regularPrice')}
@@ -125,7 +125,7 @@ const PriceFields = ({
         </Col>
 
         {/* Sale Price */}
-        <Col span={8}>
+        <Col xs={24} md={8}>
           <div>
             <Input
               label={t('salePrice')}
@@ -180,7 +180,7 @@ const PriceFields = ({
         </Col>
 
         {/* Stock Quantity */}
-        <Col span={8}>
+        <Col xs={24} md={8}>
           <Input
             label={t('stockQuantity') || 'כמות במלאי'}
             type="number"

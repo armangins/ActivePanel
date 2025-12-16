@@ -106,7 +106,7 @@ const ProductDetailsPanel = ({
 
         {/* Product Name and SKU */}
         <Row gutter={16}>
-          <Col span={12}>
+          <Col xs={24} md={12}>
             <Controller
               name="product_name"
               control={control}
@@ -128,7 +128,7 @@ const ProductDetailsPanel = ({
             />
           </Col>
 
-          <Col span={12}>
+          <Col xs={24} md={12}>
             <Text strong style={{ display: 'block', fontSize: '14px', marginBottom: '8px', textAlign: 'right' }}>
               {t('sku')}
             </Text>

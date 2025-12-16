@@ -1,6 +1,7 @@
 import React from 'react';
 import { FormProvider } from 'react-hook-form';
 import { CalculatorOutlined as Calculator } from '@ant-design/icons';
+import { Row, Col } from 'antd';
 import { Breadcrumbs, Button } from '../../ui';
 import {
   PageTitle,
@@ -28,135 +29,129 @@ const AddProductView = () => {
 
       {/* Title and Navigation */}
       <PageTitle
-        title={vm.isEditMode ? vm.t('editProduct') : vm.t('addProduct')}
-        actions={
-          <Button
-            variant="ghost"
-            onClick={() => vm.navigate('/calculator')}
-            icon={Calculator}
-          >
-            {vm.t('calculator') || 'מחשבון'}
-          </Button>
-        }
+        title={vm.isEditMode ? 'עריכת מוצר' : 'הוספת מוצר חדש'}
       />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px 24px' }}>
-        <FormProvider {...vm.methods}>
-          <form
-            style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px 24px' }}
-            onSubmit={(e) => e.preventDefault()}
-            noValidate
-            autoComplete="off"
-          >
-
-
+      <FormProvider {...vm.methods}>
+        <form
+          onSubmit={(e) => e.preventDefault()}
+          noValidate
+          autoComplete="off"
+          style={{ width: '100%' }}
+        >
+          <Row gutter={[24, 24]}>
             {/* Left Panel - Product Details */}
-            <ProductDetailsPanel
-              // passing simplified props
-              productType={vm.productType}
-              onProductTypeChange={vm.handleProductTypeChange}
-              categories={vm.categories}
-              selectedDiscount={vm.selectedDiscount}
-              onDiscountSelect={vm.handleDiscountSelect}
-              onDiscountClear={vm.handleDiscountClear}
-              generatingSKU={vm.generatingSKU}
-              onGenerateSKU={vm.handleGenerateSKU}
-              improvingShortDescription={vm.improvingShortDescription}
-              onImproveShortDescription={vm.handleImproveShortDescription}
-              improvingDescription={vm.improvingDescription}
-              onImproveDescription={vm.handleImproveDescription}
-              onCalculatorClick={() => vm.setShowCalculatorModal(true)}
-              onScheduleClick={() => {
-                vm.setScheduleDates({
-                  start: vm.formData.date_on_sale_from || '',
-                  end: vm.formData.date_on_sale_to || ''
-                });
-                vm.setShowScheduleModal(true);
-              }}
-              scheduleDates={vm.scheduleDates}
-              saving={vm.saving}
-            />
+            <Col xs={24} lg={12} xl={14}>
+              <ProductDetailsPanel
+                // passing simplified props
+                productType={vm.productType}
+                onProductTypeChange={vm.handleProductTypeChange}
+                categories={vm.categories}
+                selectedDiscount={vm.selectedDiscount}
+                onDiscountSelect={vm.handleDiscountSelect}
+                onDiscountClear={vm.handleDiscountClear}
+                generatingSKU={vm.generatingSKU}
+                onGenerateSKU={vm.handleGenerateSKU}
+                improvingShortDescription={vm.improvingShortDescription}
+                onImproveShortDescription={vm.handleImproveShortDescription}
+                improvingDescription={vm.improvingDescription}
+                onImproveDescription={vm.handleImproveDescription}
+                onCalculatorClick={() => vm.setShowCalculatorModal(true)}
+                onScheduleClick={() => {
+                  vm.setScheduleDates({
+                    start: vm.formData.date_on_sale_from || '',
+                    end: vm.formData.date_on_sale_to || ''
+                  });
+                  vm.setShowScheduleModal(true);
+                }}
+                scheduleDates={vm.scheduleDates}
+                saving={vm.saving}
+              />
+            </Col>
 
             {/* Right Panel - Media, Attributes, Variations */}
-            <ProductSidePanel
-              // Images
-              images={vm.formData.images}
-              uploadingImage={vm.uploadingImage}
-              imageError={vm.errors.images?.message}
-              onImageUpload={vm.handleImageUpload}
-              onImageRemove={vm.removeImage}
+            <Col xs={24} lg={12} xl={10}>
+              <ProductSidePanel
+                // Images
+                images={vm.formData.images}
+                uploadingImage={vm.uploadingImage}
+                imageError={vm.errors.images?.message}
+                onImageUpload={vm.handleImageUpload}
+                onImageRemove={vm.removeImage}
 
-              // Attributes
-              productType={vm.productType}
-              attributes={vm.attributes}
-              attributeTerms={vm.attributeTerms}
-              selectedAttributeIds={vm.selectedAttributeIds}
-              selectedAttributeTerms={vm.selectedAttributeTerms}
-              loadingAttributes={vm.loadingAttributes}
-              onToggleAttribute={vm.toggleAttribute}
-              onToggleTerm={vm.toggleAttributeTerm}
-              isAttributeSelected={vm.isAttributeSelected}
-              isTermSelected={vm.isTermSelected}
-              attributeErrors={vm.attributeErrors}
-              onRetryLoadTerms={(attributeId) => {
-                // Force reload by clearing error and recalling load
-                vm.loadAttributeTerms(attributeId);
-              }}
+                // Attributes
+                productType={vm.productType}
+                attributes={vm.attributes}
+                attributeTerms={vm.attributeTerms}
+                selectedAttributeIds={vm.selectedAttributeIds}
+                selectedAttributeTerms={vm.selectedAttributeTerms}
+                loadingAttributes={vm.loadingAttributes}
+                onToggleAttribute={vm.toggleAttribute}
+                onToggleTerm={vm.toggleAttributeTerm}
+                isAttributeSelected={vm.isAttributeSelected}
+                isTermSelected={vm.isTermSelected}
+                attributeErrors={vm.attributeErrors}
+                onRetryLoadTerms={(attributeId) => {
+                  // Force reload by clearing error and recalling load
+                  vm.loadAttributeTerms(attributeId);
+                }}
 
-              // Variations
-              variations={vm.variations}
-              pendingVariations={vm.pendingVariations}
-              loadingVariations={vm.loadingVariations}
-              isEditMode={vm.isEditMode}
-              id={vm.id}
-              onAddVariationClick={() => {
-                // We need to update variation form data directly since it's separate state
-                vm.setVariationFormData(prev => ({
-                  ...prev,
-                  regular_price: vm.formData.regular_price || '',
-                  sale_price: vm.formData.sale_price || '',
-                  sku: vm.formData.sku || '',
-                  stock_quantity: vm.formData.stock_quantity || '',
-                  attributes: vm.selectedAttributeIds.reduce((acc, attrId) => {
-                    const selectedTerms = vm.selectedAttributeTerms[attrId];
-                    // If terms are selected, pre-fill with the first one
-                    // This matches user expectation: "once i choose the att... modal should be with the attr that i choose"
-                    if (selectedTerms && selectedTerms.length > 0) {
-                      acc[attrId] = selectedTerms[0];
-                    }
-                    return acc;
-                  }, {})
-                }));
-                vm.setShowCreateVariationModal(true);
-              }}
-              onVariationClick={vm.handleEditVariation}
-              onDeletePendingVariation={vm.handleDeletePendingVariation}
-              onDeleteVariation={vm.handleDeleteVariation}
+                // Variations
+                variations={vm.variations}
+                pendingVariations={vm.pendingVariations}
+                loadingVariations={vm.loadingVariations}
+                isEditMode={vm.isEditMode}
+                id={vm.id}
+                onAddVariationClick={() => {
+                  // We need to update variation form data directly since it's separate state
+                  vm.setVariationFormData(prev => ({
+                    ...prev,
+                    regular_price: vm.formData.regular_price || '',
+                    sale_price: vm.formData.sale_price || '',
+                    sku: vm.formData.sku || '',
+                    stock_quantity: vm.formData.stock_quantity || '',
+                    attributes: vm.selectedAttributeIds.reduce((acc, attrId) => {
+                      const selectedTerms = vm.selectedAttributeTerms[attrId];
+                      // If terms are selected, pre-fill with the first one
+                      // This matches user expectation: "once i choose the att... modal should be with the attr that i choose"
+                      if (selectedTerms && selectedTerms.length > 0) {
+                        acc[attrId] = selectedTerms[0];
+                      }
+                      return acc;
+                    }, {})
+                  }));
+                  vm.setShowCreateVariationModal(true);
+                }}
+                onVariationClick={vm.handleEditVariation}
+                onDeletePendingVariation={vm.handleDeletePendingVariation}
+                onDeleteVariation={vm.handleDeleteVariation}
+                onGenerateVariations={vm.handleGenerateVariations}
 
-              // Utils
-              formatCurrency={vm.formatCurrency}
-              isRTL={vm.isRTL}
-              t={vm.t}
-              status={vm.formData.status}
+                // Utils
+                formatCurrency={vm.formatCurrency}
+                isRTL={vm.isRTL}
+                t={vm.t}
+                status={vm.formData.status}
 
-              // Modals State
-              showCalculatorModal={vm.showCalculatorModal}
-              setShowCalculatorModal={vm.setShowCalculatorModal}
-              showScheduleModal={vm.showScheduleModal}
-              setShowScheduleModal={vm.setShowScheduleModal}
-              scheduleDates={vm.scheduleDates}
-              setScheduleDates={vm.setScheduleDates}
+                // Modals State
+                showCalculatorModal={vm.showCalculatorModal}
+                setShowCalculatorModal={vm.setShowCalculatorModal}
+                showScheduleModal={vm.showScheduleModal}
+                setShowScheduleModal={vm.setShowScheduleModal}
+                scheduleDates={vm.scheduleDates}
+                setScheduleDates={vm.setScheduleDates}
 
-              // Actions
-              loadingProduct={vm.loadingProduct}
-              saving={vm.saving}
-              onSave={vm.handleSave}
-              submitError={vm.errors.root?.message}
-              setFormData={vm.setFormData}
-            />
-          </form>
-        </FormProvider>
-      </div>
+                // Actions
+                loadingProduct={vm.loadingProduct}
+                saving={vm.saving}
+                onSave={vm.handleSave}
+                submitError={vm.errors.root?.message}
+                setFormData={vm.setFormData}
+              />
+            </Col>
+          </Row>
+        </form>
+      </FormProvider>
 
       {/* Success Modal */}
       <SuccessModal
@@ -199,7 +194,7 @@ const AddProductView = () => {
       {/* Create Variation Modal */}
       <CreateVariationModal
         isOpen={vm.showCreateVariationModal}
-        onClose={() => vm.setShowEditVariationModal(false)}
+        onClose={() => vm.setShowCreateVariationModal(false)}
         formData={vm.variationFormData}
         onFormDataChange={vm.setVariationFormData}
         selectedAttributeIds={vm.selectedAttributeIds}
@@ -214,6 +209,8 @@ const AddProductView = () => {
           ...vm.variations.map(v => v.sku).filter(Boolean),
           ...vm.pendingVariations.map(v => v.sku).filter(Boolean)
         ]}
+        onToggleAttribute={vm.toggleAttribute}
+        isAttributeSelected={vm.isAttributeSelected}
         onSubmit={vm.handleCreateVariation}
       />
     </div>

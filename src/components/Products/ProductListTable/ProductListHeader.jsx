@@ -1,60 +1,74 @@
 import { UpOutlined as ChevronUp, DownOutlined as ChevronDown, SwapOutlined as ArrowUpDown } from '@ant-design/icons';
 import { Button } from '../../ui';
+import { Checkbox, theme, Space } from 'antd';
 
 /**
  * ProductListHeader Component
  * 
  * Table header row with column titles.
- * 
- * @param {Array} products - Array of all products
- * @param {Boolean} isRTL - Whether the layout is right-to-left
- * @param {Function} t - Translation function
- * @param {String} sortField - Current sort field ('name' or 'price')
- * @param {String} sortDirection - Current sort direction ('asc' or 'desc')
- * @param {Function} onSort - Callback when sort is triggered
- * @param {Set} selectedProductIds - Set of selected product IDs
- * @param {Function} onSelectAll - Callback when select all is toggled
  */
 const ProductListHeader = ({ products, isRTL, t, sortField, sortDirection, onSort, selectedProductIds, onSelectAll }) => {
+  const { token } = theme.useToken();
   const allSelected = products.length > 0 && products.every(p => selectedProductIds?.has(p.id));
   const someSelected = products.some(p => selectedProductIds?.has(p.id)) && !allSelected;
+
   const getSortIcon = (field) => {
     if (sortField !== field) {
-      return <ArrowUpDown className="w-4 h-4 text-gray-400" />;
+      return <ArrowUpDown style={{ fontSize: 14, color: token.colorTextQuaternary }} />;
     }
     return sortDirection === 'asc'
-      ? <ChevronUp className="w-4 h-4 text-primary-500" />
-      : <ChevronDown className="w-4 h-4 text-primary-500" />;
+      ? <ChevronUp style={{ fontSize: 14, color: token.colorPrimary }} />
+      : <ChevronDown style={{ fontSize: 14, color: token.colorPrimary }} />;
+  };
+
+  const thStyle = {
+    padding: '12px 16px',
+    textAlign: 'right', // Default alignment
+    borderBottom: `1px solid ${token.colorBorderSecondary}`,
+    backgroundColor: token.colorFillQuaternary,
+    fontSize: 14,
+    fontWeight: 500,
+    color: token.colorText,
+    whiteSpace: 'nowrap',
+    direction: isRTL ? 'rtl' : 'ltr'
   };
 
   return (
-    <thead className="bg-gray-50 border-b border-gray-200">
+    <thead style={{ backgroundColor: token.colorFillQuaternary }}>
       <tr>
         {/* Checkbox Column */}
-        <th className="py-3 px-4 w-12 text-center">
-          <input
-            type="checkbox"
+        <th style={{ ...thStyle, width: 48, textAlign: 'center' }}>
+          <Checkbox
             checked={allSelected}
-            ref={(input) => {
-              if (input) input.indeterminate = someSelected;
-            }}
+            indeterminate={someSelected}
             onChange={(e) => {
               if (onSelectAll) {
                 onSelectAll(e.target.checked);
               }
             }}
-            className="w-4 h-4 text-primary-500 rounded border-gray-300 focus:ring-primary-500 focus:ring-2 cursor-pointer"
             aria-label={t('selectAll') || 'Select all products'}
           />
         </th>
 
         {/* Products Column */}
-        <th className="py-3 px-4 text-sm font-medium text-gray-700 text-right">
+        <th style={thStyle}>
           <Button
             variant="ghost"
             onClick={() => onSort && onSort('name')}
-            className={`flex items-center !justify-start text-right gap-2 w-full hover:text-primary-500 transition-colors cursor-pointer p-0 h-auto hover:bg-transparent ${sortField === 'name' ? 'text-primary-500' : ''
-              }`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-start',
+              width: '100%',
+              padding: 0,
+              height: 'auto',
+              color: sortField === 'name' ? token.colorPrimary : 'inherit',
+              gap: 8,
+              fontSize: 'inherit',
+              fontWeight: 'inherit',
+              border: 'none',
+              backgroundColor: 'transparent'
+            }}
           >
             {t('products')}
             {getSortIcon('name')}
@@ -62,19 +76,31 @@ const ProductListHeader = ({ products, isRTL, t, sortField, sortDirection, onSor
         </th>
 
         {/* Category Column */}
-        <th className="py-3 px-4 text-sm font-medium text-gray-700 text-right">
-          <div className="flex items-center justify-start gap-2">
+        <th style={thStyle}>
+          <Space>
             {t('category')}
-          </div>
+          </Space>
         </th>
 
         {/* Price Column */}
-        <th className="py-3 px-4 text-sm font-medium text-gray-700 text-right">
+        <th style={thStyle}>
           <Button
             variant="ghost"
             onClick={() => onSort && onSort('price')}
-            className={`flex items-center !justify-start text-right gap-2 w-full hover:text-primary-500 transition-colors cursor-pointer p-0 h-auto hover:bg-transparent ${sortField === 'price' ? 'text-primary-500' : ''
-              }`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-start',
+              width: '100%',
+              padding: 0,
+              height: 'auto',
+              color: sortField === 'price' ? token.colorPrimary : 'inherit',
+              gap: 8,
+              fontSize: 'inherit',
+              fontWeight: 'inherit',
+              border: 'none',
+              backgroundColor: 'transparent'
+            }}
           >
             {t('price')}
             {getSortIcon('price')}
@@ -82,21 +108,21 @@ const ProductListHeader = ({ products, isRTL, t, sortField, sortDirection, onSor
         </th>
 
         {/* Sale Price Column */}
-        <th className="py-3 px-4 text-sm font-medium text-gray-700 text-right">
-          <div className="flex items-center justify-start gap-2">
+        <th style={thStyle}>
+          <Space>
             {t('salePrice') || 'Sale Price'}
-          </div>
+          </Space>
         </th>
 
         {/* Stock Status Column */}
-        <th className="py-3 px-4 text-sm font-medium text-gray-700 text-right">
-          <div className="flex items-center justify-start gap-2">
+        <th style={thStyle}>
+          <Space>
             {t('stockStatus')}
-          </div>
+          </Space>
         </th>
 
         {/* Actions Column */}
-        <th className="py-3 px-4 w-16 text-sm font-medium text-gray-700 text-center">
+        <th style={{ ...thStyle, width: 64, textAlign: 'center' }}>
           <span className="sr-only">{t('actions')}</span>
         </th>
       </tr>
