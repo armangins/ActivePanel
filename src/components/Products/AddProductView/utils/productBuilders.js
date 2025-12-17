@@ -192,15 +192,26 @@ export const cleanVariationData = (variationData) => {
   };
 };
 
+/**
+ * Map variation data for display in the UI
+ * @param {Object} variation - Variation data
+ * @param {boolean} isPending - Whether it's a pending (unsaved) variation
+ * @returns {Object} - Formatted variation for display
+ */
+export const mapVariationToDisplay = (variation, isPending) => {
+  if (!isPending) return variation;
 
-
-
-
-
-
-
-
-
-
-
-
+  return {
+    ...variation,
+    name: variation.attributes?.map(attr => `${attr.name}: ${attr.option}`).join(', ') || 'וריאציה חדשה',
+    price: variation.regular_price,
+    regular_price: variation.regular_price,
+    sale_price: variation.sale_price,
+    sku: variation.sku,
+    stock_quantity: variation.stock_quantity,
+    stock_status: variation.stock_status || 'instock',
+    image: variation.image ? {
+      src: variation.image.src || variation.image.url || variation.image.source_url
+    } : null
+  };
+};

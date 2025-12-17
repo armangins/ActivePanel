@@ -29,10 +29,9 @@ export const useVariations = () => {
 
     setLoadingVariations(true);
     try {
-      const variationsData = await variationsAPI.getByProductId(productId);
-      setVariations(variationsData || []);
+      const response = await variationsAPI.list(productId);
+      setVariations(response.data || []);
     } catch (err) {
-      // Failed to load variations
       setVariations([]);
     } finally {
       setLoadingVariations(false);
@@ -69,6 +68,49 @@ export const useVariations = () => {
     setDeletedVariationIds([]);
   }, []);
 
+  /**
+   * Helper to validate variation form data
+   */
+  const validateVariation = useCallback(({
+    parentSku,
+    existingVariationSkus,
+    t
+  }) => {
+    const selectedAttributes = Object.keys(variationFormData.attributes).filter(
+      attrId => variationFormData.attributes[attrId]
+    );
+
+    if (selectedAttributes.length === 0) {
+      alert(t('selectAtLeastOneAttribute') || 'אנא בחר לפחות תכונה אחת');
+      return null;
+    }
+
+    if (!variationFormData.regular_price) {
+      alert(t('regularPriceRequired') || 'מחיר רגיל הוא שדה חובה');
+      return null;
+    }
+
+    if (variationFormData.stock_quantity === '' || variationFormData.stock_quantity === null || variationFormData.stock_quantity === undefined) {
+      alert(t('stockQuantityRequired') || 'כמות במלאי היא שדה חובה');
+      return null;
+    }
+
+    const currentSku = (variationFormData.sku || '').trim();
+    if (currentSku) {
+      if (parentSku && currentSku === parentSku.trim()) {
+        alert(t('skuCannotMatchParent') || 'המק״ט לא יכול להיות זהה למק״ט האב');
+        return null;
+      }
+
+      if (existingVariationSkus.some(sku => sku && sku.trim() === currentSku)) {
+        alert(t('skuAlreadyUsedByVariation') || 'מק״ט זה כבר בשימוש על ידי וריאציה אחרת');
+        return null;
+      }
+    }
+
+    return selectedAttributes;
+  }, [variationFormData]);
+
   const createVariation = useCallback(async ({
     isEditMode,
     productId,
@@ -79,49 +121,8 @@ export const useVariations = () => {
     existingVariationSkus = [],
     t
   }) => {
-    // Validate that at least one attribute is selected
-    const selectedAttributes = Object.keys(variationFormData.attributes).filter(
-      attrId => variationFormData.attributes[attrId]
-    );
-
-    if (selectedAttributes.length === 0) {
-      alert(t('selectAtLeastOneAttribute') || 'אנא בחר לפחות תכונה אחת');
-      return false;
-    }
-
-    // Check if regular price is set
-    const regularPrice = variationFormData.regular_price || formData.regular_price || '';
-    if (!regularPrice) {
-      alert(t('regularPriceRequired') || 'מחיר רגיל הוא שדה חובה');
-      return false;
-    }
-
-    // Check if stock quantity is set
-    const stockQuantity = variationFormData.stock_quantity;
-    if (stockQuantity === '' || stockQuantity === null || stockQuantity === undefined) {
-      alert(t('stockQuantityRequired') || 'כמות במלאי היא שדה חובה');
-      return false;
-    }
-
-    // Validate SKU for duplicates
-    const currentSku = (variationFormData.sku || '').trim();
-    if (currentSku) {
-      // Check against parent SKU
-      if (parentSku && currentSku === parentSku.trim()) {
-        alert(t('skuCannotMatchParent') || 'המק״ט לא יכול להיות זהה למק״ט האב');
-        return false;
-      }
-
-      // Check against other variations
-      const hasDuplicate = existingVariationSkus.some(sku => {
-        return sku && sku.trim() === currentSku;
-      });
-
-      if (hasDuplicate) {
-        alert(t('skuAlreadyUsedByVariation') || 'מק״ט זה כבר בשימוש על ידי וריאציה אחרת');
-        return false;
-      }
-    }
+    const selectedAttributes = validateVariation({ parentSku, existingVariationSkus, t });
+    if (!selectedAttributes) return false;
 
     setCreatingVariation(true);
     try {
@@ -134,18 +135,15 @@ export const useVariations = () => {
         parentSalePrice: formData.sale_price
       });
 
-      // If in edit mode and product exists, save to WooCommerce immediately
       if (isEditMode && productId) {
         await variationsAPI.create(productId, variationData);
         await loadVariations(productId);
       } else {
-        // In add mode, save locally with temporary ID
-        const tempVariation = {
+        setPendingVariations(prev => [...prev, {
           id: `temp-${Date.now()}-${Math.random()}`,
           ...variationData,
           image: variationFormData.image || null,
-        };
-        setPendingVariations(prev => [...prev, tempVariation]);
+        }]);
       }
 
       resetVariationForm();
@@ -157,9 +155,7 @@ export const useVariations = () => {
     } finally {
       setCreatingVariation(false);
     }
-  }, [variationFormData, resetVariationForm, loadVariations]);
-
-
+  }, [variationFormData, validateVariation, resetVariationForm, loadVariations]);
 
   const updateVariation = useCallback(async ({
     productId,
@@ -171,48 +167,8 @@ export const useVariations = () => {
     existingVariationSkus = [],
     t
   }) => {
-    // Validate that at least one attribute is selected
-    const selectedAttributes = Object.keys(variationFormData.attributes).filter(
-      attrId => variationFormData.attributes[attrId]
-    );
-
-    if (selectedAttributes.length === 0) {
-      alert(t('selectAtLeastOneAttribute') || 'אנא בחר לפחות תכונה אחת');
-      return false;
-    }
-
-    const regularPrice = variationFormData.regular_price || formData.regular_price || '';
-    if (!regularPrice) {
-      alert(t('regularPriceRequired') || 'מחיר רגיל הוא שדה חובה');
-      return false;
-    }
-
-    // Check if stock quantity is set
-    const stockQuantity = variationFormData.stock_quantity;
-    if (stockQuantity === '' || stockQuantity === null || stockQuantity === undefined) {
-      alert(t('stockQuantityRequired') || 'כמות במלאי היא שדה חובה');
-      return false;
-    }
-
-    // Validate SKU for duplicates
-    const currentSku = (variationFormData.sku || '').trim();
-    if (currentSku) {
-      // Check against parent SKU
-      if (parentSku && currentSku === parentSku.trim()) {
-        alert(t('skuCannotMatchParent') || 'המק״ט לא יכול להיות זהה למק״ט האב');
-        return false;
-      }
-
-      // Check against other variations (excluding current one)
-      const hasDuplicate = existingVariationSkus.some(sku => {
-        return sku && sku.trim() === currentSku;
-      });
-
-      if (hasDuplicate) {
-        alert(t('skuAlreadyUsedByVariation') || 'מק״ט זה כבר בשימוש על ידי וריאציה אחרת');
-        return false;
-      }
-    }
+    const selectedAttributes = validateVariation({ parentSku, existingVariationSkus, t });
+    if (!selectedAttributes) return false;
 
     setCreatingVariation(true);
     try {
@@ -225,28 +181,16 @@ export const useVariations = () => {
         parentSalePrice: formData.sale_price
       });
 
-      // Check if this is a pending variation
       const isPending = pendingVariations.some(v => v.id === editingVariationId);
 
       if (isPending) {
-        // Update locally
         setPendingVariations(prev => prev.map(v =>
-          v.id === editingVariationId
-            ? {
-              ...v,
-              ...variationData,
-              image: variationFormData.image || null,
-              // Ensure we preserve the ID
-              id: editingVariationId
-            }
-            : v
+          v.id === editingVariationId ? { ...v, ...variationData, image: variationFormData.image || null, id: editingVariationId } : v
         ));
       } else if (productId && editingVariationId) {
-        // Update via API (only if product exists and variation has a real ID)
         await variationsAPI.update(productId, editingVariationId, variationData);
         await loadVariations(productId);
       } else {
-        // This shouldn't happen, but handle gracefully
         alert(t('cannotUpdateVariation') || 'לא ניתן לעדכן וריאציה זו');
         return false;
       }
@@ -261,7 +205,7 @@ export const useVariations = () => {
     } finally {
       setCreatingVariation(false);
     }
-  }, [variationFormData, resetVariationForm, loadVariations, pendingVariations]);
+  }, [variationFormData, validateVariation, resetVariationForm, loadVariations, pendingVariations]);
 
   const clearPendingVariations = useCallback(() => {
     setPendingVariations([]);

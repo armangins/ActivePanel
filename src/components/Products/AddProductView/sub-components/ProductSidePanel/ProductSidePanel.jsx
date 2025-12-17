@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { SaveOutlined as Save, PlusOutlined as Plus } from '@ant-design/icons';
 import { Space, Alert } from 'antd';
 import { Button } from '../../../../ui';
 import {
     ProductImagesSection,
-    AttributesSection,
     VariationsSection,
     ScheduleModal
 } from '../';
@@ -13,12 +12,11 @@ import CalculatorModal from '../../../CalculatorModal/CalculatorModal';
 const ProductSidePanel = ({
     // Images
     images, uploadingImage, imageError, onImageUpload, onImageRemove,
-    // Attributes
-    productType, attributes, attributeTerms, selectedAttributeIds, selectedAttributeTerms,
-    loadingAttributes, onToggleAttribute, onToggleTerm, isAttributeSelected, isTermSelected,
+    // Product Type
+    productType,
     // Variations
     variations, pendingVariations, loadingVariations, isEditMode, id,
-    onAddVariationClick, onVariationClick, onDeletePendingVariation, onDeleteVariation, onGenerateVariations,
+    onAddVariationClick, onVariationClick, onDeletePendingVariation, onDeleteVariation,
     // Utils
     formatCurrency, isRTL, t, status,
     // Modals State
@@ -28,9 +26,29 @@ const ProductSidePanel = ({
     loadingProduct, saving, onSave, submitError,
     // Setters needed for modals
     setFormData,
-    // Error Handling
-    attributeErrors, onRetryLoadTerms
 }) => {
+
+    const handleCalculatorClose = useCallback(() => setShowCalculatorModal(false), [setShowCalculatorModal]);
+
+    const handleSetPrice = useCallback((price) => {
+        setFormData(prev => ({ ...prev, regular_price: price.toString() }));
+        setShowCalculatorModal(false);
+    }, [setFormData, setShowCalculatorModal]);
+
+    const handleScheduleClose = useCallback(() => setShowScheduleModal(false), [setShowScheduleModal]);
+
+    const handleScheduleSave = useCallback(() => {
+        setFormData(prev => ({
+            ...prev,
+            date_on_sale_from: scheduleDates.start || '',
+            date_on_sale_to: scheduleDates.end || ''
+        }));
+        setShowScheduleModal(false);
+    }, [setFormData, scheduleDates, setShowScheduleModal]);
+
+    const handleSavePublish = useCallback(() => onSave('publish'), [onSave]);
+    const handleSaveDraft = useCallback(() => onSave('draft'), [onSave]);
+
     return (
         <Space direction="vertical" size={24} style={{ width: '100%' }}>
             {/* Upload Images */}
@@ -63,27 +81,17 @@ const ProductSidePanel = ({
             {/* Calculator Modal */}
             <CalculatorModal
                 isOpen={showCalculatorModal}
-                onClose={() => setShowCalculatorModal(false)}
-                onSetPrice={(price) => {
-                    setFormData(prev => ({ ...prev, regular_price: price.toString() }));
-                    setShowCalculatorModal(false);
-                }}
+                onClose={handleCalculatorClose}
+                onSetPrice={handleSetPrice}
             />
 
             {/* Schedule Modal */}
             <ScheduleModal
                 isOpen={showScheduleModal}
-                onClose={() => setShowScheduleModal(false)}
+                onClose={handleScheduleClose}
                 scheduleDates={scheduleDates}
                 onDatesChange={setScheduleDates}
-                onSave={() => {
-                    setFormData(prev => ({
-                        ...prev,
-                        date_on_sale_from: scheduleDates.start || '',
-                        date_on_sale_to: scheduleDates.end || ''
-                    }));
-                    setShowScheduleModal(false);
-                }}
+                onSave={handleScheduleSave}
             />
 
             {/* Loading State */}
@@ -100,7 +108,7 @@ const ProductSidePanel = ({
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
                 <Button
                     variant="primary"
-                    onClick={() => onSave('publish')}
+                    onClick={handleSavePublish}
                     disabled={saving || loadingProduct}
                     isLoading={saving}
                     style={{ width: '100%' }}
@@ -111,7 +119,7 @@ const ProductSidePanel = ({
 
                 <Button
                     variant="secondary"
-                    onClick={() => onSave('draft')}
+                    onClick={handleSaveDraft}
                     disabled={saving || loadingProduct}
                     style={{ width: '100%' }}
                 >
@@ -131,4 +139,4 @@ const ProductSidePanel = ({
     );
 };
 
-export default ProductSidePanel;
+export default memo(ProductSidePanel);

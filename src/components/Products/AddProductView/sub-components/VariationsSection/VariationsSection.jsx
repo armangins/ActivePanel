@@ -1,7 +1,8 @@
-import { memo } from 'react';
+import { useCallback, useMemo, memo } from 'react';
 import { PlusOutlined as Plus, CloseOutlined as X, AppstoreOutlined as Boxes } from '@ant-design/icons';
 import { Card, Button, Typography, Row, Col, Empty, Spin, Badge, Flex, Popconfirm, Tooltip } from 'antd';
 import VariationCard from '../../../VariationCard/VariationCard';
+import { mapVariationToDisplay } from '../../utils/productBuilders';
 
 const { Title, Text } = Typography;
 
@@ -25,21 +26,9 @@ const VariationsSection = ({
     const hasVariations = variations.length > 0 || pendingVariations.length > 0;
 
     // Render a single variation item (pending or saved)
-    const renderVariationItem = (variation, isPending) => {
+    const renderVariationItem = useCallback((variation, isPending) => {
         // Map properties for pending variations to match expected structure
-        const displayVariation = isPending ? {
-            ...variation,
-            name: variation.attributes?.map(attr => `${attr.name}: ${attr.option}`).join(', ') || 'וריאציה חדשה',
-            price: variation.regular_price,
-            regular_price: variation.regular_price,
-            sale_price: variation.sale_price,
-            sku: variation.sku,
-            stock_quantity: variation.stock_quantity,
-            stock_status: variation.stock_status || 'instock',
-            image: variation.image ? {
-                src: variation.image.src || variation.image.url || variation.image.source_url
-            } : null
-        } : variation;
+        const displayVariation = mapVariationToDisplay(variation, isPending);
 
         const content = (
             <div
@@ -106,7 +95,7 @@ const VariationsSection = ({
                 )}
             </Col>
         );
-    };
+    }, [onVariationClick, onDeletePending, onDeleteVariation, formatCurrency, isRTL, t, isEditMode]);
 
     return (
         <Card

@@ -5,6 +5,10 @@ import { useWooCommerceSettings } from './useWooCommerceSettings';
 
 const PER_PAGE = PAGINATION_DEFAULTS.PRODUCTS_PER_PAGE;
 
+// OPTIMIZATION: Default fields for different views
+const DEFAULT_PRODUCT_FIELDS = 'id,name,type,status,stock_status,stock_quantity,price,regular_price,sale_price,images,categories,sku,attributes,variations';
+const MINIMAL_PRODUCT_FIELDS = 'id,name,type,status,stock_status,stock_quantity,regular_price,sale_price,images,categories,sku';
+
 // Query keys
 export const productKeys = {
   all: ['products'],
@@ -23,13 +27,13 @@ export const useProducts = (filters = {}) => {
   return useQuery({
     queryKey: productKeys.list(filters),
     queryFn: () => productsAPI.list({
-      page: filters.page || 1,
-      per_page: filters.per_page || PER_PAGE,
-      _fields: filters._fields || 'id,name,type,status,stock_status,stock_quantity,price,regular_price,sale_price,images,categories,sku,attributes,variations',
+      page: 1,
+      per_page: PER_PAGE,
+      _fields: DEFAULT_PRODUCT_FIELDS,
       ...filters,
     }),
-    enabled: hasSettings, // Only fetch if settings are configured
-    staleTime: 15 * 60 * 1000, // 15 minutes
+    enabled: hasSettings,
+    staleTime: 15 * 60 * 1000,
   });
 };
 
@@ -42,53 +46,17 @@ export const useInfiniteProducts = (filters = {}) => {
     queryFn: ({ pageParam = 1 }) => productsAPI.list({
       page: pageParam,
       per_page: filters.per_page || PER_PAGE,
-      // PERFORMANCE: Default to minimal fields for faster loading
-      // Only request 'price' field if explicitly needed (we prefer regular_price)
-      _fields: filters._fields || 'id,name,type,status,stock_status,stock_quantity,regular_price,sale_price,images,categories,sku',
+      _fields: filters._fields || MINIMAL_PRODUCT_FIELDS,
       ...filters,
     }),
     getNextPageParam: (lastPage, allPages) => {
-      // lastPage is the result from productsAPI.list
-      // It contains { data: [...], total: X, totalPages: Y }
       const currentPage = allPages.length;
       return currentPage < lastPage.totalPages ? currentPage + 1 : undefined;
     },
-    enabled: hasSettings, // Only fetch if settings are configured
-    staleTime: 15 * 60 * 1000, // 15 minutes
-    // PERFORMANCE: Use placeholderData for instant display from cache
-    // This provides better perceived performance by showing cached data immediately
-    placeholderData: (previousData) => previousData,
-    // PERFORMANCE: Keep previous data while fetching new data
-    // This prevents flickering when refetching
-    keepPreviousData: true,
-  });
-};
-
-// Fetch all products (for client-side filtering)
-export const useAllProducts = () => {
-  const { hasSettings } = useWooCommerceSettings();
-
-  return useQuery({
-    queryKey: [...productKeys.all, 'all'],
-    queryFn: async () => {
-      let allProducts = [];
-      let page = 1;
-      let hasMore = true;
-
-      while (hasMore) {
-        const response = await productsAPI.list({
-          page,
-          per_page: 100,
-        });
-        allProducts = [...allProducts, ...response.data];
-        hasMore = page < response.totalPages;
-        page++;
-      }
-
-      return allProducts;
-    },
-    enabled: hasSettings, // Only fetch if settings are configured
+    enabled: hasSettings,
     staleTime: 15 * 60 * 1000,
+    // PERFORMANCE: Use placeholderData for instant display from cache
+    placeholderData: (previousData) => previousData,
   });
 };
 
@@ -99,7 +67,7 @@ export const useProduct = (id) => {
   return useQuery({
     queryKey: productKeys.detail(id),
     queryFn: () => productsAPI.get(id),
-    enabled: !!id && hasSettings, // Only fetch if ID exists and settings are configured
+    enabled: !!id && hasSettings,
     staleTime: 15 * 60 * 1000,
   });
 };

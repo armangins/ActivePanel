@@ -1,5 +1,5 @@
-import { memo } from 'react';
-import { Radio, Typography } from 'antd';
+import { memo, useMemo, useCallback } from 'react';
+import { Segmented, Typography } from 'antd';
 import { useLanguage } from '../../../../../contexts/LanguageContext';
 
 const { Text } = Typography;
@@ -26,7 +26,7 @@ const ProductTypeSelector = ({
   const { t } = useLanguage();
 
   // Product type options configuration
-  const typeOptions = [
+  const typeOptions = useMemo(() => [
     {
       value: 'simple',
       label: t('simple') || 'פשוט',
@@ -37,16 +37,24 @@ const ProductTypeSelector = ({
       label: t('variable') || 'משתנה',
       helpText: t('variableProductDescFull') || 'מוצר משתנה מאפשר יצירת וריאציות שונות (גודל, צבע וכו\')  <br/> עם מחירים ומלאי שונים לכל וריאציה.',
     },
-  ];
+  ], [t]);
 
-  const handleTypeSelect = (e) => {
-    const type = e.target.value;
-    if (!disabled && productType !== type) {
-      onTypeChange(type);
+  const handleTypeChange = useCallback((value) => {
+    if (!disabled && productType !== value) {
+      onTypeChange(value);
     }
-  };
+  }, [disabled, productType, onTypeChange]);
 
-  const selectedOption = typeOptions.find(option => option.value === productType);
+  const selectedOption = useMemo(() =>
+    typeOptions.find(option => option.value === productType),
+    [typeOptions, productType]
+  );
+
+  // Format options for Segmented component
+  const segmentedOptions = useMemo(() => typeOptions.map(option => ({
+    label: option.label,
+    value: option.value,
+  })), [typeOptions]);
 
   return (
     <div className={className}>
@@ -62,74 +70,27 @@ const ProductTypeSelector = ({
       </label>
 
       <style>{`
-        .product-type-selector .ant-radio-group {
-          display: flex !important;
-          width: 100%;
-          border-radius: 6px;
-          overflow: hidden;
-          border: 1px solid #d9d9d9;
-        }
-        .product-type-selector .ant-radio-button-wrapper {
-          flex: 1;
-          text-align: center;
-          border: none !important;
-          border-radius: 0 !important;
-          margin: 0 !important;
-          padding: 6px 12px;
-          height: 32px;
-          line-height: 20px;
-          font-size: 14px;
-        }
-        .product-type-selector .ant-radio-button-wrapper:not(:last-child) {
-          border-right: 1px solid #d9d9d9 !important;
-        }
-        .product-type-selector .ant-radio-button-wrapper:first-child {
-          border-top-left-radius: 6px !important;
-          border-bottom-left-radius: 6px !important;
-        }
-        .product-type-selector .ant-radio-button-wrapper:last-child {
-          border-top-right-radius: 6px !important;
-          border-bottom-right-radius: 6px !important;
-        }
-        .product-type-selector .ant-radio-button-wrapper-checked {
+        .product-type-segmented .ant-segmented-item-selected {
           background-color: #1890ff !important;
           color: #fff !important;
-          border-color: #1890ff !important;
         }
-        .product-type-selector .ant-radio-button-wrapper-checked:not(:last-child) {
-          border-right-color: #d9d9d9 !important;
-        }
-        .product-type-selector .ant-radio-button-wrapper:not(.ant-radio-button-wrapper-checked) {
-          background-color: #fff !important;
-          color: #000 !important;
-        }
-        .product-type-selector .ant-radio-button-wrapper-checked:hover {
+        .product-type-segmented .ant-segmented-item-selected:hover {
           color: #fff !important;
         }
-        .product-type-selector .ant-radio-button-wrapper:not(.ant-radio-button-wrapper-checked):hover {
-          color: #1890ff !important;
+        .product-type-segmented .ant-segmented-thumb {
+          background-color: #1890ff !important;
         }
       `}</style>
 
-      <div className="product-type-selector">
-        <Radio.Group
-          value={productType}
-          onChange={handleTypeSelect}
-          disabled={disabled}
-          optionType="button"
-          buttonStyle="solid"
-          size="small"
-        >
-          {typeOptions.map((option) => (
-            <Radio.Button
-              key={option.value}
-              value={option.value}
-            >
-              {option.label}
-            </Radio.Button>
-          ))}
-        </Radio.Group>
-      </div>
+      <Segmented
+        className="product-type-segmented"
+        block
+        options={segmentedOptions}
+        value={productType}
+        onChange={handleTypeChange}
+        disabled={disabled}
+        size="large"
+      />
 
       {showHelpText && selectedOption && (
         <Text

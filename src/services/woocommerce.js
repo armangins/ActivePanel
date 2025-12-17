@@ -136,6 +136,44 @@ const fetchCollection = async (endpoint, params = {}) => {
   }
 };
 
+/**
+ * Sanitize and format product data for WooCommerce API
+ */
+const prepareProductData = (data) => ({
+  ...data,
+  name: data.name ? sanitizeInput(data.name) : undefined,
+  slug: data.slug ? sanitizeInput(data.slug) : undefined,
+  description: data.description ? sanitizeInput(data.description) : undefined,
+  short_description: data.short_description ? sanitizeInput(data.short_description) : undefined,
+  sku: data.sku ? sanitizeInput(data.sku) : undefined,
+});
+
+/**
+ * Sanitize and format coupon data for WooCommerce API
+ */
+const prepareCouponData = (data) => ({
+  ...data,
+  code: sanitizeInput(data.code || ''),
+  description: data.description ? sanitizeInput(data.description) : undefined,
+  email_restrictions: data.email_restrictions && Array.isArray(data.email_restrictions)
+    ? data.email_restrictions
+      .filter(email => typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+      .map(email => email.trim().toLowerCase())
+    : undefined,
+  product_ids: data.product_ids && Array.isArray(data.product_ids)
+    ? data.product_ids.filter(id => Number.isInteger(id) && id > 0)
+    : undefined,
+  exclude_product_ids: data.exclude_product_ids && Array.isArray(data.exclude_product_ids)
+    ? data.exclude_product_ids.filter(id => Number.isInteger(id) && id > 0)
+    : undefined,
+  product_categories: data.product_categories && Array.isArray(data.product_categories)
+    ? data.product_categories.filter(id => Number.isInteger(id) && id > 0)
+    : undefined,
+  exclude_product_categories: data.exclude_product_categories && Array.isArray(data.exclude_product_categories)
+    ? data.exclude_product_categories.filter(id => Number.isInteger(id) && id > 0)
+    : undefined,
+});
+
 // Test API connection
 export const testConnection = async () => {
   try {
@@ -189,29 +227,13 @@ export const productsAPI = {
 
   // Create new product
   create: async (productData) => {
-    const sanitizedData = {
-      ...productData,
-      name: productData.name ? sanitizeInput(productData.name) : undefined,
-      slug: productData.slug ? sanitizeInput(productData.slug) : undefined,
-      description: productData.description ? sanitizeInput(productData.description) : undefined,
-      short_description: productData.short_description ? sanitizeInput(productData.short_description) : undefined,
-      sku: productData.sku ? sanitizeInput(productData.sku) : undefined,
-    };
-    const response = await api.post('/products', sanitizedData);
+    const response = await api.post('/products', prepareProductData(productData));
     return response.data;
   },
 
   // Update existing product
   update: async (id, productData) => {
-    const sanitizedData = {
-      ...productData,
-      name: productData.name ? sanitizeInput(productData.name) : undefined,
-      slug: productData.slug ? sanitizeInput(productData.slug) : undefined,
-      description: productData.description ? sanitizeInput(productData.description) : undefined,
-      short_description: productData.short_description ? sanitizeInput(productData.short_description) : undefined,
-      sku: productData.sku ? sanitizeInput(productData.sku) : undefined,
-    };
-    const response = await api.put(`/products/${id}`, sanitizedData);
+    const response = await api.put(`/products/${id}`, prepareProductData(productData));
     return response.data;
   },
 
@@ -242,15 +264,14 @@ export const productsAPI = {
 
   // Sync variable product price
   sync: async (id) => {
-    console.log('🔄 [FRONTEND-API] Calling sync endpoint for product:', id);
     const response = await api.post(`/products/${id}/sync`);
-    console.log('✅ [FRONTEND-API] Sync response received');
     return response.data;
   },
 };
 
-// Alias for compatibility with hooks
+// Aliases for compatibility
 productsAPI.get = productsAPI.getById;
+productsAPI.getAll = productsAPI.list;
 
 // Orders API
 export const ordersAPI = {
@@ -286,46 +307,25 @@ export const ordersAPI = {
   },
 
   getById: async (id) => {
-    try {
-      const response = await api.get(`/orders/${id}`);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.get(`/orders/${id}`);
+    return response.data;
   },
 
   update: async (id, orderData) => {
-    try {
-      const response = await api.put(`/orders/${id}`, orderData);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.put(`/orders/${id}`, orderData);
+    return response.data;
   },
 
   getStats: async () => {
-    try {
-      const response = await api.get('/reports/sales', {
-        params: { period: 'month' },
-      });
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.get('/reports/sales', {
+      params: { period: 'month' },
+    });
+    return response.data;
   },
 };
 
 // Customers API
 export const customersAPI = {
-  getAll: async (params = {}) => {
-    const { data } = await fetchCollection('/customers', {
-      per_page: 50,
-      page: 1,
-      ...params,
-    });
-    return data;
-  },
-
   list: async (params = {}) => {
     return await fetchCollection('/customers', {
       per_page: 50,
@@ -340,58 +340,34 @@ export const customersAPI = {
   },
 
   getById: async (id) => {
-    try {
-      const response = await api.get(`/customers/${id}`);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.get(`/customers/${id}`);
+    return response.data;
   },
 
   create: async (customerData) => {
-    try {
-      const response = await api.post('/customers', customerData);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.post('/customers', customerData);
+    return response.data;
   },
 
   update: async (id, customerData) => {
-    try {
-      const response = await api.put(`/customers/${id}`, customerData);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.put(`/customers/${id}`, customerData);
+    return response.data;
   },
 };
+
+// Compatibility alias
+customersAPI.getAll = customersAPI.list;
 
 // Reports API
 export const reportsAPI = {
   getSales: async (period = 'month') => {
-    try {
-      const response = await api.get('/reports/sales', { params: { period } });
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.get('/reports/sales', { params: { period } });
+    return response.data;
   },
 };
 
 // Categories API
 export const categoriesAPI = {
-  getAll: async (params = {}) => {
-    try {
-      const response = await api.get('/products/categories', {
-        params: { per_page: 100, ...params }
-      });
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
-  },
-
   list: async (params = {}) => {
     return await fetchCollection('/products/categories', {
       per_page: 50,
@@ -401,152 +377,109 @@ export const categoriesAPI = {
   },
 
   getById: async (id) => {
-    try {
-      const response = await api.get(`/products/categories/${id}`);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.get(`/products/categories/${id}`);
+    return response.data;
   },
 
   create: async (categoryData) => {
-    try {
-      const response = await api.post('/products/categories', {
-        ...categoryData,
-        name: sanitizeInput(categoryData.name),
-        slug: sanitizeInput(categoryData.slug),
-        description: sanitizeInput(categoryData.description),
-      });
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.post('/products/categories', {
+      ...categoryData,
+      name: sanitizeInput(categoryData.name),
+      slug: sanitizeInput(categoryData.slug),
+      description: sanitizeInput(categoryData.description),
+    });
+    return response.data;
   },
 
   update: async (id, categoryData) => {
-    try {
-      const response = await api.put(`/products/categories/${id}`, {
-        ...categoryData,
-        name: categoryData.name ? sanitizeInput(categoryData.name) : undefined,
-        slug: categoryData.slug ? sanitizeInput(categoryData.slug) : undefined,
-        description: categoryData.description ? sanitizeInput(categoryData.description) : undefined,
-      });
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.put(`/products/categories/${id}`, {
+      ...categoryData,
+      name: categoryData.name ? sanitizeInput(categoryData.name) : undefined,
+      slug: categoryData.slug ? sanitizeInput(categoryData.slug) : undefined,
+      description: categoryData.description ? sanitizeInput(categoryData.description) : undefined,
+    });
+    return response.data;
   },
 
   delete: async (id) => {
-    try {
-      const response = await api.delete(`/products/categories/${id}`, { params: { force: true } });
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.delete(`/products/categories/${id}`, { params: { force: true } });
+    return response.data;
   },
 
   bulkAssignProducts: async (categoryId, productIds) => {
-    try {
-      // This logic might need to move to backend, but for now we can orchestrate it here
-      // using the backend endpoints.
-
-      // 1. Fetch products
-      // 1. Fetch products in chunks to avoid URL length limits
-      const chunkArray = (arr, size) => {
-        return Array.from({ length: Math.ceil(arr.length / size) }, (v, i) =>
-          arr.slice(i * size, i * size + size)
-        );
-      };
-
-      const idChunks = chunkArray(productIds, 40); // 40 IDs per request is safe for URL length
-
-      // OPTIMIZATION: Run fetches in parallel and request ONLY needed fields
-      const chunksPromises = idChunks.map(chunk =>
-        productsAPI.getAll({
-          include: chunk.join(','),
-          per_page: 50,
-          _fields: 'id,categories' // Critical: Fetch only what we need!
-        })
+    // 1. Fetch products in chunks to avoid URL length limits
+    const chunkArray = (arr, size) => {
+      return Array.from({ length: Math.ceil(arr.length / size) }, (v, i) =>
+        arr.slice(i * size, i * size + size)
       );
+    };
 
-      const chunkResults = await Promise.all(chunksPromises);
-      const products = chunkResults.flat();
+    const idChunks = chunkArray(productIds, 40); // 40 IDs per request is safe for URL length
 
-      // 2. Prepare updates
-      const updateData = products.map(product => {
-        const currentCategoryIds = (product.categories || []).map(cat => cat.id);
-        if (currentCategoryIds.includes(categoryId)) return null;
-        return {
-          id: product.id,
-          categories: [...currentCategoryIds, categoryId].map(id => ({ id }))
-        };
-      }).filter(Boolean);
+    // OPTIMIZATION: Run fetches in parallel and request ONLY needed fields
+    const chunksPromises = idChunks.map(chunk =>
+      productsAPI.getAll({
+        include: chunk.join(','),
+        per_page: 50,
+        _fields: 'id,categories' // Critical: Fetch only what we need!
+      })
+    );
 
-      if (updateData.length === 0) return { success: true };
+    const chunkResults = await Promise.all(chunksPromises);
+    const products = chunkResults.flat();
 
-      // 3. Batch update
-      const chunkSize = 100;
-      const updates = [];
-      for (let i = 0; i < updateData.length; i += chunkSize) {
-        const chunk = updateData.slice(i, i + chunkSize);
-        updates.push(productsAPI.batch({ update: chunk }));
-      }
-      await Promise.all(updates);
+    // 2. Prepare updates
+    const updateData = products.map(product => {
+      const currentCategoryIds = (product.categories || []).map(cat => cat.id);
+      if (currentCategoryIds.includes(categoryId)) return null;
+      return {
+        id: product.id,
+        categories: [...currentCategoryIds, categoryId].map(id => ({ id }))
+      };
+    }).filter(Boolean);
 
-      return { success: true };
-    } catch (error) {
-      handleError(error);
+    if (updateData.length === 0) return { success: true };
+
+    // 3. Batch update
+    const chunkSize = 100;
+    const updates = [];
+    for (let i = 0; i < updateData.length; i += chunkSize) {
+      const chunk = updateData.slice(i, i + chunkSize);
+      updates.push(productsAPI.batch({ update: chunk }));
     }
+    await Promise.all(updates);
+
+    return { success: true };
   },
 };
 
 // Attributes API
 export const attributesAPI = {
   getAll: async (params = {}) => {
-    try {
-      const { data } = await fetchCollection('/products/attributes', {
-        per_page: 100,
-        ...params,
-      });
-      return data;
-    } catch (error) {
-      handleError(error);
-    }
+    const { data } = await fetchCollection('/products/attributes', {
+      per_page: 100,
+      ...params,
+    });
+    return data;
   },
 
   getTerms: async (attributeId, params = {}) => {
-    try {
-      const response = await fetchCollection(`/products/attributes/${attributeId}/terms`, {
-        per_page: 100,
-        ...params,
-      });
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await fetchCollection(`/products/attributes/${attributeId}/terms`, {
+      per_page: 100,
+      ...params,
+    });
+    return response.data;
   },
 };
 
 // Media API
 export const mediaAPI = {
   upload: async (formData) => {
-    try {
-      console.log('mediaAPI.upload: Starting upload request to /media');
-      // Backend should handle media upload to WP
-      const response = await api.post('/media', formData, {
-        timeout: 180000, // 180s timeout (3 mins) to handle slow WP servers
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          console.log(`mediaAPI.upload: Progress ${percentCompleted}%`);
-        }
-      });
-      console.log('mediaAPI.upload: Response received', response.status);
-      return response.data;
-    } catch (error) {
-      console.error('mediaAPI.upload: Caught error', error);
-      handleError(error);
-    }
+    // Backend should handle media upload to WP
+    const response = await api.post('/media', formData, {
+      timeout: 180000, // 180s timeout (3 mins) to handle slow WP servers
+    });
+    return response.data;
   },
 };
 
@@ -572,12 +505,8 @@ export const variationsAPI = {
    * @returns {Promise<object>}
    */
   getById: async (productId, variationId) => {
-    try {
-      const response = await api.get(`/products/${productId}/variations/${variationId}`);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.get(`/products/${productId}/variations/${variationId}`);
+    return response.data;
   },
 
   /**
@@ -587,25 +516,8 @@ export const variationsAPI = {
    * @returns {Promise<object>}
    */
   create: async (productId, variationData) => {
-    try {
-      console.log('🔵 [FRONTEND] variationsAPI.create - STEP 1: Starting variation creation');
-      console.log('🔵 [FRONTEND] Product ID:', productId);
-      console.log('🔵 [FRONTEND] Variation Data:', JSON.stringify(variationData, null, 2));
-
-      const response = await api.post(`/products/${productId}/variations`, variationData);
-
-      console.log('🟢 [FRONTEND] variationsAPI.create - STEP 2: Response received');
-      console.log('🟢 [FRONTEND] Response status:', response.status);
-      console.log('🟢 [FRONTEND] Response data:', JSON.stringify(response.data, null, 2));
-
-      return response.data;
-    } catch (error) {
-      console.error('🔴 [FRONTEND] variationsAPI.create - ERROR caught');
-      console.error('🔴 [FRONTEND] Error message:', error.message);
-      console.error('🔴 [FRONTEND] Error response:', error.response?.data);
-      console.error('🔴 [FRONTEND] Error status:', error.response?.status);
-      handleError(error);
-    }
+    const response = await api.post(`/products/${productId}/variations`, variationData);
+    return response.data;
   },
 
   /**
@@ -616,12 +528,8 @@ export const variationsAPI = {
    * @returns {Promise<object>}
    */
   update: async (productId, variationId, variationData) => {
-    try {
-      const response = await api.put(`/products/${productId}/variations/${variationId}`, variationData);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.put(`/products/${productId}/variations/${variationId}`, variationData);
+    return response.data;
   },
 
   /**
@@ -631,12 +539,8 @@ export const variationsAPI = {
    * @returns {Promise<object>}
    */
   delete: async (productId, variationId) => {
-    try {
-      const response = await api.delete(`/products/${productId}/variations/${variationId}`);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.delete(`/products/${productId}/variations/${variationId}`);
+    return response.data;
   },
 
   /**
@@ -646,26 +550,13 @@ export const variationsAPI = {
    * @returns {Promise<object>}
    */
   batch: async (productId, data) => {
-    try {
-      const response = await api.post(`/products/${productId}/variations/batch`, data);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.post(`/products/${productId}/variations/batch`, data);
+    return response.data;
   },
 };
 
 // Coupons API
 export const couponsAPI = {
-  getAll: async (params = {}) => {
-    const { data } = await fetchCollection('/coupons', {
-      per_page: 50,
-      page: 1,
-      ...params,
-    });
-    return data;
-  },
-
   list: async (params = {}) => {
     return await fetchCollection('/coupons', {
       per_page: 50,
@@ -675,90 +566,28 @@ export const couponsAPI = {
   },
 
   getById: async (id) => {
-    try {
-      const response = await api.get(`/coupons/${id}`);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.get(`/coupons/${id}`);
+    return response.data;
   },
 
+  // Create new coupon
   create: async (couponData) => {
-    try {
-      // SECURITY: Sanitize all string inputs and validate arrays
-      const sanitizedData = {
-        ...couponData,
-        code: sanitizeInput(couponData.code || ''),
-        description: couponData.description ? sanitizeInput(couponData.description) : undefined,
-        // Validate and sanitize email restrictions
-        email_restrictions: couponData.email_restrictions && Array.isArray(couponData.email_restrictions)
-          ? couponData.email_restrictions
-            .filter(email => typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
-            .map(email => email.trim().toLowerCase())
-          : undefined,
-        // Ensure arrays contain only positive integers
-        product_ids: couponData.product_ids && Array.isArray(couponData.product_ids)
-          ? couponData.product_ids.filter(id => Number.isInteger(id) && id > 0)
-          : undefined,
-        exclude_product_ids: couponData.exclude_product_ids && Array.isArray(couponData.exclude_product_ids)
-          ? couponData.exclude_product_ids.filter(id => Number.isInteger(id) && id > 0)
-          : undefined,
-        product_categories: couponData.product_categories && Array.isArray(couponData.product_categories)
-          ? couponData.product_categories.filter(id => Number.isInteger(id) && id > 0)
-          : undefined,
-        exclude_product_categories: couponData.exclude_product_categories && Array.isArray(couponData.exclude_product_categories)
-          ? couponData.exclude_product_categories.filter(id => Number.isInteger(id) && id > 0)
-          : undefined,
-      };
-
-      const response = await api.post('/coupons', sanitizedData);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.post('/coupons', prepareCouponData(couponData));
+    return response.data;
   },
 
+  // Update existing coupon
   update: async (id, couponData) => {
-    try {
-      // SECURITY: Sanitize all string inputs and validate arrays
-      const sanitizedData = {
-        ...couponData,
-        code: couponData.code ? sanitizeInput(couponData.code) : undefined,
-        description: couponData.description ? sanitizeInput(couponData.description) : undefined,
-        // Validate and sanitize email restrictions
-        email_restrictions: couponData.email_restrictions !== undefined && Array.isArray(couponData.email_restrictions)
-          ? couponData.email_restrictions
-            .filter(email => typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
-            .map(email => email.trim().toLowerCase())
-          : undefined,
-        // Ensure arrays contain only positive integers
-        product_ids: couponData.product_ids !== undefined && Array.isArray(couponData.product_ids)
-          ? couponData.product_ids.filter(id => Number.isInteger(id) && id > 0)
-          : undefined,
-        exclude_product_ids: couponData.exclude_product_ids !== undefined && Array.isArray(couponData.exclude_product_ids)
-          ? couponData.exclude_product_ids.filter(id => Number.isInteger(id) && id > 0)
-          : undefined,
-        product_categories: couponData.product_categories !== undefined && Array.isArray(couponData.product_categories)
-          ? couponData.product_categories.filter(id => Number.isInteger(id) && id > 0)
-          : undefined,
-        exclude_product_categories: couponData.exclude_product_categories !== undefined && Array.isArray(couponData.exclude_product_categories)
-          ? couponData.exclude_product_categories.filter(id => Number.isInteger(id) && id > 0)
-          : undefined,
-      };
-
-      const response = await api.put(`/coupons/${id}`, sanitizedData);
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.put(`/coupons/${id}`, prepareCouponData(couponData));
+    return response.data;
   },
 
   delete: async (id) => {
-    try {
-      const response = await api.delete(`/coupons/${id}`, { params: { force: true } });
-      return response.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await api.delete(`/coupons/${id}`, { params: { force: true } });
+    return response.data;
   },
 };
+
+// Aliases for compatibility
+couponsAPI.get = couponsAPI.getById;
+couponsAPI.getAll = couponsAPI.list;
