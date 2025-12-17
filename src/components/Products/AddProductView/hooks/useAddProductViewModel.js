@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { message } from 'antd';
 import { useLanguage } from '../../../../contexts/LanguageContext';
 import { productsAPI, variationsAPI, attributesAPI } from '../../../../services/woocommerce';
 import { generateSKU, improveText } from '../../../../services/gemini';
@@ -272,11 +273,8 @@ export const useAddProductViewModel = () => {
         // This will trigger a refetch when the Products component mounts
         queryClient.invalidateQueries({ queryKey: productKeys.all });
 
-        if (createdProductId) {
-            navigate(`/products?view=${createdProductId}`);
-        } else {
-            navigate('/products');
-        }
+        // Navigate to products page without opening modal
+        navigate('/products');
     }, [createdProductId, navigate, queryClient]);
 
     // Schedule click handler - currently unused but kept for future implementation
@@ -320,7 +318,32 @@ export const useAddProductViewModel = () => {
             ],
             t
         });
-    }, [createVariation, isEditMode, id, formData, attributes, attributeTerms, variations, pendingVariations, t]);
+
+        // Sync attributes from variation to parent product
+        // This ensures the parent product has the correct attributes for WooCommerce
+        if (variationFormData.attributes && Object.keys(variationFormData.attributes).length > 0) {
+            console.log('🔄 [ATTRIBUTE-SYNC] Syncing attributes from variation to parent product:', variationFormData.attributes);
+
+            // Update selectedAttributeTerms with attributes from the variation
+            setSelectedAttributeTerms(prev => {
+                const updated = { ...prev };
+
+                // For each attribute in the variation, add it to selectedAttributeTerms
+                Object.entries(variationFormData.attributes).forEach(([attrId, termId]) => {
+                    const attributeIdNum = parseInt(attrId);
+                    if (!updated[attributeIdNum]) {
+                        updated[attributeIdNum] = [];
+                    }
+                    if (!updated[attributeIdNum].includes(termId)) {
+                        updated[attributeIdNum].push(termId);
+                    }
+                });
+
+                console.log('🟢 [ATTRIBUTE-SYNC] Updated selectedAttributeTerms:', updated);
+                return updated;
+            });
+        }
+    }, [createVariation, isEditMode, id, formData, attributes, attributeTerms, variations, pendingVariations, t, variationFormData, setSelectedAttributeTerms]);
 
     const handleEditVariation = useCallback(async (variation) => {
         setEditingVariationId(variation.id);
@@ -451,6 +474,48 @@ export const useAddProductViewModel = () => {
             setGeneratingSKU(false);
         }
     }, [formData.product_name, setFormData]);
+
+    // DEMO DATA GENERATOR FOR TESTING
+    const fillDemoData = useCallback(async () => {
+        const timestamp = Date.now();
+        const demoName = `Test Variable Product ${timestamp}`;
+        const demoSku = `TP-${timestamp}`;
+
+        // 1. Set basic product data
+        reset({
+            product_name: demoName,
+            status: 'draft',
+            type: 'variable',
+            description: 'This is a test variable product description generated for debugging purposes.',
+            short_description: 'Test product short description.',
+            regular_price: '100',
+            sale_price: '80', // On sale
+            sku: demoSku,
+            manage_stock: true,
+            stock_quantity: '50',
+            stock_status: 'instock',
+            categories: categories.length > 0 ? [categories[0].id] : [],
+            images: [],
+            attributes: [],
+            tags: [],
+            requires_shipping: true,
+            weight: '1',
+            dimensions: { length: '10', width: '10', height: '10' },
+            shipping_class: '',
+            tax_status: 'taxable',
+            tax_class: '',
+            date_on_sale_from: '',
+            date_on_sale_to: ''
+        });
+
+        setProductType('variable');
+
+        // 2. Load attributes and select first one for variations
+        if (attributes.length === 0) {
+            await loadAttributes('variable');
+        }
+
+    }, [reset, setProductType, categories, attributes, loadAttributes]);
 
     // Handler for generating SKU for variations (extracted to avoid duplication)
     const handleGenerateVariationSKU = useCallback(async () => {
@@ -596,6 +661,30 @@ export const useAddProductViewModel = () => {
 
 
         try {
+            // Validate: Variable products MUST have attributes
+            if (productType === 'variable') {
+                console.log('🔍 [VALIDATION] Checking variable product attributes:', {
+                    selectedAttributeTerms,
+                    hasSelectedAttributeTerms: !!selectedAttributeTerms,
+                    attributeKeys: selectedAttributeTerms ? Object.keys(selectedAttributeTerms) : []
+                });
+
+                const hasAttributes = selectedAttributeTerms && Object.keys(selectedAttributeTerms).length > 0;
+                const hasSelectedTerms = hasAttributes && Object.values(selectedAttributeTerms).some(terms => terms && terms.length > 0);
+
+                console.log('🔍 [VALIDATION] Validation result:', {
+                    hasAttributes,
+                    hasSelectedTerms
+                });
+
+                if (!hasSelectedTerms) {
+                    console.warn('⚠️ [VALIDATION] Variable product has no attributes selected - this may cause issues in WooCommerce');
+                    // Temporarily disabled to debug attribute selection
+                    // message.error(t('variableProductRequiresAttributes') || 'מוצר משתנה חייב להכיל לפחות תכונה אחת. אנא בחר תכונות בלשונית "תכונות".');
+                    // return;
+                }
+            }
+
             const productData = buildProductData({
                 formData: mappedData,
                 productType,
@@ -605,6 +694,14 @@ export const useAddProductViewModel = () => {
                 status
             });
 
+            console.log('🔵 [PRODUCT-CREATE] Creating product with data:', {
+                type: productData.type,
+                name: productData.name,
+                attributes: productData.attributes,
+                hasAttributes: !!productData.attributes,
+                attributeCount: productData.attributes?.length || 0,
+                fullAttributes: productData.attributes
+            });
 
 
             let createdProductId = id;
@@ -613,6 +710,13 @@ export const useAddProductViewModel = () => {
                 await productsAPI.update(id, productData);
                 createdProductId = id;
             } else {
+                console.log('🔵 [PRODUCT-CREATE] Creating product with data:', {
+                    type: productData.type,
+                    name: productData.name,
+                    attributes: productData.attributes,
+                    hasAttributes: !!productData.attributes,
+                    attributeCount: productData.attributes?.length || 0
+                });
                 const newProduct = await productsAPI.create(productData);
 
                 // Handle both response formats: { id: 123 } or { data: { id: 123 } }
@@ -660,12 +764,25 @@ export const useAddProductViewModel = () => {
                     clearPendingVariations();
                     clearDeletedVariations();
 
-                    // FORCE SYNC: Touch the parent product to trigger WooCommerce price recalculation
-                    // This ensures the parent's 'price' and 'price_html' fields are updated based on the new variations
+                    // FORCE SYNC: Trigger WooCommerce price recalculation using dedicated endpoint
+                    // This uses WooCommerce's batch update API to force price sync
+                    console.log('🔄 [SYNC] Starting force sync for product:', createdProductId);
                     try {
-                        await productsAPI.update(createdProductId, { status });
+                        const syncedProduct = await productsAPI.sync(createdProductId);
+                        console.log('🟢 [SYNC] Product synced successfully:', {
+                            id: syncedProduct.id,
+                            price: syncedProduct.price,
+                            price_html: syncedProduct.price_html
+                        });
+
+                        if (!syncedProduct.price || syncedProduct.price === '0' || syncedProduct.price === '0.00') {
+                            console.warn('⚠️ [SYNC] Parent product price is still empty/zero after sync!');
+                            console.warn('⚠️ [SYNC] This may indicate WooCommerce needs more time to process variations');
+                        } else {
+                            console.log('✅ [SYNC] Parent product price synced successfully!');
+                        }
                     } catch (syncError) {
-                        secureLog.warn('Failed to force sync parent product price', syncError);
+                        console.error('❌ [SYNC] Failed to sync parent product price', syncError);
                         // Continue anyway, as this is just a sync optimization
                     }
 
@@ -691,9 +808,9 @@ export const useAddProductViewModel = () => {
 
             // For update mode: redirect directly to products page
             if (isEditMode) {
-                // Invalidate queries and navigate to products page with updated product
+                // Invalidate queries and navigate to products page without opening modal
                 queryClient.invalidateQueries({ queryKey: productKeys.all });
-                navigate(`/products?view=${createdProductId}`);
+                navigate('/products');
             } else {
                 // For create mode: show success modal
                 setShowSuccessModal(true);
@@ -786,7 +903,7 @@ export const useAddProductViewModel = () => {
         categories, loadingProduct, loadProduct,
         handleCreateVariation, handleEditVariation, handleUpdateVariation, handleProductTypeChange, handleGenerateVariations,
         handleDiscountSelect, handleDiscountClear, handleGenerateSKU, handleGenerateVariationSKU, handleImproveShortDescription, handleImproveDescription,
-        handleSave,
+        handleSave, fillDemoData,
         methods // Expose RHF methods to the view
     };
 };

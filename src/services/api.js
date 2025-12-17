@@ -65,8 +65,11 @@ const createApiClient = () => {
 
       // Add CSRF token for state-changing operations (POST, PUT, DELETE, PATCH)
       // GET and HEAD requests don't need CSRF protection
+      // /auth/refresh is excluded because it uses httpOnly cookie for authentication
       const stateChangingMethods = ['POST', 'PUT', 'DELETE', 'PATCH'];
-      if (stateChangingMethods.includes(config.method?.toUpperCase())) {
+      const isRefreshEndpoint = config.url?.includes('/auth/refresh');
+
+      if (stateChangingMethods.includes(config.method?.toUpperCase()) && !isRefreshEndpoint) {
         const csrfToken = getCSRFToken();
         if (csrfToken) {
           config.headers['X-CSRF-Token'] = csrfToken;

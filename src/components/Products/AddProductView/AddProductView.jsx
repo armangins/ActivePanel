@@ -30,6 +30,11 @@ const AddProductView = () => {
       {/* Title and Navigation */}
       <PageTitle
         title={vm.isEditMode ? 'עריכת מוצר' : 'הוספת מוצר חדש'}
+        actions={
+          <Button onClick={vm.fillDemoData} type="default">
+            מלא נתוני דמו (בדיקה)
+          </Button>
+        }
       />
 
       <FormProvider {...vm.methods}>
@@ -57,7 +62,7 @@ const AddProductView = () => {
                 improvingDescription={vm.improvingDescription}
                 onImproveDescription={vm.handleImproveDescription}
                 onCalculatorClick={() => vm.setShowCalculatorModal(true)}
-                onScheduleClick={() => {
+              onScheduleClick={() => {
                   vm.setScheduleDates({
                     start: vm.formData.date_on_sale_from || '',
                     end: vm.formData.date_on_sale_to || ''
@@ -105,7 +110,7 @@ const AddProductView = () => {
                 onAddVariationClick={() => {
                   // We need to update variation form data directly since it's separate state
                   vm.setVariationFormData(prev => ({
-                    ...prev,
+                      ...prev,
                     regular_price: vm.formData.regular_price || '',
                     sale_price: vm.formData.sale_price || '',
                     sku: vm.formData.sku || '',

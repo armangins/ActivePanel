@@ -74,7 +74,7 @@ const Products = () => {
     // Request only first image (images[0]) to reduce payload size
     _fields: ['id', 'name', 'type', 'status', 'stock_status',
       'stock_quantity', 'regular_price',
-      'sale_price', 'images', 'categories', 'sku']
+      'sale_price', 'price', 'price_html', 'images', 'categories', 'sku']
   });
 
   // Categories

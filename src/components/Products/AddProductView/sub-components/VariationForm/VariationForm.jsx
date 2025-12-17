@@ -56,20 +56,20 @@ const VariationForm = ({
   const skuError = getSkuValidationError();
 
   const handleAttributeChange = (attributeId, termId) => {
-    onFormDataChange({
-      ...formData,
+    onFormDataChange(prev => ({
+      ...prev,
       attributes: {
-        ...formData.attributes,
+        ...prev.attributes,
         [attributeId]: termId ? parseInt(termId) : null
       }
-    });
+    }));
   };
 
   const handleFieldChange = (field, value) => {
-    onFormDataChange({
-      ...formData,
+    onFormDataChange(prev => ({
+      ...prev,
       [field]: value
-    });
+    }));
   };
 
   return (

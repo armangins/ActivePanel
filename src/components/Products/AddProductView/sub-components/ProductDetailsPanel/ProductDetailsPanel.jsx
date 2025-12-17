@@ -117,7 +117,6 @@ const ProductDetailsPanel = ({
                   type="text"
                   placeholder={"הכנס שם מוצר"}
                   error={errors.product_name?.message}
-                  maxLength={20}
                   required
                   autoComplete="off"
                   testId="product-name-input"
@@ -189,13 +188,15 @@ const ProductDetailsPanel = ({
           scheduleDates={scheduleDates}
         />
 
-        {/* Discount Selector */}
-        <DiscountSelector
-          selectedDiscount={selectedDiscount}
-          regularPrice={formData.regular_price}
-          onDiscountSelect={handleDiscountSelect}
-          onClear={handleDiscountClear}
-        />
+        {/* Discount Selector - Only for Simple Products */}
+        {productType === 'simple' && (
+          <DiscountSelector
+            selectedDiscount={selectedDiscount}
+            regularPrice={formData.regular_price}
+            onDiscountSelect={handleDiscountSelect}
+            onClear={handleDiscountClear}
+          />
+        )}
 
         {/* Short Description */}
         <ShortDescriptionField

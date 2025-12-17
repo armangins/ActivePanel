@@ -28,3 +28,4 @@ const ProductDetailsVariations = ({
 };
 
 export default ProductDetailsVariations;
+

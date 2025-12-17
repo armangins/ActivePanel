@@ -78,19 +78,149 @@ export const calculateProductPricing = (product, formatCurrency, t) => {
         } else {
             // Variations not loaded yet - show placeholder or parent price if available
             // This allows faster initial load, variations can be loaded on-demand
+
+            // Try to parse price_html if available to get regular/sale prices
+            let parsedPrices = false;
+
+            if (product.price_html) {
+                // Check for del/ins structure: <del>...</del> <ins>...</ins>
+                // WooCommerce wraps regular price in <del> and sale price in <ins>
+                // Note: Check for both encoded (&lt;del&gt;) and decoded (<del>) versions
+
+                const hasDel = product.price_html.includes('<del') || product.price_html.includes('&lt;del');
+                const hasIns = product.price_html.includes('<ins') || product.price_html.includes('&lt;ins');
+
+                if (hasDel && hasIns) {
+                    // Extract numeric prices from del/ins elements
+                    try {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(product.price_html, 'text/html');
+
+                        const delElement = doc.querySelector('del');
+                        const insElement = doc.querySelector('ins');
+
+                        if (delElement && insElement) {
+                            // Extract price from nested span.amount or bdi elements
+                            const delPriceElement = delElement.querySelector('span.amount, bdi, .woocommerce-Price-amount');
+                            const insPriceElement = insElement.querySelector('span.amount, bdi, .woocommerce-Price-amount');
+
+                            if (delPriceElement && insPriceElement) {
+                                formattedRegularPrice = delPriceElement.textContent.trim();
+                                formattedSalePrice = insPriceElement.textContent.trim();
+                            } else {
+                                // Fallback: use regex to extract just the price
+                                const delText = delElement.textContent.trim();
+                                const insText = insElement.textContent.trim();
+
+                                const delMatch = delText.match(/[\d,]+\.?\d*\s*[₪$€£¥ש״ח]/);
+                                const insMatch = insText.match(/[\d,]+\.?\d*\s*[₪$€£¥ש״ח]/);
+
+                                if (delMatch && insMatch) {
+                                    formattedRegularPrice = delMatch[0].trim();
+                                    formattedSalePrice = insMatch[0].trim();
+                                }
+                            }
+
+                            // If we successfully parsed both, set display price to sale price
+                            if (formattedRegularPrice && formattedSalePrice) {
+                                displayPrice = formattedSalePrice;
+                                parsedPrices = true;
+
+                                // Calculate discount percentage
+                                const regularPriceNum = parseFloat(formattedRegularPrice.replace(/[^\d.]/g, ''));
+                                const salePriceNum = parseFloat(formattedSalePrice.replace(/[^\d.]/g, ''));
+                                if (regularPriceNum > salePriceNum && salePriceNum > 0) {
+                                    discountPercentage = Math.round(((regularPriceNum - salePriceNum) / regularPriceNum) * 100);
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error parsing price_html with DOMParser', e);
+                    }
+                } else if (product.price_html) {
+                    // If just a single price in HTML (no sale), it might still be formatted (e.g. range)
+                    // Extract numeric price values only, not descriptive text
+                    try {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(product.price_html, 'text/html');
+
+                        // Try to find price in span.amount or bdi elements (WooCommerce structure)
+                        const priceElements = doc.querySelectorAll('span.amount, bdi, .woocommerce-Price-amount');
+
+                        if (priceElements.length > 0) {
+                            // Check if this is a price range (multiple price elements)
+                            if (priceElements.length >= 2) {
+                                // Variable product with price range
+                                const prices = Array.from(priceElements).map(el => el.textContent.trim());
+                                // Get unique prices and sort them
+                                const uniquePrices = [...new Set(prices)];
+
+                                if (uniquePrices.length >= 2) {
+                                    // Display as range: min - max
+                                    displayPrice = `${uniquePrices[0]} - ${uniquePrices[uniquePrices.length - 1]}`;
+                                    parsedPrices = true;
+                                } else {
+                                    // All variations have same price
+                                    displayPrice = uniquePrices[0];
+                                    parsedPrices = true;
+                                }
+                            } else {
+                                // Single price (simple product or variable with one variation)
+                                const priceText = priceElements[0].textContent.trim();
+                                if (priceText) {
+                                    displayPrice = priceText;
+                                    parsedPrices = true;
+                                }
+                            }
+                        } else {
+                            // Fallback: try to extract just numbers and currency symbols
+                            const allText = doc.body.textContent.trim();
+                            // Match price patterns like "80.00 ₪" or "₪80.00" or "80.00 ש״ח"
+                            const priceMatch = allText.match(/[\d,]+\.?\d*\s*[₪$€£¥ש״ח]/);
+                            if (priceMatch) {
+                                displayPrice = priceMatch[0].trim();
+                                parsedPrices = true;
+                            }
+                        }
+                    } catch (e) {
+                        // Fallback
+                        console.error('Error parsing price_html:', e);
+                    }
+                }
+            }
+
             const parentRegularPrice = parseFloat(product.regular_price || 0);
             const parentPrice = parseFloat(product.price || 0);
 
-            if (parentRegularPrice > 0) {
-                displayPrice = formatCurrency(parentRegularPrice);
-            } else if (parentPrice > 0) {
-                // Fallback to 'price' if regular_price is not set (common for variable products)
-                displayPrice = formatCurrency(parentPrice);
-            } else {
-                displayPrice = t?.('priceOnRequest') || 'מחיר לפי בקשה';
+            if (!parsedPrices) {
+                if (parentRegularPrice > parentPrice && parentPrice > 0) {
+                    // On Sale Logic using direct API values
+                    displayPrice = formatCurrency(parentPrice);
+                    formattedSalePrice = displayPrice;
+                    formattedRegularPrice = formatCurrency(parentRegularPrice);
+
+                    // Calculate discount
+                    discountPercentage = Math.round(((parentRegularPrice - parentPrice) / parentRegularPrice) * 100);
+                } else if (parentPrice > 0) {
+                    // Regular Price logic (or range start)
+                    displayPrice = formatCurrency(parentPrice);
+                    formattedSalePrice = null;
+                    formattedRegularPrice = null;
+                } else if (parentRegularPrice > 0) {
+                    displayPrice = formatCurrency(parentRegularPrice);
+                    formattedSalePrice = null;
+                    formattedRegularPrice = null;
+                } else {
+                    // Try to use 'price' field as fallback if others failed
+                    if (product.price && parseFloat(product.price) > 0) {
+                        displayPrice = formatCurrency(product.price);
+                    } else {
+                        displayPrice = t?.('priceOnRequest') || 'מחיר לפי בקשה';
+                    }
+                    formattedSalePrice = null;
+                    formattedRegularPrice = null;
+                }
             }
-            formattedSalePrice = null;
-            formattedRegularPrice = null;
         }
     } else {
         // Simple product pricing
@@ -190,7 +320,10 @@ export const processProductForDisplay = (product, formatCurrency, t) => {
         stockStatus,
         stockStatusLabel,
         sku,
-        ...pricing,
+        displayPrice: pricing.displayPrice,
+        salePrice: pricing.formattedSalePrice,
+        regularPrice: pricing.formattedRegularPrice,
+        discountPercentage: pricing.discountPercentage,
         stockQuantity: product.stock_quantity
     };
 };

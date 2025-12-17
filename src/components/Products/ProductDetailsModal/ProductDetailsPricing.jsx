@@ -9,7 +9,9 @@ const { Text, Title } = Typography;
  */
 const ProductDetailsPricing = ({ product, formatCurrency, isRTL, t }) => {
   const stockStatus = product.stock_status || 'instock';
-  const regularPrice = product.regular_price || null;
+  // Use price field as fallback for variable products where regular_price might be empty
+  const price = product.price || '';
+  const regularPrice = product.regular_price || (price && !product.sale_price ? price : null);
   const salePrice = product.sale_price || null;
 
   return (

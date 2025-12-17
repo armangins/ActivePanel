@@ -239,6 +239,14 @@ export const productsAPI = {
     });
     return response.data;
   },
+
+  // Sync variable product price
+  sync: async (id) => {
+    console.log('🔄 [FRONTEND-API] Calling sync endpoint for product:', id);
+    const response = await api.post(`/products/${id}/sync`);
+    console.log('✅ [FRONTEND-API] Sync response received');
+    return response.data;
+  },
 };
 
 // Alias for compatibility with hooks
@@ -580,9 +588,22 @@ export const variationsAPI = {
    */
   create: async (productId, variationData) => {
     try {
+      console.log('🔵 [FRONTEND] variationsAPI.create - STEP 1: Starting variation creation');
+      console.log('🔵 [FRONTEND] Product ID:', productId);
+      console.log('🔵 [FRONTEND] Variation Data:', JSON.stringify(variationData, null, 2));
+
       const response = await api.post(`/products/${productId}/variations`, variationData);
+
+      console.log('🟢 [FRONTEND] variationsAPI.create - STEP 2: Response received');
+      console.log('🟢 [FRONTEND] Response status:', response.status);
+      console.log('🟢 [FRONTEND] Response data:', JSON.stringify(response.data, null, 2));
+
       return response.data;
     } catch (error) {
+      console.error('🔴 [FRONTEND] variationsAPI.create - ERROR caught');
+      console.error('🔴 [FRONTEND] Error message:', error.message);
+      console.error('🔴 [FRONTEND] Error response:', error.response?.data);
+      console.error('🔴 [FRONTEND] Error status:', error.response?.status);
       handleError(error);
     }
   },

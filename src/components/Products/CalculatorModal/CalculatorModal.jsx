@@ -61,7 +61,7 @@ const CalculatorModal = ({ isOpen, onClose, onSetPrice }) => {
       footer={null}
       width={900}
       centered
-      destroyOnClose
+      destroyOnHidden
     >
       <div className="py-4">
         <Calculator
