@@ -660,6 +660,15 @@ export const useAddProductViewModel = () => {
                     clearPendingVariations();
                     clearDeletedVariations();
 
+                    // FORCE SYNC: Touch the parent product to trigger WooCommerce price recalculation
+                    // This ensures the parent's 'price' and 'price_html' fields are updated based on the new variations
+                    try {
+                        await productsAPI.update(createdProductId, { status });
+                    } catch (syncError) {
+                        secureLog.warn('Failed to force sync parent product price', syncError);
+                        // Continue anyway, as this is just a sync optimization
+                    }
+
                     // Reload variations to get latest state
                     await loadVariations(createdProductId);
                 } catch (variationError) {

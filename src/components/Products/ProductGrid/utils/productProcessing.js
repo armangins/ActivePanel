@@ -16,7 +16,7 @@ export const calculateProductPricing = (product, formatCurrency, t) => {
         // Check if variations are loaded (empty array means loaded but no variations)
         const hasVariationsData = product.variations !== undefined;
         const variationsArray = product.variations || [];
-        
+
         if (hasVariationsData && variationsArray.length > 0) {
             // Calculate price ranges from variations
             // Use only regular_price - do not use 'price' field as it may include tax calculations
@@ -67,8 +67,8 @@ export const calculateProductPricing = (product, formatCurrency, t) => {
                     } else {
                         displayPrice = `${formatCurrency(minRegularPrice)} - ${formatCurrency(maxRegularPrice)}`;
                     }
-                formattedSalePrice = null;
-                formattedRegularPrice = null;
+                    formattedSalePrice = null;
+                    formattedRegularPrice = null;
                 }
             } else {
                 displayPrice = formatCurrency(0);
@@ -78,8 +78,13 @@ export const calculateProductPricing = (product, formatCurrency, t) => {
         } else {
             // Variations not loaded yet - show placeholder or parent price if available
             // This allows faster initial load, variations can be loaded on-demand
-            const parentPrice = parseFloat(product.regular_price || 0);
-            if (parentPrice > 0) {
+            const parentRegularPrice = parseFloat(product.regular_price || 0);
+            const parentPrice = parseFloat(product.price || 0);
+
+            if (parentRegularPrice > 0) {
+                displayPrice = formatCurrency(parentRegularPrice);
+            } else if (parentPrice > 0) {
+                // Fallback to 'price' if regular_price is not set (common for variable products)
                 displayPrice = formatCurrency(parentPrice);
             } else {
                 displayPrice = t?.('priceOnRequest') || 'מחיר לפי בקשה';
@@ -127,7 +132,7 @@ export const processProductForDisplay = (product, formatCurrency, t) => {
         // Don't log as error - this is expected for new users without WooCommerce settings
         return null;
     }
-    
+
     // SECURITY: Validate product structure
     if (!validateProduct(product)) {
         // Only log if it's not a SETUP_REQUIRED response
@@ -136,7 +141,7 @@ export const processProductForDisplay = (product, formatCurrency, t) => {
         }
         return null;
     }
-    
+
     const isVariable = product.type === 'variable';
 
     // PERFORMANCE: Optimize image processing - only get first image for list view

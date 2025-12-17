@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
-import { InboxOutlined as Package } from '@ant-design/icons';
-import { theme } from 'antd';
+import { useState } from 'react';
+import { InboxOutlined as Package, LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { theme, Carousel } from 'antd';
 import { OptimizedImage } from '../../ui';
 
 const ProductCardImage = ({
@@ -9,31 +9,80 @@ const ProductCardImage = ({
     productName,
 }) => {
     const { token } = theme.useToken();
-    // Gallery state - track which image is currently displayed as main (0 = original main, 1+ = gallery index)
-    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+    const [isHovered, setIsHovered] = useState(false);
 
     // Combine all images: main image + gallery images
     const allImages = imageUrl ? [imageUrl, ...galleryImages] : galleryImages;
+    const hasMultipleImages = allImages.length > 1;
 
-    // Get current main image based on selected index
-    const currentMainImage = allImages[selectedImageIndex] || imageUrl;
+    const renderImage = (src, index) => (
+        <div
+            key={`${src}-${index}`}
+            style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                aspectRatio: '1',
+                overflow: 'hidden',
+                position: 'relative' // Ensure relative for any absolute children if needed
+            }}
+        >
+            <OptimizedImage
+                src={src}
+                alt={`${productName} - ${index + 1}`}
+                style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                resize={false}
+            />
+        </div>
+    );
 
-    // Get thumbnail images (all images except the currently selected one)
-    const thumbnailImages = allImages.filter((_, index) => index !== selectedImageIndex);
+    // Custom Arrow Component
+    const CustomArrow = ({ currentSlide, slideCount, direction, onClick, style, className }) => {
+        // Only show if hovered
+        if (!isHovered) return null;
 
-    const handleThumbnailClick = useCallback((e, index) => {
-        e.stopPropagation(); // Prevent card click
-        // Calculate the actual index in allImages array
-        const clickedImageUrl = thumbnailImages[index];
-        const actualIndex = allImages.findIndex(img => img === clickedImageUrl);
-        if (actualIndex !== -1) {
-            setSelectedImageIndex(actualIndex);
-        }
-    }, [thumbnailImages, allImages]);
+        const isLeft = direction === 'left';
+
+        return (
+            <div
+                onClick={(e) => {
+                    e.stopPropagation(); // Prevent card click
+                    onClick && onClick(e);
+                }}
+                style={{
+                    position: 'absolute',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    zIndex: 2,
+                    [isLeft ? 'left' : 'right']: 10,
+                    width: 30,
+                    height: 30,
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: token.colorText,
+                    transition: 'all 0.3s',
+                }}
+                className="custom-slick-arrow"
+            >
+                {isLeft ? <LeftOutlined style={{ fontSize: 12 }} /> : <RightOutlined style={{ fontSize: 12 }} />}
+            </div>
+        );
+    };
 
     return (
-        <div style={{ width: '100%' }}>
-            {/* Main Image */}
+        <div
+            style={{ width: '100%' }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {/* Main Image Area */}
             <div style={{
                 width: '100%',
                 position: 'relative',
@@ -41,18 +90,24 @@ const ProductCardImage = ({
                 borderTopLeftRadius: token.borderRadiusLG,
                 borderTopRightRadius: token.borderRadiusLG,
                 overflow: 'hidden',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
                 aspectRatio: '1',
             }}>
-                {currentMainImage ? (
-                    <OptimizedImage
-                        src={currentMainImage}
-                        alt={productName}
-                        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
-                        resize={false}
-                    />
+                {allImages.length > 0 ? (
+                    hasMultipleImages ? (
+                        <Carousel
+                            dots={{ className: 'custom-dots' }}
+                            style={{ width: '100%', height: '100%' }}
+                            autoplay={false}
+                            draggable={true}
+                            arrows={true}
+                            prevArrow={<CustomArrow direction="left" />}
+                            nextArrow={<CustomArrow direction="right" />}
+                        >
+                            {allImages.map((img, index) => renderImage(img, index))}
+                        </Carousel>
+                    ) : (
+                        renderImage(allImages[0], 0)
+                    )
                 ) : (
                     <div style={{
                         width: '100%',
@@ -65,83 +120,8 @@ const ProductCardImage = ({
                     </div>
                 )}
             </div>
-
-            {/* Gallery Thumbnails */}
-            {/* PERFORMANCE: Only show thumbnails if there are images (lazy render) */}
-            {thumbnailImages.length > 0 && (
-                <div style={{
-                    padding: `${token.paddingXXS}px ${token.paddingXS}px ${token.paddingXS}px ${token.paddingXS}px`,
-                    display: 'flex',
-                    gap: token.marginXXS,
-                    overflowX: 'auto'
-                }}>
-                    {/* PERFORMANCE: Limit to 3 thumbnails initially for faster rendering */}
-                    {thumbnailImages.slice(0, 3).map((thumbnailImage, index) => {
-                        // Check if this thumbnail corresponds to the currently selected main image
-                        const isSelected = allImages[selectedImageIndex] === thumbnailImage;
-
-                        return (
-                            <div
-                                key={`${thumbnailImage}-${index}`}
-                                onClick={(e) => handleThumbnailClick(e, index)}
-                                style={{
-                                    flexShrink: 0,
-                                    width: '48px',
-                                    height: '48px',
-                                    borderRadius: token.borderRadiusSM,
-                                    overflow: 'hidden',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s ease',
-                                    position: 'relative',
-                                    backgroundColor: token.colorFillQuaternary,
-                                    border: isSelected ? `2px solid ${token.colorPrimary}` : `1px solid ${token.colorBorderSecondary}`,
-                                    boxShadow: isSelected ? `0 0 0 2px ${token.colorPrimaryBg}` : 'none',
-                                    opacity: isSelected ? 1 : 0.9,
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (!isSelected) {
-                                        e.currentTarget.style.borderColor = token.colorPrimary;
-                                        e.currentTarget.style.opacity = '1';
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (!isSelected) {
-                                        e.currentTarget.style.borderColor = token.colorBorderSecondary;
-                                        e.currentTarget.style.opacity = '0.9';
-                                    }
-                                }}
-                                title={`Click to view this image`}
-                            >
-                                <OptimizedImage
-                                    src={thumbnailImage}
-                                    alt={`${productName} - Gallery ${index + 1}`}
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                    // PERFORMANCE: Resize thumbnails (48x48 for 12x12 grid)
-                                    resize={true}
-                                    width={48}
-                                    height={48}
-                                />
-                            </div>
-                        );
-                    })}
-                    {thumbnailImages.length > 3 && (
-                        <div style={{
-                            flexShrink: 0,
-                            width: '48px',
-                            height: '48px',
-                            borderRadius: token.borderRadiusSM,
-                            border: `1px solid ${token.colorBorderSecondary}`,
-                            backgroundColor: token.colorFillQuaternary,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}>
-                            <span style={{ fontSize: token.fontSizeSM, color: token.colorTextSecondary }}>+{thumbnailImages.length - 3}</span>
-                        </div>
-                    )}
-                </div>
-            )}
         </div>
     );
 };
 export default ProductCardImage;
+

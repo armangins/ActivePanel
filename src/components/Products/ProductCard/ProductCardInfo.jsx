@@ -1,5 +1,7 @@
 import React from 'react';
-import { Rate, theme } from 'antd';
+import { Rate, theme, Typography, Space } from 'antd';
+
+const { Title, Text, Paragraph } = Typography;
 
 const ProductCardInfo = ({
     productName,
@@ -15,112 +17,84 @@ const ProductCardInfo = ({
     discountPercentage,
     offLabel,
 }) => {
+    const { token } = theme.useToken();
+
     // Extract product name and variant
     const nameParts = productName ? productName.split(',') : [];
     const mainName = nameParts[0]?.trim() || productName || '';
     const variant = nameParts.length > 1 ? nameParts.slice(1).join(',').trim() : '';
 
-    // Get short description from product
+    // Get short description from product (strip HTML if simple needed, but Paragraph handles text content)
+    // We strictly need plain text for safer rendering if not using dangerouslySetInnerHTML
     const shortDescription = product?.short_description || product?.description || '';
-    // Strip HTML tags and limit length
-    const cleanDescription = shortDescription
-        .replace(/<[^>]*>/g, '')
-        .trim()
-        .substring(0, 100);
+    const cleanDescription = shortDescription.replace(/<[^>]*>/g, '').trim();
 
-    // Get rating from product (WooCommerce uses average_rating)
+    // Get rating from product
     const rating = product?.average_rating || 0;
-    const reviewCount = product?.rating_count || 0;
-
-    const { token } = theme.useToken();
 
     return (
         <div style={{ marginBottom: token.marginXS }}>
             {/* Product Name and Variant */}
             <div style={{ marginBottom: token.marginXS }}>
-                <h3 style={{
-                    fontSize: token.fontSizeLG,
-                    fontWeight: 600,
-                    color: token.colorText,
-                    margin: 0,
-                    lineHeight: '1.4'
-                }}>
+                <Title level={5} style={{ margin: 0, fontSize: token.fontSizeLG, lineHeight: '1.4' }}>
                     {mainName}
                     {variant && (
-                        <span style={{
-                            fontSize: token.fontSize,
-                            fontWeight: 400,
-                            color: token.colorTextSecondary,
-                            marginLeft: '4px'
-                        }}>
+                        <Text type="secondary" style={{ fontSize: token.fontSize, fontWeight: 400, marginLeft: 4 }}>
                             {variant}
-                        </span>
+                        </Text>
                     )}
-                </h3>
+                </Title>
             </div>
 
             {/* Pricing */}
-            <div style={{
-                display: 'flex',
-                alignItems: 'baseline',
-                flexDirection: 'row',
-                justifyContent: 'flex-start',
-                gap: token.marginXS,
-                flexWrap: 'wrap'
-            }}>
+            <Space wrap size={token.marginXS} align="baseline">
                 {salePrice ? (
                     <>
-                        <p style={{ fontSize: token.fontSizeLG, fontFamily: 'inherit', color: token.colorText, fontWeight: 500, margin: 0 }}>
+                        <Text strong style={{ fontSize: token.fontSizeLG, color: token.colorText }}>
                             {salePrice}
-                        </p>
+                        </Text>
                         {regularPrice && (
-                            <p style={{ fontSize: token.fontSize, color: token.colorTextTertiary, textDecoration: 'line-through', margin: 0 }}>
+                            <Text delete type="secondary" style={{ fontSize: token.fontSize }}>
                                 {regularPrice}
-                            </p>
+                            </Text>
                         )}
                         {discountPercentage > 0 && (
-                            <span style={{
-                                fontSize: token.fontSize,
-                                fontWeight: 500,
-                                color: token.colorSuccess,
-                                marginLeft: '4px'
-                            }}>
+                            <Text type="success" strong style={{ fontSize: token.fontSize }}>
                                 {discountPercentage}% {offLabel || 'off'}
-                            </span>
+                            </Text>
                         )}
                     </>
                 ) : (
-                    <p style={{ fontSize: token.fontSizeLG, fontFamily: 'inherit', color: token.colorText, fontWeight: 500, margin: 0 }}>
+                    <Text strong style={{ fontSize: token.fontSizeLG, color: token.colorText }}>
                         {displayPrice}
-                    </p>
+                    </Text>
                 )}
-            </div>
+            </Space>
 
             {/* Rating */}
             {rating > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: token.marginXS, marginTop: token.marginXS }}>
-                    <Rate disabled allowHalf value={rating} style={{ fontSize: token.fontSize, color: token.colorWarning }} />
-                    <span style={{ fontSize: token.fontSize, color: token.colorTextSecondary }}>
-                        {rating.toFixed(1)}
-                    </span>
+                    <Rate disabled allowHalf value={parseFloat(rating)} style={{ fontSize: token.fontSize, color: token.colorWarning }} />
+                    <Text type="secondary" style={{ fontSize: token.fontSize }}>
+                        {parseFloat(rating).toFixed(1)}
+                    </Text>
                 </div>
             )}
 
             {/* Short Description */}
             {cleanDescription && (
-                <p style={{
-                    fontSize: '13px',
-                    color: token.colorTextSecondary,
-                    lineHeight: '1.5',
-                    margin: `${token.marginXS}px 0 0 0`,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                }}>
+                <Paragraph
+                    type="secondary"
+                    ellipsis={{ rows: 2 }}
+                    style={{
+                        fontSize: '13px', // Keep slightly smaller as per original design
+                        marginBottom: 0,
+                        marginTop: token.marginXS,
+                        lineHeight: '1.5'
+                    }}
+                >
                     {cleanDescription}
-                </p>
+                </Paragraph>
             )}
         </div>
     );

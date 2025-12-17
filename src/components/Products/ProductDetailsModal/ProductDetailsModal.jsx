@@ -8,6 +8,7 @@ import ProductDetailsBasicInfo from './ProductDetailsBasicInfo';
 import ProductDetailsPricing from './ProductDetailsPricing';
 import ProductDetailsMedia from './ProductDetailsMedia';
 import ProductDetailsDescription from './ProductDetailsDescription.jsx';
+import ProductDetailsVariations from './ProductDetailsVariations';
 
 /**
  * ProductDetailsModal Component
@@ -71,6 +72,19 @@ const ProductDetailsModal = ({ product: initialProduct, onClose, formatCurrency 
                   t={t}
                 />
               </div>
+
+              {/* Variations (Duplicate view for convenience) */}
+              {isVariableProduct && (
+                <div style={contentStyle}>
+                  <ProductDetailsVariations
+                    variations={variations}
+                    loading={loadingVariations}
+                    t={t}
+                    isRTL={isRTL}
+                    formatCurrency={formatCurrency}
+                  />
+                </div>
+              )}
             </div>
           </Col>
 
@@ -126,6 +140,25 @@ const ProductDetailsModal = ({ product: initialProduct, onClose, formatCurrency 
       ),
     },
   ];
+
+  // Add Variations Tab if applicable
+  if (isVariableProduct) {
+    tabItems.push({
+      key: 'variations',
+      label: t('variations') || 'Variations',
+      children: (
+        <div style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+          <ProductDetailsVariations
+            variations={variations}
+            loading={loadingVariations}
+            t={t}
+            isRTL={isRTL}
+            formatCurrency={formatCurrency}
+          />
+        </div>
+      ),
+    });
+  }
 
   return (
     <Modal
