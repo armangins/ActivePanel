@@ -7,7 +7,6 @@ import ProductDetailsHeader from './ProductDetailsHeader';
 import ProductDetailsBasicInfo from './ProductDetailsBasicInfo';
 import ProductDetailsPricing from './ProductDetailsPricing';
 import ProductDetailsMedia from './ProductDetailsMedia';
-import ProductDetailsOrganization from './ProductDetailsOrganization';
 import ProductDetailsDescription from './ProductDetailsDescription.jsx';
 
 /**
@@ -75,7 +74,7 @@ const ProductDetailsModal = ({ product: initialProduct, onClose, formatCurrency 
             </div>
           </Col>
 
-          {/* Right Column - Media and Organization */}
+          {/* Right Column - Media */}
           <Col xs={24} md={12}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               <div style={contentStyle}>
@@ -83,18 +82,6 @@ const ProductDetailsModal = ({ product: initialProduct, onClose, formatCurrency 
                   product={product}
                   isRTL={isRTL}
                   t={t}
-                />
-              </div>
-
-              <div style={contentStyle}>
-                <ProductDetailsOrganization
-                  product={product}
-                  isRTL={isRTL}
-                  t={t}
-                  formatCurrency={formatCurrency}
-                  variations={variations}
-                  loadingVariations={loadingVariations}
-                  variationsError={variationsError?.message || null}
                 />
               </div>
             </div>

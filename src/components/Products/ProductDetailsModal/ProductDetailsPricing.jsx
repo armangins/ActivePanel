@@ -14,9 +14,9 @@ const ProductDetailsPricing = ({ product, formatCurrency, isRTL, t }) => {
 
   return (
     <div>
-      <Title level={5} style={{ marginBottom: 16 }}>{t('pricing') || 'Pricing'}</Title>
+      <Title level={5} style={{ marginBottom: 16 }}>תמחור ומלאי</Title>
 
-      <Descriptions column={1} layout="vertical" size="small">
+      <Descriptions column={4} layout="vertical" size="small">
         <Descriptions.Item label={t('price')}>
           <Text strong>{regularPrice ? formatCurrency(parseFloat(regularPrice)) : '-'}</Text>
         </Descriptions.Item>

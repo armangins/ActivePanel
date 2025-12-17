@@ -10,8 +10,8 @@ const ProductDetailsBasicInfo = ({ product, isRTL, t }) => {
 
   return (
     <div>
-      <Title level={5} style={{ marginBottom: 16 }}>{t('basicInfo') || 'Basic Info'}</Title>
-      <Descriptions column={1} layout="vertical" size="small">
+      <Title level={5} style={{ marginBottom: 16 }}>פרטי מוצר</Title>
+      <Descriptions column={3} layout="vertical" size="small">
         <Descriptions.Item label={t('productName')}>
           <Text strong>{product.name || '-'}</Text>
         </Descriptions.Item>
