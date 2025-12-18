@@ -21,7 +21,7 @@ export const productKeys = {
 };
 
 // Fetch products list
-export const useProducts = (filters = {}) => {
+export const useProducts = (filters = {}, options = {}) => {
   const { hasSettings } = useWooCommerceSettings();
 
   return useQuery({
@@ -34,6 +34,7 @@ export const useProducts = (filters = {}) => {
     }),
     enabled: hasSettings,
     staleTime: 15 * 60 * 1000,
+    ...options, // Merge external options
   });
 };
 

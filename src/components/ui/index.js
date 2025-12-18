@@ -26,7 +26,7 @@ export { SetupRequired } from './SetupRequired';
 export { default as LoadingMoreIndicator } from './indicators/LoadingMoreIndicator';
 
 // Inputs
-export { default as SearchInput } from './inputs/SearchInput';
+// Inputs
 
 // Common Components
 export { default as UserAvatar } from './common/UserAvatar';

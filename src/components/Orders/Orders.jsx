@@ -3,7 +3,10 @@ import { InboxOutlined as Package } from '@ant-design/icons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { ordersAPI } from '../../services/woocommerce';
 import { useOrders } from '../../hooks/useOrders';
-import { SearchInput, EmptyState, LoadingState, ErrorState, Card } from '../ui';
+import { Input } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
+// ... other imports
+
 import { Select, Row, Col } from 'antd';
 import Pagination from '../ui/Pagination/Pagination';
 import OrderDetailsModal from './OrderDetailsModal/OrderDetailsModal';
@@ -167,11 +170,13 @@ const Orders = () => {
       <Card style={{ marginTop: 24 }}>
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
-            <SearchInput
+            <Input
+              prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
               value={searchQuery}
-              onChange={setSearchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('searchOrders')}
-              isRTL={isRTL}
+              allowClear
+              style={{ direction: isRTL ? 'rtl' : 'ltr' }}
             />
           </Col>
           <Col xs={24} md={12}>

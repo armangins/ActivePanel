@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { DollarOutlined as DollarSign, MailOutlined as Mail, CloseOutlined as X, InfoCircleOutlined as InformationCircleIcon, InboxOutlined as Package } from '@ant-design/icons';
-import SearchInput from '../../ui/inputs/SearchInput';
+import { DollarOutlined as DollarSign, MailOutlined as Mail, CloseOutlined as X, InfoCircleOutlined as InformationCircleIcon, InboxOutlined as Package, SearchOutlined } from '@ant-design/icons';
 import { Button, OptimizedImage } from '../../ui';
-import { Input } from '../../ui/inputs';
+import { Input } from 'antd'; // Use straight AntD Input
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { validateImageUrl } from '../../Products/utils/securityHelpers';
 
@@ -13,7 +12,7 @@ const InfoTooltip = ({ text, isRTL }) => {
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const iconRef = useRef(null);
     const tooltipRef = useRef(null);
-    
+
     useEffect(() => {
         if (showTooltip && iconRef.current) {
             const updatePosition = () => {
@@ -21,13 +20,13 @@ const InfoTooltip = ({ text, isRTL }) => {
                 const tooltipWidth = 250; // Approximate tooltip width
                 const tooltipHeight = 100; // Approximate tooltip height
                 const spacing = 8;
-                
+
                 let left, top;
-                
+
                 // Position below the icon, centered
                 top = rect.bottom + spacing;
                 left = rect.left + (rect.width / 2);
-                
+
                 // Check if tooltip would go off screen to the right
                 if (left + tooltipWidth / 2 > window.innerWidth - 20) {
                     left = window.innerWidth - tooltipWidth / 2 - 20;
@@ -36,26 +35,26 @@ const InfoTooltip = ({ text, isRTL }) => {
                 if (left - tooltipWidth / 2 < 20) {
                     left = tooltipWidth / 2 + 20;
                 }
-                
+
                 // If tooltip would go off bottom, position above instead
                 if (top + tooltipHeight > window.innerHeight - 20) {
                     top = rect.top - tooltipHeight - spacing;
                 }
-                
+
                 setPosition({ top, left });
             };
-            
+
             updatePosition();
             window.addEventListener('scroll', updatePosition, true);
             window.addEventListener('resize', updatePosition);
-            
+
             return () => {
                 window.removeEventListener('scroll', updatePosition, true);
                 window.removeEventListener('resize', updatePosition);
             };
         }
     }, [showTooltip]);
-    
+
     return (
         <>
             <div className="relative inline-block" ref={iconRef}>
@@ -69,7 +68,7 @@ const InfoTooltip = ({ text, isRTL }) => {
                 <div
                     ref={tooltipRef}
                     className="fixed z-[10000] px-3 py-2 text-xs text-white bg-gray-900 rounded-lg shadow-xl whitespace-normal max-w-xs"
-                    style={{ 
+                    style={{
                         direction: isRTL ? 'rtl' : 'ltr',
                         minWidth: '200px',
                         top: `${position.top}px`,
@@ -81,7 +80,7 @@ const InfoTooltip = ({ text, isRTL }) => {
                     onMouseLeave={() => setShowTooltip(false)}
                 >
                     {text}
-                    <div 
+                    <div
                         className="absolute left-1/2 bottom-full w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-900"
                         style={{
                             transform: 'translateX(-50%)'
@@ -130,7 +129,7 @@ const UsageRestrictionsStep = ({
     const rtl = isRTL !== undefined ? isRTL : contextRTL;
     const searchRef = useRef(null);
     const excludeSearchRef = useRef(null);
-    
+
     // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -141,18 +140,18 @@ const UsageRestrictionsStep = ({
                 setShowExcludeProductDropdown(false);
             }
         };
-        
+
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
-    
+
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <div className={`flex items-center gap-2 mb-2 ${rtl ? 'flex-row' : 'flex-row-reverse'}`}>
-                        <InfoTooltip 
-                            text={t('minimumAmountTooltip') || 'סכום ההזמנה המינימלי הנדרש כדי שהקופון הזה יהיה תקף. השאר ריק ללא מינימום.'} 
+                        <InfoTooltip
+                            text={t('minimumAmountTooltip') || 'סכום ההזמנה המינימלי הנדרש כדי שהקופון הזה יהיה תקף. השאר ריק ללא מינימום.'}
                             isRTL={rtl}
                         />
                         <label htmlFor="minimum-amount" className={`block text-sm font-medium text-gray-700 ${rtl ? 'text-right' : 'text-left'}`}>
@@ -177,8 +176,8 @@ const UsageRestrictionsStep = ({
 
                 <div>
                     <div className={`flex items-center gap-2 mb-2 ${rtl ? 'flex-row' : 'flex-row-reverse'}`}>
-                        <InfoTooltip 
-                            text={t('maximumAmountTooltip') || 'סכום ההזמנה המקסימלי שבו ניתן להחיל את הקופון הזה. השאר ריק ללא מקסימום.'} 
+                        <InfoTooltip
+                            text={t('maximumAmountTooltip') || 'סכום ההזמנה המקסימלי שבו ניתן להחיל את הקופון הזה. השאר ריק ללא מקסימום.'}
                             isRTL={rtl}
                         />
                         <label htmlFor="maximum-amount" className={`block text-sm font-medium text-gray-700 ${rtl ? 'text-right' : 'text-left'}`}>
@@ -205,8 +204,8 @@ const UsageRestrictionsStep = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <div className={`flex items-center gap-2 mb-2 ${rtl ? 'flex-row' : 'flex-row-reverse'}`}>
-                        <InfoTooltip 
-                            text={t('individualUseTooltip') || 'כאשר מופעל, הקופון הזה לא יכול לשמש יחד עם קופונים אחרים.'} 
+                        <InfoTooltip
+                            text={t('individualUseTooltip') || 'כאשר מופעל, הקופון הזה לא יכול לשמש יחד עם קופונים אחרים.'}
                             isRTL={rtl}
                         />
                         <label className={`block text-sm font-medium text-gray-700 ${rtl ? 'text-right' : 'text-left'}`}>
@@ -230,8 +229,8 @@ const UsageRestrictionsStep = ({
 
                 <div>
                     <div className={`flex items-center gap-2 mb-2 ${rtl ? 'flex-row' : 'flex-row-reverse'}`}>
-                        <InfoTooltip 
-                            text={t('excludeSaleItemsTooltip') || 'כאשר מופעל, הקופון הזה לא יחול על פריטים שנמצאים כרגע במבצע.'} 
+                        <InfoTooltip
+                            text={t('excludeSaleItemsTooltip') || 'כאשר מופעל, הקופון הזה לא יחול על פריטים שנמצאים כרגע במבצע.'}
                             isRTL={rtl}
                         />
                         <label className={`block text-sm font-medium text-gray-700 ${rtl ? 'text-right' : 'text-left'}`}>
@@ -257,15 +256,15 @@ const UsageRestrictionsStep = ({
             {/* Products */}
             <div className="card">
                 <div className={`flex items-center gap-2 mb-3 ${rtl ? 'flex-row' : 'flex-row-reverse'}`}>
-                    <InfoTooltip 
-                        text={t('productsTooltip') || 'בחר מוצרים ספציפיים שהקופון הזה יכול לחול עליהם. השאר ריק כדי לאפשר את הקופון על כל המוצרים.'} 
+                    <InfoTooltip
+                        text={t('productsTooltip') || 'בחר מוצרים ספציפיים שהקופון הזה יכול לחול עליהם. השאר ריק כדי לאפשר את הקופון על כל המוצרים.'}
                         isRTL={rtl}
                     />
                     <label className={`block text-sm font-medium text-gray-700 ${rtl ? 'text-right' : 'text-left'}`}>
                         {t('products') || 'מוצרים'}
                     </label>
                 </div>
-                
+
                 {/* Search Input with Dropdown */}
                 <div className="mb-3 relative" ref={searchRef}>
                     <SearchInput
@@ -282,7 +281,7 @@ const UsageRestrictionsStep = ({
                         placeholder={t('searchProducts') || 'Search products...'}
                         isRTL={isRTL}
                     />
-                    
+
                     {/* Dropdown Results */}
                     {showProductDropdown && filteredProducts.length > 0 && (
                         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
@@ -291,10 +290,10 @@ const UsageRestrictionsStep = ({
                                 const imageUrl = rawImageUrl ? validateImageUrl(rawImageUrl) : null;
                                 const isSelected = tempSelectedProducts.includes(product.id);
                                 const isAlreadyAdded = formData.product_ids.includes(product.id);
-                                
+
                                 return (
-                                    <div 
-                                        key={product.id} 
+                                    <div
+                                        key={product.id}
                                         className={`flex items-center gap-2 p-2 hover:bg-gray-50 transition-colors ${isAlreadyAdded ? 'opacity-50' : ''}`}
                                     >
                                         <input
@@ -329,7 +328,7 @@ const UsageRestrictionsStep = ({
                                     </div>
                                 );
                             })}
-                            
+
                             {/* Add Button */}
                             {tempSelectedProducts.length > 0 && (
                                 <div className="sticky bottom-0 bg-white border-t border-gray-200 p-2">
@@ -345,24 +344,24 @@ const UsageRestrictionsStep = ({
                             )}
                         </div>
                     )}
-                    
+
                     {showProductDropdown && productSearch.length > 0 && filteredProducts.length === 0 && (
                         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
                             <p className="text-sm text-gray-500 text-center">{t('noProductsFound') || 'No products found'}</p>
                         </div>
                     )}
                 </div>
-                
+
                 {/* Selected Products List */}
                 {formData.product_ids.length > 0 && (
                     <div className="space-y-2">
                         {formData.product_ids.map(productId => {
                             const product = Array.isArray(allProducts) ? allProducts.find(p => p.id === productId) : null;
                             if (!product) return null;
-                            
+
                             const rawImageUrl = product.images && product.images.length > 0 ? product.images[0].src : null;
                             const imageUrl = rawImageUrl ? validateImageUrl(rawImageUrl) : null;
-                            
+
                             return (
                                 <div key={productId} className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
                                     <div className="w-8 h-8 flex-shrink-0 rounded overflow-hidden bg-gray-100">
@@ -405,15 +404,15 @@ const UsageRestrictionsStep = ({
             {/* Exclude Products */}
             <div className="card">
                 <div className={`flex items-center gap-2 mb-3 ${rtl ? 'flex-row' : 'flex-row-reverse'}`}>
-                    <InfoTooltip 
-                        text={t('excludeProductsTooltip') || 'בחר מוצרים שהקופון הזה לא יכול לחול עליהם, גם אם הם תואמים קריטריונים אחרים.'} 
+                    <InfoTooltip
+                        text={t('excludeProductsTooltip') || 'בחר מוצרים שהקופון הזה לא יכול לחול עליהם, גם אם הם תואמים קריטריונים אחרים.'}
                         isRTL={rtl}
                     />
                     <label className={`block text-sm font-medium text-gray-700 ${rtl ? 'text-right' : 'text-left'}`}>
                         {t('excludeProducts') || 'אל תחול על מוצרים'}
                     </label>
                 </div>
-                
+
                 {/* Search Input with Dropdown */}
                 <div className="mb-3 relative" ref={excludeSearchRef}>
                     <SearchInput
@@ -430,7 +429,7 @@ const UsageRestrictionsStep = ({
                         placeholder={t('searchProducts') || 'Search products...'}
                         isRTL={isRTL}
                     />
-                    
+
                     {/* Dropdown Results */}
                     {showExcludeProductDropdown && filteredExcludeProducts.length > 0 && (
                         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
@@ -439,10 +438,10 @@ const UsageRestrictionsStep = ({
                                 const imageUrl = rawImageUrl ? validateImageUrl(rawImageUrl) : null;
                                 const isSelected = tempSelectedExcludeProducts.includes(product.id);
                                 const isAlreadyAdded = formData.exclude_product_ids.includes(product.id);
-                                
+
                                 return (
-                                    <div 
-                                        key={product.id} 
+                                    <div
+                                        key={product.id}
                                         className={`flex items-center gap-2 p-2 hover:bg-gray-50 transition-colors ${isAlreadyAdded ? 'opacity-50' : ''}`}
                                     >
                                         <input
@@ -477,7 +476,7 @@ const UsageRestrictionsStep = ({
                                     </div>
                                 );
                             })}
-                            
+
                             {/* Add Button */}
                             {tempSelectedExcludeProducts.length > 0 && (
                                 <div className="sticky bottom-0 bg-white border-t border-gray-200 p-2">
@@ -493,24 +492,24 @@ const UsageRestrictionsStep = ({
                             )}
                         </div>
                     )}
-                    
+
                     {showExcludeProductDropdown && excludeProductSearch.length > 0 && filteredExcludeProducts.length === 0 && (
                         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
                             <p className="text-sm text-gray-500 text-center">{t('noProductsFound') || 'No products found'}</p>
                         </div>
                     )}
                 </div>
-                
+
                 {/* Selected Products List */}
                 {formData.exclude_product_ids.length > 0 && (
                     <div className="space-y-2">
                         {formData.exclude_product_ids.map(productId => {
                             const product = Array.isArray(allProducts) ? allProducts.find(p => p.id === productId) : null;
                             if (!product) return null;
-                            
+
                             const rawImageUrl = product.images && product.images.length > 0 ? product.images[0].src : null;
                             const imageUrl = rawImageUrl ? validateImageUrl(rawImageUrl) : null;
-                            
+
                             return (
                                 <div key={productId} className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
                                     <div className="w-8 h-8 flex-shrink-0 rounded overflow-hidden bg-gray-100">
@@ -553,8 +552,8 @@ const UsageRestrictionsStep = ({
             {/* Categories */}
             <div className="card">
                 <div className={`flex items-center gap-2 mb-3 ${rtl ? 'flex-row' : 'flex-row-reverse'}`}>
-                    <InfoTooltip 
-                        text={t('productCategoriesTooltip') || 'בחר קטגוריות מוצרים שהקופון הזה יכול לחול עליהן. השאר ריק כדי לאפשר את הקופון על כל הקטגוריות.'} 
+                    <InfoTooltip
+                        text={t('productCategoriesTooltip') || 'בחר קטגוריות מוצרים שהקופון הזה יכול לחול עליהן. השאר ריק כדי לאפשר את הקופון על כל הקטגוריות.'}
                         isRTL={rtl}
                     />
                     <label className={`block text-sm font-medium text-gray-700 ${rtl ? 'text-right' : 'text-left'}`}>
@@ -599,8 +598,8 @@ const UsageRestrictionsStep = ({
             {/* Exclude Categories */}
             <div className="card">
                 <div className={`flex items-center gap-2 mb-3 ${rtl ? 'flex-row' : 'flex-row-reverse'}`}>
-                    <InfoTooltip 
-                        text={t('excludeCategoriesTooltip') || 'בחר קטגוריות מוצרים שהקופון הזה לא יכול לחול עליהן, גם אם הן תואמות קריטריונים אחרים.'} 
+                    <InfoTooltip
+                        text={t('excludeCategoriesTooltip') || 'בחר קטגוריות מוצרים שהקופון הזה לא יכול לחול עליהן, גם אם הן תואמות קריטריונים אחרים.'}
                         isRTL={rtl}
                     />
                     <label className={`block text-sm font-medium text-gray-700 ${rtl ? 'text-right' : 'text-left'}`}>
@@ -637,8 +636,8 @@ const UsageRestrictionsStep = ({
             {/* Email Restrictions */}
             <div className="card">
                 <div className={`flex items-center gap-2 mb-3 ${rtl ? 'flex-row' : 'flex-row-reverse'}`}>
-                    <InfoTooltip 
-                        text={t('allowedEmailsTooltip') || 'הגבל את הקופון הזה לכתובות אימייל ספציפיות. רק לקוחות עם כתובות האימייל האלה יוכלו להשתמש בקופון הזה.'} 
+                    <InfoTooltip
+                        text={t('allowedEmailsTooltip') || 'הגבל את הקופון הזה לכתובות אימייל ספציפיות. רק לקוחות עם כתובות האימייל האלה יוכלו להשתמש בקופון הזה.'}
                         isRTL={rtl}
                     />
                     <label className={`block text-sm font-medium text-gray-700 ${rtl ? 'text-right' : 'text-left'}`}>

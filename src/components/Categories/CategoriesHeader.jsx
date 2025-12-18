@@ -1,5 +1,5 @@
-import { PlusOutlined as Plus } from '@ant-design/icons';
-import { SearchInput } from '../ui/inputs';
+import { PlusOutlined as Plus, SearchOutlined } from '@ant-design/icons';
+import { Input } from 'antd';
 import { Button } from '../ui';
 import { Row, Col, Typography } from 'antd';
 const { Text } = Typography;
@@ -8,11 +8,13 @@ const CategoriesHeader = ({ searchQuery, onSearchChange, onAddClick, displayedCo
   return (
     <Row gutter={[16, 16]} justify="space-between" align="middle">
       <Col xs={24} sm={12}>
-        <SearchInput
+        <Input
+          prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={t('searchCategories') || 'Search categories...'}
-          isRTL={isRTL}
+          style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+          allowClear
         />
       </Col>
 

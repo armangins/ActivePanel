@@ -1,7 +1,7 @@
-import { PlusOutlined } from '@ant-design/icons';
-import { SearchInput, Button } from '../ui';
+import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
+import { Button } from '../ui';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Row, Col, Typography } from 'antd';
+import { Row, Col, Typography, Input } from 'antd';
 const { Title, Text } = Typography;
 
 /**
@@ -42,11 +42,13 @@ const CouponsHeader = ({
 
       <Col xs={24} md={12}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flexDirection: isRTL ? 'column-reverse' : 'column' }}>
-          <SearchInput
+          <Input
+            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
             value={searchQuery}
-            onChange={onSearchChange}
+            onChange={(e) => onSearchChange(e.target.value)}
             placeholder={t('searchCoupons') || 'Search coupons by code or description...'}
-            isRTL={isRTL}
+            style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+            allowClear
           />
           <Button
             onClick={onCreateCoupon}

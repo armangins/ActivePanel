@@ -22,6 +22,7 @@ build
 # Documentation files
 *.md
 !README.md
+!ANTIGRAVITY_RULES.md
 
 # Editor directories and files
 .vscode/*

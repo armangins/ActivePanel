@@ -6,23 +6,20 @@ import {
   MenuUnfoldOutlined
 } from '@ant-design/icons';
 import { Button } from 'antd';
-import { useState, useCallback, useEffect } from 'react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import ConnectionStatus from './ConnectionStatus';
 import NotificationDropdown from './NotificationDropdown';
 import UserMenuDropdown from './UserMenuDropdown';
-import { SearchInput, UserAvatar } from '../ui';
+import { UserAvatar } from '../ui';
+import GlobalSearch from './GlobalSearch';
 import { refreshAllData } from '../../utils/refreshHelpers';
 import useNewOrdersCount from '../../hooks/useNewOrdersCount';
 import OrderDetailsModal from '../Orders/OrderDetailsModal/OrderDetailsModal';
 
 const Header = ({ onMenuClick, onCollapseToggle, isCollapsed }) => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const location = useLocation();
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -31,40 +28,6 @@ const Header = ({ onMenuClick, onCollapseToggle, isCollapsed }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { newOrdersCount, newOrders, removeOrder, clearAllNotifications, markAsRead, markAsUnread, markAllAsRead, isLoading, hasError } = useNewOrdersCount();
-
-  // Sync local search state with URL params
-  useEffect(() => {
-    const currentSearch = searchParams.get('search') || '';
-    if (currentSearch !== searchQuery) {
-      setSearchQuery(currentSearch);
-    }
-  }, [searchParams]);
-
-  // Debounced search update
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const currentSearchParam = searchParams.get('search') || '';
-
-      // Only update if changed
-      if (searchQuery !== currentSearchParam) {
-        if (location.pathname !== '/products') {
-          if (searchQuery.trim()) {
-            navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
-          }
-        } else {
-          const newParams = new URLSearchParams(searchParams);
-          if (searchQuery) {
-            newParams.set('search', searchQuery);
-          } else {
-            newParams.delete('search');
-          }
-          setSearchParams(newParams, { replace: true });
-        }
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery, navigate, location.pathname, searchParams, setSearchParams]);
 
   // Handlers
   const handleLogout = useCallback(async () => {
@@ -301,14 +264,9 @@ const Header = ({ onMenuClick, onCollapseToggle, isCollapsed }) => {
           />
         </div>
 
-        {/* Search */}
-        <div style={{ maxWidth: '400px' }}>
-          <SearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder={t('search')}
-            isRTL={isRTL}
-          />
+        {/* Global Search */}
+        <div style={{ maxWidth: '400px', width: '100%' }}>
+          <GlobalSearch placeholder={t('search')} isRTL={isRTL} />
         </div>
 
         {/* Spacer to push toggle to the right */}

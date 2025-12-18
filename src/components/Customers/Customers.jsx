@@ -3,7 +3,9 @@ import { UserOutlined as User } from '@ant-design/icons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { customersAPI } from '../../services/woocommerce';
 import { useCustomers } from '../../hooks/useCustomers';
-import { SearchInput, EmptyState, LoadingState, ErrorState, LoadingMoreIndicator, Card } from '../ui';
+import { Input } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
+import { EmptyState, LoadingState, ErrorState, LoadingMoreIndicator, Card } from '../ui';
 import CustomerDetailsModal from './CustomerDetailsModal/CustomerDetailsModal';
 import CustomersHeader from './CustomersHeader';
 import CustomersGrid from './CustomersGrid';
@@ -94,11 +96,13 @@ const Customers = () => {
 
       {/* Search Bar */}
       <Card style={{ marginTop: 24 }}>
-        <SearchInput
+        <Input
+          prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
           value={searchQuery}
-          onChange={setSearchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={t('searchCustomers')}
-          isRTL={isRTL}
+          allowClear
+          style={{ direction: isRTL ? 'rtl' : 'ltr' }}
         />
       </Card>
 

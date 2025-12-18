@@ -1,5 +1,6 @@
 import React from 'react';
-import { SearchInput } from '../../ui';
+import { Input } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 
 const FiltersModalSearch = ({ searchQuery, onSearchChange, t, isRTL }) => {
     return (
@@ -7,11 +8,13 @@ const FiltersModalSearch = ({ searchQuery, onSearchChange, t, isRTL }) => {
             <label className={`block text-sm font-medium text-gray-700 mb-2`} style={{ textAlign: 'right' }}>
                 {t('searchProducts')}
             </label>
-            <SearchInput
+            <Input
+                prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                 value={searchQuery}
-                onChange={onSearchChange}
+                onChange={(e) => onSearchChange(e.target.value)}
                 placeholder={t('searchProducts')}
-                isRTL={isRTL}
+                style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+                allowClear
             />
         </div>
     );

@@ -2,7 +2,20 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { CloseOutlined as X, ReloadOutlined as Loader, CheckOutlined as Check, InboxOutlined as Package } from '@ant-design/icons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { categoriesAPI, productsAPI } from '../../services/woocommerce';
-import SearchInput from '../ui/inputs/SearchInput';
+import { Input } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
+
+// ... other imports
+
+// Inside component
+<Input
+  prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+  value={searchQuery}
+  onChange={(e) => setSearchQuery(e.target.value)}
+  placeholder={t('searchProducts') || 'Search products...'}
+  style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+  allowClear
+/>
 import { EmptyState, LoadingState, Button } from '../ui';
 
 const BulkAssignModal = ({ category, onClose, isRTL, t }) => {
@@ -146,11 +159,13 @@ const BulkAssignModal = ({ category, onClose, isRTL, t }) => {
 
         {/* Search */}
         <div className="p-4 border-b border-gray-200">
-          <SearchInput
+          <Input
+            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('searchProducts') || 'Search products...'}
-            isRTL={isRTL}
+            style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+            allowClear
           />
         </div>
 
