@@ -42,15 +42,15 @@ const Sidebar = ({ isOpen, onClose, onCollapseChange, isCollapsed: externalColla
 
 
   const menuItems = [
-    { 
-      key: '/dashboard', 
-      icon: <DashboardOutlined />, 
+    {
+      key: '/dashboard',
+      icon: <DashboardOutlined />,
       label: t('dashboard'),
       'data-onboarding': 'dashboard-nav'
     },
-    { 
+    {
       key: '/products',
-      icon: <ShoppingOutlined />, 
+      icon: <ShoppingOutlined />,
       label: t('products'),
       'data-onboarding': 'products-nav',
       children: [
@@ -80,8 +80,6 @@ const Sidebar = ({ isOpen, onClose, onCollapseChange, isCollapsed: externalColla
     { key: '/customers', icon: <TeamOutlined />, label: t('customers') },
     { key: '/coupons', icon: <DollarOutlined />, label: t('coupons') },
     { key: '/categories', icon: <FolderOutlined />, label: t('categories') || 'Categories' },
-    { key: '/calculator', icon: <Calculator />, label: t('calculator') || 'מחשבון' },
-    { key: '/imports', icon: <UploadOutlined />, label: t('imports') || 'ייבוא' },
     { key: '/settings', icon: <SettingOutlined />, label: t('settings'), 'data-onboarding': 'settings-nav' },
   ];
 
@@ -91,10 +89,10 @@ const Sidebar = ({ isOpen, onClose, onCollapseChange, isCollapsed: externalColla
       '/products/list': '/products',
       '/products/add': '/products/add'
     };
-    
+
     const route = routeMap[key] || key;
     navigate(route);
-    
+
     // Close sidebar on mobile when navigating
     if (window.innerWidth < 1024) {
       onClose();
@@ -105,9 +103,9 @@ const Sidebar = ({ isOpen, onClose, onCollapseChange, isCollapsed: externalColla
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Mobile Close Button */}
       {window.innerWidth < 1024 && (
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
           justifyContent: 'flex-end',
           padding: 16,
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
@@ -117,7 +115,7 @@ const Sidebar = ({ isOpen, onClose, onCollapseChange, isCollapsed: externalColla
             type="text"
             size="small"
             icon={<X />}
-            style={{ 
+            style={{
               color: '#fff',
               alignItems: 'center',
               justifyContent: 'center'
@@ -137,24 +135,24 @@ const Sidebar = ({ isOpen, onClose, onCollapseChange, isCollapsed: externalColla
         minHeight: 64
       }}>
         {isCollapsed ? (
-          <img 
-            src="/logo.svg" 
-            alt="Logo" 
-            style={{ 
-              width: 40, 
+          <img
+            src="/logo.svg"
+            alt="Logo"
+            style={{
+              width: 40,
               height: 40,
               objectFit: 'contain'
-            }} 
+            }}
           />
         ) : (
-          <img 
-            src="/logo.svg" 
-            alt="Logo" 
-            style={{ 
+          <img
+            src="/logo.svg"
+            alt="Logo"
+            style={{
               height: 40,
               width: 'auto',
               objectFit: 'contain'
-            }} 
+            }}
           />
         )}
       </div>
@@ -174,7 +172,7 @@ const Sidebar = ({ isOpen, onClose, onCollapseChange, isCollapsed: externalColla
           background-color: rgba(255, 255, 255, 0.08) !important;
         }
       `}</style>
-      
+
       {/* Menu */}
       <Menu
         mode="inline"
@@ -185,7 +183,7 @@ const Sidebar = ({ isOpen, onClose, onCollapseChange, isCollapsed: externalColla
         onOpenChange={setOpenKeys}
         items={menuItems}
         onClick={handleMenuClick}
-        style={{ 
+        style={{
           borderRight: 0,
           flex: 1,
           direction: isRTL ? 'rtl' : 'ltr',
@@ -197,8 +195,8 @@ const Sidebar = ({ isOpen, onClose, onCollapseChange, isCollapsed: externalColla
       />
 
       {/* Footer - Custom Trigger */}
-      <div style={{ 
-        padding: '12px 16px', 
+      <div style={{
+        padding: '12px 16px',
         backgroundColor: '#0f172a',
         borderTop: '1px solid rgba(255, 255, 255, 0.1)',
         display: 'flex',

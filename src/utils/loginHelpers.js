@@ -6,7 +6,6 @@
  */
 
 import { checkRateLimit } from './security';
-import { authenticateWithEmail } from '../services/auth';
 import { authAPI } from '../services/api';
 
 const USE_BACKEND_API = import.meta.env.VITE_API_URL;
@@ -47,22 +46,22 @@ const BACKOFF_MULTIPLIER = 2;
 export const recordFailedLoginAttempt = (email) => {
   const now = Date.now();
   const key = email.toLowerCase().trim();
-  const record = loginAttemptsStore.get(key) || { 
-    count: 0, 
+  const record = loginAttemptsStore.get(key) || {
+    count: 0,
     resetTime: now + WINDOW_MS,
     backoffUntil: 0
   };
 
   record.count++;
   record.resetTime = now + WINDOW_MS;
-  
+
   // Calculate exponential backoff
   const backoffDelay = Math.min(
     INITIAL_BACKOFF_MS * Math.pow(BACKOFF_MULTIPLIER, record.count - 1),
     MAX_BACKOFF_MS
   );
   record.backoffUntil = now + backoffDelay;
-  
+
   loginAttemptsStore.set(key, record);
 };
 
@@ -115,8 +114,8 @@ export const checkLoginRateLimit = (email) => {
     };
   }
 
-  return { 
-    allowed: true, 
+  return {
+    allowed: true,
     error: null,
     remaining: MAX_ATTEMPTS - record.count
   };
@@ -137,6 +136,7 @@ export const authenticateUser = async (email, password) => {
     accessToken: result.accessToken
   };
 };
+
 
 
 

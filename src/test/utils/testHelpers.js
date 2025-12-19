@@ -7,8 +7,8 @@ import { render } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { LanguageProvider } from '../../../contexts/LanguageContext';
-import { AuthProvider } from '../../../contexts/AuthContext';
-import { SettingsProvider } from '../../../contexts/SettingsContext';
+import { AuthProvider } from '@/features/auth';
+import { SettingsProvider } from '@/features/settings';
 
 /**
  * Creates a test QueryClient with disabled retries

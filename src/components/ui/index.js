@@ -1,9 +1,5 @@
 // UI Components Barrel Export
 
-// Cards
-export { default as Card } from './cards/Card';
-export { default as StatCard } from './cards/StatCard';
-
 // Modals
 export { default as Modal } from './modals/Modal';
 // Note: ModalHeader, ModalBody, ModalFooter are deprecated - use Ant Design Modal props directly

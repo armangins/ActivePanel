@@ -17,11 +17,14 @@ export const LanguageProvider = ({ children }) => {
   }, []);
 
   const formatCurrency = useCallback((amount) => {
+    if (amount === null || amount === undefined || amount === 'undefined') return '';
+    const num = Number(amount);
+    if (isNaN(num)) return amount;
     return new Intl.NumberFormat('he-IL', {
       style: 'currency',
       currency: 'ILS',
       minimumFractionDigits: 2,
-    }).format(amount);
+    }).format(num);
   }, []);
 
   useEffect(() => {

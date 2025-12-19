@@ -1,22 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout, Spin } from 'antd';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { SettingsProvider } from './contexts/SettingsContext';
+import { AuthProvider, useAuth, LoginPage, SignUpPage, OAuthCallback, ProtectedRoute } from '@/features/auth';
+import { SettingsProvider } from '@/features/settings';
 import { MessageProvider } from './contexts/MessageContext';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
-import Dashboard from './components/Dashboard/Dashboard';
-import Products from './components/Products/Products/Products';
-import AddProductView from './components/Products/AddProductView';
-import Orders from './components/Orders/Orders';
-import Customers from './components/Customers/Customers';
-import Settings from './components/Settings/Settings';
-import Login from './components/Auth/Login';
-import OAuthCallback from './components/Auth/OAuthCallback';
-import ProtectedRoute from './components/Auth/ProtectedRoute';
+
+// Lazy load route components for code-splitting
+const Dashboard = lazy(() => import('@/features/dashboard'));
+const Products = lazy(() => import('@/features/products'));
+const ProductForm = lazy(() => import('@/features/products').then(module => ({ default: module.ProductForm })));
+const Orders = lazy(() => import('@/features/orders'));
+const Customers = lazy(() => import('@/features/customers'));
+const Coupons = lazy(() => import('@/features/coupons'));
+const Categories = lazy(() => import('@/features/categories'));
+const Settings = lazy(() => import('@/features/settings'));
 
 const { Content } = Layout;
 
@@ -74,7 +75,8 @@ function AppContent() {
   return (
     <Routes>
       {/* Public routes - no layout */}
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignUpPage />} />
       <Route path="/oauth/callback" element={<OAuthCallback />} />
       <Route path="/auth/callback" element={<OAuthCallback />} />
 
@@ -97,16 +99,20 @@ function AppContent() {
                   isCollapsed={isCollapsed}
                 />
                 <Content style={{ margin: '24px 16px', padding: 24, minHeight: 280, background: '#fff', borderRadius: 8, direction: isRTL ? 'rtl' : 'ltr' }}>
-                  <Routes>
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/products" element={<Products />} />
-                    <Route path="/products/add" element={<AddProductView />} />
-                    <Route path="/products/edit/:id" element={<AddProductView />} />
-                    <Route path="/orders" element={<Orders />} />
-                    <Route path="/customers" element={<Customers />} />
-                    <Route path="/settings" element={<Settings />} />
-                  </Routes>
+                  <Suspense fallback={<div style={{ textAlign: 'center', padding: 50 }}><Spin size="large" /></div>}>
+                    <Routes>
+                      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/products" element={<Products />} />
+                      <Route path="/products/add" element={<ProductForm />} />
+                      <Route path="/products/edit/:id" element={<ProductForm />} />
+                      <Route path="/orders" element={<Orders />} />
+                      <Route path="/customers" element={<Customers />} />
+                      <Route path="/coupons" element={<Coupons />} />
+                      <Route path="/categories" element={<Categories />} />
+                      <Route path="/settings" element={<Settings />} />
+                    </Routes>
+                  </Suspense>
                 </Content>
               </Layout>
             </Layout>

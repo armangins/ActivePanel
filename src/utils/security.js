@@ -145,3 +145,28 @@ export const generateSecureToken = (length = 32) => {
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 };
 
+/**
+ * Validate image URL
+ * Checks if the URL is valid and uses allowed protocols (http, https)
+ * @param {string} url - The URL to validate
+ * @returns {string|null} The validated URL or null if invalid
+ */
+export const validateImageUrl = (url) => {
+  if (!url || typeof url !== 'string') return null;
+
+  try {
+    const parsedUrl = new URL(url);
+    // Allow http, https, and data URIs for images
+    if (['http:', 'https:', 'data:'].includes(parsedUrl.protocol)) {
+      // Basic XSS prevention: avoid javascript: protocol (already handled by protocol check but good practice)
+      return DOMPurify.sanitize(url);
+    }
+    return null;
+  } catch (error) {
+    // Check if it's a relative path which might be valid for local assets
+    if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../')) {
+      return DOMPurify.sanitize(url);
+    }
+    return null;
+  }
+};

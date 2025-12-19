@@ -9,7 +9,7 @@ import { Button } from 'antd';
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@/features/auth';
 import ConnectionStatus from './ConnectionStatus';
 import NotificationDropdown from './NotificationDropdown';
 import UserMenuDropdown from './UserMenuDropdown';
@@ -17,7 +17,7 @@ import { UserAvatar } from '../ui';
 import GlobalSearch from './GlobalSearch';
 import { refreshAllData } from '../../utils/refreshHelpers';
 import useNewOrdersCount from '../../hooks/useNewOrdersCount';
-import OrderDetailsModal from '../Orders/OrderDetailsModal/OrderDetailsModal';
+import { OrderDetailsModal } from '@/features/orders';
 
 const Header = ({ onMenuClick, onCollapseToggle, isCollapsed }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);

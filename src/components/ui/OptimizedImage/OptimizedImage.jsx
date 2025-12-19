@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Image } from 'antd';
 import { PictureOutlined } from '@ant-design/icons';
-import { validateImageUrl } from '../../Products/utils/securityHelpers';
+import { validateImageUrl } from '@/utils/security';
 
 /**
  * OptimizedImage Component - Ant Design wrapper
  * 
  * Optimized image component with lazy loading and resizing support using Ant Design Image.
  */
-const OptimizedImage = ({ 
-    src, 
-    alt, 
-    className = '', 
+const OptimizedImage = ({
+    src,
+    alt,
+    className = '',
     placeholderClassName = '',
     width,
     height,
@@ -23,13 +23,13 @@ const OptimizedImage = ({
     // PERFORMANCE: Resize image URL if resize prop is true
     const getOptimizedImageUrl = (originalUrl) => {
         if (!originalUrl) return null;
-        
+
         // SECURITY: Validate URL before processing
         const validatedUrl = validateImageUrl(originalUrl);
         if (!validatedUrl) {
             return null;
         }
-        
+
         // If resize is requested, add resize parameters
         if (resize && (width || height)) {
             const separator = validatedUrl.includes('?') ? '&' : '?';
@@ -39,12 +39,12 @@ const OptimizedImage = ({
             params.push('fit=crop'); // Maintain aspect ratio with crop
             return `${validatedUrl}${separator}${params.join('&')}`;
         }
-        
+
         return validatedUrl;
     };
 
     const optimizedSrc = getOptimizedImageUrl(src);
-    
+
     // SECURITY: Reset error state if src changes to a valid URL
     useEffect(() => {
         if (optimizedSrc && hasError) {
@@ -54,9 +54,9 @@ const OptimizedImage = ({
 
     if (hasError || !optimizedSrc) {
         return (
-            <div className={className} style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+            <div className={className} style={{
+                display: 'flex',
+                alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: '#f5f5f5',
                 minHeight: height || 100,

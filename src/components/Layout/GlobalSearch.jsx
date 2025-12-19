@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AutoComplete, Input, Typography, Flex, Spin, Empty } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { useProducts } from '../../hooks/useProducts';
+import { useProductsData } from '@/features/products/hooks/useProductsData';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { OptimizedImage } from '../ui';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -17,7 +17,7 @@ const GlobalSearch = ({ placeholder, isRTL, className }) => {
     const { t, formatCurrency } = useLanguage();
 
     // Fetch products only when we have a search term
-    const { data, isLoading } = useProducts(
+    const { data, isLoading } = useProductsData(
         { search: debouncedSearchValue, per_page: 5 },
         { enabled: !!debouncedSearchValue }
     );
@@ -42,8 +42,8 @@ const GlobalSearch = ({ placeholder, isRTL, className }) => {
             return;
         }
 
-        if (data?.products?.length > 0) {
-            const productOptions = data.products.map(product => ({
+        if (data?.data?.length > 0) {
+            const productOptions = data.data.map(product => ({
                 value: product.id.toString(),
                 label: (
                     <Flex align="center" gap={12} style={{ padding: '4px 0' }}>
