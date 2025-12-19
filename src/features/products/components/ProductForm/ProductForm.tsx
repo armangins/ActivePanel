@@ -1,5 +1,5 @@
 import { Form, Button, Space, Spin, Typography } from 'antd';
-import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useProductForm } from '../../hooks/useProductForm';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -86,7 +86,7 @@ export const ProductForm = () => {
                 boxShadow: '0 -2px 10px rgba(0,0,0,0.05)'
             }}>
                 <Space>
-                    <Button type="primary" htmlType="submit" loading={isSaving} icon={<SaveOutlined />} size="large">
+                    <Button type="primary" htmlType="submit" loading={isSaving} size="large">
                         {isEditMode ? t('update') : (t('uploadProduct') || t('publish') || 'Upload Product')}
                     </Button>
                 </Space>

@@ -78,7 +78,7 @@ export const ProductsPage = () => {
     const handleDelete = useCallback((product: any) => {
         Modal.confirm({
             title: t('deleteProduct'),
-            content: `${t('areYouSureDelete')} "${product.name}"?`,
+            content: t('deleteProductWarning').replace('{productName}', product.name),
             okText: t('yes'),
             okType: 'danger',
             cancelText: t('no'),
