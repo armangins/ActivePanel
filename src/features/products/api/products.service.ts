@@ -1,46 +1,12 @@
-import { productsAPI } from '@/services/woocommerce';
+import { productsAPI, variationsAPI } from '@/services/woocommerce';
 // @ts-ignore
 import { secureLog } from '@/utils/logger';
 import { Product, ProductsResponse, CreateProductData, UpdateProductData } from '../types';
 
 export const productsService = {
-    async getProducts(params: {
-        page?: number;
-        per_page?: number;
-        search?: string;
-        category?: number;
-        status?: string;
-        min_price?: string;
-        max_price?: string;
-        sku?: string;
-    } = {}): Promise<ProductsResponse> {
+    async getProducts(params: any): Promise<ProductsResponse> {
         try {
-            const apiParams: any = {
-                page: params.page || 1,
-                per_page: params.per_page || 10,
-                search: params.search || '',
-                status: params.status || 'publish', // Default to publish if not specified? Or all? Legacy code suggests all or specific filtering.
-                orderby: 'date',
-                order: 'desc'
-            };
-
-            if (params.category) apiParams.category = params.category;
-            if (params.min_price) apiParams.min_price = params.min_price;
-            if (params.max_price) apiParams.max_price = params.max_price;
-            if (params.sku) apiParams.sku = params.sku;
-
-            // Performance optimization: select specific fields? 
-            // Legacy code uses _fields to optimize. We should replicate that if possible, but strict typing might make it tricky unless api supports it well.
-            // For now, let's fetch full objects to ensure type safety, or specific fields if we are sure.
-            // apiParams._fields = 'id,name,slug,price,regular_price,sale_price,images,stock_status,stock_quantity,categories,type,sku,date_created,status';
-
-            const response = await productsAPI.list(apiParams);
-
-            return {
-                data: response.data as Product[],
-                total: response.total || 0,
-                totalPages: response.totalPages || 0
-            };
+            return await productsAPI.list(params);
         } catch (error) {
             secureLog.error('Error fetching products:', error);
             throw error;
@@ -49,8 +15,7 @@ export const productsService = {
 
     async getProductById(id: number): Promise<Product> {
         try {
-            const product = await productsAPI.getById(id);
-            return product as Product;
+            return await productsAPI.getById(id);
         } catch (error) {
             secureLog.error(`Error fetching product ${id}:`, error);
             throw error;
@@ -59,8 +24,7 @@ export const productsService = {
 
     async createProduct(data: CreateProductData): Promise<Product> {
         try {
-            const product = await productsAPI.create(data);
-            return product as Product;
+            return await productsAPI.create(data);
         } catch (error) {
             secureLog.error('Error creating product:', error);
             throw error;
@@ -69,8 +33,7 @@ export const productsService = {
 
     async updateProduct(id: number, data: Partial<UpdateProductData>): Promise<Product> {
         try {
-            const product = await productsAPI.update(id, data);
-            return product as Product;
+            return await productsAPI.update(id, data);
         } catch (error) {
             secureLog.error(`Error updating product ${id}:`, error);
             throw error;
@@ -100,7 +63,9 @@ export const productsService = {
     // Variations Support
     async getVariations(productId: number): Promise<any[]> {
         try {
-            return await productsAPI.getVariations(productId);
+            const response = await variationsAPI.list(productId);
+            // variationsAPI.list returns { data: [], total: number }
+            return response.data;
         } catch (error) {
             secureLog.error(`Error fetching variations for product ${productId}:`, error);
             throw error;

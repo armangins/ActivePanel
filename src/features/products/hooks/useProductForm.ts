@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { productSchema, ProductFormValues } from '../types/schemas';
 import { useCreateProduct, useUpdateProduct, useProductDetail } from './useProductsData';
@@ -66,19 +66,32 @@ export const useProductForm = (productId?: number | null) => {
     const createMutation = useCreateProduct();
     const updateMutation = useUpdateProduct();
 
-    const onSubmit = async (data: ProductFormValues) => {
+    const onSubmit = async (data: Partial<ProductFormValues>) => {
         try {
             if (isEditMode && productId) {
+                // Determine if this is a full update or partial (like status change)
                 await updateMutation.mutateAsync({ id: productId, data });
                 message.success(t('productUpdatedSuccessfully'));
+                return true;
             } else {
-                await createMutation.mutateAsync(data as any); // Type assertion needed until backend matches 1:1
+                // Create mode
+                const response = await createMutation.mutateAsync(data as any);
                 message.success(t('productCreatedSuccessfully'));
+
+                // If specific status was requested (like 'draft'), we don't redirect yet
+                if (data.status === 'draft') {
+                    // Force navigation to edit mode of the new draft
+                    navigate(`/products/edit/${response.id}`, { replace: true });
+                    return true;
+                }
+
                 navigate('/products');
+                return true;
             }
         } catch (error: any) {
             secureLog.error('Product form submission error:', error);
             message.error(error.message || t('errorSavingProduct'));
+            return false;
         }
     };
 
@@ -99,7 +112,7 @@ export const useProductForm = (productId?: number | null) => {
         form,
         isLoading: isLoadingProduct,
         isSaving: createMutation.isPending || updateMutation.isPending,
-        onSubmit: form.handleSubmit(onSubmit),
+        onSubmit: onSubmit, // Expose the wrapped submit handler
         isEditMode,
         handleGenerateSKU
     };

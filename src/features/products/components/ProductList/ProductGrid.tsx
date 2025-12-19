@@ -47,21 +47,50 @@ export const ProductGrid = ({
                     >
                         <Card
                             hoverable
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => onView(product)}
                             cover={
-                                <img
-                                    alt={product.name}
-                                    src={imageUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect width="400" height="400" fill="%23f0f2f5"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="system-ui" font-size="48" fill="%23bfbfbf"%3E%F0%9F%93%A6%3C/text%3E%3C/svg%3E'}
-                                    style={{
-                                        width: '100%',
-                                        aspectRatio: '1 / 1',
-                                        objectFit: 'cover'
-                                    }}
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    {product.type === 'variable' && (
+                                        <Tag
+                                            color="#2f54eb"
+                                            style={{
+                                                position: 'absolute',
+                                                top: 10,
+                                                right: 10,
+                                                zIndex: 1,
+                                                margin: 0,
+                                                border: 'none',
+                                                fontWeight: 600
+                                            }}
+                                        >
+                                            מוצר וריאציה
+                                        </Tag>
+                                    )}
+                                    <img
+                                        alt={product.name}
+                                        src={imageUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect width="400" height="400" fill="%23f0f2f5"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="system-ui" font-size="48" fill="%23bfbfbf"%3E%F0%9F%93%A6%3C/text%3E%3C/svg%3E'}
+                                        style={{
+                                            width: '100%',
+                                            aspectRatio: '1 / 1',
+                                            objectFit: 'cover'
+                                        }}
+                                    />
+                                </div>
                             }
                             actions={[
-                                <EyeOutlined key="view" onClick={() => onView(product)} />,
-                                <EditOutlined key="edit" onClick={() => onEdit(product)} />,
-                                <DeleteOutlined key="delete" onClick={() => onDelete(product)} />
+                                <EyeOutlined key="view" onClick={(e) => {
+                                    e.stopPropagation();
+                                    onView(product);
+                                }} />,
+                                <EditOutlined key="edit" onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEdit(product);
+                                }} />,
+                                <DeleteOutlined key="delete" onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete(product);
+                                }} />
                             ]}
                         >
                             <Meta
@@ -77,9 +106,11 @@ export const ProductGrid = ({
                                                 currency={product.currency}
                                                 type={product.type}
                                             />
-                                            <Tag color={stockStatus === 'instock' ? 'success' : 'error'}>
-                                                {stockStatus === 'instock' ? t('inStock') : t('outOfStock')}
-                                            </Tag>
+                                            <Space size={4}>
+                                                <Tag color={stockStatus === 'instock' ? 'success' : 'error'}>
+                                                    {stockStatus === 'instock' ? t('inStock') : t('outOfStock')}
+                                                </Tag>
+                                            </Space>
                                         </Space>
                                         <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
                                             SKU: {product.sku || '-'}

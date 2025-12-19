@@ -23,6 +23,7 @@ build
 *.md
 !README.md
 !ANTIGRAVITY_RULES.md
+!TASKS.md
 
 # Allow workflow files
 !WORKFLOWS/

@@ -1,0 +1,13 @@
+import React from 'react';
+
+export interface LanguageContextType {
+    t: (key: string) => string;
+    language: string;
+    setLanguage: (lang: string) => void;
+    dir: 'ltr' | 'rtl';
+    formatCurrency: (amount: number | string) => string;
+}
+
+export const LanguageContext: React.Context<LanguageContextType>;
+export const LanguageProvider: React.FC<{ children: React.ReactNode }>;
+export const useLanguage: () => LanguageContextType;

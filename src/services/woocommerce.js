@@ -453,6 +453,10 @@ export const categoriesAPI = {
   },
 };
 
+// Aliases for compatibility
+categoriesAPI.get = categoriesAPI.getById;
+categoriesAPI.getAll = categoriesAPI.list;
+
 // Attributes API
 export const attributesAPI = {
   getAll: async (params = {}) => {

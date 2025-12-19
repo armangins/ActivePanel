@@ -66,12 +66,12 @@ export const dashboardService = {
     },
 
     async getTopProducts(): Promise<DashboardProduct[]> {
-        const products = await productsAPI.getAll({
+        const response: any = await productsAPI.getAll({
             per_page: 5,
             orderby: 'popularity',
             order: 'desc'
         });
-        return products;
+        return response.data || [];
     },
 
     async getSalesChartData(orders: any[]): Promise<SalesChartData[]> {

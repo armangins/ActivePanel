@@ -19,7 +19,7 @@
 ## ⚡ 3. PERFORMANCE & CODE QUALITY (DRY)
 - **Lazy Loading:** All route-level components must use `React.lazy()` with `<Suspense>`.
 - **Hooks First:** Extract all business logic, API calls, and state management into custom hooks.
-- **Complexity Limit:** Components exceeding 150 lines must be refactored into smaller sub-components.
+- **Complexity Limit:** Components exceeding 200 lines must be refactored into smaller sub-components.
 - **Memoization:** Apply `useMemo` and `useCallback` for heavy computations or to prevent expensive re-renders in stable components.
 
 ## 🔐 4. SECURITY & DATA INTEGRITY

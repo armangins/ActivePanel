@@ -1,14 +1,10 @@
-import { Form, Button, Tabs, Space, Spin, Typography } from 'antd';
+import { Form, Button, Space, Spin, Typography } from 'antd';
 import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
-import { useWatch } from 'react-hook-form';
 import { useProductForm } from '../../hooks/useProductForm';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCategories } from '@/hooks/useCategories';
 import { GeneralTab } from './GeneralTab';
-import { InventoryTab } from './InventoryTab';
-import { ShippingTab } from './ShippingTab';
-import { AttributesTab, VariationsTab } from './ProductTabs';
 
 export const ProductForm = () => {
     const { id } = useParams();
@@ -16,77 +12,85 @@ export const ProductForm = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
 
+
+
     const {
         form: { control, formState: { errors } },
+        form,
         isLoading,
         isSaving,
-        onSubmit,
+        onSubmit: handleSave,
         isEditMode,
         handleGenerateSKU
     } = useProductForm(productId);
 
     const { data: categories = [] } = useCategories();
-    const attributes = useWatch({ control, name: 'attributes' }) || [];
-    const productType = useWatch({ control, name: 'type' });
+
 
     if (isLoading) {
         return <div style={{ textAlign: 'center', padding: 50 }}><Spin size="large" /></div>;
     }
 
-    const items = [
-        {
-            key: 'general',
-            label: t('general'),
-            children: <GeneralTab control={control} errors={errors} categories={categories} />
-        },
-        {
-            key: 'inventory',
-            label: t('inventory'),
-            children: <InventoryTab control={control} handleGenerateSKU={handleGenerateSKU} />
-        },
-        {
-            key: 'shipping',
-            label: t('shipping'),
-            children: <ShippingTab control={control} />
-        },
-        {
-            key: 'attributes',
-            label: t('attributes'),
-            children: <AttributesTab attributes={attributes} />
-        },
-        {
-            key: 'variations',
-            label: t('variations'),
-            children: <VariationsTab productId={productId} productType={productType} attributes={attributes} />
-        },
-    ];
+
+
+    const handleFormSubmit = () => {
+        form.handleSubmit(handleSave)();
+    };
+
+    const formContent = (
+        <GeneralTab
+            control={control}
+            errors={errors}
+            categories={categories}
+            handleGenerateSKU={handleGenerateSKU}
+            setValue={form.setValue}
+        />
+    );
+
+
 
     return (
-        <Form layout="vertical" onFinish={onSubmit}>
+        <Form layout="vertical" onFinish={handleFormSubmit} style={{ paddingBottom: 80 }}>
+            {/* Header - Just Title and Back */}
             <div style={{
                 marginBottom: 24,
                 display: 'flex',
-                flexWrap: 'wrap',
-                gap: '16px',
                 justifyContent: 'space-between',
                 alignItems: 'center'
             }}>
-                <Space wrap>
+                <Space>
                     <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/products')}>
-                        {t('back')}
+                        {t('back') || "Back"}
                     </Button>
                     <Typography.Title level={4} style={{ margin: 0 }}>
                         {isEditMode ? t('editProduct') : t('createProduct')}
                     </Typography.Title>
                 </Space>
-                <Space wrap>
-                    <Button type="primary" htmlType="submit" loading={isSaving} icon={<SaveOutlined />}>
-                        {isEditMode ? t('update') : t('publish')}
+            </div>
+
+            {/* Form Content */}
+            {formContent}
+
+            {/* Sticky Actions Footer */}
+            <div style={{
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                zIndex: 999,
+                padding: '16px 24px',
+                background: '#fff',
+                borderTop: '1px solid #f0f0f0',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                boxShadow: '0 -2px 10px rgba(0,0,0,0.05)'
+            }}>
+                <Space>
+                    <Button type="primary" htmlType="submit" loading={isSaving} icon={<SaveOutlined />} size="large">
+                        {isEditMode ? t('update') : (t('uploadProduct') || t('publish') || 'Upload Product')}
                     </Button>
                 </Space>
             </div>
-
-            <Tabs defaultActiveKey="general" items={items} />
         </Form>
     );
 };

@@ -40,6 +40,8 @@ export const productSchema = z.object({
     sku: z.string().optional(),
     regular_price: z.string().optional().refine((val) => !val || !isNaN(parseFloat(val)), 'Invalid price format'),
     sale_price: z.string().optional().refine((val) => !val || !isNaN(parseFloat(val)), 'Invalid price format'),
+    date_on_sale_from: z.string().nullable().optional(),
+    date_on_sale_to: z.string().nullable().optional(),
     manage_stock: z.boolean().default(false),
     stock_status: z.enum(['instock', 'outofstock', 'onbackorder']).default('instock'),
     stock_quantity: z.number().nullable().optional(),
@@ -65,6 +67,14 @@ export const productSchema = z.object({
             code: z.ZodIssueCode.custom,
             message: "Regular price is required for simple products",
             path: ["regular_price"]
+        });
+    }
+
+    if (data.manage_stock && (data.stock_quantity === null || data.stock_quantity === undefined || data.stock_quantity < 0)) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Stock quantity is required when stock management is enabled",
+            path: ["stock_quantity"]
         });
     }
 });

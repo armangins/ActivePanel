@@ -1,12 +1,34 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { ProductDetailModal } from '../components/ProductDetails/ProductDetailModal';
-import { LanguageProvider } from '@/contexts/LanguageContext';
+// Mock LanguageContext
+vi.mock('@/contexts/LanguageContext', () => ({
+    useLanguage: () => ({
+        t: (key: string) => key,
+        formatCurrency: (amount: any) => `${amount} $`
+    }),
+    LanguageProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
+}));
 
-// Mock LanguageProvider
-const MockLanguageProvider = ({ children }: { children: React.ReactNode }) => (
-    <LanguageProvider>{children}</LanguageProvider>
+// No longer need local MockLanguageProvider wrapper if we mock the module
+const MockWrapper = ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
 );
+
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation(query => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(), // deprecated
+        removeListener: vi.fn(), // deprecated
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+    })),
+});
 
 // Verify that we can import the component
 describe('ProductDetailModal', () => {
@@ -24,14 +46,14 @@ describe('ProductDetailModal', () => {
 
     it('renders product details correctly', () => {
         render(
-            <MockLanguageProvider>
+            <MockWrapper>
                 <ProductDetailModal
                     product={mockProduct}
                     open={true}
                     onClose={() => { }}
                     onEdit={() => { }}
                 />
-            </MockLanguageProvider>
+            </MockWrapper>
         );
 
         expect(screen.getByText('Test Product')).toBeInTheDocument();
@@ -43,18 +65,18 @@ describe('ProductDetailModal', () => {
     it('calls onClose when close button is clicked', () => {
         const handleClose = vi.fn();
         render(
-            <MockLanguageProvider>
+            <MockWrapper>
                 <ProductDetailModal
                     product={mockProduct}
                     open={true}
                     onClose={handleClose}
                     onEdit={() => { }}
                 />
-            </MockLanguageProvider>
+            </MockWrapper>
         );
 
-        const closeButtons = screen.getAllByText('close'); // might match text in provider too, be careful. 
-        // Better trigger by key or known button text if unique. 
-        // "close" is likely the translation key. Assuming "close" or "Close" text.
+        const closeButton = screen.getByText('close');
+        fireEvent.click(closeButton);
+        expect(handleClose).toHaveBeenCalled();
     });
 });
