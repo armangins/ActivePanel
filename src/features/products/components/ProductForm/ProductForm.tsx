@@ -1,5 +1,5 @@
-import { Form, Button, Space, Spin, Typography, notification } from 'antd';
-import { ArrowLeftOutlined, PlusOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { Form, Button, Space, Spin, Typography, message } from 'antd';
+import { ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons';
 import { useProductForm } from '../../hooks/useProductForm';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -14,7 +14,7 @@ export const ProductForm = () => {
     const productId = id ? parseInt(id) : null;
     const { t } = useLanguage();
     const navigate = useNavigate();
-    const [api, contextHolder] = notification.useNotification();
+    const [messageApi, contextHolder] = message.useMessage();
 
     const {
         form: { control, formState: { errors } },
@@ -27,7 +27,7 @@ export const ProductForm = () => {
     } = useProductForm(productId);
 
     const { data: categories = [] } = useCategories();
-    const { uploadProduct } = useCreateProduct();
+    const { uploadProduct, uploadState } = useCreateProduct();
 
     if (isLoading) {
         return <div style={{ textAlign: 'center', padding: 50 }}><Spin size="large" /></div>;
@@ -44,8 +44,51 @@ export const ProductForm = () => {
         console.log('🔵 Form values:', form.getValues());
 
         if (!isValid) {
-            // Validation failed, errors will be displayed on fields
+            // Validation failed, show user-friendly error message
             console.log('❌ Validation failed, blocking submission');
+
+            const errors = form.formState.errors;
+            let errorMessage = 'נא למלא את כל השדות הנדרשים';
+
+            // Build specific error message
+            const errorFields: string[] = [];
+            if (errors.name) errorFields.push('שם המוצר');
+            if (errors.regular_price) errorFields.push('מחיר רגיל');
+            if (errors.stock_quantity) errorFields.push('כמות במלאי');
+
+            // Console log errors for debugging
+            console.error('❌ VALIDATION ERRORS:', JSON.stringify(errors, null, 2));
+
+            if (errors.variations) {
+                if (Array.isArray(errors.variations)) {
+                    const variationErrors = errors.variations;
+                    // Count only non-null errors in the array
+                    const errorCount = variationErrors.filter((v: any) => v).length;
+                    if (errorCount > 0) {
+                        errorFields.push(`${errorCount} וריאציות`);
+                    }
+                } else {
+                    // Fallback for non-array variation errors
+                    errorFields.push('וריאציות (שגיאה כללית)');
+                }
+            }
+
+            if (errorFields.length > 0) {
+                errorMessage = `שדות חסרים: ${errorFields.join(', ')}`;
+            }
+
+            if (errorFields.length > 0) {
+                errorMessage = `שדות חסרים: ${errorFields.join(', ')}`;
+            }
+
+            messageApi.error(errorMessage);
+
+            // Scroll to first error field
+            const firstErrorField = document.querySelector('.ant-form-item-has-error');
+            if (firstErrorField) {
+                firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
             return;
         }
 
@@ -57,42 +100,16 @@ export const ProductForm = () => {
             try {
                 await uploadProduct(formData);
 
-                // Show success notification with actions
-                api.success({
-                    message: 'המוצר נוצר בהצלחה!',
-                    description: 'המוצר שלך נוסף למערכת',
-                    icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
-                    duration: 5, // Auto-close after 5 seconds
-                    showProgress: true, // Show progress bar
-                    pauseOnHover: true, // Pause countdown on hover
-                    btn: (
-                        <Space>
-                            <Button type="primary" size="small" onClick={() => {
-                                api.destroy();
-                                handleAddAnother();
-                            }}>
-                                הוסף מוצר נוסף
-                            </Button>
-                            <Button size="small" onClick={() => {
-                                api.destroy();
-                                navigate('/products');
-                            }}>
-                                עבור לעמוד המוצרים
-                            </Button>
-                        </Space>
-                    ),
-                    placement: 'topRight',
-                });
+                // Show success message
+                messageApi.success('המוצר נוצר בהצלחה!');
+
+                // Navigate to products list
+                navigate('/products');
+
             } catch (error: any) {
                 console.error('❌ Upload failed:', error);
-                // Show error notification
-                api.error({
-                    message: 'שגיאה ביצירת המוצר',
-                    description: error.message || 'אירעה שגיאה בעת יצירת המוצר',
-                    icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-                    duration: 5,
-                    placement: 'topRight',
-                });
+                // Show error message
+                messageApi.error(error.message || 'אירעה שגיאה בעת יצירת המוצר');
             }
         } else {
             // For editing, use existing save logic
@@ -117,10 +134,7 @@ export const ProductForm = () => {
         getValues: form.getValues
     });
 
-    // Handle adding another product after successful upload
-    const handleAddAnother = () => {
-        form.reset();  // Reset form to initial values
-    };
+
 
     const formContent = (
         <AddProductForm
@@ -236,7 +250,12 @@ export const ProductForm = () => {
                                 {t('createVariations')} ({currentAttributes.length})
                             </Button>
                         )}
-                        <Button type="primary" htmlType="submit" loading={isSaving} size="large">
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            loading={isEditMode ? isSaving : uploadState.isUploading}
+                            size="large"
+                        >
                             {isEditMode ? t('update') : (t('uploadProduct') || t('publish') || 'Upload Product')}
                         </Button>
                     </Space>

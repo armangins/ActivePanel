@@ -59,34 +59,37 @@ export const ProductVariationCard: React.FC<ProductVariationCardProps> = ({
                                     listType="picture-card"
                                     maxCount={1}
                                     beforeUpload={() => false}
-                                    fileList={field.value?.src ? [{
-                                        uid: '-1',
-                                        name: field.value.name || 'image',
-                                        status: 'done',
-                                        url: field.value.src
-                                    }] : []}
+                                    fileList={
+                                        field.value instanceof File
+                                            ? [{
+                                                uid: '-1',
+                                                name: field.value.name,
+                                                status: 'done' as const,
+                                                url: URL.createObjectURL(field.value)
+                                            }]
+                                            : field.value?.src
+                                                ? [{
+                                                    uid: '-1',
+                                                    name: field.value.name || 'image',
+                                                    status: 'done' as const,
+                                                    url: field.value.src
+                                                }]
+                                                : []
+                                    }
                                     onChange={async (info) => {
                                         if (info.fileList.length > 0) {
                                             const file = info.fileList[0];
 
-                                            // Convert file to base64 data URL
+                                            // Store the actual File object for upload
                                             if (file.originFileObj) {
-                                                const reader = new FileReader();
-                                                reader.onload = (e) => {
-                                                    const dataUrl = e.target?.result as string;
-                                                    field.onChange({
-                                                        src: dataUrl,
-                                                        name: file.name,
-                                                        alt: file.name
-                                                    });
-                                                };
-                                                reader.readAsDataURL(file.originFileObj);
+                                                field.onChange(file.originFileObj);
                                             } else if (file.url) {
                                                 // If already has URL (from existing image)
                                                 field.onChange({
                                                     src: file.url,
                                                     name: file.name,
-                                                    alt: file.name
+                                                    alt: file.name,
+                                                    id: (file as any).id
                                                 });
                                             }
                                         } else {
@@ -98,7 +101,7 @@ export const ProductVariationCard: React.FC<ProductVariationCardProps> = ({
                                     }}
                                     className="full-width-upload"
                                 >
-                                    {!field.value?.src && (
+                                    {!field.value && (
                                         <div style={{
                                             width: '100%',
                                             height: 200,

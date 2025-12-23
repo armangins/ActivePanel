@@ -71,11 +71,6 @@ export const useVariationGeneration = ({
 
         // Set all variations in form
         setValue('variations', allVariations, { shouldDirty: true });
-
-        // Clear attributes - set to empty array to trigger field array update
-        setTimeout(() => {
-            setValue('attributes', [], { shouldDirty: true, shouldValidate: true });
-        }, 0);
     }, [currentAttributes, parentRegularPrice, parentSalePrice, setValue, getValues]);
 
     return { generateVariations };

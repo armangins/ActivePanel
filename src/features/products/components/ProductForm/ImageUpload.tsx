@@ -172,7 +172,10 @@ export const ImageUpload = ({ value = [], onChange, maxCount = 5 }: ImageUploadP
                     }
                     return f;
                 });
-                updateFormValue(updated);
+                // Defer form value update to avoid setState during render
+                setTimeout(() => {
+                    updateFormValue(updated);
+                }, 0);
                 return updated;
             });
         } catch (error) {
@@ -189,7 +192,10 @@ export const ImageUpload = ({ value = [], onChange, maxCount = 5 }: ImageUploadP
     const handleRemove = (file: UploadFile) => {
         const newFileList = fileList.filter(f => f.uid !== file.uid);
         setFileList(newFileList);
-        updateFormValue(newFileList);
+        // Defer form value update to avoid setState during render
+        setTimeout(() => {
+            updateFormValue(newFileList);
+        }, 0);
     };
 
     const uploadButton = (

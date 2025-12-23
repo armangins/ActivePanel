@@ -28,7 +28,8 @@ export const productVariationSchema = z.object({
     stock_status: z.enum(['instock', 'outofstock', 'onbackorder']).default('instock'),
     stock_quantity: z.number().nullable().optional(),
     manage_stock: z.boolean().default(false),
-    image: productImageSchema.optional()
+    // Allow image to be strict schema (API data) or any (File object for upload)
+    image: z.union([productImageSchema, z.any()]).optional()
 });
 
 export const productSchema = z.object({

@@ -2,6 +2,7 @@
 
 ## 🏗 1. ARCHITECTURE & FOLDER STRUCTURE
 - **Pattern:** Feature-Based Colocation.
+- alway present me plans before starting to code
 - **Location:** All logic lives in `src/features/[feature-name]/`.
 - **Internal structure:** - `api/` (TanStack Query hooks + Zod schemas)
   - `components/` (Feature-specific UI)

@@ -56,7 +56,10 @@ export const useCreateProduct = () => {
                 : await createVariableProduct(data);
 
             if (result.success) {
-                message.success('Product created successfully!');
+                setUploadState(prev => ({
+                    ...prev,
+                    isUploading: false
+                }));
                 // Don't auto-close or navigate - let user choose via success buttons
             } else {
                 throw new Error(result.error);
@@ -68,7 +71,8 @@ export const useCreateProduct = () => {
                 error: errorMessage,
                 isUploading: false
             }));
-            message.error(errorMessage);
+            // Re-throw error so the component can handle it (show notification, etc.)
+            throw error;
         }
     }, [createSimpleProduct, createVariableProduct]);
 

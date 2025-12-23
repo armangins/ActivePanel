@@ -86,6 +86,9 @@ export const useCreateVariableProduct = ({ updateProgress }: UseCreateVariablePr
                 currentStep: 'Creating parent product...'
             });
 
+            console.log('🔍 DEBUG: Starting Parent Product Creation');
+            console.log('🔍 DEBUG: Raw Form Attributes:', JSON.stringify(data.attributes, null, 2));
+
             const parentData = {
                 name: data.name,
                 type: 'variable',
@@ -109,11 +112,18 @@ export const useCreateVariableProduct = ({ updateProgress }: UseCreateVariablePr
                 date_on_sale_to: data.date_on_sale_to
             };
 
-            console.log('📤 Creating variable parent product:', JSON.stringify(parentData, null, 2));
+            console.log('📤 DEBUG: Final Parent Product Payload:', JSON.stringify(parentData, null, 2));
 
             const parentResponse = await api.post('/products', parentData);
 
-            console.log('✅ Parent product response:', JSON.stringify(parentResponse.data, null, 2));
+            console.log('✅ DEBUG: Parent Product API Response:', JSON.stringify(parentResponse.data, null, 2));
+
+            // Log if attributes were actually saved
+            if (parentResponse.data.attributes) {
+                console.log('✅ DEBUG: Saved Attributes on Parent:', JSON.stringify(parentResponse.data.attributes, null, 2));
+            } else {
+                console.warn('⚠️ DEBUG: No attributes returned in parent response!');
+            }
 
             // Handle nested response structure - API might return data.data.id or data.id
             const parentId = parentResponse.data?.data?.id || parentResponse.data?.id;
@@ -137,7 +147,7 @@ export const useCreateVariableProduct = ({ updateProgress }: UseCreateVariablePr
             const variationsData = {
                 create: data.variations?.map((variation, index) => {
                     const variationImage = variationImages[index];
-                    console.log(`📸 Variation ${index} image:`, variationImage);
+                    console.log(`📸 DEBUG: Processing Variation ${index}`, variation);
 
                     return {
                         name: data.name, // Use parent product name as default
@@ -159,13 +169,26 @@ export const useCreateVariableProduct = ({ updateProgress }: UseCreateVariablePr
                 }) || []
             };
 
-            console.log('📤 Creating variations for parent ID:', parentId);
-            console.log('📤 Variations data:', JSON.stringify(variationsData, null, 2));
+            console.log('📤 DEBUG: Final Batch Variations Payload:', JSON.stringify(variationsData, null, 2));
 
             try {
                 const variationsResponse = await api.post(`/products/${parentId}/variations/batch`, variationsData);
                 console.log('✅ Variations created successfully!');
                 console.log('✅ Variations response:', JSON.stringify(variationsResponse.data, null, 2));
+
+                // Validate batch response for errors
+                // WooCommerce Batch API returns 200 even if items fail
+                const createdVariations = variationsResponse.data.create || variationsResponse.data?.data?.create || [];
+                const failedVariations = createdVariations.filter((v: any) => v.error || !v.id);
+
+                if (failedVariations.length > 0) {
+                    console.error('❌ Some variations failed to create:', failedVariations);
+                    const errorMessages = failedVariations.map((v: any) =>
+                        v.error?.message ? `${v.error.message} (Code: ${v.error.code})` : 'Unknown variation error'
+                    ).join('; ');
+
+                    throw new Error(`Variations failed to create: ${errorMessages}`);
+                }
             } catch (variationError: any) {
                 console.error('❌ VARIATION CREATION FAILED:', variationError);
                 console.error('❌ Variation error response:', variationError.response?.data);
