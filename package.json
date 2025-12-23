@@ -7,6 +7,9 @@
   "homepage": "./",
   "dependencies": {
     "@ant-design/icons": "^5.5.1",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@google/genai": "^1.30.0",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.2.2",

@@ -19,13 +19,16 @@ export const useProductForm = (productId?: number | null) => {
 
     const form = useForm<ProductFormValues>({
         resolver: zodResolver(productSchema),
+        mode: 'onChange', // Validate on change for real-time feedback
         defaultValues: {
             name: '',
             type: 'simple',
             status: 'publish',
             regular_price: '',
             sale_price: '',
-            manage_stock: false,
+            date_on_sale_from: null,
+            date_on_sale_to: null,
+            manage_stock: true,
             stock_status: 'instock',
             categories: [], // IDs
             images: [],

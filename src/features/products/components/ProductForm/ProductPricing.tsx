@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Input, Row, Col, Tooltip, DatePicker, Popover } from 'antd';
-import { Controller, Control, FieldErrors, UseFormSetValue } from 'react-hook-form';
+import { Controller, Control, FieldErrors, UseFormSetValue, useWatch } from 'react-hook-form';
 import { CalculatorOutlined, CalendarOutlined, PercentageOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProductFormValues } from '../../types/schemas';
 import { SmartPricingModal } from './SmartPricingModal';
+import dayjs from 'dayjs';
 
 interface ProductPricingProps {
     control: Control<ProductFormValues>;
     errors: FieldErrors<ProductFormValues>;
     setValue: UseFormSetValue<ProductFormValues>;
+    productType?: string;
 }
 
-export const ProductPricing: React.FC<ProductPricingProps> = ({ control, errors, setValue }) => {
+export const ProductPricing: React.FC<ProductPricingProps> = ({ control, errors, setValue, productType }) => {
     const { t } = useLanguage();
     const [isPricingModalVisible, setIsPricingModalVisible] = useState(false);
     const [isScheduleVisible, setIsScheduleVisible] = useState(false);
@@ -20,6 +22,19 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ control, errors,
     const [isSalePriceFocused, setIsSalePriceFocused] = useState(false);
     const [scheduledDates, setScheduledDates] = useState<{ from: string; to: string } | null>(null);
     const [isRegularPriceFocused, setIsRegularPriceFocused] = useState(false);
+
+    // Watch the form values for scheduled dates to sync with local state
+    const dateOnSaleFrom = useWatch({ control, name: 'date_on_sale_from' });
+    const dateOnSaleTo = useWatch({ control, name: 'date_on_sale_to' });
+
+    // Sync scheduledDates state with form values (handles form reset)
+    useEffect(() => {
+        if (dateOnSaleFrom && dateOnSaleTo) {
+            setScheduledDates({ from: dateOnSaleFrom, to: dateOnSaleTo });
+        } else {
+            setScheduledDates(null);
+        }
+    }, [dateOnSaleFrom, dateOnSaleTo]);
 
     const handleApplyPrice = (price: number) => {
         setValue('regular_price', price.toString(), { shouldValidate: true, shouldDirty: true });
@@ -196,63 +211,79 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ control, errors,
                                                             </Tooltip>
                                                         </div>
                                                     </Popover>
-                                                    <Popover
-                                                        content={
-                                                            <div style={{ padding: 8 }}>
-                                                                <DatePicker.RangePicker
-                                                                    style={{ width: 280 }}
-                                                                    onChange={(_, dateStrings) => {
-                                                                        setValue('date_on_sale_from', dateStrings[0]);
-                                                                        setValue('date_on_sale_to', dateStrings[1]);
-                                                                        if (dateStrings[0] && dateStrings[1]) {
-                                                                            setScheduledDates({ from: dateStrings[0], to: dateStrings[1] });
-                                                                        } else {
-                                                                            setScheduledDates(null);
+                                                    {productType !== 'variable' && (
+                                                        <Popover
+                                                            content={
+                                                                <div style={{ padding: 8 }}>
+                                                                    <DatePicker.RangePicker
+                                                                        style={{ width: 280 }}
+                                                                        format="YYYY-MM-DD"
+                                                                        value={
+                                                                            dateOnSaleFrom && dateOnSaleTo
+                                                                                ? [
+                                                                                    dayjs(dateOnSaleFrom),
+                                                                                    dayjs(dateOnSaleTo)
+                                                                                ] as any
+                                                                                : null
                                                                         }
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                        }
-                                                        title={t('scheduleSale')}
-                                                        trigger="click"
-                                                        open={isScheduleVisible}
-                                                        onOpenChange={setIsScheduleVisible}
-                                                        placement="bottomRight"
-                                                    >
-                                                        <div
-                                                            style={{
-                                                                display: 'inline-flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                width: 24,
-                                                                height: 24,
-                                                                borderRadius: 4,
-                                                                cursor: 'pointer',
-                                                                transition: 'all 0.2s',
-                                                                backgroundColor: scheduledDates ? '#f6ffed' : (isScheduleVisible ? '#e6f7ff' : 'transparent'),
-                                                                animation: isSalePriceFocused && !isScheduleVisible && !scheduledDates ? 'iconPulse 2s ease-in-out infinite 0.3s' : 'none'
-                                                            }}
-                                                            onMouseEnter={(e) => {
-                                                                if (!scheduledDates) {
-                                                                    e.currentTarget.style.backgroundColor = '#e6f7ff';
-                                                                }
-                                                            }}
-                                                            onMouseLeave={(e) => {
-                                                                if (!isScheduleVisible && !scheduledDates) {
-                                                                    e.currentTarget.style.backgroundColor = 'transparent';
-                                                                }
-                                                            }}
+                                                                        onChange={(dates, dateStrings) => {
+                                                                            // Ensure ISO 8601 format for WooCommerce API
+                                                                            const fromDate = dateStrings[0] || null;
+                                                                            const toDate = dateStrings[1] || null;
+
+                                                                            setValue('date_on_sale_from', fromDate);
+                                                                            setValue('date_on_sale_to', toDate);
+
+                                                                            if (fromDate && toDate) {
+                                                                                setScheduledDates({ from: fromDate, to: toDate });
+                                                                            } else {
+                                                                                setScheduledDates(null);
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            }
+                                                            title={t('scheduleSale')}
+                                                            trigger="click"
+                                                            open={isScheduleVisible}
+                                                            onOpenChange={setIsScheduleVisible}
+                                                            placement="bottomRight"
                                                         >
-                                                            <Tooltip title={t('scheduleSale')}>
-                                                                <CalendarOutlined
-                                                                    style={{
-                                                                        color: scheduledDates ? '#52c41a' : '#1890ff',
-                                                                        fontSize: 16
-                                                                    }}
-                                                                />
-                                                            </Tooltip>
-                                                        </div>
-                                                    </Popover>
+                                                            <div
+                                                                style={{
+                                                                    display: 'inline-flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    width: 24,
+                                                                    height: 24,
+                                                                    borderRadius: 4,
+                                                                    cursor: 'pointer',
+                                                                    transition: 'all 0.2s',
+                                                                    backgroundColor: scheduledDates ? '#f6ffed' : (isScheduleVisible ? '#e6f7ff' : 'transparent'),
+                                                                    animation: isSalePriceFocused && !isScheduleVisible && !scheduledDates ? 'iconPulse 2s ease-in-out infinite 0.3s' : 'none'
+                                                                }}
+                                                                onMouseEnter={(e) => {
+                                                                    if (!scheduledDates) {
+                                                                        e.currentTarget.style.backgroundColor = '#e6f7ff';
+                                                                    }
+                                                                }}
+                                                                onMouseLeave={(e) => {
+                                                                    if (!isScheduleVisible && !scheduledDates) {
+                                                                        e.currentTarget.style.backgroundColor = 'transparent';
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <Tooltip title={t('scheduleSale')}>
+                                                                    <CalendarOutlined
+                                                                        style={{
+                                                                            color: scheduledDates ? '#52c41a' : '#1890ff',
+                                                                            fontSize: 16
+                                                                        }}
+                                                                    />
+                                                                </Tooltip>
+                                                            </div>
+                                                        </Popover>
+                                                    )}
                                                 </div>
                                             }
                                         />

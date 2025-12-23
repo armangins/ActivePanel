@@ -10,7 +10,7 @@ export const AttributesTab = ({ attributes }: AttributesTabProps) => {
     const { t } = useLanguage();
 
     return (
-        <Card bordered={false} title={t('attributes')}>
+        <Card variant="borderless" title={t('attributes')}>
             <Alert
                 message={t('attributesNotice') || "Manage global attributes in Products > Attributes. Local attributes support coming soon."}
                 type="info"
@@ -39,7 +39,7 @@ export const VariationsTab = ({ productId, productType, attributes }: Variations
     const { t } = useLanguage();
 
     return (
-        <Card bordered={false}>
+        <Card variant="borderless">
             {productId ? (
                 productType === 'variable' ? (
                     <VariationManager productId={productId} attributes={attributes} />

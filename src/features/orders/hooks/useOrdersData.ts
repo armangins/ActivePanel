@@ -43,7 +43,8 @@ export const useOrderStatusCounts = () => {
         queryKey: ['order-status-counts'],
         queryFn: () => ordersService.getStatusCounts(),
         enabled: isConfigured,
-        staleTime: 5 * 60 * 1000
+        staleTime: 30 * 1000, // 30 seconds for real-time updates
+        refetchInterval: 30 * 1000 // Auto-refetch every 30 seconds
     });
 };
 
@@ -53,10 +54,45 @@ export const useUpdateOrder = () => {
     return useMutation({
         mutationFn: ({ id, status }: { id: number; status: string }) =>
             ordersService.updateOrderStatus(id, status),
+        // Optimistic update for instant UI feedback
+        onMutate: async ({ id, status }) => {
+            // Cancel outgoing refetches
+            await queryClient.cancelQueries({ queryKey: ['orders'] });
+
+            // Snapshot previous value
+            const previousOrders = queryClient.getQueryData(['orders']);
+
+            // Optimistically update all orders queries
+            queryClient.setQueriesData(
+                { queryKey: ['orders'] },
+                (old: any) => {
+                    if (!old?.data) return old;
+                    return {
+                        ...old,
+                        data: old.data.map((order: Order) =>
+                            order.id === id ? { ...order, status } : order
+                        )
+                    };
+                }
+            );
+
+            // Return context with previous data for rollback
+            return { previousOrders };
+        },
+        onError: (err, variables, context) => {
+            // Rollback on error
+            if (context?.previousOrders) {
+                queryClient.setQueryData(['orders'], context.previousOrders);
+            }
+        },
         onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            // Update individual order cache
             queryClient.invalidateQueries({ queryKey: ['order', data.id] });
             queryClient.invalidateQueries({ queryKey: ['order-status-counts'] });
+        },
+        onSettled: () => {
+            // Refetch to ensure sync with server
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
         }
     });
 };

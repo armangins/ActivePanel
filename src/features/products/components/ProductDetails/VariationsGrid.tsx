@@ -8,9 +8,10 @@ interface VariationsGridProps {
     variations: any[];
     loading: boolean;
     currency: string;
+    parentName?: string; // Parent product name for fallback
 }
 
-export const VariationsGrid: React.FC<VariationsGridProps> = ({ variations, loading, currency }) => {
+export const VariationsGrid: React.FC<VariationsGridProps> = ({ variations, loading, currency, parentName }) => {
     const { t } = useLanguage();
 
     if (loading) {
@@ -54,7 +55,9 @@ export const VariationsGrid: React.FC<VariationsGridProps> = ({ variations, load
                             <Card.Meta
                                 title={
                                     <div style={{ fontSize: '12px', whiteSpace: 'normal', lineHeight: '1.2' }}>
-                                        {variation.attributes?.map((mockAttr: any) => `${mockAttr.option}`).join(', ') || `ID: ${variation.id}`}
+                                        {variation.attributes?.length > 0
+                                            ? variation.attributes.map((attr: any) => `${attr.option}`).join(', ')
+                                            : (parentName || `ID: ${variation.id}`)}
                                     </div>
                                 }
                                 description={

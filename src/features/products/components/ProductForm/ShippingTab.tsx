@@ -11,7 +11,7 @@ export const ShippingTab = ({ control }: ShippingTabProps) => {
     const { t } = useLanguage();
 
     return (
-        <Card bordered={false}>
+        <Card variant="borderless">
             <Row gutter={[24, 24]}>
                 <Col xs={24} md={8}>
                     <Form.Item label={t('weight')}>

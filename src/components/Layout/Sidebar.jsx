@@ -15,7 +15,7 @@ import {
 } from '@ant-design/icons';
 
 import { useLanguage } from '../../contexts/LanguageContext';
-import useNewOrdersCount from '../../hooks/useNewOrdersCount';
+import { useOrderStatusCounts } from '../../features/orders/hooks/useOrdersData';
 import { Layout, Menu, Badge, Typography, Drawer, Button as AntButton } from 'antd';
 const { Sider } = Layout;
 const { Text } = Typography;
@@ -24,7 +24,7 @@ const Sidebar = ({ isOpen, onClose, onCollapseChange, isCollapsed: externalColla
   const location = useLocation();
   const navigate = useNavigate();
   const { t, isRTL } = useLanguage();
-  const { newOrdersCount, isLoading, hasError } = useNewOrdersCount();
+  const { data: statusCounts } = useOrderStatusCounts();
   const [internalCollapsed, setInternalCollapsed] = useState(false);
   const isCollapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
 
@@ -40,6 +40,10 @@ const Sidebar = ({ isOpen, onClose, onCollapseChange, isCollapsed: externalColla
     }
   }, [location.pathname]);
 
+  // Calculate pending orders count (excluding cancelled and completed)
+  const pendingOrdersCount = statusCounts
+    ? (statusCounts.pending || 0) + (statusCounts.processing || 0) + (statusCounts['on-hold'] || 0)
+    : 0;
 
   const menuItems = [
     {
@@ -66,15 +70,16 @@ const Sidebar = ({ isOpen, onClose, onCollapseChange, isCollapsed: externalColla
     },
     {
       key: '/orders',
-      icon: <ShoppingCartOutlined />,
-      label: (
-        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {t('orders')}
-          {(!hasError && !isLoading && newOrdersCount > 0) && (
-            <Badge count={newOrdersCount > 99 ? '99+' : newOrdersCount} style={{ backgroundColor: '#ff4d4f' }} />
-          )}
-        </span>
+      icon: (
+        <Badge
+          count={pendingOrdersCount > 99 ? '99+' : pendingOrdersCount}
+          offset={[-5, 0]}
+          size="small"
+        >
+          <ShoppingCartOutlined />
+        </Badge>
       ),
+      label: t('orders'),
       'data-onboarding': 'orders-nav'
     },
     { key: '/customers', icon: <TeamOutlined />, label: t('customers') },

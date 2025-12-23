@@ -210,6 +210,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                         variations={variations}
                         loading={loadingVariations}
                         currency={product.currency}
+                        parentName={product.name}
                     />
                 </>
             )}

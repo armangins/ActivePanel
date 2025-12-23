@@ -1,4 +1,4 @@
-import { Form, Input, Select, Card, Row, Col, Button, Segmented, ConfigProvider, InputNumber, Checkbox, Typography } from 'antd';
+import { Form, Input, Select, Card, Row, Col, Button, Segmented, ConfigProvider, InputNumber, Checkbox, Typography, Tooltip } from 'antd';
 import { Controller, Control, FieldErrors, UseFormSetValue, useWatch } from 'react-hook-form';
 import { ThunderboltOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -6,12 +6,13 @@ import { ProductFormValues } from '../../types/schemas';
 import { ImageUpload } from './ImageUpload';
 import { ProductAttributes } from './ProductAttributes';
 import { ProductPricing } from './ProductPricing';
+import { ProductVariations } from './ProductVariations';
 
 const { TextArea } = Input;
 
 
 
-interface GeneralTabProps {
+interface AddProductFormProps {
     control: Control<ProductFormValues>;
     errors: FieldErrors<ProductFormValues>;
     categories: any[];
@@ -19,16 +20,17 @@ interface GeneralTabProps {
     setValue: UseFormSetValue<ProductFormValues>;
 }
 
-export const GeneralTab = ({ control, errors, categories, handleGenerateSKU, setValue }: GeneralTabProps) => {
+export const AddProductForm = ({ control, errors, categories, handleGenerateSKU, setValue }: AddProductFormProps) => {
     const { t } = useLanguage();
 
     const productType = useWatch({ control, name: 'type' });
+    const productName = useWatch({ control, name: 'name' }); // Get product name for variations
 
     return (
         <Row gutter={[24, 24]}>
             {/* LEFT COL: Product Details */}
-            <Col xs={24} md={14}>
-                <Card title={t('productDetails')} bordered={false}>
+            <Col xs={24} md={10}>
+                <Card title={t('productDetails')} variant="borderless">
                     <Form.Item label={t('productType')}>
                         <Controller
                             name="type"
@@ -40,8 +42,8 @@ export const GeneralTab = ({ control, errors, categories, handleGenerateSKU, set
                                             Segmented: {
                                                 itemSelectedBg: '#1677ff',
                                                 itemSelectedColor: '#ffffff',
-                                                trackBg: '#e5e5e5', // Slightly darker for contrast
-                                                itemColor: '#262626', // Pure black for unselected
+                                                trackBg: '#e5e5e5',
+                                                itemColor: '#262626',
                                                 itemHoverColor: '#1677ff',
                                                 itemHoverBg: 'rgba(0,0,0,0.05)',
                                             },
@@ -51,11 +53,29 @@ export const GeneralTab = ({ control, errors, categories, handleGenerateSKU, set
                                     <Segmented
                                         {...field}
                                         options={[
-                                            { label: t('simpleProduct'), value: 'simple' },
-                                            { label: t('variableProduct'), value: 'variable' },
+                                            {
+                                                label: (
+                                                    <Tooltip title={t('simpleProductTooltip')} placement="top">
+                                                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                            {t('simpleProduct')}
+                                                        </div>
+                                                    </Tooltip>
+                                                ),
+                                                value: 'simple'
+                                            },
+                                            {
+                                                label: (
+                                                    <Tooltip title={t('variableProductTooltip')} placement="top">
+                                                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                            {t('variableProduct')}
+                                                        </div>
+                                                    </Tooltip>
+                                                ),
+                                                value: 'variable'
+                                            },
                                         ]}
                                         block
-                                        size="large" // Make it larger for better visibility
+                                        size="large"
                                     />
                                 </ConfigProvider>
                             )}
@@ -117,16 +137,16 @@ export const GeneralTab = ({ control, errors, categories, handleGenerateSKU, set
                                                         <Controller
                                                             name="stock_quantity"
                                                             control={control}
-                                                            render={({ field, fieldState: { isTouched }, formState: { isSubmitted } }) => (
+                                                            render={({ field }) => (
                                                                 <>
                                                                     <InputNumber
                                                                         {...field}
                                                                         placeholder={t('stockQuantity') || "Stock Qty"}
                                                                         style={{ width: '100%' }}
                                                                         min={0}
-                                                                        status={errors.stock_quantity && (isTouched || isSubmitted) ? 'error' : ''}
+                                                                        status={errors.stock_quantity ? 'error' : ''}
                                                                     />
-                                                                    {errors.stock_quantity && (isTouched || isSubmitted) && (
+                                                                    {errors.stock_quantity && (
                                                                         <Typography.Text type="danger" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
                                                                             {errors.stock_quantity.message}
                                                                         </Typography.Text>
@@ -135,7 +155,7 @@ export const GeneralTab = ({ control, errors, categories, handleGenerateSKU, set
                                                             )}
                                                         />
                                                     </div>
-                                                ) : null
+                                                ) : <></>
                                             )}
                                         />
                                     </div>
@@ -165,7 +185,7 @@ export const GeneralTab = ({ control, errors, categories, handleGenerateSKU, set
                     </Form.Item>
 
                     {/* Pricing Row */}
-                    <ProductPricing control={control} errors={errors} setValue={setValue} />
+                    <ProductPricing control={control} errors={errors} setValue={setValue} productType={productType} />
 
                     <Form.Item label={t('shortDescription')}>
                         <Controller
@@ -190,8 +210,8 @@ export const GeneralTab = ({ control, errors, categories, handleGenerateSKU, set
             </Col>
 
             {/* RIGHT COL: Media + Attributes */}
-            <Col xs={24} md={10}>
-                <Card title={t('media')} bordered={false}>
+            <Col xs={24} md={14}>
+                <Card title={t('media')} variant="borderless">
                     <Form.Item>
                         <Controller
                             name="images"
@@ -207,7 +227,11 @@ export const GeneralTab = ({ control, errors, categories, handleGenerateSKU, set
                 </Card>
 
                 {productType === 'variable' && (
-                    <Card bordered={false} style={{ marginTop: 24 }}>
+                    <ProductVariations control={control} parentName={productName} errors={errors} />
+                )}
+
+                {productType === 'variable' && (
+                    <Card variant="borderless" style={{ marginTop: 24 }}>
                         <ProductAttributes control={control} setValue={setValue} />
                     </Card>
                 )}
