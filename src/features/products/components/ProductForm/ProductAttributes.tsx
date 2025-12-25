@@ -1,20 +1,23 @@
 import React from 'react';
 import { Button, Typography, Divider, Card, Space, Form, Input, Switch, Select } from 'antd';
-import { Controller, Control, useFieldArray, UseFormSetValue, useWatch } from 'react-hook-form';
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { Controller, Control, useFieldArray, UseFormSetValue, useWatch, UseFormGetValues } from 'react-hook-form';
+import { DeleteOutlined, PlusOutlined, SyncOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProductFormValues } from '../../types/schemas';
 import { useAttributes } from '@/hooks/useAttributes';
 import { GlobalAttributeSelector } from './GlobalAttributeSelector';
+
+import { useVariationGeneration } from '../../hooks/useVariationGeneration';
 
 const { Text } = Typography;
 
 interface ProductAttributesProps {
     control: Control<ProductFormValues>;
     setValue: UseFormSetValue<ProductFormValues>;
+    getValues: UseFormGetValues<ProductFormValues>;
 }
 
-export const ProductAttributes: React.FC<ProductAttributesProps> = ({ control, setValue }) => {
+export const ProductAttributes: React.FC<ProductAttributesProps> = ({ control, setValue, getValues }) => {
     const { t } = useLanguage();
 
     // Watch parent product prices to inherit for variations
@@ -60,6 +63,15 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({ control, s
         }
     };
 
+    // Use variation generation hook
+    const { generateVariations, regenerateVariations } = useVariationGeneration({
+        currentAttributes,
+        parentRegularPrice,
+        parentSalePrice,
+        setValue,
+        getValues
+    });
+
     return (
         <div>
             {/* SECTION 1: Global Attributes (Visual Selection) */}
@@ -90,63 +102,33 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({ control, s
                 )}
             </Card>
 
-            {/* Create Variations Button */}
+            {/* Create Variations Buttons */}
             {currentAttributes.length >= 1 && (
                 <div style={{ marginTop: 16, marginBottom: 24 }}>
-                    <Button
-                        type="primary"
-                        size="large"
-                        icon={<PlusOutlined />}
-                        onClick={() => {
-                            // Auto-generate all possible variation combinations
-                            const attributesWithTerms = currentAttributes.filter((attr: any) =>
-                                attr.options && attr.options.length > 0
-                            );
-
-                            if (attributesWithTerms.length === 0) {
-                                return;
-                            }
-
-                            // Generate all combinations using cartesian product
-                            const generateCombinations = (arrays: string[][]): string[][] => {
-                                if (arrays.length === 0) return [[]];
-                                const [first, ...rest] = arrays;
-                                const restCombinations = generateCombinations(rest);
-                                return first.flatMap(item =>
-                                    restCombinations.map(combo => [item, ...combo])
-                                );
-                            };
-
-                            const termArrays = attributesWithTerms.map((attr: any) => attr.options);
-                            const combinations = generateCombinations(termArrays);
-
-                            // Create variation objects
-                            const variations = combinations.map((combo) => {
-                                const attributes = combo.map((term, i) => ({
-                                    id: attributesWithTerms[i].id || 0,
-                                    name: attributesWithTerms[i].name,
-                                    option: term
-                                }));
-
-                                return {
-                                    id: 0, // Will be assigned by backend
-                                    sku: '',
-                                    regular_price: parentRegularPrice, // Inherit from parent
-                                    sale_price: parentSalePrice, // Inherit from parent
-                                    stock_quantity: 0,
-                                    stock_status: 'instock' as const,
-                                    manage_stock: false, // Disabled by default
-                                    attributes
-                                };
-                            });
-
-                            // Set variations in form
-                            setValue('variations', variations, { shouldDirty: true });
-                        }}
-                        block
-                    >
-                        {t('createVariations')} ({currentAttributes.length} {t('attributes')})
-                    </Button>
+                    <Space>
+                        <Button
+                            type="primary"
+                            size="large"
+                            icon={<PlusOutlined />}
+                            onClick={generateVariations}
+                        >
+                            {t('createVariations')} ({t('addNewOnly') || "Add New"})
+                        </Button>
+                        <Button
+                            type="dashed"
+                            danger
+                            size="large"
+                            icon={<SyncOutlined />}
+                            onClick={regenerateVariations}
+                        >
+                            {t('regenerateAll') || "צור את כל הוריאציות"}
+                        </Button>
+                    </Space>
+                    <div style={{ marginTop: 8 }}>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                            {t('variationHelp') || "Create Variations adds new combinations. Regenerate All clears and rebuilds everything."}
+                        </Text>
+                    </div>
                 </div>
             )}
 

@@ -1,5 +1,5 @@
 import { Form, Input, Select, Card, Row, Col, Button, Segmented, ConfigProvider, InputNumber, Checkbox, Typography, Tooltip } from 'antd';
-import { Controller, Control, FieldErrors, UseFormSetValue, useWatch } from 'react-hook-form';
+import { Controller, Control, FieldErrors, UseFormSetValue, useWatch, UseFormGetValues } from 'react-hook-form';
 import { ThunderboltOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProductFormValues } from '../../types/schemas';
@@ -18,9 +18,10 @@ interface AddProductFormProps {
     categories: any[];
     handleGenerateSKU?: () => void;
     setValue: UseFormSetValue<ProductFormValues>;
+    getValues: UseFormGetValues<ProductFormValues>;
 }
 
-export const AddProductForm = ({ control, errors, categories, handleGenerateSKU, setValue }: AddProductFormProps) => {
+export const AddProductForm = ({ control, errors, categories, handleGenerateSKU, setValue, getValues }: AddProductFormProps) => {
     const { t } = useLanguage();
 
     const productType = useWatch({ control, name: 'type' });
@@ -232,7 +233,7 @@ export const AddProductForm = ({ control, errors, categories, handleGenerateSKU,
 
                 {productType === 'variable' && (
                     <Card variant="borderless" style={{ marginTop: 24 }}>
-                        <ProductAttributes control={control} setValue={setValue} />
+                        <ProductAttributes control={control} setValue={setValue} getValues={getValues} />
                     </Card>
                 )}
             </Col>

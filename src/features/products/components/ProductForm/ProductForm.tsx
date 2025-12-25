@@ -5,9 +5,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCategories } from '@/hooks/useCategories';
 import { AddProductForm } from './AddProductForm';
-import { useWatch } from 'react-hook-form';
-import { useCreateProduct } from '../../hooks/useCreateProduct';
-import { useVariationGeneration } from '../../hooks/useVariationGeneration';
+import { useCreateProduct } from '../../hooks/useCreateProduct'; // Restored import
+
 
 export const ProductForm = () => {
     const { id } = useParams();
@@ -117,22 +116,7 @@ export const ProductForm = () => {
         }
     };
 
-    // Watch product type and attributes for Create Variations button
-    const productType = useWatch({ control, name: 'type' });
-    const currentAttributes = useWatch({ control, name: 'attributes' }) || [];
 
-    // Watch parent product pricing to use as defaults for variations
-    const parentRegularPrice = useWatch({ control, name: 'regular_price' }) || '';
-    const parentSalePrice = useWatch({ control, name: 'sale_price' }) || '';
-
-    // Use variation generation hook
-    const { generateVariations } = useVariationGeneration({
-        currentAttributes,
-        parentRegularPrice,
-        parentSalePrice,
-        setValue: form.setValue,
-        getValues: form.getValues
-    });
 
 
 
@@ -143,6 +127,7 @@ export const ProductForm = () => {
             categories={categories}
             handleGenerateSKU={handleGenerateSKU}
             setValue={form.setValue}
+            getValues={form.getValues}
         />
     );
 
@@ -240,16 +225,6 @@ export const ProductForm = () => {
                     boxShadow: '0 -2px 10px rgba(0,0,0,0.05)'
                 }}>
                     <Space>
-                        {productType === 'variable' && currentAttributes.length >= 1 && (
-                            <Button
-                                type="default"
-                                size="large"
-                                icon={<PlusOutlined />}
-                                onClick={generateVariations}
-                            >
-                                {t('createVariations')} ({currentAttributes.length})
-                            </Button>
-                        )}
                         <Button
                             type="primary"
                             htmlType="submit"

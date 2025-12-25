@@ -22,15 +22,12 @@ export const useVariationGeneration = ({
     getValues
 }: UseVariationGenerationProps) => {
 
-    const generateVariations = useCallback(() => {
-        // Auto-generate all possible variation combinations
+    const getVariations = () => {
         const attributesWithTerms = currentAttributes.filter((attr: any) =>
             attr.options && attr.options.length > 0
         );
 
-        if (attributesWithTerms.length === 0) {
-            return;
-        }
+        if (attributesWithTerms.length === 0) return [];
 
         // Generate all combinations using cartesian product
         const generateCombinations = (arrays: string[][]): string[][] => {
@@ -46,7 +43,7 @@ export const useVariationGeneration = ({
         const combinations = generateCombinations(termArrays);
 
         // Create variation objects
-        const newVariations = combinations.map((combo) => {
+        return combinations.map((combo) => {
             const attributes = combo.map((term, i) => ({
                 id: attributesWithTerms[i].id || 0,
                 name: attributesWithTerms[i].name,
@@ -64,14 +61,47 @@ export const useVariationGeneration = ({
                 attributes
             };
         });
+    };
 
-        // Get existing variations and append new ones
+    /**
+     * Additive Generation: Only adds new unique variations
+     */
+    const generateVariations = useCallback(() => {
+        const newCandidates = getVariations();
         const existingVariations = getValues('variations') || [];
-        const allVariations = [...existingVariations, ...newVariations];
 
-        // Set all variations in form
-        setValue('variations', allVariations, { shouldDirty: true });
+        // Filter out candidates that effectively exist already
+        const uniqueNew = newCandidates.filter(candidate => {
+            // Check if ANY existing variation matches this candidate's attributes
+            const exists = existingVariations.some((existing: any) => {
+                // If attribute count differs, they differ
+                if (!existing.attributes || existing.attributes.length !== candidate.attributes.length) return false;
+
+                // Check if every attribute in candidate exists in existing (Name + Option match)
+                // We use Name/Option pair because ID might be 0 for new attrs
+                return candidate.attributes.every((cA: any) =>
+                    existing.attributes.some((eA: any) =>
+                        eA.name === cA.name && eA.option === cA.option
+                    )
+                );
+            });
+            return !exists;
+        });
+
+        if (uniqueNew.length > 0) {
+            const allVariations = [...existingVariations, ...uniqueNew];
+            setValue('variations', allVariations, { shouldDirty: true });
+        }
     }, [currentAttributes, parentRegularPrice, parentSalePrice, setValue, getValues]);
 
-    return { generateVariations };
+    /**
+     * Destructive Regeneration: Clears and rebuilds all
+     */
+    const regenerateVariations = useCallback(() => {
+        const allFresh = getVariations();
+        // Replace entire array
+        setValue('variations', allFresh, { shouldDirty: true });
+    }, [currentAttributes, parentRegularPrice, parentSalePrice, setValue]);
+
+    return { generateVariations, regenerateVariations };
 };
