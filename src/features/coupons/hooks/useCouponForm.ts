@@ -5,7 +5,10 @@ import { couponSchema, CouponFormSchema } from '../types/schemas';
 import { Coupon } from '../types';
 import { useCreateCoupon, useUpdateCoupon } from './useCouponsData';
 
-export const useCouponForm = (coupon?: Coupon | null, onClose?: () => void) => {
+import { useLanguage } from '@/contexts/LanguageContext';
+
+export const useCouponForm = (coupon?: Coupon | null, onClose?: () => void, messageApi?: any) => {
+    const { t } = useLanguage();
     const createMutation = useCreateCoupon();
     const updateMutation = useUpdateCoupon();
 
@@ -73,12 +76,15 @@ export const useCouponForm = (coupon?: Coupon | null, onClose?: () => void) => {
         try {
             if (coupon?.id) {
                 await updateMutation.mutateAsync({ id: coupon.id, data });
+                messageApi?.success(t('couponUpdated') || 'Coupon updated successfully');
             } else {
                 await createMutation.mutateAsync(data);
+                messageApi?.success(t('couponCreated') || 'Coupon created successfully');
             }
             onClose?.();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save coupon', error);
+            messageApi?.error(error.message || t('errorSavingCoupon') || 'Failed to save coupon');
         }
     };
 

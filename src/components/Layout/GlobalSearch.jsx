@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AutoComplete, Input, Typography, Flex, Spin, Empty, Button, Tooltip } from 'antd';
 import { SearchOutlined, InfoCircleOutlined, EditOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { useProductsData } from '@/features/products/hooks/useProductsData';
+import { useProductSearch } from '@/features/products';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { OptimizedImage } from '../ui';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -18,14 +18,14 @@ const GlobalSearch = ({ placeholder, isRTL, className }) => {
     const navigate = useNavigate();
     const { t, formatCurrency } = useLanguage();
 
-    // Fetch products only when we have a search term
-    const { data, isLoading } = useProductsData(
-        {
-            search: debouncedSearchValue,
-            per_page: 100
-        },
-        { enabled: !!debouncedSearchValue }
-    );
+    // Client-side search for partial SKU matching
+    const { search, isLoading } = useProductSearch();
+
+    // Perform search on the client side using useMemo to avoid effect loops
+    const searchResults = React.useMemo(() => {
+        if (!debouncedSearchValue) return [];
+        return search(debouncedSearchValue);
+    }, [debouncedSearchValue, search]);
 
     // Update options when data changes
     useEffect(() => {
@@ -47,37 +47,9 @@ const GlobalSearch = ({ placeholder, isRTL, className }) => {
             return;
         }
 
-        if (data?.data?.length > 0) {
-            // Client-side sorting for better relevance
-            const sortedProducts = [...data.data].sort((a, b) => {
-                const term = debouncedSearchValue.toLowerCase();
-                const nameA = a.name.toLowerCase();
-                const nameB = b.name.toLowerCase();
-                const skuA = (a.sku || '').toLowerCase();
-                const skuB = (b.sku || '').toLowerCase();
-
-                // 1. Exact Name Match
-                if (nameA === term && nameB !== term) return -1;
-                if (nameB === term && nameA !== term) return 1;
-
-                // 2. Exact SKU Match
-                if (skuA === term && skuB !== term) return -1;
-                if (skuB === term && skuA !== term) return 1;
-
-                // 3. Name Starts With
-                const aStarts = nameA.startsWith(term);
-                const bStarts = nameB.startsWith(term);
-                if (aStarts && !bStarts) return -1;
-                if (!aStarts && bStarts) return 1;
-
-                // 4. SKU Starts With
-                const aSkuStarts = skuA.startsWith(term);
-                const bSkuStarts = skuB.startsWith(term);
-                if (aSkuStarts && !bSkuStarts) return -1;
-                if (!aSkuStarts && bSkuStarts) return 1;
-
-                return 0;
-            });
+        if (searchResults?.length > 0) {
+            // Data is already sorted by useProductSearch hook
+            const sortedProducts = searchResults;
 
             const productOptions = sortedProducts.map(product => ({
                 value: product.id.toString(),
@@ -93,6 +65,7 @@ const GlobalSearch = ({ placeholder, isRTL, className }) => {
                         <Flex vertical flex={1} style={{ overflow: 'hidden' }}>
                             <Text strong ellipsis>{product.name}</Text>
                             <Text type="secondary" style={{ fontSize: '12px' }}>
+                                <span>{product.sku ? `SKU: ${product.sku} | ` : ''}</span>
                                 {formatCurrency(product.regular_price || product.price)}
                             </Text>
                         </Flex>
@@ -139,7 +112,7 @@ const GlobalSearch = ({ placeholder, isRTL, className }) => {
                 disabled: true
             }]);
         }
-    }, [data, isLoading, debouncedSearchValue, formatCurrency, t, navigate]);
+    }, [searchResults, isLoading, debouncedSearchValue, formatCurrency, t, navigate]);
 
     const handleSelect = (value, option) => {
         if (option.product) {

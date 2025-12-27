@@ -33,4 +33,15 @@ export const useCustomerDetails = (id: number | null) => {
         enabled: isConfigured && !!id,
         staleTime: 10 * 60 * 1000
     });
-}
+};
+
+export const useCustomerOrders = (customerId: number | null) => {
+    const { settings } = useSettings();
+    const isConfigured = !!(settings?.hasConsumerKey && settings?.hasConsumerSecret);
+
+    return useQuery({
+        queryKey: ['customer-orders', customerId],
+        queryFn: () => customersService.getCustomerOrders(customerId!),
+        enabled: isConfigured && !!customerId
+    });
+};

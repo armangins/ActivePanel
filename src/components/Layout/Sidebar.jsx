@@ -73,7 +73,7 @@ const Sidebar = ({ isOpen, onClose, onCollapseChange, isCollapsed: externalColla
       icon: (
         <Badge
           count={pendingOrdersCount > 99 ? '99+' : pendingOrdersCount}
-          offset={[-5, 0]}
+          offset={isCollapsed ? [10, 0] : [-5, 0]}
           size="small"
         >
           <ShoppingCartOutlined />
@@ -175,6 +175,11 @@ const Sidebar = ({ isOpen, onClose, onCollapseChange, isCollapsed: externalColla
         }
         .ant-menu-dark .ant-menu-submenu-title:hover {
           background-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        /* Fix for badge clipping in collapsed mode */
+        .ant-menu-inline-collapsed .ant-menu-item,
+        .ant-menu-inline-collapsed .ant-menu-item-icon {
+          overflow: visible !important;
         }
       `}</style>
 

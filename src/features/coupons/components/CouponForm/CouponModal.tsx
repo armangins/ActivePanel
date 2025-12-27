@@ -11,17 +11,18 @@ interface CouponModalProps {
     open: boolean;
     onClose: () => void;
     coupon?: Coupon | null;
+    messageApi?: any;
 }
 
-const CouponModal = ({ open, onClose, coupon }: CouponModalProps) => {
+const CouponModal = ({ open, onClose, coupon, messageApi }: CouponModalProps) => {
     const { t, isRTL } = useLanguage();
     const [currentStep, setCurrentStep] = useState(0);
-    const { form, isLoading, onSubmit, isEditMode, generateRandomCode } = useCouponForm(coupon, onClose);
+    const { form, isLoading, onSubmit, isEditMode, generateRandomCode } = useCouponForm(coupon, onClose, messageApi);
 
     const steps = [
         { title: t('general') || 'General', content: <GeneralStep form={form} generateRandomCode={generateRandomCode} /> },
-        { title: t('usageRestriction') || 'Usage Restriction', content: <UsageRestrictionStep /> },
-        { title: t('usageLimits') || 'Usage Limits', content: <UsageLimitStep /> }
+        { title: t('usageRestriction') || 'Usage Restriction', content: <UsageRestrictionStep form={form} /> },
+        { title: t('usageLimits') || 'Usage Limits', content: <UsageLimitStep form={form} /> }
     ];
 
     const next = async () => {
@@ -54,9 +55,7 @@ const CouponModal = ({ open, onClose, coupon }: CouponModalProps) => {
             <Steps current={currentStep} items={steps.map(s => ({ title: s.title }))} />
 
             <Form
-                form={form}
                 layout="vertical"
-                onFinish={onSubmit}
                 initialValues={{ discount_type: 'percent' }}
             >
                 <div style={{ minHeight: 300 }}>
@@ -75,7 +74,7 @@ const CouponModal = ({ open, onClose, coupon }: CouponModalProps) => {
                         </Button>
                     )}
                     {currentStep === steps.length - 1 && (
-                        <Button type="primary" htmlType="submit" loading={isLoading}>
+                        <Button type="primary" onClick={() => onSubmit()} loading={isLoading}>
                             {t('done') || 'Done'}
                         </Button>
                     )}

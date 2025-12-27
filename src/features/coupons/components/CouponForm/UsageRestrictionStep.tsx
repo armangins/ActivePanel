@@ -3,8 +3,13 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useProductsData } from '@/features/products/hooks/useProductsData';
 import { useState } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
+import { Controller } from 'react-hook-form';
 
-export const UsageRestrictionStep = () => {
+interface UsageRestrictionStepProps {
+    form: any;
+}
+
+export const UsageRestrictionStep = ({ form }: UsageRestrictionStepProps) => {
     const { t } = useLanguage();
     const [productSearch, setProductSearch] = useState('');
     const [debouncedProductSearch] = useDebounce(productSearch, 500);
@@ -22,74 +27,106 @@ export const UsageRestrictionStep = () => {
 
     return (
         <div style={{ paddingTop: 20 }}>
-            <Form.Item
+            <Controller
                 name="minimum_amount"
-                label={t('minSpend') || 'Minimum spend'}
-            >
-                <InputNumber style={{ width: '100%' }} min={0} step="0.01" />
-            </Form.Item>
+                control={form.control}
+                render={({ field }) => (
+                    <Form.Item label={t('minSpend') || 'Minimum spend'}>
+                        <InputNumber {...field} style={{ width: '100%' }} min="0" step="0.01" stringMode />
+                    </Form.Item>
+                )}
+            />
 
-            <Form.Item
+            <Controller
                 name="maximum_amount"
-                label={t('maxSpend') || 'Maximum spend'}
-            >
-                <InputNumber style={{ width: '100%' }} min={0} step="0.01" />
-            </Form.Item>
+                control={form.control}
+                render={({ field }) => (
+                    <Form.Item label={t('maxSpend') || 'Maximum spend'}>
+                        <InputNumber {...field} style={{ width: '100%' }} min="0" step="0.01" stringMode />
+                    </Form.Item>
+                )}
+            />
 
-            <Form.Item name="individual_use" valuePropName="checked">
-                <Checkbox>
-                    {t('individualUseOnly') || 'Individual use only'}
-                </Checkbox>
-            </Form.Item>
+            <Controller
+                name="individual_use"
+                control={form.control}
+                render={({ field: { value, onChange, ...field } }) => (
+                    <Form.Item>
+                        <Checkbox checked={value} onChange={onChange} {...field}>
+                            {t('individualUseOnly') || 'Individual use only'}
+                        </Checkbox>
+                    </Form.Item>
+                )}
+            />
 
-            <Form.Item name="exclude_sale_items" valuePropName="checked">
-                <Checkbox>
-                    {t('excludeSaleItems') || 'Exclude sale items'}
-                </Checkbox>
-            </Form.Item>
+            <Controller
+                name="exclude_sale_items"
+                control={form.control}
+                render={({ field: { value, onChange, ...field } }) => (
+                    <Form.Item>
+                        <Checkbox checked={value} onChange={onChange} {...field}>
+                            {t('excludeSaleItems') || 'Exclude sale items'}
+                        </Checkbox>
+                    </Form.Item>
+                )}
+            />
 
-            <Form.Item
+            <Controller
                 name="product_ids"
-                label={t('products') || 'Products'}
-            >
-                <Select
-                    mode="multiple"
-                    placeholder={t('searchProducts') || 'Search products...'}
-                    filterOption={false}
-                    onSearch={setProductSearch}
-                    loading={productsLoading}
-                    options={productOptions}
-                    style={{ width: '100%' }}
-                />
-            </Form.Item>
+                control={form.control}
+                render={({ field }) => (
+                    <Form.Item label={t('products') || 'Products'}>
+                        <Select
+                            {...field}
+                            mode="multiple"
+                            placeholder={t('searchProducts') || 'Search products...'}
+                            filterOption={false}
+                            onSearch={setProductSearch}
+                            loading={productsLoading}
+                            options={productOptions}
+                            style={{ width: '100%' }}
+                        />
+                    </Form.Item>
+                )}
+            />
 
-            <Form.Item
+            <Controller
                 name="excluded_product_ids"
-                label={t('excludeProducts') || 'Exclude Products'}
-            >
-                <Select
-                    mode="multiple"
-                    placeholder={t('searchProducts') || 'Search products...'}
-                    filterOption={false}
-                    onSearch={setProductSearch}
-                    loading={productsLoading}
-                    options={productOptions}
-                    style={{ width: '100%' }}
-                />
-            </Form.Item>
+                control={form.control}
+                render={({ field }) => (
+                    <Form.Item label={t('excludeProducts') || 'Exclude Products'}>
+                        <Select
+                            {...field}
+                            mode="multiple"
+                            placeholder={t('searchProducts') || 'Search products...'}
+                            filterOption={false}
+                            onSearch={setProductSearch}
+                            loading={productsLoading}
+                            options={productOptions}
+                            style={{ width: '100%' }}
+                        />
+                    </Form.Item>
+                )}
+            />
 
-            <Form.Item
+            <Controller
                 name="email_restrictions"
-                label={t('allowedEmails') || 'Allowed Emails'}
-                tooltip={t('emailRestrictionTip') || 'List of email addresses that can use this coupon.'}
-            >
-                <Select
-                    mode="tags"
-                    placeholder={t('enterEmail') || 'Enter email and press Enter'}
-                    style={{ width: '100%' }}
-                    tokenSeparators={[',', ' ']}
-                />
-            </Form.Item>
+                control={form.control}
+                render={({ field }) => (
+                    <Form.Item
+                        label={t('allowedEmails') || 'Allowed Emails'}
+                        tooltip={t('emailRestrictionTip') || 'List of email addresses that can use this coupon.'}
+                    >
+                        <Select
+                            {...field}
+                            mode="tags"
+                            placeholder={t('enterEmail') || 'Enter email and press Enter'}
+                            style={{ width: '100%' }}
+                            tokenSeparators={[',', ' ']}
+                        />
+                    </Form.Item>
+                )}
+            />
         </div>
     );
 };

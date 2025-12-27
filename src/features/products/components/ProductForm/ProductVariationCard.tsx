@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Input, InputNumber, Button, Space, Tag, Row, Col, Form, Switch, Typography, Upload } from 'antd';
 import { Controller, Control } from 'react-hook-form';
-import { DeleteOutlined, UploadOutlined } from '@ant-design/icons';
+import { DeleteOutlined, UploadOutlined, EditOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProductFormValues } from '../../types/schemas';
 
@@ -14,6 +14,7 @@ interface ProductVariationCardProps {
     onRemove: () => void;
     parentName?: string; // Parent product name for fallback
     errors?: any; // Form errors for validation display
+    onEdit?: () => void;
 }
 
 export const ProductVariationCard: React.FC<ProductVariationCardProps> = ({
@@ -22,28 +23,30 @@ export const ProductVariationCard: React.FC<ProductVariationCardProps> = ({
     control,
     onRemove,
     parentName,
-    errors
+    errors,
+    onEdit
 }) => {
     const { t } = useLanguage();
 
     return (
         <Card
             size="small"
-            title={
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {variation.attributes?.map((attr: any, i: number) => (
-                        <Tag key={i} color="blue">{attr.name}: {attr.option}</Tag>
-                    ))}
-                </div>
-            }
             extra={
-                <Button
-                    danger
-                    type="text"
-                    size="small"
-                    icon={<DeleteOutlined />}
-                    onClick={onRemove}
-                />
+                <Space>
+                    <Button
+                        type="text"
+                        size="small"
+                        icon={<EditOutlined />}
+                        onClick={onEdit}
+                    />
+                    <Button
+                        danger
+                        type="text"
+                        size="small"
+                        icon={<DeleteOutlined />}
+                        onClick={onRemove}
+                    />
+                </Space>
             }
             style={{ height: '100%' }}
         >
@@ -58,6 +61,7 @@ export const ProductVariationCard: React.FC<ProductVariationCardProps> = ({
                                 <Upload
                                     listType="picture-card"
                                     maxCount={1}
+                                    showUploadList={false} // Hide default list to use custom preview
                                     beforeUpload={() => false}
                                     fileList={
                                         field.value instanceof File
@@ -77,34 +81,77 @@ export const ProductVariationCard: React.FC<ProductVariationCardProps> = ({
                                                 : []
                                     }
                                     onChange={async (info) => {
+                                        // Always take the last file (replacement)
                                         if (info.fileList.length > 0) {
-                                            const file = info.fileList[0];
+                                            const file = info.fileList[info.fileList.length - 1]; // Take latest
 
                                             // Store the actual File object for upload
                                             if (file.originFileObj) {
                                                 field.onChange(file.originFileObj);
-                                            } else if (file.url) {
-                                                // If already has URL (from existing image)
-                                                field.onChange({
-                                                    src: file.url,
-                                                    name: file.name,
-                                                    alt: file.name,
-                                                    id: (file as any).id
-                                                });
                                             }
-                                        } else {
-                                            field.onChange(undefined);
                                         }
-                                    }}
-                                    onRemove={() => {
-                                        field.onChange(undefined);
                                     }}
                                     className="full-width-upload"
                                 >
-                                    {!field.value && (
+                                    {field.value ? (
+                                        // Custom Preview with Overlays
+                                        <div style={{ position: 'relative', width: '100%', height: 180, overflow: 'hidden', borderRadius: 8 }}>
+                                            <img
+                                                src={
+                                                    field.value instanceof File
+                                                        ? URL.createObjectURL(field.value)
+                                                        : field.value?.src
+                                                }
+                                                alt="Variation"
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            />
+                                            {/* Hover Overlay */}
+                                            <div
+                                                className="upload-overlay"
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    left: 0,
+                                                    right: 0,
+                                                    bottom: 0,
+                                                    background: 'rgba(0,0,0,0.5)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: 8,
+                                                    opacity: 0,
+                                                    transition: 'opacity 0.2s',
+                                                }}
+                                            >
+                                                {/* Replace Button - Trigger Upload */}
+                                                <Button
+                                                    type="text"
+                                                    icon={<EditOutlined style={{ color: 'white', fontSize: 16 }} />}
+                                                    title={t('replaceImage') || "Replace"}
+                                                />
+
+                                                {/* Remove Button */}
+                                                <Button
+                                                    type="text"
+                                                    icon={<DeleteOutlined style={{ color: 'white', fontSize: 16 }} />}
+                                                    title={t('removeImage') || "Remove"}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        field.onChange(undefined);
+                                                    }}
+                                                />
+                                            </div>
+                                            <style>{`
+                                                .full-width-upload:hover .upload-overlay {
+                                                    opacity: 1 !important;
+                                                }
+                                            `}</style>
+                                        </div>
+                                    ) : (
+                                        // Upload Placeholder
                                         <div style={{
                                             width: '100%',
-                                            height: 200,
+                                            height: 180,
                                             display: 'flex',
                                             flexDirection: 'column',
                                             alignItems: 'center',
@@ -118,11 +165,9 @@ export const ProductVariationCard: React.FC<ProductVariationCardProps> = ({
                                 <style>{`
                                     .full-width-upload .ant-upload-select {
                                         width: 100% !important;
-                                        height: 200px !important;
-                                    }
-                                    .full-width-upload .ant-upload-list-item-container {
-                                        width: 100% !important;
-                                        height: 200px !important;
+                                        height: 180px !important;
+                                        overflow: hidden;
+                                        padding: 0 !important;
                                     }
                                 `}</style>
                             </div>
@@ -135,6 +180,7 @@ export const ProductVariationCard: React.FC<ProductVariationCardProps> = ({
                     <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
                         {t('variationTitle') || 'כותרת'}
                     </Text>
+                    {/* Tags removed as per request */}
                     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                         {variation.attributes?.length > 0 ? (
                             variation.attributes.map((attr: any, i: number) => (

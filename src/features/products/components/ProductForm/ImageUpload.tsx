@@ -256,6 +256,17 @@ export const ImageUpload = ({ value = [], onChange, maxCount = 5 }: ImageUploadP
             <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancel}>
                 <img alt="example" style={{ width: '100%' }} src={previewImage} />
             </Modal>
+            <style>{`
+                .ant-upload-list-picture-card .ant-upload-list-item,
+                .ant-upload-list-picture-card .ant-upload-select {
+                    width: 200px !important;
+                    height: 200px !important;
+                }
+                .ant-upload-list-picture-card .ant-upload-list-item-container {
+                     width: 200px !important;
+                     height: 200px !important;
+                }
+            `}</style>
         </>
     );
 };

@@ -13,6 +13,82 @@ export const productsService = {
         }
     },
 
+    /**
+     * Search products by search term AND/OR sku
+     * This handles the case where general 'search' parameter might effectively filter out SKU matches depending on server config.
+     */
+    async searchProducts(term: string): Promise<ProductsResponse> {
+        try {
+            // Run both general search and explicit SKU search in parallel
+            const [searchResult, skuResult] = await Promise.all([
+                productsAPI.list({ search: term, per_page: 50 }),
+                // Only try SKU search if short enough (SKUs rarely > 50 chars) to save resources
+                term.length < 50 ? productsAPI.list({ sku: term }) : Promise.resolve({ data: [], total: 0, totalPages: 0 })
+            ]);
+
+            // Merge results, removing duplicates
+            const allProducts = [...(searchResult.data || [])];
+            const existingIds = new Set(allProducts.map(p => p.id));
+
+            if (skuResult.data && skuResult.data.length > 0) {
+                skuResult.data.forEach((product: any) => {
+                    if (!existingIds.has(product.id)) {
+                        allProducts.push(product);
+                        existingIds.add(product.id);
+                    }
+                });
+            }
+
+            return {
+                data: allProducts,
+                total: allProducts.length,
+                totalPages: 1 // Artificial pagination for merged results
+            };
+        } catch (error) {
+            secureLog.error('Error searching products:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Fetch all products with minimal fields for client-side indexing.
+     * Iterates through all pages to build a complete index.
+     * Use with caution on very large catalogs.
+     */
+    async getAllProductsLight(): Promise<any[]> {
+        try {
+            const allProducts: any[] = [];
+            let page = 1;
+            let hasMore = true;
+
+            while (hasMore) {
+                const response = await productsAPI.list({
+                    page,
+                    per_page: 100,
+                    _fields: 'id,name,sku,price,regular_price,sale_price,images,stock_status'
+                });
+
+                if (response.data && response.data.length > 0) {
+                    allProducts.push(...response.data);
+
+                    // Check if we reached the last page
+                    if (page >= response.totalPages) {
+                        hasMore = false;
+                    } else {
+                        page++;
+                    }
+                } else {
+                    hasMore = false;
+                }
+            }
+
+            return allProducts;
+        } catch (error) {
+            secureLog.error('Error fetching product index:', error);
+            throw error;
+        }
+    },
+
     async getProductById(id: number): Promise<Product> {
         try {
             return await productsAPI.getById(id);

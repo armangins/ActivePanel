@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Layout, Input, Space, Button, Radio, Card, Flex, Modal, Spin, Typography } from 'antd';
+import { Layout, Input, Space, Button, Card, Flex, Modal, Spin, Typography, Segmented } from 'antd';
 import { ProductDetailModal } from './ProductDetails/ProductDetailModal';
 import { SearchOutlined, AppstoreOutlined, BarsOutlined, PlusOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -125,10 +125,20 @@ export const ProductsPage = () => {
                             {t('deleteSelected')} ({selectedProductIds.size})
                         </Button>
                     )}
-                    <Radio.Group value={viewMode} onChange={(e) => setViewMode(e.target.value)}>
-                        <Radio.Button value="grid"><AppstoreOutlined /></Radio.Button>
-                        <Radio.Button value="list"><BarsOutlined /></Radio.Button>
-                    </Radio.Group>
+                    <Segmented
+                        value={viewMode}
+                        onChange={(value) => setViewMode(value as 'grid' | 'list')}
+                        options={[
+                            {
+                                value: 'grid',
+                                icon: <AppstoreOutlined />,
+                            },
+                            {
+                                value: 'list',
+                                icon: <BarsOutlined />,
+                            },
+                        ]}
+                    />
                     <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/products/add')}>
                         {t('addProduct')}
                     </Button>

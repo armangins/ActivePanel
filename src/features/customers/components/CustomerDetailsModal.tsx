@@ -1,12 +1,8 @@
 import { Modal, Descriptions, Tabs, Table, Tag, Typography, Spin } from 'antd';
-import { Customer } from '../types';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useCustomerDetails } from '../hooks/useCustomersData';
-// We might need an orders service call here to list specific orders for this customer if not included in details
-import { ordersAPI } from '@/services/woocommerce';
-import { useQuery } from '@tanstack/react-query';
+import { useCustomerDetails, useCustomerOrders } from '../hooks/useCustomersData';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface CustomerDetailsModalProps {
     customerId: number | null;
@@ -18,11 +14,7 @@ export const CustomerDetailsModal = ({ customerId, onClose }: CustomerDetailsMod
     const { data: customer, isLoading } = useCustomerDetails(customerId);
 
     // Fetch orders separately if needed. For now assuming basic recent orders are enough or fetching them here.
-    const { data: orders, isLoading: isLoadingOrders } = useQuery({
-        queryKey: ['customer-orders', customerId],
-        queryFn: () => ordersAPI.list({ customer: customerId, per_page: 10 }),
-        enabled: !!customerId
-    });
+    const { data: orders, isLoading: isLoadingOrders } = useCustomerOrders(customerId);
 
     if (!customerId) return null;
 
@@ -105,7 +97,24 @@ export const CustomerDetailsModal = ({ customerId, onClose }: CustomerDetailsMod
             {isLoading ? (
                 <div style={{ textAlign: 'center', padding: 40 }}><Spin /></div>
             ) : (
-                <Tabs items={items} />
+                <>
+                    <div style={{ display: 'flex', gap: 24, marginBottom: 24, padding: 16, background: '#fafafa', borderRadius: 8, border: '1px solid #f0f0f0' }}>
+                        <div style={{ textAlign: 'center', flex: 1 }}>
+                            <Text type="secondary" style={{ fontSize: 13 }}>{t('ordersCount') || 'Orders'}</Text>
+                            <div style={{ fontSize: 24, fontWeight: 'bold', color: '#1890ff' }}>
+                                {customer?.orders_count || 0}
+                            </div>
+                        </div>
+                        <div style={{ width: 1, background: '#f0f0f0' }} />
+                        <div style={{ textAlign: 'center', flex: 1 }}>
+                            <Text type="secondary" style={{ fontSize: 13 }}>{t('totalSpent') || 'Total Spent'}</Text>
+                            <div style={{ fontSize: 24, fontWeight: 'bold', color: '#52c41a' }}>
+                                {customer?.total_spent ? `$${parseFloat(customer.total_spent).toFixed(2)}` : '$0.00'}
+                            </div>
+                        </div>
+                    </div>
+                    <Tabs items={items} />
+                </>
             )}
         </Modal>
     );

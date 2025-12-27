@@ -1,16 +1,20 @@
+
+import React, { useState } from 'react';
 import { Form, Button, Space, Spin, Typography, message } from 'antd';
-import { ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useProductForm } from '../../hooks/useProductForm';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCategories } from '@/hooks/useCategories';
+import { useAttributes } from '@/hooks/useAttributes';
 import { AddProductForm } from './AddProductForm';
-import { useCreateProduct } from '../../hooks/useCreateProduct'; // Restored import
+import { useCreateProduct } from '../../hooks/useCreateProduct';
+import { AddVariationModal } from './AddVariationModal';
 
 
 export const ProductForm = () => {
     const { id } = useParams();
-    const productId = id ? parseInt(id) : null;
+    const productId = id ? parseInt(id) : undefined;
     const { t } = useLanguage();
     const navigate = useNavigate();
     const [messageApi, contextHolder] = message.useMessage();
@@ -26,7 +30,83 @@ export const ProductForm = () => {
     } = useProductForm(productId);
 
     const { data: categories = [] } = useCategories();
+    const { data: globalAttributes = [] } = useAttributes();
     const { uploadProduct, uploadState } = useCreateProduct();
+
+    const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+    const [editingVariationIndex, setEditingVariationIndex] = useState<number | null>(null);
+    const productType = form.watch('type');
+    const currentAttributes = form.watch('attributes');
+
+    const handleEditVariation = (index: number) => {
+        setEditingVariationIndex(index);
+        setIsManualModalOpen(true);
+    };
+
+    const handleManualAdd = (data: any) => {
+        // Sync attributes: Add any new attributes/options from the modal to the product form state
+        const formAttributes = form.getValues('attributes') || [];
+        const newFormAttributes = [...formAttributes];
+        let attributesChanged = false;
+
+        data.attributes.forEach((newAttr: any) => {
+            const existingAttrIndex = newFormAttributes.findIndex((a: any) => a.name === newAttr.name);
+
+            if (existingAttrIndex > -1) {
+                // Attribute exists, check if option needs to be added
+                const existingOptions = newFormAttributes[existingAttrIndex].options || [];
+                if (!existingOptions.includes(newAttr.option)) {
+                    newFormAttributes[existingAttrIndex] = {
+                        ...newFormAttributes[existingAttrIndex],
+                        options: [...existingOptions, newAttr.option]
+                    };
+                    attributesChanged = true;
+                }
+            } else {
+                // Attribute does not exist, add it
+                newFormAttributes.push({
+                    id: newAttr.id,
+                    name: newAttr.name,
+                    options: [newAttr.option],
+                    visible: true,
+                    variation: true
+                });
+                attributesChanged = true;
+            }
+        });
+
+        if (attributesChanged) {
+            form.setValue('attributes', newFormAttributes, { shouldDirty: true });
+        }
+
+        const existingVariations = form.getValues('variations') || [];
+
+        const newVariation = {
+            id: editingVariationIndex !== null ? existingVariations[editingVariationIndex].id : 0,
+            sku: data.sku || '',
+            regular_price: data.regular_price,
+            sale_price: data.sale_price,
+            stock_quantity: data.stock_quantity || 0,
+            stock_status: data.stock_status,
+            manage_stock: data.manage_stock,
+            attributes: data.attributes
+        };
+
+        if (editingVariationIndex !== null) {
+            const updatedVariations = [...existingVariations];
+            updatedVariations[editingVariationIndex] = {
+                ...updatedVariations[editingVariationIndex],
+                ...newVariation
+            };
+            form.setValue('variations', updatedVariations, { shouldDirty: true });
+            messageApi.success(t('variationUpdated') || 'Variation updated');
+        } else {
+            form.setValue('variations', [...existingVariations, newVariation], { shouldDirty: true });
+            messageApi.success(t('variationAdded') || 'Variation added manually');
+        }
+
+        setEditingVariationIndex(null);
+    };
 
     if (isLoading) {
         return <div style={{ textAlign: 'center', padding: 50 }}><Spin size="large" /></div>;
@@ -64,7 +144,7 @@ export const ProductForm = () => {
                     // Count only non-null errors in the array
                     const errorCount = variationErrors.filter((v: any) => v).length;
                     if (errorCount > 0) {
-                        errorFields.push(`${errorCount} וריאציות`);
+                        errorFields.push(errorCount + ' וריאציות');
                     }
                 } else {
                     // Fallback for non-array variation errors
@@ -73,11 +153,7 @@ export const ProductForm = () => {
             }
 
             if (errorFields.length > 0) {
-                errorMessage = `שדות חסרים: ${errorFields.join(', ')}`;
-            }
-
-            if (errorFields.length > 0) {
-                errorMessage = `שדות חסרים: ${errorFields.join(', ')}`;
+                errorMessage = 'שדות חסרים: ' + errorFields.join(', ');
             }
 
             messageApi.error(errorMessage);
@@ -98,55 +174,67 @@ export const ProductForm = () => {
             const formData = form.getValues();
             try {
                 await uploadProduct(formData);
-
-                // Show success message
-                messageApi.success('המוצר נוצר בהצלחה!');
-
-                // Navigate to products list
-                navigate('/products');
-
             } catch (error: any) {
-                console.error('❌ Upload failed:', error);
-                // Show error message
-                messageApi.error(error.message || 'אירעה שגיאה בעת יצירת המוצר');
+                console.error('Upload failed:', error);
             }
         } else {
-            // For editing, use existing save logic
-            form.handleSubmit(handleSave)();
+            // For edit mode, use normal submit
+            handleSave(form.getValues());
         }
     };
 
-
-
-
-
     const formContent = (
         <AddProductForm
+            form={form}
             control={control}
             errors={errors}
             categories={categories}
-            handleGenerateSKU={handleGenerateSKU}
-            setValue={form.setValue}
-            getValues={form.getValues}
+            isEditMode={!!isEditMode}
+            onGenerateSKU={handleGenerateSKU}
+            onEditVariation={handleEditVariation}
         />
     );
 
     return (
         <>
             {contextHolder}
-            <Form layout="vertical" onFinish={handleFormSubmit} style={{ paddingBottom: 80 }}>
-                {/* Header - Just Title and Back */}
+            {uploadState.isUploading && (
                 <div style={{
-                    marginBottom: 24,
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(255, 255, 255, 0.8)',
+                    zIndex: 2000,
                     display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                 }}>
-                    <Space>
-                        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/products')}>
-                            {t('back') || "Back"}
-                        </Button>
-                        <Typography.Title level={4} style={{ margin: 0 }}>
+                    <Spin size="large" />
+                    <Typography.Title level={4} style={{ marginTop: 16 }}>
+                        {t('uploadingProduct')}...
+                    </Typography.Title>
+                    <Typography.Text type="secondary">
+                        {uploadState.progress}% - {uploadState.currentStep}
+                    </Typography.Text>
+                </div>
+            )}
+
+            <Form
+                layout="vertical"
+                onFinish={handleFormSubmit}
+                initialValues={{ type: 'simple', status: 'publish' }}
+            >
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                    <Space align="center">
+                        <Button
+                            icon={<ArrowLeftOutlined />}
+                            onClick={() => navigate('/products')}
+                        />
+                        <Typography.Title level={2} style={{ margin: 0 }}>
                             {isEditMode ? t('editProduct') : t('createProduct')}
                         </Typography.Title>
                     </Space>
@@ -220,11 +308,19 @@ export const ProductForm = () => {
                     padding: '16px 24px',
                     background: '#fff',
                     borderTop: '1px solid #f0f0f0',
+                    boxShadow: '0 -2px 10px rgba(0,0,0,0.05)',
                     display: 'flex',
                     justifyContent: 'flex-end',
-                    boxShadow: '0 -2px 10px rgba(0,0,0,0.05)'
                 }}>
                     <Space>
+                        {productType === 'variable' && (
+                            <Button
+                                size="large"
+                                onClick={() => setIsManualModalOpen(true)}
+                            >
+                                {t('addSpecificVariation') || 'Add Variations'}
+                            </Button>
+                        )}
                         <Button
                             type="primary"
                             htmlType="submit"
@@ -236,6 +332,21 @@ export const ProductForm = () => {
                     </Space>
                 </div>
             </Form>
+
+            {isManualModalOpen && (
+                <AddVariationModal
+                    visible={isManualModalOpen}
+                    onCancel={() => {
+                        setIsManualModalOpen(false);
+                        setEditingVariationIndex(null);
+                    }}
+                    onAdd={handleManualAdd}
+                    globalAttributes={globalAttributes}
+                    initialValues={editingVariationIndex !== null ? form.getValues(`variations.${editingVariationIndex}`) : undefined}
+                    isEditing={editingVariationIndex !== null}
+                />
+            )}
         </>
     );
 };
+

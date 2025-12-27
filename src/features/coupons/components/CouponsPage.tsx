@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Layout, Typography, Button, Input, Empty } from 'antd';
+import { Layout, Typography, Button, Input, Empty, message } from 'antd';
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCouponsData, useDeleteCoupon } from '../hooks/useCouponsData';
@@ -13,6 +13,7 @@ const { Title } = Typography;
 
 export const CouponsPage = () => {
     const { t, isRTL } = useLanguage();
+    const [messageApi, contextHolder] = message.useMessage();
     const [search, setSearch] = useState('');
     const [debouncedSearch] = useDebounce(search, 500);
     const [page, setPage] = useState(1);
@@ -34,7 +35,14 @@ export const CouponsPage = () => {
 
     const handleDelete = (id: number) => {
         if (window.confirm(t('deleteCouponConfirm') || 'Are you sure you want to delete this coupon?')) {
-            deleteMutation.mutate(id);
+            deleteMutation.mutate(id, {
+                onSuccess: () => {
+                    messageApi.success(t('couponDeleted') || 'Coupon deleted successfully');
+                },
+                onError: (error: any) => {
+                    messageApi.error(error.message || t('errorDeletingCoupon') || 'Failed to delete coupon');
+                }
+            });
         }
     };
 
@@ -45,6 +53,7 @@ export const CouponsPage = () => {
 
     return (
         <Content style={{ padding: 24, minHeight: 280, direction: isRTL ? 'rtl' : 'ltr' }}>
+            {contextHolder}
             <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Title level={2} style={{ margin: 0 }}>
                     {t('coupons') || 'Coupons'}
@@ -100,6 +109,7 @@ export const CouponsPage = () => {
                     open={isModalOpen}
                     onClose={handleModalClose}
                     coupon={selectedCoupon}
+                    messageApi={messageApi}
                 />
             )}
         </Content>

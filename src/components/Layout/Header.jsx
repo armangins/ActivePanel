@@ -1,88 +1,80 @@
+import React, { useState, useCallback } from 'react';
 import {
-  MenuOutlined as Menu,
-  BellOutlined as Bell,
-  ReloadOutlined as RefreshCw,
+  MenuOutlined,
+  BellOutlined,
+  ReloadOutlined,
   MenuFoldOutlined,
-  MenuUnfoldOutlined
+  MenuUnfoldOutlined,
+  UserOutlined,
+  LogoutOutlined,
+  InboxOutlined
 } from '@ant-design/icons';
-import { Button } from 'antd';
-import { useState, useCallback } from 'react';
+import { Layout, Button, Dropdown, Popover, Badge, Avatar, Space, Typography, List, Empty, Spin, theme } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '@/features/auth';
 import ConnectionStatus from './ConnectionStatus';
-import NotificationDropdown from './NotificationDropdown';
-import UserMenuDropdown from './UserMenuDropdown';
-import { UserAvatar } from '../ui';
 import GlobalSearch from './GlobalSearch';
 import { refreshAllData } from '../../utils/refreshHelpers';
 import useNewOrdersCount from '../../hooks/useNewOrdersCount';
 import { OrderDetailsModal } from '@/features/orders';
+import { formatRelativeDate } from '../../utils/dateHelpers';
+import { getCustomerName } from '../../utils/orderHelpers';
+
+const { Header: AntHeader } = Layout;
+const { Text } = Typography;
+const { useToken } = theme;
 
 const Header = ({ onMenuClick, onCollapseToggle, isCollapsed }) => {
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
+  const { token } = useToken();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+
   const { t, formatCurrency, isRTL } = useLanguage();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { newOrdersCount, newOrders, removeOrder, clearAllNotifications, markAsRead, markAsUnread, markAllAsRead, isLoading, hasError } = useNewOrdersCount();
+  const {
+    newOrdersCount,
+    newOrders,
+    removeOrder,
+    clearAllNotifications,
+    markAsRead,
+    markAsUnread,
+    markAllAsRead,
+    isLoading
+  } = useNewOrdersCount();
 
   // Handlers
   const handleLogout = useCallback(async () => {
-    // Close menu first to prevent UI issues
-    setShowUserMenu(false);
-
     try {
-      // Wait for logout to complete (clears tokens, calls API, etc.)
       await logout();
-
-      // Navigate to login page after logout completes
-      // Use replace: true to prevent back button from going back to authenticated pages
       navigate('/login', { replace: true });
     } catch (error) {
-      // Ensure menu is closed even on error
-      setShowUserMenu(false);
-
-      // Still navigate to login page to ensure user is logged out from UI perspective
-      // The AuthContext logout function already clears local state in finally block
-      // This ensures the user is logged out even if the API call fails
       navigate('/login', { replace: true });
     }
   }, [logout, navigate]);
-
-  const handleMenuToggle = useCallback(() => {
-    setShowUserMenu(prev => !prev);
-  }, []);
-
-  const handleBackdropClick = useCallback(() => {
-    setShowUserMenu(false);
-    setShowNotifications(false);
-  }, []);
-
-  const handleNotificationClick = useCallback(() => {
-    setShowNotifications(prev => !prev);
-  }, []);
-
-  const handleOrderClick = useCallback((orderId) => {
-    const latestOrder = newOrders.find(o => o.id === orderId);
-    if (!latestOrder) return;
-    setSelectedOrder(latestOrder);
-    setShowNotifications(false);
-  }, [newOrders]);
-
-  const handleStatusUpdate = useCallback(() => {
-    setSelectedOrder(null);
-  }, []);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
       await refreshAllData();
     } catch (error) {
+      // Error handled by utils
+    } finally {
       setIsRefreshing(false);
     }
+  }, []);
+
+  const handleOrderClick = useCallback((orderId) => {
+    const latestOrder = newOrders.find(o => o.id === orderId);
+    if (!latestOrder) return;
+    setSelectedOrder(latestOrder);
+    setNotificationOpen(false);
+  }, [newOrders]);
+
+  const handleStatusUpdate = useCallback(() => {
+    setSelectedOrder(null);
   }, []);
 
   const handleModalClose = useCallback(() => {
@@ -93,203 +85,208 @@ const Header = ({ onMenuClick, onCollapseToggle, isCollapsed }) => {
     setSelectedOrder(null);
   }, [newOrders, selectedOrder, markAsRead]);
 
+  // User Menu Items
+  const userMenuItems = [
+    {
+      key: 'user-info',
+      label: (
+        <div style={{ padding: '8px 0', cursor: 'default' }}>
+          <Text strong style={{ display: 'block' }}>{user?.name || t('adminUser')}</Text>
+          <Text type="secondary" style={{ fontSize: '12px' }}>{user?.email || 'admin@example.com'}</Text>
+        </div>
+      ),
+      disabled: true,
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined style={{ color: token.colorError }} />,
+      label: <Text type="danger">{t('logout') || 'Logout'}</Text>,
+      onClick: handleLogout,
+    },
+  ];
+
+  // Notification Content
+  const notificationContent = (
+    <div style={{ width: 350, maxHeight: 500, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 4px', borderBottom: `1px solid ${token.colorBorderSecondary}` }}>
+        <Text strong>{t('notifications') || 'Notifications'}</Text>
+        <Space>
+          {newOrders.length > 0 && (
+            <Button type="link" size="small" onClick={clearAllNotifications} style={{ padding: 0 }}>
+              {t('clearAll') || 'Clear All'}
+            </Button>
+          )}
+        </Space>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', maxHeight: 400 }}>
+        {isLoading ? (
+          <div style={{ padding: 24, textAlign: 'center' }}><Spin /></div>
+        ) : newOrders.length === 0 ? (
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('noNewOrders') || 'No new orders'} />
+        ) : (
+          <List
+            dataSource={newOrders}
+            renderItem={order => (
+              <List.Item
+                key={order.id}
+                style={{
+                  cursor: 'pointer',
+                  padding: '12px',
+                  background: !order.read ? token.colorPrimaryBg : 'transparent',
+                  transition: 'background 0.3s'
+                }}
+                className="notification-item"
+                onClick={() => handleOrderClick(order.id)}
+                actions={[
+                  <Button
+                    key="remove"
+                    type="text"
+                    size="small"
+                    icon={<span style={{ fontSize: 16 }}>&times;</span>}
+                    onClick={(e) => { e.stopPropagation(); removeOrder(order.id); }}
+                  />
+                ]}
+              >
+                <List.Item.Meta
+                  avatar={
+                    <Avatar
+                      icon={<InboxOutlined />}
+                      style={{ backgroundColor: !order.read ? token.colorPrimary : token.colorBgContainerDisabled }}
+                    />
+                  }
+                  title={
+                    <Space size={4} style={{ width: '100%', justifyContent: 'space-between' }}>
+                      <Text strong={!order.read}>
+                        {t('order')} #{order.number || order.id}
+                      </Text>
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {formatRelativeDate(order.date_created)}
+                      </Text>
+                    </Space>
+                  }
+                  description={
+                    <div>
+                      <div>{getCustomerName(order, t)}</div>
+                      <Text type="success" strong>{formatCurrency(order.total)}</Text>
+                    </div>
+                  }
+                />
+              </List.Item>
+            )}
+          />
+        )}
+      </div>
+
+      {newOrders.length > 0 && (
+        <div style={{ padding: '8px 0', textAlign: 'center', borderTop: `1px solid ${token.colorBorderSecondary}` }}>
+          <Button type="link" onClick={() => { navigate('/orders'); setNotificationOpen(false); }}>
+            {t('viewAllOrders') || 'View All Orders'}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <header style={{
-      backgroundColor: '#fff',
-      borderBottom: '1px solid #e5e7eb',
-      padding: 0,
+    <AntHeader style={{
+      background: token.colorBgContainer,
+      padding: '0 16px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 16,
       position: 'sticky',
       top: 0,
-      zIndex: 10
+      zIndex: 10,
+      borderBottom: `1px solid ${token.colorBorderSecondary}`,
+      height: 64,
+      flexDirection: isRTL ? 'row-reverse' : 'row'
     }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 16,
-        flexDirection: isRTL ? 'row-reverse' : 'row',
-        padding: '0 16px',
-        direction: isRTL ? 'rtl' : 'ltr'
-      }}>
-        {/* Mobile menu button */}
-        <Button
-          type="text"
-          icon={<Menu />}
-          onClick={onMenuClick}
-          style={{
-            display: window.innerWidth < 1024 ? 'flex' : 'none',
-            fontSize: '16px',
-            width: 64,
-            height: 64
-          }}
-        />
+      {/* 1. Mobile Menu Toggle */}
+      <Button
+        type="text"
+        icon={<MenuOutlined />}
+        onClick={onMenuClick}
+        style={{ display: window.innerWidth < 1024 ? 'flex' : 'none', fontSize: '16px', width: 64, height: 64 }}
+      />
 
-        {/* User Menu - Profile */}
-        <div style={{ position: 'relative' }}>
-          <button
-            onClick={handleMenuToggle}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              padding: '8px 16px 8px 0',
-              borderRight: isRTL ? 'none' : '1px solid #e5e7eb',
-              borderLeft: isRTL ? '1px solid #e5e7eb' : 'none',
-              background: 'none',
-              borderTop: 'none',
-              borderBottom: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#f9fafb';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-            aria-label="User menu"
-          >
-            <UserAvatar
-              src={user?.picture}
-              alt={user?.name || 'User'}
-              name={user?.name}
-              size="md"
-            />
-            <div style={{
-              display: window.innerWidth >= 768 ? 'block' : 'none',
-              textAlign: isRTL ? 'right' : 'left'
-            }}>
-              <p style={{ fontSize: '14px', fontWeight: 500, color: '#111827', margin: 0 }}>
-                {user?.name || t('adminUser')}
-              </p>
-              <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>
-                {user?.email || 'admin@example.com'}
-              </p>
-            </div>
-          </button>
-          <UserMenuDropdown
-            isOpen={showUserMenu}
-            onClose={handleBackdropClick}
-            user={user}
-            onLogout={handleLogout}
-          />
-        </div>
-
-        {/* Refresh */}
-        <button
-          onClick={handleRefresh}
-          disabled={isRefreshing}
+      {/* 2. User Profile (Was on Left/Start) */}
+      <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement={isRTL ? "bottomLeft" : "bottomRight"}>
+        <div
           style={{
-            padding: '8px',
-            color: '#6b7280',
-            background: 'none',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: isRefreshing ? 'not-allowed' : 'pointer',
-            opacity: isRefreshing ? 0.5 : 1,
-            transition: 'all 0.2s'
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '8px 16px 8px 0',
+            borderRight: isRTL ? 'none' : `1px solid ${token.colorBorderSecondary}`,
+            borderLeft: isRTL ? `1px solid ${token.colorBorderSecondary}` : 'none',
+            borderRadius: 8,
+            cursor: 'pointer',
+            transition: 'background-color 0.2s',
+            color: token.colorText
           }}
-          onMouseEnter={(e) => {
-            if (!isRefreshing) {
-              e.currentTarget.style.backgroundColor = '#f3f4f6';
-              e.currentTarget.style.color = '#4560FF';
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.color = '#6b7280';
-          }}
-          title={t('refresh') || 'רענון'}
+          className="user-menu-trigger"
         >
-          <RefreshCw style={{ fontSize: '20px' }} spin={isRefreshing} />
-        </button>
-
-        {/* Notifications - Bell */}
-        <div style={{ position: 'relative' }}>
-          <button
-            onClick={handleNotificationClick}
-            style={{
-              position: 'relative',
-              padding: '8px',
-              color: '#6b7280',
-              background: 'none',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#f3f4f6';
-              e.currentTarget.style.color = '#4560FF';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = '#6b7280';
-            }}
-          >
-            <Bell style={{ fontSize: '20px' }} />
-            {newOrdersCount > 0 && (
-              <span style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                backgroundColor: '#f97316',
-                color: '#fff',
-                fontSize: '12px',
-                fontWeight: 700,
-                borderRadius: '50%',
-                width: '20px',
-                height: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                {newOrdersCount > 99 ? '99+' : newOrdersCount}
-              </span>
-            )}
-          </button>
-          <NotificationDropdown
-            isOpen={showNotifications}
-            onClose={handleBackdropClick}
-            orders={newOrders}
-            isLoading={isLoading}
-            hasError={hasError}
-            onOrderClick={handleOrderClick}
-            onMarkAsRead={markAsRead}
-            onMarkAsUnread={markAsUnread}
-            onRemoveOrder={removeOrder}
-            onMarkAllAsRead={markAllAsRead}
-            onClearAll={clearAllNotifications}
-            formatCurrency={formatCurrency}
-          />
+          <Avatar src={user?.picture} icon={<UserOutlined />} size="default" />
+          <div style={{ display: window.innerWidth >= 768 ? 'block' : 'none', textAlign: isRTL ? 'right' : 'left' }}>
+            <Text strong style={{ display: 'block', lineHeight: 1.2 }}>{user?.name || t('adminUser')}</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>{user?.email || 'admin@example.com'}</Text>
+          </div>
         </div>
+      </Dropdown>
 
-        {/* Global Search */}
-        <div style={{ maxWidth: '400px', width: '100%' }}>
-          <GlobalSearch placeholder={t('search')} isRTL={isRTL} />
-        </div>
-
-        {/* Spacer to push toggle to the right */}
-        <div style={{ flex: 1 }} />
-
-        {/* Desktop collapse toggle */}
+      {/* 3. Actions Group: Refresh & Notifications */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Refresh */}
         <Button
           type="text"
-          icon={isCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-          onClick={onCollapseToggle}
-          style={{
-            display: window.innerWidth >= 1024 ? 'flex' : 'none',
-            fontSize: '16px',
-            width: 64,
-            height: 64
-          }}
+          icon={<ReloadOutlined spin={isRefreshing} />}
+          onClick={handleRefresh}
+          title={t('refresh')}
+          style={{ width: 40, height: 40, color: token.colorTextSecondary }}
         />
 
-        {/* Connection Status - Hidden or moved to end */}
-        <div style={{ display: 'none' }}>
-          <ConnectionStatus />
-        </div>
+        {/* Notifications */}
+        <Popover
+          content={notificationContent}
+          trigger="click"
+          placement="bottomRight"
+          open={notificationOpen}
+          onOpenChange={setNotificationOpen}
+          // overlayInnerStyle={{ padding: 0 }} // Deprecated
+          styles={{ body: { padding: 0 } }}
+        >
+          <Badge count={newOrdersCount} offset={[-2, 2]} size="small">
+            <Button
+              type="text"
+              icon={<BellOutlined style={{ fontSize: 20 }} />}
+              style={{ width: 40, height: 40, color: token.colorTextSecondary }}
+            />
+          </Badge>
+        </Popover>
       </div>
+
+      {/* 4. Global Search */}
+      <div style={{ maxWidth: 400, width: '100%' }}>
+        <GlobalSearch placeholder={t('search')} isRTL={isRTL} />
+      </div>
+
+      {/* 5. Spacer */}
+      <div style={{ flex: 1 }} />
+
+      {/* 6. Desktop Collapse Toggle (Far Right/End) */}
+      <Button
+        type="text"
+        icon={isCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+        onClick={onCollapseToggle}
+        style={{ display: window.innerWidth >= 1024 ? 'flex' : 'none', fontSize: '16px', width: 64, height: 64 }}
+      />
+
+      {/* Connection Status (Hidden) */}
+      <div style={{ display: 'none' }}><ConnectionStatus /></div>
 
       {/* Order Details Modal */}
       {selectedOrder && (
@@ -302,9 +299,8 @@ const Header = ({ onMenuClick, onCollapseToggle, isCollapsed }) => {
           t={t}
         />
       )}
-    </header>
+    </AntHeader>
   );
 };
 
 export default Header;
-

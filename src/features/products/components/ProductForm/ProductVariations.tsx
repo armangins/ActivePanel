@@ -12,9 +12,10 @@ interface ProductVariationsProps {
     control: Control<ProductFormValues>;
     parentName?: string; // Parent product name for fallback display
     errors?: any; // Form errors for validation display
+    onEdit?: (index: number) => void;
 }
 
-export const ProductVariations: React.FC<ProductVariationsProps> = ({ control, parentName, errors }) => {
+export const ProductVariations: React.FC<ProductVariationsProps> = ({ control, parentName, errors, onEdit }) => {
     const { t } = useLanguage();
 
     const { fields, remove } = useFieldArray({
@@ -63,6 +64,7 @@ export const ProductVariations: React.FC<ProductVariationsProps> = ({ control, p
                             onRemove={() => remove(index)}
                             parentName={parentName}
                             errors={errors}
+                            onEdit={onEdit ? () => onEdit(index) : undefined}
                         />
                     </Col>
                 ))}

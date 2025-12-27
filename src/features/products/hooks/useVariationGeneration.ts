@@ -22,7 +22,7 @@ export const useVariationGeneration = ({
     getValues
 }: UseVariationGenerationProps) => {
 
-    const getVariations = () => {
+    const getVariations = (existingVariations: any[] = []) => {
         const attributesWithTerms = currentAttributes.filter((attr: any) =>
             attr.options && attr.options.length > 0
         );
@@ -50,6 +50,29 @@ export const useVariationGeneration = ({
                 option: term
             }));
 
+            // Try to find an existing variation that matches these attributes
+            const match = existingVariations.find((existing: any) => {
+                if (!existing.attributes || existing.attributes.length !== attributes.length) return false;
+
+                // Case-insensitive comparison helper
+                const normalize = (str: any) => String(str).toLowerCase().trim();
+
+                return attributes.every((cA: any) =>
+                    existing.attributes.some((eA: any) =>
+                        normalize(eA.name) === normalize(cA.name) &&
+                        normalize(eA.option) === normalize(cA.option)
+                    )
+                );
+            });
+
+            if (match) {
+                // Preserve identity and key data
+                return {
+                    ...match,
+                    attributes // Update attributes structure just in case, but keep values
+                };
+            }
+
             return {
                 id: 0,
                 sku: '',
@@ -67,21 +90,26 @@ export const useVariationGeneration = ({
      * Additive Generation: Only adds new unique variations
      */
     const generateVariations = useCallback(() => {
-        const newCandidates = getVariations();
         const existingVariations = getValues('variations') || [];
+        // Pass existing so we can preserve IDs if we "generate" something that actually exists
+        // (Though logic below filters uniqueNew, this helps if logic changes)
+        const newCandidates = getVariations(existingVariations);
 
-        // Filter out candidates that effectively exist already
+        // Filter out candidates that truly match existing ones (by ID or attributes)
         const uniqueNew = newCandidates.filter(candidate => {
-            // Check if ANY existing variation matches this candidate's attributes
+            // If it has an ID, it's definitely existing, so skip it (we only want NEW ones here)
+            if (candidate.id && candidate.id !== 0) return false;
+
+            // Double check attribute matching for good measure
             const exists = existingVariations.some((existing: any) => {
-                // If attribute count differs, they differ
                 if (!existing.attributes || existing.attributes.length !== candidate.attributes.length) return false;
 
-                // Check if every attribute in candidate exists in existing (Name + Option match)
-                // We use Name/Option pair because ID might be 0 for new attrs
+                const normalize = (str: any) => String(str).toLowerCase().trim();
+
                 return candidate.attributes.every((cA: any) =>
                     existing.attributes.some((eA: any) =>
-                        eA.name === cA.name && eA.option === cA.option
+                        normalize(eA.name) === normalize(cA.name) &&
+                        normalize(eA.option) === normalize(cA.option)
                     )
                 );
             });
@@ -95,13 +123,14 @@ export const useVariationGeneration = ({
     }, [currentAttributes, parentRegularPrice, parentSalePrice, setValue, getValues]);
 
     /**
-     * Destructive Regeneration: Clears and rebuilds all
+     * Destructive Regeneration: Rebuilds list but preserves IDs of matches
      */
     const regenerateVariations = useCallback(() => {
-        const allFresh = getVariations();
-        // Replace entire array
+        const existingVariations = getValues('variations') || [];
+        const allFresh = getVariations(existingVariations);
+        // Replace entire array with fresh list (some of which might have preserved IDs)
         setValue('variations', allFresh, { shouldDirty: true });
-    }, [currentAttributes, parentRegularPrice, parentSalePrice, setValue]);
+    }, [currentAttributes, parentRegularPrice, parentSalePrice, setValue, getValues]);
 
     return { generateVariations, regenerateVariations };
 };
