@@ -5,13 +5,14 @@ import { productSchema, ProductFormValues } from '../types/schemas';
 import { useCreateProduct, useUpdateProduct, useProductDetail, useVariations } from './useProductsData';
 import { useUpdateVariableProduct } from './useUpdateVariableProduct';
 import { useNavigate } from 'react-router-dom';
-import { message } from 'antd';
+import { useMessage } from '@/contexts/MessageContext';
 // @ts-ignore
 import { secureLog } from '@/utils/logger';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export const useProductForm = (productId?: number | null) => {
     const { t } = useLanguage();
+    const message = useMessage();
     const navigate = useNavigate();
     const [isEditMode, setIsEditMode] = useState(!!productId);
 

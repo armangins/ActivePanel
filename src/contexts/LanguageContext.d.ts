@@ -5,6 +5,7 @@ export interface LanguageContextType {
     language: string;
     setLanguage: (lang: string) => void;
     dir: 'ltr' | 'rtl';
+    isRTL: boolean;
     formatCurrency: (amount: number | string) => string;
 }
 

@@ -12,7 +12,7 @@ interface VariationCardProps {
 }
 
 export const VariationCard = ({ variation, onEdit, onDelete }: VariationCardProps) => {
-    const { t, isRTL } = useLanguage();
+    const { t, } = useLanguage();
 
     const attributesString = variation.attributes
         .map(attr => `${attr.name}: ${attr.option}`)

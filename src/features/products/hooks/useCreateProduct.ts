@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { message } from 'antd';
+import { useMessage } from '@/contexts/MessageContext';
 import { UploadState, UploadProgress, ProductCreationResult } from '../types/upload';
 import { ProductFormValues } from '../types/schemas';
 import { useCreateSimpleProduct } from './useCreateSimpleProduct';
@@ -20,6 +20,7 @@ const initialProgress: UploadProgress = {
  * Orchestrates the upload process and manages upload state
  */
 export const useCreateProduct = () => {
+    const message = useMessage();
     const [uploadState, setUploadState] = useState<UploadState>({
         isUploading: false,
         progress: initialProgress,

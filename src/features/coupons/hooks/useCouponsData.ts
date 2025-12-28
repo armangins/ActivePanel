@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { couponsService } from '../api/coupons.service';
 import { useSettings } from '@/features/settings';
+import { useMessage } from '@/contexts/MessageContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const useCouponsData = (params: any = {}) => {
     const { settings } = useSettings();
@@ -27,44 +29,52 @@ export const useCouponDetail = (id: number | null) => {
 
 export const useCreateCoupon = () => {
     const queryClient = useQueryClient();
+    const message = useMessage();
+    const { t } = useLanguage();
 
     return useMutation({
         mutationFn: couponsService.createCoupon,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['coupons'] });
+            message.success(t('couponCreated') || 'Coupon created successfully');
+        },
+        onError: () => {
+            message.error(t('couponCreateFailed') || 'Failed to create coupon');
         }
     });
 };
 
 export const useUpdateCoupon = () => {
     const queryClient = useQueryClient();
+    const message = useMessage();
+    const { t } = useLanguage();
 
     return useMutation({
         mutationFn: ({ id, data }: { id: number; data: any }) => couponsService.updateCoupon(id, data),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['coupons'] });
             queryClient.invalidateQueries({ queryKey: ['coupons', variables.id] });
+            message.success(t('couponUpdated') || 'Coupon updated successfully');
+        },
+        onError: () => {
+            message.error(t('couponUpdateFailed') || 'Failed to update coupon');
         }
     });
 };
 
 export const useDeleteCoupon = () => {
     const queryClient = useQueryClient();
+    const message = useMessage();
+    const { t } = useLanguage();
 
     return useMutation({
         mutationFn: couponsService.deleteCoupon,
         onMutate: async (id) => {
-            // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
             await queryClient.cancelQueries({ queryKey: ['coupons'] });
-
-            // Snapshot the previous value
             const previousCoupons = queryClient.getQueriesData({ queryKey: ['coupons'] });
 
-            // Optimistically update to the new value
             queryClient.setQueriesData({ queryKey: ['coupons'] }, (old: any) => {
                 if (!old) return old;
-
-                // Handle paginated response structure { data: [], total: ... }
                 if (old.data && Array.isArray(old.data)) {
                     return {
                         ...old,
@@ -72,29 +82,27 @@ export const useDeleteCoupon = () => {
                         total: old.total ? old.total - 1 : old.total
                     };
                 }
-
-                // Handle plain array response (if used elsewhere)
                 if (Array.isArray(old)) {
                     return old.filter((c: any) => c.id !== id);
                 }
-
                 return old;
             });
 
-            // Return a context object with the snapshotted value
             return { previousCoupons };
         },
         onError: (_err, _id, context) => {
-            // If the mutation fails, use the context returned from onMutate to roll back
             if (context?.previousCoupons) {
                 context.previousCoupons.forEach(([queryKey, data]) => {
                     queryClient.setQueryData(queryKey, data);
                 });
             }
+            message.error(t('couponDeleteFailed') || 'Failed to delete coupon');
         },
         onSettled: () => {
-            // Always refetch after error or success:
             queryClient.invalidateQueries({ queryKey: ['coupons'] });
         },
+        onSuccess: () => {
+            message.success(t('couponDeleted') || 'Coupon deleted successfully');
+        }
     });
 };

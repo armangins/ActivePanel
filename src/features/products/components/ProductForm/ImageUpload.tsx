@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Upload, Modal, message, Tag } from 'antd';
+import { Upload, Modal, Tag } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
 import { mediaAPI } from '@/services/woocommerce';
+import { useMessage } from '@/contexts/MessageContext';
 // @ts-ignore
 import { secureLog } from '@/utils/logger';
 import {
@@ -60,6 +61,7 @@ const DraggableUploadListItem = ({ originNode, file }: DraggableUploadListItemPr
 };
 
 export const ImageUpload = ({ value = [], onChange, maxCount = 5 }: ImageUploadProps) => {
+    const message = useMessage();
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState('');
     const [previewTitle, setPreviewTitle] = useState('');

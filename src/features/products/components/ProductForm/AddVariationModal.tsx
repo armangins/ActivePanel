@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Select, Form, Alert, Input, InputNumber, Checkbox, Row, Col, Divider, message, Spin } from 'antd';
+import { Modal, Select, Form, Alert, Input, InputNumber, Checkbox, Row, Col, Divider, Spin } from 'antd';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useMessage } from '@/contexts/MessageContext';
 import { useAttributeTerms } from '@/hooks/useAttributes';
 
 interface Attribute {
@@ -92,6 +93,7 @@ export const AddVariationModal: React.FC<AddVariationModalProps> = ({
     isEditing = false
 }) => {
     const { t } = useLanguage();
+    const message = useMessage();
     const [form] = Form.useForm();
     const manageStock = Form.useWatch('manage_stock', form);
 

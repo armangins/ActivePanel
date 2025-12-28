@@ -1,20 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { AutoComplete, Input, Typography, Flex, Spin, Empty, Button, Tooltip } from 'antd';
 import { SearchOutlined, InfoCircleOutlined, EditOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useProductSearch } from '@/features/products';
-import { useLanguage } from '../../contexts/LanguageContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { OptimizedImage } from '../ui';
-import { useDebounce } from '../../hooks/useDebounce';
+import { useDebounce } from '@/hooks/useDebounce';
 import { ProductDetailModal } from '@/features/products/components/ProductDetails/ProductDetailModal';
+import type { DefaultOptionType } from 'antd/es/select';
 
 const { Text } = Typography;
 
-const GlobalSearch = ({ placeholder, isRTL, className }) => {
+interface Product {
+    id: number;
+    name: string;
+    sku?: string;
+    price?: string;
+    regular_price?: string;
+    images?: { src: string }[];
+}
+
+interface CustomOptionType extends DefaultOptionType {
+    product?: Product;
+}
+
+interface GlobalSearchProps {
+    placeholder?: string;
+    isRTL?: boolean;
+    className?: string;
+    style?: React.CSSProperties;
+    autoFocus?: boolean;
+}
+
+const GlobalSearch: React.FC<GlobalSearchProps> = ({ placeholder, isRTL, className, style, autoFocus }) => {
     const [searchValue, setSearchValue] = useState('');
     const [debouncedSearchValue] = useDebounce(searchValue, 500);
-    const [options, setOptions] = useState([]);
-    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [options, setOptions] = useState<CustomOptionType[]>([]);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const navigate = useNavigate();
     const { t, formatCurrency } = useLanguage();
 
@@ -22,7 +44,7 @@ const GlobalSearch = ({ placeholder, isRTL, className }) => {
     const { search, isLoading } = useProductSearch();
 
     // Perform search on the client side using useMemo to avoid effect loops
-    const searchResults = React.useMemo(() => {
+    const searchResults = useMemo(() => {
         if (!debouncedSearchValue) return [];
         return search(debouncedSearchValue);
     }, [debouncedSearchValue, search]);
@@ -51,7 +73,7 @@ const GlobalSearch = ({ placeholder, isRTL, className }) => {
             // Data is already sorted by useProductSearch hook
             const sortedProducts = searchResults;
 
-            const productOptions = sortedProducts.map(product => ({
+            const productOptions: CustomOptionType[] = sortedProducts.map((product: Product) => ({
                 value: product.id.toString(),
                 label: (
                     <Flex align="center" gap={12} style={{ padding: '4px 0' }}>
@@ -66,7 +88,7 @@ const GlobalSearch = ({ placeholder, isRTL, className }) => {
                             <Text strong ellipsis>{product.name}</Text>
                             <Text type="secondary" style={{ fontSize: '12px' }}>
                                 <span>{product.sku ? `SKU: ${product.sku} | ` : ''}</span>
-                                {formatCurrency(product.regular_price || product.price)}
+                                {formatCurrency(product.regular_price || product.price || '')}
                             </Text>
                         </Flex>
                         <Flex gap={4}>
@@ -114,7 +136,7 @@ const GlobalSearch = ({ placeholder, isRTL, className }) => {
         }
     }, [searchResults, isLoading, debouncedSearchValue, formatCurrency, t, navigate]);
 
-    const handleSelect = (value, option) => {
+    const handleSelect = (value: string, option: CustomOptionType) => {
         if (option.product) {
             navigate(`/products/edit/${option.product.id}`);
             setSearchValue(''); // Clear search after selection
@@ -123,7 +145,7 @@ const GlobalSearch = ({ placeholder, isRTL, className }) => {
 
     return (
         <>
-            <div className={`global-search ${className || ''}`} style={{ width: '100%', maxWidth: '400px' }}>
+            <div className={`global-search ${className || ''}`} style={{ width: '100%', maxWidth: '400px', ...style }}>
                 <AutoComplete
                     popupMatchSelectWidth={400}
                     style={{ width: '100%' }}
@@ -131,12 +153,13 @@ const GlobalSearch = ({ placeholder, isRTL, className }) => {
                     onSelect={handleSelect}
                     onSearch={setSearchValue}
                     value={searchValue}
-                    listHeight={400} // Ensure dropdown has enough height
+                // listHeight={400} // Removed: AntD handles this well by default, or use if strictly needed
                 >
                     <Input
                         size="large"
                         placeholder={placeholder || (t('search') || 'חיפוש...')}
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        autoFocus={autoFocus}
                         allowClear
                         style={{
                             borderRadius: '8px',
@@ -152,7 +175,7 @@ const GlobalSearch = ({ placeholder, isRTL, className }) => {
                     product={selectedProduct}
                     open={!!selectedProduct}
                     onClose={() => setSelectedProduct(null)}
-                    onEdit={(product) => {
+                    onEdit={(product: Product) => {
                         navigate(`/products/edit/${product.id}`);
                         setSelectedProduct(null);
                         setSearchValue('');

@@ -1,23 +1,22 @@
-
 import React, { useState } from 'react';
-import { Form, Button, Space, Spin, Typography, message } from 'antd';
+import { Form, Button, Space, Spin, Typography } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useProductForm } from '../../hooks/useProductForm';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useMessage } from '@/contexts/MessageContext';
 import { useCategories } from '@/hooks/useCategories';
 import { useAttributes } from '@/hooks/useAttributes';
 import { AddProductForm } from './AddProductForm';
 import { useCreateProduct } from '../../hooks/useCreateProduct';
 import { AddVariationModal } from './AddVariationModal';
 
-
 export const ProductForm = () => {
     const { id } = useParams();
     const productId = id ? parseInt(id) : undefined;
     const { t } = useLanguage();
     const navigate = useNavigate();
-    const [messageApi, contextHolder] = message.useMessage();
+    const messageApi = useMessage();
 
     const {
         form: { control, formState: { errors } },
@@ -197,7 +196,6 @@ export const ProductForm = () => {
 
     return (
         <>
-            {contextHolder}
             {uploadState.isUploading && (
                 <div style={{
                     position: 'fixed',
@@ -342,7 +340,7 @@ export const ProductForm = () => {
                     }}
                     onAdd={handleManualAdd}
                     globalAttributes={globalAttributes}
-                    initialValues={editingVariationIndex !== null ? form.getValues(`variations.${editingVariationIndex}`) : undefined}
+                    initialValues={editingVariationIndex !== null ? form.getValues(`variations.${editingVariationIndex} `) : undefined}
                     isEditing={editingVariationIndex !== null}
                 />
             )}
