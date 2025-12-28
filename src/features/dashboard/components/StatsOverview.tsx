@@ -70,7 +70,7 @@ export const StatsOverview = ({ stats, lowStockCount }: StatsOverviewProps) => {
                 const chartData = generateData(item.key);
 
                 return (
-                    <Col xs={24} sm={12} lg={6} key={item.key}>
+                    <Col xs={12} sm={12} lg={6} key={item.key}>
                         <Card
                             hoverable
                             style={{
@@ -82,20 +82,20 @@ export const StatsOverview = ({ stats, lowStockCount }: StatsOverviewProps) => {
                                 height: '100%',
                                 boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
                             }}
-                            bodyStyle={{ padding: '24px 24px 0 24px', height: 160 }}
+                            bodyStyle={{ padding: '16px 16px 0 16px', height: 160 }}
                         >
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, zIndex: 1, position: 'relative' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12, zIndex: 1, position: 'relative' }}>
                                 {/* Hexagon Icon container */}
                                 <div style={{
                                     background: item.color,
                                     color: '#fff',
-                                    width: 48,
-                                    height: 48,
+                                    width: 40,
+                                    height: 40,
                                     clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    fontSize: 22,
+                                    fontSize: 18,
                                     flexShrink: 0
                                 }}>
                                     {item.icon}
@@ -105,7 +105,7 @@ export const StatsOverview = ({ stats, lowStockCount }: StatsOverviewProps) => {
                                     <Text type="secondary" style={{ fontSize: 13, fontWeight: 500, color: '#9ca3af', display: 'block', marginBottom: 2 }}>
                                         {item.label}
                                     </Text>
-                                    <Title level={3} style={{ margin: 0, fontWeight: 800, fontSize: 24, lineHeight: 1.2 }}>
+                                    <Title level={3} style={{ margin: 0, fontWeight: 800, fontSize: 22, lineHeight: 1.2, wordBreak: 'break-all' }}>
                                         {item.value}
                                     </Title>
                                     {item.isWarning && (
