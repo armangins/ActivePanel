@@ -12,6 +12,7 @@ interface PriceDisplayProps {
     price_html?: string;
     currency?: string;
     type?: string;
+    isMobile?: boolean;
 }
 
 export const PriceDisplay: React.FC<PriceDisplayProps> = ({
@@ -20,7 +21,8 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
     sale_price: rawSalePrice,
     price_html: rawPriceHtml,
     currency: rawCurrency = '',
-    type = 'simple'
+    type = 'simple',
+    isMobile = false
 }) => {
     const { formatCurrency } = useLanguage();
 
@@ -71,6 +73,8 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
             .trim();
     };
 
+    const baseStyle = { fontSize: isMobile ? '12px' : undefined };
+
     // If we have no price at all, and no price_html, return null
     if (!price && !regular_price && !price_html) return null;
 
@@ -83,7 +87,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
                 dangerouslySetInnerHTML={{ __html: cleanWooHtml(price_html) }}
                 style={{
                     // Basic styling to ensure it fits reasonably well with Ant Design Text
-                    fontSize: '14px',
+                    fontSize: isMobile ? '12px' : '14px',
                     fontWeight: 600,
                     // Ensure del tags look correct
                     textDecoration: 'none'
@@ -101,24 +105,24 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
 
         if (!effectivePrice) {
             if (price_html) {
-                return <Text strong>{stripHtml(price_html)}</Text>;
+                return <Text strong style={baseStyle}>{stripHtml(price_html)}</Text>;
             }
             return null;
         }
 
         const formattedPrice = formatRange(effectivePrice);
-        return <Text strong>{formattedPrice}</Text>;
+        return <Text strong style={baseStyle}>{formattedPrice}</Text>;
     }
 
     // 3. Sale Price Logic (Simple / Uniform Variable)
     if (sale_price && isNumeric(sale_price)) {
         return (
             <Space align="baseline" size={4}>
-                <Text strong type="danger">
+                <Text strong type="danger" style={baseStyle}>
                     {formatCurrency(sale_price)}
                 </Text>
                 {regular_price && isNumeric(regular_price) && (
-                    <Text delete type="secondary" style={{ fontSize: '0.9em' }}>
+                    <Text delete type="secondary" style={{ fontSize: isMobile ? '10px' : '0.9em' }}>
                         {formatCurrency(regular_price)}
                     </Text>
                 )}
@@ -131,17 +135,17 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
     const displayPrice = isNumeric(price) ? price : (isNumeric(regular_price) ? regular_price : null);
 
     if (displayPrice !== null) {
-        return <Text strong>{formatCurrency(displayPrice)}</Text>;
+        return <Text strong style={baseStyle}>{formatCurrency(displayPrice)}</Text>;
     }
 
     // 5. Fallback for non-numeric strings (e.g. "Free", "Contact us")
     if (price) {
-        return <Text strong>{price} {currency}</Text>;
+        return <Text strong style={baseStyle}>{price} {currency}</Text>;
     }
 
     // 6. Last resort: price_html (stripped)
     if (price_html) {
-        return <Text strong>{stripHtml(price_html)}</Text>;
+        return <Text strong style={baseStyle}>{stripHtml(price_html)}</Text>;
     }
 
     return null;

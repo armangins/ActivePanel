@@ -158,7 +158,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ placeholder, isRTL, classNa
                     <Input
                         size="large"
                         placeholder={placeholder || (t('search') || 'חיפוש...')}
-                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf', fontSize: 18 }} />}
                         autoFocus={autoFocus}
                         allowClear
                         style={{

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useOrderStatusCounts } from '@/features/orders/hooks/useOrdersData';
+import { useResponsive } from '@/hooks/useResponsive';
 
 interface UseSidebarLogicProps {
     onClose: () => void;
@@ -13,10 +14,12 @@ export const useSidebarLogic = ({ onClose, externalCollapsed }: UseSidebarLogicP
     const navigate = useNavigate();
     const { t, isRTL } = useLanguage();
     const { data: statusCounts } = useOrderStatusCounts();
+    const { isDesktop } = useResponsive();
 
     const [internalCollapsed, setInternalCollapsed] = useState(false);
     const isCollapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+    // Semantic mobile check - standard across app
+    const isMobile = !isDesktop;
 
     const [openKeys, setOpenKeys] = useState<string[]>(() => {
         // Open products submenu if we're on a products-related page
@@ -35,14 +38,17 @@ export const useSidebarLogic = ({ onClose, externalCollapsed }: UseSidebarLogicP
         }
     }, [location.pathname]);
 
-    // Handle window resize for mobile detection
+    // Handle window resize for mobile detection - REPLACED BY useResponsive
+    // kept logic purely for documentation reference of what removed
+    /*
     useEffect(() => {
-        const handleResize = () => {
-            setIsMobile(window.innerWidth < 1024);
-        };
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+      const handleResize = () => {
+        setIsMobile(window.innerWidth < 1024);
+      };
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
     }, []);
+    */
 
     const handleMenuClick = ({ key }: { key: string }) => {
         // Map menu keys to actual routes

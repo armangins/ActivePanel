@@ -4,6 +4,7 @@ import { Product } from '../../types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { PriceDisplay } from './PriceDisplay';
 import { ProductImageCarousel } from './ProductImageCarousel';
+import { useResponsive } from '@/hooks/useResponsive';
 
 const { Meta } = Card;
 const { Text } = Typography;
@@ -24,6 +25,7 @@ export const ProductGrid = ({
     onDelete
 }: ProductGridProps) => {
     const { t } = useLanguage();
+    const { isMobile } = useResponsive();
 
     if (isLoading) {
         // Skeleton loading could be added here
@@ -38,7 +40,7 @@ export const ProductGrid = ({
 
                 return (
                     <Col
-                        xs={24}
+                        xs={12}
                         sm={12}
                         md={8}
                         lg={6}
@@ -84,6 +86,21 @@ export const ProductGrid = ({
                                             }}
                                         />
                                     )}
+                                    <Tag
+                                        color={stockStatus === 'instock' ? 'success' : 'error'}
+                                        style={{
+                                            position: 'absolute',
+                                            top: 10,
+                                            left: 10,
+                                            zIndex: 1,
+                                            margin: 0,
+                                            border: 'none',
+                                            fontWeight: 600,
+                                            opacity: 0.9
+                                        }}
+                                    >
+                                        {stockStatus === 'instock' ? t('inStock') : t('outOfStock')}
+                                    </Tag>
                                 </div>
                             }
                             actions={[
@@ -113,12 +130,8 @@ export const ProductGrid = ({
                                                 price_html={product.price_html}
                                                 currency={product.currency}
                                                 type={product.type}
+                                                isMobile={isMobile}
                                             />
-                                            <Space size={4}>
-                                                <Tag color={stockStatus === 'instock' ? 'success' : 'error'}>
-                                                    {stockStatus === 'instock' ? t('inStock') : t('outOfStock')}
-                                                </Tag>
-                                            </Space>
                                         </Space>
                                         <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
                                             SKU: {product.sku || '-'}

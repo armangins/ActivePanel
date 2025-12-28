@@ -132,8 +132,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       <Badge count={newOrdersCount} offset={[-2, 2]} size="small">
         <Button
           type="text"
+          shape="circle"
           icon={<BellOutlined style={{ fontSize: 20 }} />}
-          style={{ width: 40, height: 40, color: token.colorTextSecondary }}
+          style={{ width: 40, height: 40, color: token.colorTextSecondary, border: `1px solid ${token.colorBorderSecondary}` }}
         />
       </Badge>
     </Popover>

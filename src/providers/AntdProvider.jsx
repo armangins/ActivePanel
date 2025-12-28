@@ -19,6 +19,13 @@ export const AntdProvider = ({ children }) => {
           fontFamily: "'Polin Light', 'Polin', 'Arial Hebrew', sans-serif",
           fontSize: 14,
           borderRadius: 8,
+          // Standard Ant Design breakpoints
+          screenXS: 480,
+          screenSM: 576,
+          screenMD: 768,
+          screenLG: 992,
+          screenXL: 1200,
+          screenXXL: 1600,
         },
       }}
     >

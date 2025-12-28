@@ -1,8 +1,9 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Layout, Input, Space, Button, Card, Flex, Modal, Spin, Typography, Segmented } from 'antd';
+import { Layout, Button, Card, Flex, Modal, Spin, Typography, Segmented } from 'antd';
 import { ProductDetailModal } from './ProductDetails/ProductDetailModal';
-import { SearchOutlined, AppstoreOutlined, BarsOutlined, PlusOutlined, LoadingOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, BarsOutlined, PlusOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useResponsive } from '@/hooks/useResponsive';
 import { useInfiniteProducts, useDeleteProduct, useBulkDeleteProducts } from '../hooks/useProductsData';
 import { ProductGrid } from './ProductList/ProductGrid';
 import { ProductTable } from './ProductList/ProductTable';
@@ -13,22 +14,15 @@ import { useSettings } from '@/features/settings';
 const { Content } = Layout;
 const { Text } = Typography;
 
+// ... existing imports
+
 export const ProductsPage = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
+    const { isMobile } = useResponsive();
     const { settings } = useSettings();
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-    const [search, setSearch] = useState('');
-    // Debounce search to prevent excessive API calls
-    const [debouncedSearch, setDebouncedSearch] = useState('');
 
-    // Simple debounce effect
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearch(search);
-        }, 300);
-        return () => clearTimeout(timer);
-    }, [search]);
 
     const [selectedProductIds, setSelectedProductIds] = useState<Set<number>>(new Set());
     const [viewProduct, setViewProduct] = useState<any>(null);
@@ -38,11 +32,10 @@ export const ProductsPage = () => {
         isLoading,
         fetchNextPage,
         hasNextPage,
-        isFetchingNextPage,
-        isFetching
+        isFetchingNextPage
     } = useInfiniteProducts({
         per_page: 24, // Increased per page for better infinite scroll experience
-        search: debouncedSearch
+        search: ''
     });
 
     const products = data?.pages.flatMap(page => page.data) || [];
@@ -107,42 +100,47 @@ export const ProductsPage = () => {
     if (!isConfigured) return <div>{t('setupRequired')}</div>;
 
     return (
-        <Content style={{ padding: '16px 24px', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-            <Flex wrap="wrap" gap={16} justify="space-between" align="center" style={{ marginBottom: 24 }}>
-                <Input
-                    placeholder={t('searchProducts')}
-                    prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                    suffix={isFetching && search ? <LoadingOutlined style={{ color: '#1890ff' }} /> : null}
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onPressEnter={() => setDebouncedSearch(search)}
-                    allowClear
-                    style={{ width: '100%', maxWidth: 300, minWidth: 200 }}
-                />
-                <Space wrap>
-                    {selectedProductIds.size > 0 && (
-                        <Button danger onClick={handleBulkDelete}>
-                            {t('deleteSelected')} ({selectedProductIds.size})
-                        </Button>
-                    )}
-                    <Segmented
-                        value={viewMode}
-                        onChange={(value) => setViewMode(value as 'grid' | 'list')}
-                        options={[
-                            {
-                                value: 'grid',
-                                icon: <AppstoreOutlined />,
-                            },
-                            {
-                                value: 'list',
-                                icon: <BarsOutlined />,
-                            },
-                        ]}
-                    />
-                    <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/products/add')}>
-                        {t('addProduct')}
+        <Content style={{
+            padding: isMobile ? '4px 6px' : '16px 24px',
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column'
+        }}>
+
+            <Flex wrap="wrap" gap={16} align="center" style={{ marginBottom: 24, width: '100%', justifyContent: isMobile ? 'normal' : 'flex-end' }}>
+                {selectedProductIds.size > 0 && (
+                    <Button danger onClick={handleBulkDelete}>
+                        {t('deleteSelected')} ({selectedProductIds.size})
                     </Button>
-                </Space>
+                )}
+                <Segmented
+                    size="large"
+                    value={viewMode}
+                    onChange={(value) => setViewMode(value as 'grid' | 'list')}
+                    options={[
+                        {
+                            value: 'grid',
+                            icon: <AppstoreOutlined />,
+                        },
+                        {
+                            value: 'list',
+                            icon: <BarsOutlined />,
+                        },
+                    ]}
+                />
+
+                {/* Spacer to push button to the left on mobile (RTL End) */}
+                {isMobile && <div style={{ flex: 1 }} />}
+
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => navigate('/products/add')}
+                    shape={isMobile ? "circle" : "default"}
+                    style={isMobile ? { minWidth: 40, width: 40, height: 40, padding: 0 } : undefined}
+                >
+                    {!isMobile && t('addProduct')}
+                </Button>
             </Flex>
 
             <Flex vertical flex={1}>
@@ -174,7 +172,7 @@ export const ProductsPage = () => {
                     style={{
                         display: 'flex',
                         justifyContent: 'center',
-                        padding: '24px',
+                        padding: isMobile ? '0px' : '24px',
                         marginTop: 'auto',
                         width: '100%'
                     }}
