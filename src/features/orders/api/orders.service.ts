@@ -35,7 +35,7 @@ export const ordersService = {
 
     async getOrderById(id: number): Promise<Order> {
         try {
-            const order = await ordersAPI.get(id);
+            const order = await ordersAPI.getById(id);
             return order as Order;
         } catch (error) {
             secureLog.error(`Error fetching order ${id}:`, error);

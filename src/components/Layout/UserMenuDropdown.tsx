@@ -47,28 +47,18 @@ const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
     <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement={isRTL ? "bottomLeft" : "bottomRight"}>
       <div
         style={{
+          cursor: 'pointer',
+          border: `1px solid ${token.colorBorderSecondary}`,
+          borderRadius: '50%',
+          padding: 2,
           display: 'flex',
           alignItems: 'center',
-          gap: 12,
-          padding: screens.md ? '8px 16px 8px 0' : 0,
-          border: !screens.md ? `1px solid ${token.colorBorderSecondary}` : 'none',
-          borderRight: screens.md ? (isRTL ? 'none' : `1px solid ${token.colorBorderSecondary}`) : undefined,
-          borderLeft: screens.md ? (isRTL ? `1px solid ${token.colorBorderSecondary}` : 'none') : undefined,
-          borderRadius: screens.md ? 8 : '50%',
-          width: !screens.md ? 40 : 'auto',
-          height: !screens.md ? 40 : 'auto',
-          justifyContent: !screens.md ? 'center' : 'flex-start',
-          cursor: 'pointer',
-          transition: 'background-color 0.2s',
-          color: token.colorText
+          justifyContent: 'center',
+          width: 40,
+          height: 40
         }}
-        className="user-menu-trigger"
       >
-        <Avatar src={user?.picture} icon={<UserOutlined />} size="default" />
-        <div style={{ display: screens.md ? 'block' : 'none', textAlign: isRTL ? 'right' : 'left' }}>
-          <Text strong style={{ display: 'block', lineHeight: 1.2 }}>{user?.name || t('adminUser')}</Text>
-          <Text type="secondary" style={{ fontSize: 12 }}>{user?.email || 'admin@example.com'}</Text>
-        </div>
+        <Avatar src={user?.picture} icon={<UserOutlined />} size={36} />
       </div>
     </Dropdown>
   );

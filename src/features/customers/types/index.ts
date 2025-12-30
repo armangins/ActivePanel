@@ -40,6 +40,8 @@ export interface Customer {
     meta_data: any[];
     orders_count?: number; // Optional as it might come from a separate aggregate or custom field
     total_spent?: string;
+    completed_orders_count?: number; // Custom field aggregated by backend
+    avg_purchase?: string; // Average purchase amount (total_spent / completed_orders_count)
 }
 
 export interface CustomersResponse {

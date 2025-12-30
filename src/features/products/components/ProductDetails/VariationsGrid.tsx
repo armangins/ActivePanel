@@ -36,18 +36,11 @@ export const VariationsGrid: React.FC<VariationsGridProps> = ({ variations, load
                             hoverable
                             size="small"
                             cover={
-                                <div style={{
-
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    backgroundColor: '#f5f5f5',
-                                    borderBottom: '1px solid #f0f0f0'
-                                }}>
+                                <div className="variation-card-image">
                                     {varImg ? (
-                                        <img alt={variation.sku} src={varImg} style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
+                                        <img alt={variation.sku} src={varImg} />
                                     ) : (
-                                        <ShoppingOutlined style={{ fontSize: 32, color: '#d9d9d9' }} />
+                                        <ShoppingOutlined className="variation-empty-icon" />
                                     )}
                                 </div>
                             }

@@ -3,13 +3,14 @@ import {
   CloseOutlined as X,
   EditOutlined,
 } from '@ant-design/icons';
-import { Layout, Typography, Drawer, Button as AntButton } from 'antd';
+import { Layout, Typography, Drawer, Button as AntButton, theme } from 'antd';
 import { useSidebarLogic } from './hooks/useSidebarLogic';
 import SidebarLogo from './SidebarLogo';
 import SidebarMenu from './SidebarMenu';
 
 const { Sider } = Layout;
 const { Text } = Typography;
+const { useToken } = theme;
 
 interface SidebarProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed: externalCollapsed }) => {
+  const { token } = useToken();
   const {
     t,
     isRTL,
@@ -41,7 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed: externa
           alignItems: 'center',
           justifyContent: 'flex-end',
           padding: 16,
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          borderBottom: `1px solid ${token.colorBorderSecondary}`,
           flexDirection: isRTL ? 'row-reverse' : 'row'
         }}>
           <AntButton
@@ -49,7 +51,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed: externa
             size="small"
             icon={<X />}
             style={{
-              color: '#fff',
+              color: token.colorText,
               alignItems: 'center',
               justifyContent: 'center'
             }}
@@ -76,8 +78,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed: externa
       {/* Footer - Custom Trigger */}
       <div style={{
         padding: '12px 16px',
-        backgroundColor: '#0f172a',
-        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        backgroundColor: token.colorBgContainer,
+        borderTop: `1px solid ${token.colorBorderSecondary}`,
         display: 'flex',
         alignItems: 'center',
         gap: 8,
@@ -86,10 +88,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed: externa
       }}>
         {!isCollapsed && (
           <>
-            <Text style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.8)', flex: 1 }}>
+            <Text style={{ fontSize: 14, color: token.colorTextSecondary, flex: 1 }}>
               Custom trigger
             </Text>
-            <EditOutlined style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 14 }} />
+            <EditOutlined style={{ color: token.colorTextTertiary, fontSize: 14 }} />
           </>
         )}
       </div>
@@ -106,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed: externa
         open={isOpen}
         width={256}
         closable={false}
-        styles={{ body: { padding: 0, background: '#1e293b' } }}
+        styles={{ body: { padding: 0, background: token.colorBgContainer } }}
         style={{ zIndex: 1000 }}
       >
         {sidebarContent}
@@ -125,9 +127,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed: externa
       style={{
         overflow: 'auto',
         direction: isRTL ? 'rtl' : 'ltr',
-        background: '#1e293b'
+        background: token.colorBgContainer,
+        borderRight: `1px solid ${token.colorBorderSecondary}`,
+        boxShadow: '2px 0 8px rgba(0, 0, 0, 0.04)',
+        zIndex: 100
       }}
-      theme="dark"
+      theme="light"
     >
       {sidebarContent}
     </Sider>

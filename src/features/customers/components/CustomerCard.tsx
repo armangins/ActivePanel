@@ -11,7 +11,7 @@ interface CustomerCardProps {
 }
 
 export const CustomerCard = ({ customer, onClick }: CustomerCardProps) => {
-    const { t, isRTL } = useLanguage();
+    const { t, isRTL, formatCurrency } = useLanguage();
 
     const fullName = `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.username;
 
@@ -64,13 +64,20 @@ export const CustomerCard = ({ customer, onClick }: CustomerCardProps) => {
             <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <ShoppingOutlined />
-                    <Text>{customer.orders_count || 0} {t('orders') || 'Orders'}</Text>
+                    <Text>{customer.completed_orders_count ?? customer.orders_count ?? 0} {t('completedOrders') || 'Completed Orders'}</Text>
                 </div>
-                {customer.total_spent && (
-                    <Text strong>
-                        ${parseFloat(customer.total_spent).toFixed(2)}
-                    </Text>
-                )}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                    {customer.avg_purchase && (
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                            {t('avgPurchase') || 'Avg'}: {formatCurrency(customer.avg_purchase)}
+                        </Text>
+                    )}
+                    {customer.total_spent && (
+                        <Text strong>
+                            {formatCurrency(customer.total_spent)}
+                        </Text>
+                    )}
+                </div>
             </div>
         </Card>
     );

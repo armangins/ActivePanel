@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Popover, Button, Checkbox, Space, Badge, Divider, Typography } from 'antd';
+import { Popover, Button, Checkbox, Space, Badge, Divider, Typography, Grid } from 'antd';
 import { FilterOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -99,6 +99,8 @@ export const OrderStatusFilter: React.FC<OrderStatusFilterProps> = ({
     const selectedCount = selectedStatuses.length;
     const totalCount = ORDER_STATUSES.length;
 
+    const screens = Grid.useBreakpoint();
+
     return (
         <Popover
             content={content}
@@ -108,8 +110,8 @@ export const OrderStatusFilter: React.FC<OrderStatusFilterProps> = ({
             onOpenChange={setVisible}
             placement="bottomLeft"
         >
-            <Button icon={<FilterOutlined />}>
-                {t('filterStatuses')} ({selectedCount}/{totalCount})
+            <Button icon={<FilterOutlined />} style={{ minHeight: 32 }}>
+                {screens.md && `${t('filterStatuses')} (${selectedCount}/${totalCount})`}
             </Button>
         </Popover>
     );

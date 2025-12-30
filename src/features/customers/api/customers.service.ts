@@ -10,7 +10,7 @@ export const customersService = {
                 page: params.page || 1,
                 per_page: params.per_page || 10,
                 search: params.search || '',
-                _fields: 'id,first_name,last_name,username,email,avatar_url,billing,shipping,date_created,role,orders_count,total_spent'
+
             });
 
             // The legacy API wrapper returns { data, total, totalPages }

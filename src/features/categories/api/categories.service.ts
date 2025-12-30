@@ -5,7 +5,8 @@ import { secureLog } from '@/utils/logger';
 export const categoriesService = {
     getCategories: async (params: any = {}): Promise<Category[]> => {
         try {
-            return await categoriesAPI.getAll(params);
+            const response = await categoriesAPI.getAll(params);
+            return response.data || [];
         } catch (error) {
             secureLog.error('Error fetching categories:', error);
             throw error;

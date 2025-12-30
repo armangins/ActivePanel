@@ -1,4 +1,4 @@
-import { Table, Tag, Button, Space, Avatar, Typography } from 'antd';
+import { Table, Tag, Button, Space, Avatar, Typography, Grid, List } from 'antd';
 import { SearchOutlined, InboxOutlined, UserOutlined } from '@ant-design/icons';
 import { Order } from '../types';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -13,6 +13,7 @@ interface OrdersTableProps {
 
 export const OrdersTable = ({ orders, onViewDetails, isLoading }: OrdersTableProps) => {
     const { t, isRTL, formatCurrency } = useLanguage();
+    const screens = Grid.useBreakpoint();
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -25,6 +26,67 @@ export const OrdersTable = ({ orders, onViewDetails, isLoading }: OrdersTablePro
             default: return 'default';
         }
     };
+
+    if (!screens.md) {
+        return (
+            <List
+                dataSource={orders}
+                loading={isLoading}
+                renderItem={(order) => {
+                    const firstItem = order.line_items?.[0];
+                    const productImage = firstItem?.image?.src;
+                    const productName = firstItem?.name || t('product');
+                    const customerName = `${order.billing?.first_name || ''} ${order.billing?.last_name || ''}`.trim() || order.billing?.email || t('customer');
+
+                    return (
+                        <List.Item
+                            onClick={() => onViewDetails(order)}
+                            className="touch-manipulation"
+                            style={{
+                                cursor: 'pointer',
+                                padding: '12px 16px',
+                                borderBottom: '1px solid #f0f0f0',
+                                backgroundColor: '#fff'
+                            }}
+                        >
+                            <div style={{ display: 'flex', width: '100%', alignItems: 'center', gap: 12 }}>
+                                {/* Product Image */}
+                                <Avatar
+                                    shape="square"
+                                    size={48}
+                                    src={productImage}
+                                    icon={<InboxOutlined />}
+                                    style={{ flexShrink: 0, backgroundColor: '#f0f2f5' }}
+                                />
+
+                                {/* Middle Content */}
+                                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                                        <Text strong style={{ fontSize: 14 }}>{customerName}</Text>
+                                        <Text strong style={{ color: '#1890ff' }}>{formatCurrency(parseFloat(order.total))}</Text>
+                                    </div>
+
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <Text type="secondary" style={{ fontSize: 12 }}>
+                                                #{order.id} • {productName}
+                                            </Text>
+                                            <Text type="secondary" style={{ fontSize: 11, marginTop: 2 }}>
+                                                {new Date(order.date_created).toLocaleDateString()}
+                                            </Text>
+                                        </div>
+                                        <Tag color={getStatusColor(order.status)} style={{ margin: 0, fontSize: 11 }}>
+                                            {(t(order.status) || order.status).toUpperCase()}
+                                        </Tag>
+                                    </div>
+                                </div>
+                            </div>
+                        </List.Item>
+                    );
+                }}
+            />
+        );
+    }
 
     const columns = [
         {

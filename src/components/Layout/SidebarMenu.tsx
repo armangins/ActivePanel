@@ -88,18 +88,6 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
     return (
         <>
             <style>{`
-        .ant-menu-dark .ant-menu-item-selected {
-          background-color: #007bff !important;
-        }
-        .ant-menu-dark .ant-menu-item-selected > * {
-          color: #fff !important;
-        }
-        .ant-menu-dark .ant-menu-item:hover {
-          background-color: rgba(255, 255, 255, 0.08) !important;
-        }
-        .ant-menu-dark .ant-menu-submenu-title:hover {
-          background-color: rgba(255, 255, 255, 0.08) !important;
-        }
         /* Fix for badge clipping in collapsed mode */
         .ant-menu-inline-collapsed .ant-menu-item,
         .ant-menu-inline-collapsed .ant-menu-item-icon {
@@ -117,11 +105,10 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
                     borderRight: 0,
                     flex: 1,
                     direction: isRTL ? 'rtl' : 'ltr',
-                    background: 'transparent',
-                    color: '#fff'
+                    background: 'transparent'
                 }}
                 inlineCollapsed={isCollapsed}
-                theme="dark"
+                theme="light"
             />
         </>
     );

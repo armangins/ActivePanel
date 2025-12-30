@@ -1,0 +1,172 @@
+.kanban-board-container {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding: 16px 0;
+    height: calc(100vh - 320px);
+    width: 100%;
+}
+
+.kanban-column {
+    width: 340px;
+    min-width: 340px;
+    flex: 0 0 auto;
+    border-radius: 8px;
+    padding: 16px;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #F9FAFB; /* Light gray background */
+    border: 2px solid transparent;
+}
+
+.kanban-column.is-over {
+    background-color: #EFF6FF; /* Light blue background on drag over */
+    /* Border color handled via inline style for specific status color */
+}
+
+.kanban-column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-shrink: 0;
+}
+
+.kanban-column-count-tag {
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.kanban-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 4px;
+    direction: ltr; /* Force scrollbar to right */
+}
+
+.kanban-cards-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    /* Direction handled dynamically in component for RTL support */
+}
+
+.kanban-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid #E5E7EB; /* Theme border color */
+    transition: all 0.2s;
+    cursor: grab;
+    background-color: #FFFFFF; /* White background */
+}
+
+.kanban-card.is-dragging {
+    opacity: 0.5;
+    transform: rotate(2deg);
+}
+
+.kanban-card-body {
+    padding: 16px;
+}
+
+.kanban-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.kanban-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.kanban-card-product-group {
+    display: flex;
+    gap: 12px;
+}
+
+.kanban-product-image {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background-color: #F3F4F6; /* Light gray background */
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+.kanban-product-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.kanban-product-name {
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+.kanban-product-price {
+    color: #10B981; /* Success green for price */
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.kanban-order-id-group {
+    text-align: right;
+}
+
+.kanban-divider {
+    height: 1px;
+    background-color: #E5E7EB; /* Theme border color */
+    width: 100%;
+}
+
+.kanban-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.kanban-address-group {
+    display: flex;
+    flex-direction: column;
+    max-width: 70%;
+}
+
+.kanban-date-block {
+    background-color: #EFF6FF; /* Light blue background */
+    border-radius: 8px;
+    padding: 6px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 48px;
+}
+
+.kanban-date-day {
+    color: #3B82F6; /* Primary blue */
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.kanban-date-month {
+    color: #1F2937; /* Primary text color */
+    font-weight: 600;
+    font-size: 11px;
+    line-height: 1;
+}

@@ -1,41 +1,34 @@
 import React from 'react';
+import { theme } from 'antd';
+
+const { useToken } = theme;
 
 interface SidebarLogoProps {
     isCollapsed: boolean;
     isRTL: boolean;
 }
 
-const SidebarLogo: React.FC<SidebarLogoProps> = React.memo(({ isCollapsed, isRTL }) => {
+const SidebarLogo: React.FC<SidebarLogoProps> = React.memo(({ isCollapsed }) => {
+    const { token } = useToken();
+
     return (
         <div style={{
-            padding: 0,
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: isCollapsed ? 'center' : (isRTL ? 'flex-end' : 'flex-start'),
+            justifyContent: 'center',
+            borderBottom: `1px solid ${token.colorBorderSecondary}`,
             minHeight: 64
         }}>
-            {isCollapsed ? (
-                <img
-                    src="/logo.svg"
-                    alt="Logo"
-                    style={{
-                        width: 40,
-                        height: 40,
-                        objectFit: 'contain'
-                    }}
-                />
-            ) : (
-                <img
-                    src="/logo.svg"
-                    alt="Logo"
-                    style={{
-                        height: 40,
-                        width: 'auto',
-                        objectFit: 'contain'
-                    }}
-                />
-            )}
+            <img
+                src="/logo.svg"
+                alt="Logo"
+                style={{
+                    width: isCollapsed ? 48 : 120,
+                    height: isCollapsed ? 48 : 48,
+                    transition: 'all 0.2s',
+                    objectFit: 'contain'
+                }}
+            />
         </div>
     );
 });

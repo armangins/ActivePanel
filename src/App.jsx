@@ -98,7 +98,7 @@ function AppContent() {
                   onCollapseToggle={() => setIsCollapsed(!isCollapsed)}
                   isCollapsed={isCollapsed}
                 />
-                <Content style={{ margin: isMobile ? '12px 8px' : '24px 16px', padding: isMobile ? 12 : 24, minHeight: 280, background: '#fff', borderRadius: 8, direction: isRTL ? 'rtl' : 'ltr' }}>
+                <Content style={{ margin: isMobile ? '12px 8px' : '24px 16px', padding: isMobile ? 6 : 24, minHeight: 280, background: '#fff', borderRadius: 8, direction: isRTL ? 'rtl' : 'ltr' }}>
                   <Suspense fallback={<div style={{ textAlign: 'center', padding: 50 }}><Spin size="large" /></div>}>
                     <Routes>
                       <Route path="/" element={<Navigate to="/dashboard" replace />} />
