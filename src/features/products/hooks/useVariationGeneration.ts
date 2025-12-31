@@ -6,6 +6,10 @@ interface UseVariationGenerationProps {
     currentAttributes: any[];
     parentRegularPrice: string;
     parentSalePrice: string;
+    // New props for inheritance
+    parentSku?: string;
+    parentManageStock?: boolean;
+    parentStockQuantity?: number;
     setValue: UseFormSetValue<ProductFormValues>;
     getValues: UseFormGetValues<ProductFormValues>;
 }
@@ -18,6 +22,9 @@ export const useVariationGeneration = ({
     currentAttributes,
     parentRegularPrice,
     parentSalePrice,
+    parentSku,
+    parentManageStock,
+    parentStockQuantity,
     setValue,
     getValues
 }: UseVariationGenerationProps) => {
@@ -73,14 +80,26 @@ export const useVariationGeneration = ({
                 };
             }
 
+            // Generate SKU: ParentSKU-Option1-Option2
+            const slugify = (text: string) => text.toString().toLowerCase()
+                .replace(/\s+/g, '-')           // Replace spaces with -
+                .replace(/[^\w\u0590-\u05FF\-]+/g, '') // Remove all non-word chars (allow Hebrew)
+                .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+                .replace(/^-+/, '')             // Trim - from start
+                .replace(/-+$/, '');            // Trim - from end
+
+            const generatedSku = parentSku
+                ? `${parentSku}-${attributes.map(a => slugify(a.option)).join('-')}`.toUpperCase()
+                : '';
+
             return {
                 id: 0,
-                sku: '',
+                sku: generatedSku,
                 regular_price: parentRegularPrice, // Inherit from parent
                 sale_price: parentSalePrice, // Inherit from parent
-                stock_quantity: 0,
+                stock_quantity: parentStockQuantity || 0,
                 stock_status: 'instock' as const,
-                manage_stock: true, // Enable stock management by default
+                manage_stock: parentManageStock || false, // Inherit from parent
                 attributes
             };
         });
@@ -120,7 +139,7 @@ export const useVariationGeneration = ({
             const allVariations = [...existingVariations, ...uniqueNew];
             setValue('variations', allVariations, { shouldDirty: true });
         }
-    }, [currentAttributes, parentRegularPrice, parentSalePrice, setValue, getValues]);
+    }, [currentAttributes, parentRegularPrice, parentSalePrice, parentSku, parentManageStock, parentStockQuantity, setValue, getValues]);
 
     /**
      * Destructive Regeneration: Rebuilds list but preserves IDs of matches
@@ -130,7 +149,7 @@ export const useVariationGeneration = ({
         const allFresh = getVariations(existingVariations);
         // Replace entire array with fresh list (some of which might have preserved IDs)
         setValue('variations', allFresh, { shouldDirty: true });
-    }, [currentAttributes, parentRegularPrice, parentSalePrice, setValue, getValues]);
+    }, [currentAttributes, parentRegularPrice, parentSalePrice, parentSku, parentManageStock, parentStockQuantity, setValue, getValues]);
 
     return { generateVariations, regenerateVariations };
 };

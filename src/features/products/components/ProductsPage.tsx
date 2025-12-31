@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Layout, Button, Card, Flex, Modal, Spin, Typography, Segmented } from 'antd';
+import { Layout, Button, Card, Flex, Modal, Spin, Typography, Segmented, FloatButton } from 'antd';
 import { ProductDetailModal } from './ProductDetails/ProductDetailModal';
 import { AppstoreOutlined, BarsOutlined, PlusOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -196,6 +196,25 @@ export const ProductsPage = () => {
                 onClose={() => setViewProduct(null)}
                 onEdit={(p) => navigate(`/products/edit/${p.id}`)}
             />
+
+            {/* Mobile Float Button */}
+            {isMobile && (
+                <FloatButton
+                    type="primary"
+                    shape="circle"
+                    icon={<PlusOutlined />}
+                    onClick={() => navigate('/products/add')}
+                    style={{
+                        bottom: 24,
+                        right: 24,
+                        width: 50,
+                        height: 50,
+                        minWidth: 50, // Ensure it doesn't shrink
+                        borderRadius: '50%' // Force circle
+                    }}
+                />
+            )}
         </Content>
     );
 };
+

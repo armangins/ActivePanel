@@ -85,10 +85,10 @@ export const productSchema = z.object({
     }
 
     // Stock quantity is required when stock management is enabled
-    if (data.manage_stock && (data.stock_quantity === null || data.stock_quantity === undefined || data.stock_quantity < 0)) {
+    if (data.manage_stock && (data.stock_quantity === null || data.stock_quantity === undefined || data.stock_quantity <= 0)) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "כמות במלאי נדרשת כאשר ניהול מלאי מופעל",
+            message: "כמות במלאי חייבת להיות גדולה מ-0",
             path: ["stock_quantity"]
         });
     }
@@ -115,4 +115,5 @@ export const productSchema = z.object({
     }
 });
 
+export type ProductVariation = z.infer<typeof productVariationSchema>;
 export type ProductFormValues = z.infer<typeof productSchema>;

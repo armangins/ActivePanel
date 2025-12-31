@@ -52,9 +52,16 @@ export const CouponsPage = () => {
     };
 
     return (
-        <Content style={{ padding: 24, minHeight: 280, direction: isRTL ? 'rtl' : 'ltr' }}>
+        <Content style={{ padding: '16px', minHeight: 280, direction: isRTL ? 'rtl' : 'ltr' }}>
             {contextHolder}
-            <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{
+                marginBottom: 24,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 16
+            }}>
                 <Title level={2} style={{ margin: 0 }}>
                     {t('coupons') || 'Coupons'}
                 </Title>
@@ -75,7 +82,7 @@ export const CouponsPage = () => {
                 prefix={<SearchOutlined />}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={{ marginBottom: 24, maxWidth: 400 }}
+                style={{ marginBottom: 24, width: '100%', maxWidth: 400 }}
                 allowClear
             />
 

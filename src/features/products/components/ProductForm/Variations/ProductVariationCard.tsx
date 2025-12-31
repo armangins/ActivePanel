@@ -1,9 +1,9 @@
 import React from 'react';
-import { Card, Input, InputNumber, Button, Space, Tag, Row, Col, Form, Switch, Typography, Upload } from 'antd';
+import { Card, Input, InputNumber, Button, Space, Row, Col, Form, Switch, Typography, Upload } from 'antd';
 import { Controller, Control } from 'react-hook-form';
 import { DeleteOutlined, UploadOutlined, EditOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { ProductFormValues } from '../../types/schemas';
+import { ProductFormValues } from '../../../types/schemas';
 
 const { Text } = Typography;
 

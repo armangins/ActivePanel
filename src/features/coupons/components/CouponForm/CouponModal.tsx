@@ -15,7 +15,7 @@ interface CouponModalProps {
 }
 
 const CouponModal = ({ open, onClose, coupon, messageApi }: CouponModalProps) => {
-    const { t, isRTL } = useLanguage();
+    const { t } = useLanguage();
     const [currentStep, setCurrentStep] = useState(0);
     const { form, isLoading, onSubmit, isEditMode, generateRandomCode } = useCouponForm(coupon, onClose, messageApi);
 
@@ -50,6 +50,7 @@ const CouponModal = ({ open, onClose, coupon, messageApi }: CouponModalProps) =>
             onCancel={onClose}
             footer={null}
             width={720}
+            style={{ maxWidth: 'calc(100vw - 32px)', margin: '0 auto' }}
             maskClosable={false}
         >
             <Steps current={currentStep} items={steps.map(s => ({ title: s.title }))} />

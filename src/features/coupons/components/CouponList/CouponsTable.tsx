@@ -4,7 +4,6 @@ import { DeleteOutlined as Trash2, EditOutlined as Edit, CopyOutlined as Copy, C
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Coupon } from '../../types';
 import { secureLog } from '@/utils/logger';
-import { validateInput } from '@/utils/security'; // Assuming common validation
 import dayjs from 'dayjs';
 
 interface CouponsTableProps {
@@ -36,7 +35,7 @@ const CouponsTable = ({ coupons, isLoading, onEdit, onDelete, pagination }: Coup
         {
             title: t('code') || 'Code',
             key: 'code',
-            align: isRTL ? 'right' : 'left' as const,
+            align: (isRTL ? 'right' : 'left') as 'left' | 'right',
             render: (_: any, coupon: Coupon) => (
                 <Space size={8}>
                     <code style={{ fontSize: 14, fontFamily: 'monospace', backgroundColor: '#f5f5f5', padding: '4px 8px', borderRadius: 4 }}>
@@ -57,7 +56,7 @@ const CouponsTable = ({ coupons, isLoading, onEdit, onDelete, pagination }: Coup
         {
             title: t('discount') || 'Discount',
             key: 'discount',
-            align: isRTL ? 'right' : 'left' as const,
+            align: (isRTL ? 'right' : 'left') as 'left' | 'right',
             render: (_: any, coupon: Coupon) => {
                 const amount = parseFloat(coupon.amount);
                 if (coupon.discount_type === 'percent') {
@@ -69,25 +68,25 @@ const CouponsTable = ({ coupons, isLoading, onEdit, onDelete, pagination }: Coup
         {
             title: t('usageLimit') || 'Usage Limit',
             key: 'usageLimit',
-            align: isRTL ? 'right' : 'left' as const,
+            align: (isRTL ? 'right' : 'left') as 'left' | 'right',
             render: (_: any, coupon: Coupon) => coupon.usage_limit || (t('unlimited') || 'Unlimited')
         },
         {
             title: t('used') || 'Used',
             key: 'used',
-            align: isRTL ? 'right' : 'left' as const,
+            align: (isRTL ? 'right' : 'left') as 'left' | 'right',
             render: (_: any, coupon: Coupon) => coupon.usage_count || 0
         },
         {
             title: t('expiryDate') || 'Expiry Date',
             key: 'expiryDate',
-            align: isRTL ? 'right' : 'left' as const,
+            align: (isRTL ? 'right' : 'left') as 'left' | 'right',
             render: (_: any, coupon: Coupon) => coupon.date_expires ? dayjs(coupon.date_expires).format('YYYY-MM-DD') : (t('neverExpires') || 'Never expires')
         },
         {
             title: t('actions') || 'Actions',
             key: 'actions',
-            align: isRTL ? 'right' : 'left' as const,
+            align: (isRTL ? 'right' : 'left') as 'left' | 'right',
             render: (_: any, coupon: Coupon) => (
                 <Space size={8} style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
                     <AntButton
@@ -114,7 +113,7 @@ const CouponsTable = ({ coupons, isLoading, onEdit, onDelete, pagination }: Coup
             rowKey="id"
             pagination={pagination}
             loading={isLoading}
-            scroll={{ x: true }}
+            scroll={{ x: 800 }}
         />
     );
 };

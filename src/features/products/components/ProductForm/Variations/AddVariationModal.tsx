@@ -4,14 +4,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useMessage } from '@/contexts/MessageContext';
 import { useAttributeTerms } from '@/hooks/useAttributes';
 
-interface Attribute {
-    id: number;
-    name: string;
-    options: string[];
-    variation?: boolean;
-    visible?: boolean;
-}
-
 interface NewVariationData {
     attributes: { id: number; name: string; option: string }[];
     sku?: string;
@@ -82,6 +74,10 @@ interface AddVariationModalProps {
     globalAttributes?: any[];
     initialValues?: any;
     isEditing?: boolean;
+    // New props for inheritance
+    parentSku?: string;
+    parentManageStock?: boolean;
+    parentStockQuantity?: number;
 }
 
 export const AddVariationModal: React.FC<AddVariationModalProps> = ({
@@ -90,7 +86,10 @@ export const AddVariationModal: React.FC<AddVariationModalProps> = ({
     onAdd,
     globalAttributes = [],
     initialValues,
-    isEditing = false
+    isEditing = false,
+    parentSku = '',
+    parentManageStock = false,
+    parentStockQuantity
 }) => {
     const { t } = useLanguage();
     const message = useMessage();
@@ -113,19 +112,65 @@ export const AddVariationModal: React.FC<AddVariationModalProps> = ({
                     });
                 }
                 form.setFieldsValue(formValues);
+            } else {
+                // PRE-FILL Defaults for NEW variation
+                form.setFieldsValue({
+                    manage_stock: parentManageStock,
+                    stock_quantity: parentStockQuantity,
+                    stock_status: 'instock',
+                    sku: parentSku // Start with parent SKU
+                });
             }
         }
-    }, [visible, form, initialValues]);
+    }, [visible, form, initialValues, parentManageStock, parentStockQuantity, parentSku]);
 
     const [, setTick] = useState(0);
 
+    // Slugify helper
+    const slugify = (text: string) => text.toString().toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w\u0590-\u05FF\-]+/g, '')
+        .replace(/\-\-+/g, '-')
+        .replace(/^-+/, '')
+        .replace(/-+$/, '');
+
     const handleTermSelect = (attrName: string, term: string) => {
         const currentValue = form.getFieldValue(attrName);
+        let newValue: string | undefined = term;
+
         if (currentValue === term) {
-            form.setFieldValue(attrName, undefined); // Deselect
-        } else {
-            form.setFieldValue(attrName, term); // Select
+            newValue = undefined; // Deselect
         }
+
+        form.setFieldValue(attrName, newValue);
+
+        // Auto-update SKU if not editing an existing variation
+        if (!isEditing && parentSku) {
+            // Get all currently selected attribute values
+            const formValues = form.getFieldsValue();
+            // We need to verify which fields are attributes. 
+            // We can iterate globalAttributes.
+            const selectedOptions: string[] = [];
+
+            globalAttributes.forEach((attr: any) => {
+                // Check if this attribute is the one being changed right now
+                if (attr.name === attrName) {
+                    if (newValue) selectedOptions.push(slugify(newValue));
+                } else {
+                    const val = formValues[attr.name];
+                    if (val) selectedOptions.push(slugify(val));
+                }
+            });
+
+            // Construct SKU
+            if (selectedOptions.length > 0) {
+                const newSku = `${parentSku}-${selectedOptions.join('-')}`.toUpperCase();
+                form.setFieldValue('sku', newSku);
+            } else {
+                form.setFieldValue('sku', parentSku);
+            }
+        }
+
         // Force re-render to update UI chips
         setTick(t => t + 1);
     };

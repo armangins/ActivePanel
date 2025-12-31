@@ -35,7 +35,7 @@ export const useProductForm = (productId?: number | null) => {
             date_on_sale_to: null,
             manage_stock: true,
             stock_status: 'instock',
-            stock_quantity: 0,
+            stock_quantity: undefined,
             categories: [], // IDs
             images: [],
             attributes: [],
@@ -122,12 +122,15 @@ export const useProductForm = (productId?: number | null) => {
                 }
 
                 navigate('/products');
-                return true;
             }
         } catch (error: any) {
             setIsVariableUpdating(false); // Ensure state reset on error
             secureLog.error('Product form submission error:', error);
             message.error(error.message || t('errorSavingProduct'));
+            if (Object.keys(form.formState.errors).length > 0) {
+                console.log('🔴 Validation errors:', form.formState.errors);
+                console.log('🔵 Form values at time of error:', form.getValues());
+            }
             return false;
         }
     };
@@ -154,3 +157,4 @@ export const useProductForm = (productId?: number | null) => {
         handleGenerateSKU
     };
 };
+

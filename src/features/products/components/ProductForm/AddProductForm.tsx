@@ -1,16 +1,15 @@
-import { Form, Input, Select, Card, Row, Col, Button, Segmented, ConfigProvider, InputNumber, Checkbox, Typography, Tooltip } from 'antd';
+import { Form, Input, Select, Card, Row, Col } from 'antd';
 import { Controller, Control, FieldErrors, UseFormSetValue, useWatch, UseFormGetValues } from 'react-hook-form';
-import { ThunderboltOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProductFormValues } from '../../types/schemas';
 import { ImageUpload } from './ImageUpload';
 import { ProductAttributes } from './ProductAttributes';
-import { ProductPricing } from './ProductPricing';
-import { ProductVariations } from './ProductVariations';
+import { ProductPricing } from './Pricing/ProductPricing';
+import { ProductVariations } from './Variations/ProductVariations';
+import { ProductTypeSelector } from './ProductTypeSelector';
+import { ProductInventory } from './ProductInventory';
 
 const { TextArea } = Input;
-
-
 
 interface AddProductFormProps {
     control: Control<ProductFormValues>;
@@ -22,7 +21,6 @@ interface AddProductFormProps {
     isEditMode?: boolean;
     onEditVariation?: (index: number) => void;
 }
-
 export const AddProductForm = ({ control, errors, categories, handleGenerateSKU, setValue, getValues, isEditMode, onEditVariation }: AddProductFormProps) => {
     const { t } = useLanguage();
 
@@ -34,56 +32,9 @@ export const AddProductForm = ({ control, errors, categories, handleGenerateSKU,
             {/* LEFT COL: Product Details */}
             <Col xs={24} md={10}>
                 <Card title={t('productDetails')} variant="borderless">
-                    <Form.Item label={t('productType')}>
-                        <Controller
-                            name="type"
-                            control={control}
-                            render={({ field }) => (
-                                <ConfigProvider
-                                    theme={{
-                                        components: {
-                                            Segmented: {
-                                                itemSelectedBg: '#1677ff',
-                                                itemSelectedColor: '#ffffff',
-                                                trackBg: '#e5e5e5',
-                                                itemColor: '#262626',
-                                                itemHoverColor: '#1677ff',
-                                                itemHoverBg: 'rgba(0,0,0,0.05)',
-                                            },
-                                        },
-                                    }}
-                                >
-                                    <Segmented
-                                        {...field}
-                                        options={[
-                                            {
-                                                label: (
-                                                    <Tooltip title={t('simpleProductTooltip')} placement="top">
-                                                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                            {t('simpleProduct')}
-                                                        </div>
-                                                    </Tooltip>
-                                                ),
-                                                value: 'simple'
-                                            },
-                                            {
-                                                label: (
-                                                    <Tooltip title={t('variableProductTooltip')} placement="top">
-                                                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                            {t('variableProduct')}
-                                                        </div>
-                                                    </Tooltip>
-                                                ),
-                                                value: 'variable'
-                                            },
-                                        ]}
-                                        block
-                                        size="large"
-                                    />
-                                </ConfigProvider>
-                            )}
-                        />
-                    </Form.Item>
+
+                    <ProductTypeSelector control={control} setValue={setValue} />
+
                     <Form.Item label={t('productName')} validateStatus={errors.name ? 'error' : ''} help={errors.name?.message}>
                         <Controller
                             name="name"
@@ -92,82 +43,12 @@ export const AddProductForm = ({ control, errors, categories, handleGenerateSKU,
                         />
                     </Form.Item>
 
-                    {/* SKU Row */}
-                    {/* SKU & Stock Row */}
-                    <Form.Item label={t('sku')} style={{ marginBottom: 0 }}>
-                        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                            {/* SKU Input */}
-                            <div style={{ flex: 1 }}>
-                                <Form.Item validateStatus={errors.sku ? 'error' : ''} help={errors.sku?.message}>
-                                    <div style={{ display: 'flex', gap: 8 }}>
-                                        <Controller
-                                            name="sku"
-                                            control={control}
-                                            render={({ field }) => <Input {...field} placeholder="SKU-123" />}
-                                        />
-                                        {handleGenerateSKU && (
-                                            <Button onClick={handleGenerateSKU} icon={<ThunderboltOutlined />} />
-                                        )}
-                                    </div>
-                                </Form.Item>
-                            </div>
+                    <ProductInventory
+                        control={control}
+                        errors={errors}
+                        handleGenerateSKU={handleGenerateSKU}
+                    />
 
-                            {/* Stock Management and Quantity */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                <Form.Item style={{ marginBottom: 0 }}>
-                                    <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                                        {/* Checkbox for Manage Stock */}
-                                        <Controller
-                                            name="manage_stock"
-                                            control={control}
-                                            render={({ field }) => (
-                                                <Checkbox
-                                                    checked={field.value}
-                                                    onChange={field.onChange}
-                                                >
-                                                    {t('manageStock')}
-                                                </Checkbox>
-                                            )}
-                                        />
-
-                                        {/* Stock Quantity Input (Visible if Managed) */}
-                                        <Controller
-                                            name="manage_stock"
-                                            control={control}
-                                            render={({ field: { value: manageStock } }) => (
-                                                manageStock ? (
-                                                    <div style={{ width: 140 }}>
-                                                        <Controller
-                                                            name="stock_quantity"
-                                                            control={control}
-                                                            render={({ field }) => (
-                                                                <>
-                                                                    <InputNumber
-                                                                        {...field}
-                                                                        placeholder={t('stockQuantity') || "Stock Qty"}
-                                                                        style={{ width: '100%' }}
-                                                                        min={0}
-                                                                        status={errors.stock_quantity ? 'error' : ''}
-                                                                    />
-                                                                    {errors.stock_quantity && (
-                                                                        <Typography.Text type="danger" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
-                                                                            {errors.stock_quantity.message}
-                                                                        </Typography.Text>
-                                                                    )}
-                                                                </>
-                                                            )}
-                                                        />
-                                                    </div>
-                                                ) : <></>
-                                            )}
-                                        />
-                                    </div>
-                                </Form.Item>
-                            </div>
-                        </div>
-                    </Form.Item>
-
-                    {/* Spacer since we removed margin bottom from parent Form.Item */}
                     <div style={{ marginBottom: 24 }} />
 
                     <Form.Item label={t('categories')}>
@@ -205,9 +86,6 @@ export const AddProductForm = ({ control, errors, categories, handleGenerateSKU,
                             render={({ field }) => <TextArea {...field} rows={4} />}
                         />
                     </Form.Item>
-
-
-
 
                 </Card>
             </Col>

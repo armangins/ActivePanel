@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Typography, Divider, Card, Space, Form, Input, Switch, Select, message } from 'antd';
+import { Button, Typography, Divider, Card, Space, Form, Input, Switch, Select } from 'antd';
 import { Controller, Control, useFieldArray, UseFormSetValue, useWatch, UseFormGetValues } from 'react-hook-form';
 import { DeleteOutlined, PlusOutlined, SyncOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -20,9 +20,12 @@ interface ProductAttributesProps {
 export const ProductAttributes: React.FC<ProductAttributesProps> = ({ control, setValue, getValues }) => {
     const { t } = useLanguage();
 
-    // Watch parent product prices to inherit for variations
+    // Watch parent product properties for inheritance
     const parentRegularPrice = useWatch({ control, name: 'regular_price' }) || '';
     const parentSalePrice = useWatch({ control, name: 'sale_price' }) || '';
+    const parentSku = useWatch({ control, name: 'sku' }) || '';
+    const parentManageStock = useWatch({ control, name: 'manage_stock' }) || false;
+    const parentStockQuantity = useWatch({ control, name: 'stock_quantity' }) ?? undefined;
 
     // 1. Fetch all available global attributes from WooCommerce
     const { data: globalAttributes = [] } = useAttributes();
@@ -68,6 +71,9 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({ control, s
         currentAttributes,
         parentRegularPrice,
         parentSalePrice,
+        parentSku,
+        parentManageStock,
+        parentStockQuantity,
         setValue,
         getValues
     });

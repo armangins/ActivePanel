@@ -1,9 +1,16 @@
 import React from 'react';
-import { Tag, Spin, Space, Typography } from 'antd';
+import { Tag, Spin, Space, Typography, theme } from 'antd';
 import { useAttributeTerms } from '@/hooks/useAttributeTerms';
 import { CheckCircleFilled } from '@ant-design/icons';
 
 const { Text } = Typography;
+
+interface AttributeTerm {
+    id: number;
+    name: string;
+    slug: string;
+    count?: number;
+}
 
 interface GlobalAttributeSelectorProps {
     attributeId: number;
@@ -18,6 +25,7 @@ export const GlobalAttributeSelector = ({
     selectedTerms = [],
     onTermsChange
 }: GlobalAttributeSelectorProps) => {
+    const { token } = theme.useToken();
 
     // Fetch terms for this specific attribute
     const { data: terms = [], isLoading } = useAttributeTerms(attributeId);
@@ -40,7 +48,7 @@ export const GlobalAttributeSelector = ({
                 {attributeName}
             </Text>
             <Space size={[8, 8]} wrap>
-                {terms.map((term: any) => {
+                {(terms as AttributeTerm[]).map((term) => {
                     const isSelected = selectedTerms.includes(term.name);
                     return (
                         <Tag.CheckableTag
@@ -51,9 +59,9 @@ export const GlobalAttributeSelector = ({
                                 fontSize: 14,
                                 padding: '4px 12px',
                                 borderRadius: 16,
-                                border: isSelected ? '1px solid #1677ff' : '1px solid #d9d9d9',
-                                background: isSelected ? '#e6f7ff' : '#fff',
-                                color: isSelected ? '#1677ff' : 'rgba(0, 0, 0, 0.88)',
+                                border: isSelected ? `1px solid ${token.colorPrimary}` : `1px solid ${token.colorBorder}`,
+                                background: isSelected ? token.colorPrimaryBg : token.colorBgContainer,
+                                color: isSelected ? token.colorPrimary : token.colorText,
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 6,

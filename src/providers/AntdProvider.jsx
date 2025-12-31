@@ -74,6 +74,10 @@ export const AntdProvider = ({ children }) => {
           Button: {
             primaryShadow: '0 2px 0 rgba(59, 130, 246, 0.1)',
           },
+          Tooltip: {
+            colorTextLightSolid: '#1F2937', // Dark gray/black text for tooltips
+            colorBgSpotlight: '#FFFFFF', // White background for tooltips
+          },
           Menu: {
             itemBg: '#FFFFFF', // White background for menu items
             itemColor: '#1F2937', // Dark gray text for menu items
