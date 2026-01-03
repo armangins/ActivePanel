@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Layout, Typography, Button, Input, Empty } from 'antd';
+import { Layout, Typography, Button, Input, Empty, Modal, theme, Flex } from 'antd';
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCategoriesData, useDeleteCategory } from '../hooks/useCategoriesData';
@@ -13,13 +13,16 @@ const { Title } = Typography;
 
 export const CategoriesPage = () => {
     const { t, isRTL } = useLanguage();
+    const { token } = theme.useToken();
+    const [modal, contextHolder] = Modal.useModal();
+
     const [search, setSearch] = useState('');
     const [debouncedSearch] = useDebounce(search, 500);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
     const { data: categories = [], isLoading } = useCategoriesData({
-        per_page: 100, // Fetch all for clientside filtering if needed, or implement server search
+        per_page: 100,
         search: debouncedSearch
     });
 
@@ -31,9 +34,14 @@ export const CategoriesPage = () => {
     };
 
     const handleDelete = (id: number) => {
-        if (window.confirm(t('deleteCategoryConfirm') || 'Are you sure you want to delete this category?')) {
-            deleteMutation.mutate(id);
-        }
+        modal.confirm({
+            title: t('deleteCategoryConfirmTitle'),
+            content: t('deleteCategoryConfirmContent'),
+            okText: t('delete'),
+            okType: 'danger',
+            cancelText: t('cancel'),
+            onOk: () => deleteMutation.mutate(id),
+        });
     };
 
     const handleModalClose = () => {
@@ -41,40 +49,43 @@ export const CategoriesPage = () => {
         setSelectedCategory(null);
     };
 
+    const handleAddClick = () => {
+        setSelectedCategory(null);
+        setIsModalOpen(true);
+    };
+
     return (
-        <Content style={{ padding: 24, minHeight: 280, direction: isRTL ? 'rtl' : 'ltr' }}>
-            <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Content style={{ padding: token.paddingLG, minHeight: 280, direction: isRTL ? 'rtl' : 'ltr' }}>
+            {contextHolder}
+            <Flex justify="space-between" align="center" style={{ marginBottom: token.marginLG }}>
                 <Title level={2} style={{ margin: 0 }}>
-                    {t('categories') || 'Categories'}
+                    {t('categories')}
                 </Title>
                 <Button
                     type="primary"
                     icon={<PlusOutlined />}
-                    onClick={() => {
-                        setSelectedCategory(null);
-                        setIsModalOpen(true);
-                    }}
+                    onClick={handleAddClick}
                 >
-                    {t('addCategory') || 'Add Category'}
+                    {t('addCategory')}
                 </Button>
-            </div>
+            </Flex>
 
             <Input
-                placeholder={t('searchCategories') || 'Search categories...'}
+                placeholder={t('searchCategories')}
                 prefix={<SearchOutlined />}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={{ marginBottom: 24, maxWidth: 400 }}
+                style={{ marginBottom: token.marginLG, maxWidth: 400 }}
                 allowClear
             />
 
             {!isLoading && categories.length === 0 ? (
                 <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description={t('noCategories') || 'No categories found'}
+                    description={t('noCategories')}
                 >
                     <Button type="primary" onClick={() => setIsModalOpen(true)}>
-                        {t('createFirstCategory') || 'Create your first category'}
+                        {t('createFirstCategory')}
                     </Button>
                 </Empty>
             ) : (

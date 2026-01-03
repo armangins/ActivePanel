@@ -60,7 +60,7 @@ export const OrderStatusCards = ({ statusCounts, onStatusClick, selectedStatus }
                                 height: '100%',
                                 boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
                             }}
-                            bodyStyle={{ padding: '24px 24px 0 24px', height: 160 }}
+                            styles={{ body: { padding: '24px 24px 0 24px', height: 160 } }}
                         >
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, zIndex: 1, position: 'relative' }}>
                                 {/* Hexagon Icon container */}
@@ -93,8 +93,8 @@ export const OrderStatusCards = ({ statusCounts, onStatusClick, selectedStatus }
                             </div>
 
                             {/* Decorative Chart at Bottom */}
-                            <div style={{ position: 'absolute', bottom: 10, left: 10, right: 10, height: 60, opacity: 0.6 }}>
-                                <ResponsiveContainer width="100%" height="100%">
+                            <div style={{ position: 'absolute', bottom: 10, left: 10, width: 'calc(100% - 20px)', height: 60, opacity: 0.6 }}>
+                                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                     <AreaChart data={chartData}>
                                         <defs>
                                             <linearGradient id={`color-${status.key}`} x1="0" y1="0" x2="0" y2="1">

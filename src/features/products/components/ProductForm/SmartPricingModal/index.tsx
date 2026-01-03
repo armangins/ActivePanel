@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Space, Popover, Typography, Grid } from 'antd';
+import { Modal, Button, Typography, Row, Col, theme } from 'antd';
 import { InfoCircleOutlined, CalculatorOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { PricingInputSection } from './PricingInputSection';
-import { ExpensesSection, type Expense } from './ExpensesSection';
 import { PricingResultsCard } from './PricingResultsCard';
 
 const { Text } = Typography;
-const { useBreakpoint } = Grid;
+
 
 interface SmartPricingModalProps {
     visible: boolean;
@@ -22,10 +21,11 @@ export const SmartPricingModal: React.FC<SmartPricingModalProps> = ({
     onApplyPrice
 }) => {
     const { t } = useLanguage();
-    const screens = useBreakpoint();
+    const { token } = theme.useToken();
+
     const [cost, setCost] = useState<number>();
     const [margin, setMargin] = useState<number>(30); // Default 30% margin
-    const [expenses, setExpenses] = useState<Expense[]>([]);
+    const [expenses, setExpenses] = useState<Array<{ id: string; amount: number }>>([{ id: '1', amount: 0 }]);
     const [calculatedPrice, setCalculatedPrice] = useState<number>();
     const [profit, setProfit] = useState<number>();
 
@@ -51,18 +51,20 @@ export const SmartPricingModal: React.FC<SmartPricingModalProps> = ({
         setCalculatedPrice(Number(finalPrice.toFixed(2)));
         // Profit is (FinalPrice - TotalCost)
         setProfit(Number((finalPrice - baseCost).toFixed(2)));
-    }, [cost, margin, expenses, totalExpenses]);
+    }, [cost, margin, totalExpenses]);
 
     const handleAddExpense = () => {
-        setExpenses([...expenses, { id: Date.now().toString(), name: '', amount: 0 }]);
+        setExpenses([...expenses, { id: Date.now().toString(), amount: 0 }]);
     };
 
     const handleRemoveExpense = (id: string) => {
-        setExpenses(expenses.filter(e => e.id !== id));
+        if (expenses.length > 1) {
+            setExpenses(expenses.filter(e => e.id !== id));
+        }
     };
 
-    const handleUpdateExpense = (id: string, field: keyof Expense, value: any) => {
-        setExpenses(expenses.map(e => e.id === id ? { ...e, [field]: value } : e));
+    const handleUpdateExpense = (id: string, value: number) => {
+        setExpenses(expenses.map(e => e.id === id ? { ...e, amount: value } : e));
     };
 
     const handleApply = () => {
@@ -74,118 +76,122 @@ export const SmartPricingModal: React.FC<SmartPricingModalProps> = ({
     const handleReset = () => {
         setCost(0);
         setMargin(30);
-        setExpenses([]);
+        setExpenses([{ id: '1', amount: 0 }]);
     };
 
     // Calculate actual margin percentage: (Profit / Price) * 100
     const actualMargin = (calculatedPrice && profit && calculatedPrice > 0) ? ((profit / calculatedPrice) * 100) : 0;
 
+
     return (
         <Modal
-            title={
-                <Space>
-                    <CalculatorOutlined />
-                    <Typography.Title level={4} style={{ margin: 0 }}>
-                        מחשבון תמחור חכם
-                    </Typography.Title>
-                </Space>
-            }
+            title={null}
+            footer={null}
             open={visible}
             onCancel={onClose}
-            footer={[
-                <Button key="reset" onClick={handleReset}>
-                    {t('reset') || "איפוס"}
-                </Button>,
-                <Button key="cancel" onClick={onClose}>
-                    {t('cancel') || "ביטול"}
-                </Button>,
-                <Button
-                    key="apply"
-                    type="primary"
-                    onClick={handleApply}
-                    disabled={!calculatedPrice || calculatedPrice <= 0}
-                >
-                    השתמש במחיר זה
-                </Button>
-            ]}
-            width={screens.md ? 700 : '95%'}
+            width={900}
             centered
+            bodyStyle={{ padding: 0, overflow: 'hidden' }}
         >
-            {/* Help Button */}
-            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                <Popover
-                    content={
-                        <Space direction="vertical" size="small" style={{ maxWidth: screens.xs ? 260 : 350 }}>
-                            <Text>
-                                אחוז הרווח הוא <Text strong>אחוז הרווח מהמחיר הסופי</Text>, לא מהעלות.
-                            </Text>
-                            <Space direction="vertical" size="small" style={{
-                                background: '#f0f5ff',
-                                padding: 12,
-                                borderRadius: 6,
-                                border: '1px solid #adc6ff',
-                                width: '100%'
-                            }}>
-                                <Text strong type="secondary">
-                                    📊 דוגמה: עלות 100₪, רווח 50%
+            <div style={{
+                padding: `${token.paddingLG}px ${token.paddingLG}px ${token.padding}px`,
+                borderBottom: `1px solid ${token.colorBorder}`
+            }}>
+                <Typography.Title level={2} style={{ margin: 0, marginBottom: token.marginXS }}>
+                    {t('priceYourProduct')}
+                </Typography.Title>
+                <Text type="secondary" style={{ fontSize: token.fontSize }}>
+                    {t('priceYourProductDesc')}
+                </Text>
+            </div>
+
+            <div style={{ padding: token.paddingLG }}>
+                <Row gutter={32}>
+                    <Col xs={24} md={14}>
+                        <PricingInputSection
+                            cost={cost}
+                            margin={margin}
+                            expenses={expenses}
+                            onCostChange={setCost}
+                            onMarginChange={setMargin}
+                            onAddExpense={handleAddExpense}
+                            onRemoveExpense={handleRemoveExpense}
+                            onUpdateExpense={handleUpdateExpense}
+                        />
+
+                        {/* Tip Section */}
+                        <div style={{
+                            marginTop: token.marginLG,
+                            padding: `${token.paddingLG}px ${token.padding}px`,
+                            background: token.colorBgLayout,
+                            borderRadius: token.borderRadius,
+                            display: 'flex',
+                            gap: token.marginSM
+                        }}>
+                            <InfoCircleOutlined style={{
+                                color: token.colorWarning,
+                                fontSize: token.fontSizeLG,
+                                marginTop: token.marginXXS
+                            }} />
+                            <div>
+                                <Text strong style={{ display: 'block', marginBottom: token.marginXXS }}>
+                                    {t('pricingTip')}
                                 </Text>
-                                <Space direction="vertical" size={4}>
-                                    <Text type="secondary">
-                                        • <Text strong>מחיר סופי:</Text> 100 ÷ (1 - 0.5) = <Text strong type="success">200₪</Text>
-                                    </Text>
-                                    <Text type="secondary">
-                                        • <Text strong>רווח:</Text> 200 - 100 = <Text strong type="success">100₪</Text>
-                                    </Text>
-                                    <Text type="secondary">
-                                        • <Text strong>אחוז רווח מהמחיר:</Text> 100 ÷ 200 = <Text strong type="success">50%</Text> ✓
-                                    </Text>
-                                </Space>
-                            </Space>
-                        </Space>
-                    }
-                    title={
-                        <Space>
-                            <InfoCircleOutlined />
-                            <span>איך החישוב עובד?</span>
-                        </Space>
-                    }
-                    trigger="click"
-                    placement="bottom"
-                >
-                    <Button
-                        type="link"
-                        icon={<InfoCircleOutlined />}
-                        size="small"
-                    >
-                        איך החישוב עובד?
-                    </Button>
-                </Popover>
+                                <Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+                                    {t('pricingTipDesc')}
+                                </Text>
+                            </div>
+                        </div>
 
-                {/* Input Section */}
-                <PricingInputSection
-                    cost={cost}
-                    margin={margin}
-                    onCostChange={setCost}
-                    onMarginChange={setMargin}
-                />
+                    </Col>
 
-                {/* Expenses Section */}
-                <ExpensesSection
-                    expenses={expenses}
-                    onAddExpense={handleAddExpense}
-                    onRemoveExpense={handleRemoveExpense}
-                    onUpdateExpense={handleUpdateExpense}
-                    totalExpenses={totalExpenses}
-                    totalCost={totalCost}
-                />
+                    <Col xs={24} md={10}>
+                        <PricingResultsCard
+                            calculatedPrice={calculatedPrice}
+                            profit={profit}
+                            actualMargin={actualMargin}
+                            baseCost={totalCost}
+                        />
 
-                {/* Results Section */}
-                <PricingResultsCard
-                    calculatedPrice={calculatedPrice}
-                    profit={profit}
-                    actualMargin={actualMargin}
-                />
-            </Space>
+                        <div style={{
+                            marginTop: token.marginLG,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            gap: token.marginLG
+                        }}>
+                            <Button
+                                type="text"
+                                icon={<CalculatorOutlined />}
+                                onClick={handleReset}
+                            >
+                                {t('reset')}
+                            </Button>
+
+                            <Button
+                                type="text"
+                                onClick={onClose}
+                            >
+                                {t('export')}
+                            </Button>
+                        </div>
+
+                        <Button
+                            type="primary"
+                            block
+                            size="large"
+                            onClick={handleApply}
+                            style={{
+                                marginTop: token.marginLG,
+                                height: 48,
+                                fontSize: token.fontSize
+                            }}
+                            disabled={!calculatedPrice || calculatedPrice <= 0}
+                        >
+                            {t('applyPrice')}
+                        </Button>
+                    </Col>
+                </Row>
+            </div>
         </Modal>
     );
 };

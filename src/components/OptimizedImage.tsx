@@ -1,27 +1,37 @@
 import { useState, useEffect } from 'react';
-import { Image } from 'antd';
+import { Image, theme } from 'antd';
 import { PictureOutlined } from '@ant-design/icons';
 import { validateImageUrl } from '@/utils/security';
 
+interface OptimizedImageProps {
+    src: string;
+    alt: string;
+    className?: string;
+    placeholderClassName?: string;
+    width?: number;
+    height?: number;
+    resize?: boolean;
+}
+
 /**
- * OptimizedImage Component - Ant Design wrapper
+ * OptimizedImage Component
  * 
  * Optimized image component with lazy loading and resizing support using Ant Design Image.
  */
-const OptimizedImage = ({
+export const OptimizedImage = ({
     src,
     alt,
     className = '',
-    placeholderClassName = '',
     width,
     height,
     resize = false
-}) => {
+}: OptimizedImageProps) => {
+    const { token } = theme.useToken();
     const [hasError, setHasError] = useState(false);
 
     // SECURITY: Validate image URL to prevent XSS via malicious URLs
     // PERFORMANCE: Resize image URL if resize prop is true
-    const getOptimizedImageUrl = (originalUrl) => {
+    const getOptimizedImageUrl = (originalUrl: string): string | null => {
         if (!originalUrl) return null;
 
         // SECURITY: Validate URL before processing
@@ -33,7 +43,7 @@ const OptimizedImage = ({
         // If resize is requested, add resize parameters
         if (resize && (width || height)) {
             const separator = validatedUrl.includes('?') ? '&' : '?';
-            const params = [];
+            const params: string[] = [];
             if (width) params.push(`w=${width}`);
             if (height) params.push(`h=${height}`);
             params.push('fit=crop'); // Maintain aspect ratio with crop
@@ -54,15 +64,18 @@ const OptimizedImage = ({
 
     if (hasError || !optimizedSrc) {
         return (
-            <div className={className} style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#f5f5f5',
-                minHeight: height || 100,
-                minWidth: width || 100
-            }}>
-                <PictureOutlined style={{ fontSize: 32, color: '#d9d9d9' }} />
+            <div
+                className={className}
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: token.colorBgContainer,
+                    minHeight: height || 100,
+                    minWidth: width || 100
+                }}
+            >
+                <PictureOutlined style={{ fontSize: 32, color: token.colorTextDisabled }} />
             </div>
         );
     }
@@ -81,5 +94,3 @@ const OptimizedImage = ({
         />
     );
 };
-
-export default OptimizedImage;

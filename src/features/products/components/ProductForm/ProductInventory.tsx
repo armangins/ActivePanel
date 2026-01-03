@@ -1,36 +1,53 @@
 import React from 'react';
 import { Form, Input, Button, InputNumber, Checkbox, Row, Col, Typography } from 'antd';
 import { Controller, Control, FieldErrors } from 'react-hook-form';
-import { ThunderboltOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProductFormValues } from '@/features/products/types/schemas';
+import { generateUniqueSKU } from '@/utils/skuGenerator';
+import { SparklesIcon } from '@/components/icons/SparklesIcon';
 
 interface ProductInventoryProps {
     control: Control<ProductFormValues>;
     errors: FieldErrors<ProductFormValues>;
-    handleGenerateSKU?: () => void;
+    setValue: (name: any, value: any) => void;
 }
 
-export const ProductInventory: React.FC<ProductInventoryProps> = ({ control, errors, handleGenerateSKU }) => {
+export const ProductInventory: React.FC<ProductInventoryProps> = ({ control, errors, setValue }) => {
     const { t } = useLanguage();
+
+    const handleGenerateSKU = () => {
+        const sku = generateUniqueSKU();
+        setValue('sku', sku);
+    };
 
     return (
         <Row gutter={[16, 16]}>
             <Col xs={24} md={12}>
                 <Form.Item
-                    label={t('sku')}
+                    label="מק״ט"
                     validateStatus={errors.sku ? 'error' : ''}
                     help={errors.sku?.message}
                 >
-                    <div style={{ display: 'flex', gap: 8 }}>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                         <Controller
                             name="sku"
                             control={control}
-                            render={({ field }) => <Input {...field} placeholder="SKU-123" />}
+                            render={({ field }) => (
+                                <Input
+                                    {...field}
+                                    placeholder="SKU-123"
+                                    style={{ flex: 1 }}
+                                />
+                            )}
                         />
-                        {handleGenerateSKU && (
-                            <Button onClick={handleGenerateSKU} icon={<ThunderboltOutlined />} />
-                        )}
+                        <Button
+                            type="default"
+                            size="middle"
+                            icon={<SparklesIcon style={{ fontSize: 16 }} />}
+                            onClick={handleGenerateSKU}
+                            title={t('generateUniqueSKU') || 'Generate Unique SKU'}
+                            style={{ minHeight: 'auto', height: '32px' }}
+                        />
                     </div>
                 </Form.Item>
             </Col>

@@ -31,21 +31,21 @@ const CategoriesTable = ({ categories, isLoading, onEdit, onDelete }: Categories
             )
         },
         {
-
-            title: t('slug') || 'Slug',
-            dataIndex: 'slug',
-            key: 'slug',
-            align: (isRTL ? 'right' : 'left') as 'left' | 'right',
-        },
-        {
             title: t('count') || 'Count',
             dataIndex: 'count',
             key: 'count',
             render: (count: number) => (
                 <Tag color="processing" style={{ borderRadius: 10, padding: '0 8px' }}>
-                    {count} {t('products') || 'Products'}
+                    {count || 0} {t('products') || 'Products'}
                 </Tag>
             ),
+            align: (isRTL ? 'right' : 'left') as 'left' | 'right',
+        },
+        {
+
+            title: t('slug') || 'Slug',
+            dataIndex: 'slug',
+            key: 'slug',
             align: (isRTL ? 'right' : 'left') as 'left' | 'right',
         },
         {

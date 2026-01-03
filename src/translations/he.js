@@ -103,6 +103,22 @@ export default {
   expenseName: 'שם ההוצאה',
   expenseAmount: 'סכום',
   totalCost: 'סה"כ עלות',
+  priceYourProduct: 'תמחר את המוצר שלך',
+  priceYourProductDesc: 'קבע את מחיר המכירה האופטימלי על בסיס העלויות והרווח הרצוי שלך',
+  productCost: 'עלות המוצר',
+  additionalExpenses: 'הוצאות נוספות',
+  targetProfitMargin: 'אחוז רווח יעד',
+  optimalSellingPrice: 'מחיר מכירה אופטימלי',
+  basedOnMargin: 'מבוסס על',
+  margin: 'רווח',
+  baseCosts: 'עלויות בסיס',
+  netProfit: 'רווח נקי',
+  pricingTip: 'טיפ לתמחור',
+  pricingTipDesc: 'שקול פסיכולוגיית תמחור. מחירים המסתיימים ב-.99 או -.95 לרוב ממירים טוב יותר ממספרים עגולים',
+  reset: 'איפוס',
+  export: 'ייצוא',
+  totalExpenses: 'סה״כ הוצאות',
+
 
   // Products
   manageProducts: 'ניהול מוצרים',

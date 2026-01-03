@@ -4,7 +4,7 @@ import { SearchOutlined, InfoCircleOutlined, EditOutlined } from '@ant-design/ic
 import { useNavigate } from 'react-router-dom';
 import { useProductSearch } from '@/features/products';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { OptimizedImage } from '../ui';
+import { OptimizedImage } from '@/components/OptimizedImage';
 import { useDebounce } from '@/hooks/useDebounce';
 import { ProductDetailModal } from '@/features/products/components/ProductDetails/ProductDetailModal';
 import type { DefaultOptionType } from 'antd/es/select';

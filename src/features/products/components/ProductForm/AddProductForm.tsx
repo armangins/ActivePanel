@@ -15,13 +15,12 @@ interface AddProductFormProps {
     control: Control<ProductFormValues>;
     errors: FieldErrors<ProductFormValues>;
     categories: any[];
-    handleGenerateSKU?: () => void;
     setValue: UseFormSetValue<ProductFormValues>;
     getValues: UseFormGetValues<ProductFormValues>;
     isEditMode?: boolean;
     onEditVariation?: (index: number) => void;
 }
-export const AddProductForm = ({ control, errors, categories, handleGenerateSKU, setValue, getValues, isEditMode, onEditVariation }: AddProductFormProps) => {
+export const AddProductForm = ({ control, errors, categories, setValue, getValues, isEditMode, onEditVariation }: AddProductFormProps) => {
     const { t } = useLanguage();
 
     const productType = useWatch({ control, name: 'type' });
@@ -46,7 +45,7 @@ export const AddProductForm = ({ control, errors, categories, handleGenerateSKU,
                     <ProductInventory
                         control={control}
                         errors={errors}
-                        handleGenerateSKU={handleGenerateSKU}
+                        setValue={setValue}
                     />
 
                     <div style={{ marginBottom: 24 }} />
