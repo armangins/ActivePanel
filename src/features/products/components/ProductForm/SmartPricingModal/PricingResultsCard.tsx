@@ -27,7 +27,7 @@ export const PricingResultsCard: React.FC<PricingResultsCardProps> = ({
                     {t('optimalSellingPrice') || "OPTIMAL SELLING PRICE"}
                 </Text>
                 <Title level={1} style={{ margin: 0, fontSize: 48, fontWeight: 800 }}>
-                    ${calculatedPrice?.toFixed(2) || '0.00'}
+                    ₪{calculatedPrice?.toFixed(2) || '0.00'}
                 </Title>
                 <Text type="secondary" style={{ fontSize: 13 }}>
                     {t('basedOnMargin') || "Based on a"} {actualMargin.toFixed(0)}% {t('margin') || "margin"}
@@ -40,7 +40,7 @@ export const PricingResultsCard: React.FC<PricingResultsCardProps> = ({
                         <WalletOutlined style={{ color: '#595959' }} />
                         <Text type="secondary">{t('baseCosts') || "Base Costs"}</Text>
                     </div>
-                    <Text strong>${baseCost.toFixed(2)}</Text>
+                    <Text strong>₪{baseCost.toFixed(2)}</Text>
                 </Flex>
 
                 <Divider style={{ margin: '8px 0' }} />
@@ -50,7 +50,7 @@ export const PricingResultsCard: React.FC<PricingResultsCardProps> = ({
                         <RiseOutlined style={{ color: '#52c41a' }} />
                         <Text type="success">{t('netProfit') || "Net Profit"}</Text>
                     </div>
-                    <Text type="success" strong>+${profit?.toFixed(2) || '0.00'}</Text>
+                    <Text type="success" strong>+₪{profit?.toFixed(2) || '0.00'}</Text>
                 </Flex>
             </div>
         </Card>

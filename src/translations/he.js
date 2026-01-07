@@ -91,7 +91,7 @@ export default {
   smartPricing: 'תמחור חכם',
   smartPricingAssistant: 'עוזר תמחור חכם',
   smartPricingHelp: 'חשב את המחיר האופטימלי בהתבסס על העלות והרווח הרצוי.',
-  costPrice: 'מחיר עלות ($)',
+  costPrice: 'מחיר עלות (₪)',
   markupPercentage: 'אחוז רווח (%)',
   taxRate: 'שיעור מס (%)',
   recommendedPrice: 'מחיר מומלץ',

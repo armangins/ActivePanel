@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Input, InputNumber, Button, Space, Row, Col, Form, Switch, Typography, Upload } from 'antd';
 import { Controller, Control } from 'react-hook-form';
-import { DeleteOutlined, UploadOutlined, EditOutlined } from '@ant-design/icons';
+import { DeleteOutlined, UploadOutlined, EditOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProductFormValues } from '../../../types/schemas';
 
@@ -175,6 +175,7 @@ export const ProductVariationCard: React.FC<ProductVariationCardProps> = ({
                     />
                 </Form.Item>
 
+
                 {/* Row 2: Variation Title (Attributes) */}
                 <div>
                     <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
@@ -218,7 +219,7 @@ export const ProductVariationCard: React.FC<ProductVariationCardProps> = ({
                                 name={`variations.${index}.regular_price`}
                                 control={control}
                                 render={({ field }) => (
-                                    <Input {...field} prefix="$" placeholder="0.00" />
+                                    <Input {...field} prefix="₪" placeholder="0.00" />
                                 )}
                             />
                         </Form.Item>
@@ -229,7 +230,7 @@ export const ProductVariationCard: React.FC<ProductVariationCardProps> = ({
                                 name={`variations.${index}.sale_price`}
                                 control={control}
                                 render={({ field }) => (
-                                    <Input {...field} prefix="$" placeholder="0.00" />
+                                    <Input {...field} prefix="₪" placeholder="0.00" />
                                 )}
                             />
                         </Form.Item>

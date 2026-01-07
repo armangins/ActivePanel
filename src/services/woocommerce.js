@@ -29,7 +29,6 @@ const ERROR_MESSAGES = {
 };
 
 const handleError = (error) => {
-  console.log('woocommerce.js handleError called with:', error.message);
   if (error.request && !error.response) {
     const networkError = new Error('Unable to connect to the server. Please check your internet connection.');
     networkError.code = 'NETWORK_ERROR';

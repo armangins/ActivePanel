@@ -41,7 +41,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ control, errors,
                             render={({ field }) => (
                                 <Input
                                     {...field}
-                                    prefix="$"
+                                    prefix="₪"
                                     onFocus={() => setIsRegularPriceFocused(true)}
                                     onBlur={() => setIsRegularPriceFocused(false)}
                                     suffix={
@@ -89,7 +89,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ control, errors,
                                 <div>
                                     <Input
                                         {...field}
-                                        prefix="$"
+                                        prefix="₪"
                                         onFocus={() => setIsSalePriceFocused(true)}
                                         onBlur={() => setIsSalePriceFocused(false)}
                                         suffix={

@@ -86,12 +86,23 @@ export const SmartPricingModal: React.FC<SmartPricingModalProps> = ({
     return (
         <Modal
             title={null}
-            footer={null}
+            footer={
+                <div style={{ display: 'flex', gap: token.margin, justifyContent: 'flex-end' }}>
+                    <Button
+                        type="primary"
+
+                        onClick={handleApply}
+                        disabled={!calculatedPrice || calculatedPrice <= 0}
+                    >
+                        השתמש במחיר זה עבור המוצר
+                    </Button>
+                </div>
+            }
             open={visible}
             onCancel={onClose}
             width={900}
             centered
-            bodyStyle={{ padding: 0, overflow: 'hidden' }}
+            styles={{ body: { padding: 0, overflow: 'hidden' } }}
         >
             <div style={{
                 padding: `${token.paddingLG}px ${token.paddingLG}px ${token.padding}px`,
@@ -175,20 +186,6 @@ export const SmartPricingModal: React.FC<SmartPricingModalProps> = ({
                             </Button>
                         </div>
 
-                        <Button
-                            type="primary"
-                            block
-                            size="large"
-                            onClick={handleApply}
-                            style={{
-                                marginTop: token.marginLG,
-                                height: 48,
-                                fontSize: token.fontSize
-                            }}
-                            disabled={!calculatedPrice || calculatedPrice <= 0}
-                        >
-                            {t('applyPrice')}
-                        </Button>
                     </Col>
                 </Row>
             </div>

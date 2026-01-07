@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { Table, Button as AntButton, Space, Tag } from 'antd';
-import { DeleteOutlined as Trash2, EditOutlined as Edit } from '@ant-design/icons';
+import { Table, Button as AntButton, Space, Tag, Avatar } from 'antd';
+import { DeleteOutlined as Trash2, EditOutlined as Edit, FileImageOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Category } from '../types';
 
@@ -16,9 +16,26 @@ const CategoriesTable = ({ categories, isLoading, onEdit, onDelete }: Categories
 
     const columns = useMemo(() => [
         {
+            title: t('image') || 'Image',
+            dataIndex: 'image',
+            key: 'image',
+            align: 'center' as 'center',
+            width: 80,
+            render: (image: any) => (
+                <Avatar
+                    shape="square"
+                    size={48}
+                    src={image?.src}
+                    icon={<FileImageOutlined />}
+                    className="glass-card"
+                />
+            )
+        },
+        {
             title: t('name') || 'Name',
             key: 'name',
             align: (isRTL ? 'right' : 'left') as 'left' | 'right',
+            width: 200,
             render: (_: any, category: Category) => (
                 <div style={{ fontWeight: 500 }}>
                     {category.name}
@@ -31,12 +48,24 @@ const CategoriesTable = ({ categories, isLoading, onEdit, onDelete }: Categories
             )
         },
         {
+            title: t('description') || 'Description',
+            dataIndex: 'description',
+            key: 'description',
+            align: (isRTL ? 'right' : 'left') as 'left' | 'right',
+            ellipsis: true,
+            render: (html: string) => {
+                const text = html?.replace(/<[^>]+>/g, '') || '';
+                return <span style={{ color: '#8c8c8c' }}>{text}</span>;
+            }
+        },
+        {
             title: t('count') || 'Count',
             dataIndex: 'count',
             key: 'count',
-            render: (count: number) => (
+            width: 120,
+            render: (count: number, record: Category) => (
                 <Tag color="processing" style={{ borderRadius: 10, padding: '0 8px' }}>
-                    {count || 0} {t('products') || 'Products'}
+                    {count ?? (record as any).product_count ?? 0} {t('products') || 'Products'}
                 </Tag>
             ),
             align: (isRTL ? 'right' : 'left') as 'left' | 'right',
@@ -46,6 +75,7 @@ const CategoriesTable = ({ categories, isLoading, onEdit, onDelete }: Categories
             title: t('slug') || 'Slug',
             dataIndex: 'slug',
             key: 'slug',
+            width: 150,
             align: (isRTL ? 'right' : 'left') as 'left' | 'right',
         },
         {

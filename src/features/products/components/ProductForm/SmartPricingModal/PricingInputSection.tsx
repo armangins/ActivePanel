@@ -35,11 +35,11 @@ export const PricingInputSection: React.FC<PricingInputSectionProps> = ({
             <Row gutter={[16, 16]}>
                 <Col span={12}>
                     <Text strong style={{ display: 'block', marginBottom: token.marginXS }}>
-                        {t('productCost') || 'Product Cost'} ($)
+                        {t('productCost') || 'Product Cost'} (₪)
                     </Text>
                     <InputNumber
                         style={{ width: '100%' }}
-                        prefix="$"
+                        prefix="₪"
                         value={cost}
                         onChange={(val) => onCostChange(val as number)}
                         placeholder="0.00"
@@ -50,14 +50,14 @@ export const PricingInputSection: React.FC<PricingInputSectionProps> = ({
                 </Col>
                 <Col span={12}>
                     <Text strong style={{ display: 'block', marginBottom: token.marginXS }}>
-                        {t('additionalExpenses') || 'Additional Expenses'} ($)
+                        {t('additionalExpenses') || 'Additional Expenses'} (₪)
                     </Text>
                     <Space direction="vertical" style={{ width: '100%' }} size="small">
                         {expenses.map((expense, index) => (
                             <Space.Compact key={expense.id} style={{ width: '100%' }}>
                                 <InputNumber
                                     style={{ width: '100%' }}
-                                    prefix="$"
+                                    prefix="₪"
                                     value={expense.amount}
                                     onChange={(val) => onUpdateExpense(expense.id, val as number || 0)}
                                     placeholder="0.00"
@@ -95,6 +95,7 @@ export const PricingInputSection: React.FC<PricingInputSectionProps> = ({
                     max={100}
                     value={margin}
                     onChange={onMarginChange}
+                    tooltip={{ formatter: (value) => `${value}%` }}
                     marks={{
                         0: '0%',
                         50: '50%',

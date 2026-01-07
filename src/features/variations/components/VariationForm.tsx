@@ -64,7 +64,7 @@ export const VariationForm = ({ productId, variation, attributes, onCancel, onSu
                     help={errors.regular_price?.message}
                 >
                     <Input
-                        prefix="$"
+                        prefix="₪"
                         value={watch('regular_price')}
                         onChange={e => setValue('regular_price', e.target.value)}
                     />
@@ -72,7 +72,7 @@ export const VariationForm = ({ productId, variation, attributes, onCancel, onSu
 
                 <Form.Item label={t('salePrice') || 'Sale Price'}>
                     <Input
-                        prefix="$"
+                        prefix="₪"
                         value={watch('sale_price')}
                         onChange={e => setValue('sale_price', e.target.value)}
                     />

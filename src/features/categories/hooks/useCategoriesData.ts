@@ -7,7 +7,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 export const useCategoriesData = (params: any = {}) => {
     return useQuery({
         queryKey: ['categories', params],
-        queryFn: () => categoriesService.getCategories(params),
+        queryFn: () => categoriesService.getCategories({
+            ...params,
+            _t: Date.now() // Cache buster
+        }),
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 };

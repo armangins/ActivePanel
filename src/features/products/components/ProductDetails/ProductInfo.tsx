@@ -39,6 +39,7 @@ export const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
                         price_html={product.price_html}
                         currency={product.currency}
                         type={product.type}
+                        sale_end_date={product.date_on_sale_to}
                     />
                 </div>
                 <Tag color={product.stock_status === 'instock' ? 'success' : 'error'} className="product-stock-tag">

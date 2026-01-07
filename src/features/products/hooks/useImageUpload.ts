@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { ImageUploadResult } from '../types/upload';
 import { retryWithBackoff, validateImageFile } from '../services/productUploadService';
 import { api } from '@/services/api';
+import { convertImageToWebP } from '@/utils/imageConversion';
 
 /**
  * Hook for uploading product images
@@ -18,10 +19,19 @@ export const useImageUpload = () => {
             throw new Error(validation.error);
         }
 
+        // Convert to WebP
+        let fileToUpload: File;
+        try {
+            fileToUpload = await convertImageToWebP(file);
+        } catch (error) {
+            console.error('WebP conversion failed', error);
+            throw new Error('Failed to convert image to WebP');
+        }
+
         // Upload with retry
         return retryWithBackoff(async () => {
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('file', fileToUpload);
 
             const response = await api.post('/media', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }

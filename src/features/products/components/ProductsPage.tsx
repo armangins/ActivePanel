@@ -101,13 +101,13 @@ export const ProductsPage = () => {
 
     return (
         <Content style={{
-            padding: isMobile ? '4px 6px' : '16px 24px',
+            padding: isMobile ? '4px' : '8px',
             minHeight: '100vh',
             display: 'flex',
             flexDirection: 'column'
         }}>
 
-            <Flex wrap="wrap" gap={16} align="center" style={{ marginBottom: 24, width: '100%', justifyContent: isMobile ? 'normal' : 'flex-end' }}>
+            <Flex wrap="wrap" gap={16} align="center" style={{ marginBottom: 16, width: '100%', justifyContent: isMobile ? 'normal' : 'flex-end' }}>
                 {selectedProductIds.size > 0 && (
                     <Button danger onClick={handleBulkDelete}>
                         {t('deleteSelected')} ({selectedProductIds.size})
@@ -172,7 +172,7 @@ export const ProductsPage = () => {
                     style={{
                         display: 'flex',
                         justifyContent: 'center',
-                        padding: isMobile ? '0px' : '24px',
+                        padding: 0,
                         marginTop: 'auto',
                         width: '100%'
                     }}

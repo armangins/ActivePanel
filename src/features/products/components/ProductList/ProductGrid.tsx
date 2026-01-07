@@ -33,7 +33,7 @@ export const ProductGrid = ({
     }
 
     return (
-        <Row gutter={[16, 16]}>
+        <Row gutter={[8, 8]}>
             {products.map((product) => {
                 const imageUrl = product.images?.[0]?.src;
                 const stockStatus = product.stock_status || 'instock';
@@ -131,6 +131,7 @@ export const ProductGrid = ({
                                                 currency={product.currency}
                                                 type={product.type}
                                                 isMobile={isMobile}
+                                                sale_end_date={product.date_on_sale_to}
                                             />
                                         </Space>
                                         <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>

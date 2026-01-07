@@ -6,6 +6,7 @@ export const categoriesService = {
     getCategories: async (params: any = {}): Promise<Category[]> => {
         try {
             const response = await categoriesAPI.getAll(params);
+
             return response.data || [];
         } catch (error) {
             secureLog.error('Error fetching categories:', error);

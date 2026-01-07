@@ -11,7 +11,7 @@ vi.mock('@/features/auth', () => ({
 
 // Mock Language Context
 vi.mock('@/contexts/LanguageContext', () => ({
-    useLanguage: () => ({ t: (key: string) => key, isRTL: false, formatCurrency: (val: any) => `$${val}` }),
+    useLanguage: () => ({ t: (key: string) => key, isRTL: false, formatCurrency: (val: any) => `₪${val}` }),
     LanguageProvider: ({ children }: any) => children
 }));
 
@@ -21,7 +21,7 @@ const mockOrders = [
         id: 101,
         status: 'processing',
         total: '100.00',
-        currency: 'USD',
+        currency: 'ILS',
         date_created: '2023-01-01',
         line_items: [{ id: 1, name: 'Product A', quantity: 1, total: '50.00' }],
         billing: { first_name: 'John', last_name: 'Doe' }
