@@ -185,6 +185,7 @@ export const ProductForm = () => {
                     parentSku={parentSku}
                     parentManageStock={parentManageStock}
                     parentStockQuantity={parentStockQuantity}
+                    existingAttributes={form.watch('attributes')}
                 />
             )}
         </>

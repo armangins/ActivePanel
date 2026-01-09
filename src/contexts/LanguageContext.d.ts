@@ -1,7 +1,7 @@
 import React from 'react';
 
 export interface LanguageContextType {
-    t: (key: string) => string;
+    t: (key: string, params?: Record<string, any>) => string;
     language: string;
     setLanguage: (lang: string) => void;
     dir: 'ltr' | 'rtl';

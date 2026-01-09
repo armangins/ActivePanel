@@ -18,6 +18,7 @@ const Customers = lazy(() => import('@/features/customers'));
 const Coupons = lazy(() => import('@/features/coupons'));
 const Categories = lazy(() => import('@/features/categories'));
 const Settings = lazy(() => import('@/features/settings'));
+const AttributesPage = lazy(() => import('@/features/attributes'));
 
 const { Content } = Layout;
 
@@ -106,6 +107,7 @@ function AppContent() {
                       <Route path="/products" element={<Products />} />
                       <Route path="/products/add" element={<ProductForm />} />
                       <Route path="/products/edit/:id" element={<ProductForm />} />
+                      <Route path="/products/attributes" element={<AttributesPage />} />
                       <Route path="/orders" element={<Orders />} />
                       <Route path="/customers" element={<Customers />} />
                       <Route path="/coupons" element={<Coupons />} />

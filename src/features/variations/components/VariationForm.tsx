@@ -26,7 +26,7 @@ export const VariationForm = ({ productId, variation, attributes, onCancel, onSu
 
     return (
         <Form layout="vertical" onFinish={onSubmit} style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
-            <Divider orientation="left">{t('attributes') || 'Attributes'}</Divider>
+            <Divider orientation="left">{t('attributes')}</Divider>
             {attributes.map((attr, index) => (
                 <Form.Item
                     key={attr.id}
@@ -47,10 +47,10 @@ export const VariationForm = ({ productId, variation, attributes, onCancel, onSu
                 </Form.Item>
             ))}
 
-            <Divider orientation="left">{t('pricingAndStock') || 'Pricing & Stock'}</Divider>
+            <Divider orientation="left">{t('pricingAndStock')}</Divider>
 
             <Space style={{ display: 'flex' }} align="start">
-                <Form.Item label={t('sku') || 'SKU'}>
+                <Form.Item label={t('sku')}>
                     <Input
                         value={watch('sku')}
                         onChange={e => setValue('sku', e.target.value)}
@@ -58,7 +58,7 @@ export const VariationForm = ({ productId, variation, attributes, onCancel, onSu
                 </Form.Item>
 
                 <Form.Item
-                    label={t('regularPrice') || 'Regular Price'}
+                    label={t('regularPrice')}
                     required
                     validateStatus={errors.regular_price ? 'error' : ''}
                     help={errors.regular_price?.message}
@@ -70,7 +70,7 @@ export const VariationForm = ({ productId, variation, attributes, onCancel, onSu
                     />
                 </Form.Item>
 
-                <Form.Item label={t('salePrice') || 'Sale Price'}>
+                <Form.Item label={t('salePrice')}>
                     <Input
                         prefix="₪"
                         value={watch('sale_price')}
@@ -80,20 +80,20 @@ export const VariationForm = ({ productId, variation, attributes, onCancel, onSu
             </Space>
 
             <Space style={{ display: 'flex' }}>
-                <Form.Item label={t('stockStatus') || 'Stock Status'}>
+                <Form.Item label={t('stockStatus')}>
                     <Select
                         value={watch('stock_status')}
                         onChange={val => setValue('stock_status', val as any)}
                         options={[
-                            { label: t('instock') || 'In Stock', value: 'instock' },
-                            { label: t('outofstock') || 'Out of Stock', value: 'outofstock' },
-                            { label: t('onbackorder') || 'On Backorder', value: 'onbackorder' }
+                            { label: t('instock'), value: 'instock' },
+                            { label: t('outofstock'), value: 'outofstock' },
+                            { label: t('onbackorder'), value: 'onbackorder' }
                         ]}
                         style={{ width: 120 }}
                     />
                 </Form.Item>
 
-                <Form.Item label={t('quantity') || 'Quantity'}>
+                <Form.Item label={t('quantity')}>
                     <InputNumber
                         value={watch('stock_quantity')}
                         onChange={val => setValue('stock_quantity', val as number)}
@@ -105,10 +105,10 @@ export const VariationForm = ({ productId, variation, attributes, onCancel, onSu
             <div style={{ textAlign: 'right', marginTop: 16 }}>
                 <Space>
                     <Button onClick={onCancel} disabled={isLoading}>
-                        {t('cancel') || 'Cancel'}
+                        {t('cancel')}
                     </Button>
                     <Button type="primary" htmlType="submit" loading={isLoading}>
-                        {isEditMode ? (t('update') || 'Update') : (t('create') || 'Create')}
+                        {isEditMode ? t('update') : t('create')}
                     </Button>
                 </Space>
             </div>

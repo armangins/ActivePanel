@@ -466,10 +466,49 @@ export const attributesAPI = {
     return data;
   },
 
+  getById: async (id) => {
+    const response = await api.get(`/products/attributes/${id}`);
+    return response.data;
+  },
+
+  create: async (data) => {
+    const response = await api.post('/products/attributes', data);
+    return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await api.put(`/products/attributes/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/products/attributes/${id}`, {
+      force: true
+    });
+    return response.data;
+  },
+
   getTerms: async (attributeId, params = {}) => {
     const response = await fetchCollection(`/products/attributes/${attributeId}/terms`, {
       per_page: 100,
       ...params,
+    });
+    return response.data;
+  },
+
+  createTerm: async (attributeId, data) => {
+    const response = await api.post(`/products/attributes/${attributeId}/terms`, data);
+    return response.data;
+  },
+
+  updateTerm: async (attributeId, termId, data) => {
+    const response = await api.put(`/products/attributes/${attributeId}/terms/${termId}`, data);
+    return response.data;
+  },
+
+  deleteTerm: async (attributeId, termId) => {
+    const response = await api.delete(`/products/attributes/${attributeId}/terms/${termId}`, {
+      force: true
     });
     return response.data;
   },

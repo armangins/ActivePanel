@@ -1,13 +1,13 @@
-import { Form, Input, Select, Card, Row, Col } from 'antd';
+import { Form, Input, Select, Card, Row, Col, Alert } from 'antd';
 import { Controller, Control, FieldErrors, UseFormSetValue, useWatch, UseFormGetValues } from 'react-hook-form';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProductFormValues } from '../../types/schemas';
 import { ImageUpload } from './ImageUpload';
-import { ProductAttributes } from './ProductAttributes';
 import { ProductPricing } from './Pricing/ProductPricing';
 import { ProductVariations } from './Variations/ProductVariations';
 import { ProductTypeSelector } from './ProductTypeSelector';
 import { ProductInventory } from './ProductInventory';
+import { RichTextEditor } from '@/components/common/RichTextEditor';
 
 const { TextArea } = Input;
 
@@ -20,7 +20,7 @@ interface AddProductFormProps {
     isEditMode?: boolean;
     onEditVariation?: (index: number) => void;
 }
-export const AddProductForm = ({ control, errors, categories, setValue, getValues, isEditMode, onEditVariation }: AddProductFormProps) => {
+export const AddProductForm = ({ control, errors, categories, setValue, onEditVariation, isEditMode }: AddProductFormProps) => {
     const { t } = useLanguage();
 
     const productType = useWatch({ control, name: 'type' });
@@ -74,15 +74,27 @@ export const AddProductForm = ({ control, errors, categories, setValue, getValue
                         <Controller
                             name="short_description"
                             control={control}
-                            render={({ field }) => <TextArea {...field} rows={2} />}
+                            render={({ field }) => (
+                                <RichTextEditor
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder={t('enterShortDescription')}
+                                />
+                            )}
                         />
                     </Form.Item>
 
-                    <Form.Item label={t('description')}>
+                    <Form.Item label={t('description')} style={{ marginBottom: 40 }}>
                         <Controller
                             name="description"
                             control={control}
-                            render={({ field }) => <TextArea {...field} rows={4} />}
+                            render={({ field }) => (
+                                <RichTextEditor
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder={t('enterProductDescription')}
+                                />
+                            )}
                         />
                     </Form.Item>
 
@@ -117,7 +129,12 @@ export const AddProductForm = ({ control, errors, categories, setValue, getValue
 
                 {productType === 'variable' && !isEditMode && (
                     <Card variant="borderless" style={{ marginTop: 24 }}>
-                        <ProductAttributes control={control} setValue={setValue} getValues={getValues} />
+                        <Alert
+                            message={t('howToAddVariations') || "איך להוסיף וריאציות?"}
+                            description={t('howToAddVariationsDesc') || "כדי להוסיף וריאציות למוצר, יש ללחוץ על הכפתור 'הוסף וריאציה' בתחתית העמוד. המערכת תזהה אוטומטית את התכונות ותוסיף אותן למוצר."}
+                            type="info"
+                            showIcon
+                        />
                     </Card>
                 )}
             </Col>

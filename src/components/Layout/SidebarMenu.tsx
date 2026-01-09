@@ -57,6 +57,10 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
                 {
                     key: '/products/add',
                     label: 'הוסף מוצר חדש'
+                },
+                {
+                    key: '/products/attributes',
+                    label: t('attributes') || 'Attributes'
                 }
             ]
         },

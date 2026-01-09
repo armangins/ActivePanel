@@ -27,7 +27,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
     isMobile = false,
     sale_end_date
 }) => {
-    const { formatCurrency } = useLanguage();
+    const { formatCurrency, t } = useLanguage();
 
     // STRICT SANITIZATION HELPER
     const sanitize = (val: any): string | null => {
@@ -87,6 +87,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
 
         const calculateTimeLeft = () => {
             let endStr = sale_end_date;
+
             // If YYYY-MM-DD, append end of day time
             if (/^\d{4}-\d{2}-\d{2}$/.test(endStr)) {
                 endStr += 'T23:59:59';
@@ -100,8 +101,8 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
                 const minutes = Math.floor((difference / 1000 / 60) % 60);
                 const seconds = Math.floor((difference / 1000) % 60);
 
-                if (days > 0) return `${days}d ${hours}h ${minutes}m`;
-                return `${hours}h ${minutes}m ${seconds}s`;
+                if (days > 0) return `${days} ${t('days')} ${hours} ${t('hours')} ${minutes} ${t('minutes')}`;
+                return `${hours} ${t('hours')} ${minutes} ${t('minutes')} ${seconds} ${t('seconds')}`;
             }
             return null;
         };

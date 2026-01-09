@@ -1,6 +1,7 @@
 import React from 'react';
-import { Button, Space, theme } from 'antd';
+import { Button, Space } from 'antd';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useLayoutStyles } from './styles';
 
 interface ProductFormFooterProps {
     isEditMode: boolean;
@@ -18,29 +19,17 @@ export const ProductFormFooter: React.FC<ProductFormFooterProps> = ({
     onAddVariation
 }) => {
     const { t } = useLanguage();
-    const { token } = theme.useToken();
+    const { footerStyle } = useLayoutStyles();
 
     return (
-        <div style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            zIndex: 999,
-            padding: '16px 24px',
-            background: token.colorBgContainer, // Use token
-            borderTop: `1px solid ${token.colorBorderSecondary}`, // Use token
-            boxShadow: '0 -2px 10px rgba(0,0,0,0.05)',
-            display: 'flex',
-            justifyContent: 'flex-end',
-        }}>
+        <div style={footerStyle}>
             <Space>
                 {productType === 'variable' && (
                     <Button
                         size="large"
                         onClick={onAddVariation}
                     >
-                        {t('addSpecificVariation') || 'Add Variations'}
+                        {t('addSpecificVariation')}
                     </Button>
                 )}
                 <Button

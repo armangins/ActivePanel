@@ -103,7 +103,7 @@ export const ProductVariationCard: React.FC<ProductVariationCardProps> = ({
                                                         : field.value?.src
                                                 }
                                                 alt="Variation"
-                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#f5f5f5' }}
                                             />
                                             {/* Hover Overlay */}
                                             <div

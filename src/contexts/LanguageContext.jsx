@@ -12,8 +12,15 @@ export const useLanguage = () => {
 };
 
 export const LanguageProvider = ({ children }) => {
-  const t = useCallback((key) => {
-    return heTranslations[key];
+  const t = useCallback((key, params) => {
+    let text = heTranslations[key];
+    if (!text) return key;
+    if (params) {
+      Object.keys(params).forEach(k => {
+        text = text.replace(new RegExp(`{${k}}`, 'g'), params[k]);
+      });
+    }
+    return text;
   }, []);
 
   const formatCurrency = useCallback((amount) => {
