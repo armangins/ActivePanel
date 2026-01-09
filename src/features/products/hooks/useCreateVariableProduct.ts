@@ -40,7 +40,7 @@ export const useCreateVariableProduct = ({ updateProgress }: UseCreateVariablePr
 
             // Upload parent images
             const parentImages = await uploadImagesInParallel(
-                parentImageFiles,
+                parentImageFiles as unknown as File[],
                 uploadImage,
                 (uploaded) => {
                     uploadedCount = uploaded;
@@ -62,23 +62,53 @@ export const useCreateVariableProduct = ({ updateProgress }: UseCreateVariablePr
             const allParentImages = [...existingParentImages, ...parentImages];
 
             // Upload variation images
+            // Upload variation images
             const variationImages: { [index: number]: ImageUploadResult } = {};
-            for (let i = 0; i < (data.variations?.length || 0); i++) {
-                const variation = data.variations![i];
-                if (variation.image instanceof File) {
-                    variationImages[i] = await uploadImage(variation.image);
-                    uploadedCount++;
-                    const percentage = calculateProgress(uploadedCount, totalImages, false, 0, 0);
-                    updateProgress({
-                        imagesUploaded: uploadedCount,
-                        percentage,
-                        currentStep: `Uploading images (${uploadedCount}/${totalImages})`
+
+            // 1. Identify which variations have new files to upload
+            const variationsWithFiles = (data.variations || [])
+                .map((v, index) => ({ file: v.image, index }))
+                .filter((item): item is { file: File, index: number } => item.file instanceof File);
+
+            // 2. Upload them in parallel
+            if (variationsWithFiles.length > 0) {
+                const filesToUpload = variationsWithFiles.map(v => v.file);
+
+                await uploadImagesInParallel(
+                    filesToUpload,
+                    uploadImage,
+                    (uploadedBatchCount) => {
+                        // Update progress: existing parent images + uploaded parent images + already uploaded variation images + THIS batch
+                        uploadedCount += 1; // logical increment per file, handled by batch? 
+                        // Actually uploadImagesInParallel calls this with 'completed' count relative to ITS list
+                        // We need global counter. 
+                        // Let's rely on strict calculation:
+                        // totalUploaded = (currentParentUploaded) + uploadedBatchCount
+                        // But we are in a linear flow here.
+
+                        // Re-calculating global uploaded count is safer
+                        const totalUploadedSoFar = parentImages.length + uploadedBatchCount;
+                        const percentage = calculateProgress(totalUploadedSoFar, totalImages, false, 0, 0);
+                        updateProgress({
+                            imagesUploaded: totalUploadedSoFar,
+                            percentage,
+                            currentStep: `Uploading images (${totalUploadedSoFar}/${totalImages})`
+                        });
+                    }
+                ).then(results => {
+                    // 3. Map back to indices
+                    results.forEach((result, idx) => {
+                        variationImages[variationsWithFiles[idx].index] = result;
                     });
-                } else if (variation.image && typeof variation.image === 'object' && 'src' in variation.image) {
-                    // Already uploaded image
-                    variationImages[i] = variation.image as ImageUploadResult;
-                }
+                });
             }
+
+            // 4. Handle existing images
+            (data.variations || []).forEach((variation, index) => {
+                if (variation.image && typeof variation.image === 'object' && 'src' in variation.image && !(variation.image instanceof File)) {
+                    variationImages[index] = variation.image as ImageUploadResult;
+                }
+            });
 
             // Phase 2: Create parent product
             updateProgress({
@@ -86,8 +116,8 @@ export const useCreateVariableProduct = ({ updateProgress }: UseCreateVariablePr
                 currentStep: 'Creating parent product...'
             });
 
-            console.log('🔍 DEBUG: Starting Parent Product Creation');
-            console.log('🔍 DEBUG: Raw Form Attributes:', JSON.stringify(data.attributes, null, 2));
+            // console.log('🔍 DEBUG: Starting Parent Product Creation');
+            // console.log('🔍 DEBUG: Raw Form Attributes:', JSON.stringify(data.attributes, null, 2));
 
             const parentData = {
                 name: data.name,
@@ -173,8 +203,8 @@ export const useCreateVariableProduct = ({ updateProgress }: UseCreateVariablePr
 
             try {
                 const variationsResponse = await api.post(`/products/${parentId}/variations/batch`, variationsData);
-                console.log('✅ Variations created successfully!');
-                console.log('✅ Variations response:', JSON.stringify(variationsResponse.data, null, 2));
+                // console.log('✅ Variations created successfully!');
+                // console.log('✅ Variations response:', JSON.stringify(variationsResponse.data, null, 2));
 
                 // Validate batch response for errors
                 // WooCommerce Batch API returns 200 even if items fail

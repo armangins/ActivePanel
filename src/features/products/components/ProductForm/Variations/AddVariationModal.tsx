@@ -229,6 +229,10 @@ export const AddVariationModal: React.FC<AddVariationModalProps> = ({
                                 message.error(t('selectValuesForEachAttribute'));
                                 return;
                             }
+                            if (totalCombinations > 500) {
+                                message.error(t('tooManyVariations', { count: totalCombinations }) || `Too many variations (${totalCombinations}). Limit is 500.`);
+                                return;
+                            }
                             setStep(1);
                         }}
                     >

@@ -1,4 +1,5 @@
-import { Form, Input, Select, Card, Row, Col, Alert } from 'antd';
+import { Form, Input, Select, Card, Row, Col, Alert, Tooltip } from 'antd';
+import { InfoCircleOutlined } from '@ant-design/icons';
 import { Controller, Control, FieldErrors, UseFormSetValue, useWatch, UseFormGetValues } from 'react-hook-form';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProductFormValues } from '../../types/schemas';
@@ -70,7 +71,16 @@ export const AddProductForm = ({ control, errors, categories, setValue, onEditVa
                     {/* Pricing Row */}
                     <ProductPricing control={control} errors={errors} setValue={setValue} productType={productType} />
 
-                    <Form.Item label={t('shortDescription')}>
+                    <Form.Item
+                        label={
+                            <span>
+                                {t('shortDescription')}
+                                <Tooltip title={t('shortDescriptionTooltip') === 'shortDescriptionTooltip' ? "תיאור מוצר קצר, כאן כותבים את הטקסט הכללי הקצר על המוצר" : t('shortDescriptionTooltip')}>
+                                    <InfoCircleOutlined style={{ marginRight: 8, color: '#1890ff', cursor: 'help' }} />
+                                </Tooltip>
+                            </span>
+                        }
+                    >
                         <Controller
                             name="short_description"
                             control={control}
@@ -84,7 +94,17 @@ export const AddProductForm = ({ control, errors, categories, setValue, onEditVa
                         />
                     </Form.Item>
 
-                    <Form.Item label={t('description')} style={{ marginBottom: 40 }}>
+                    <Form.Item
+                        label={
+                            <span>
+                                {t('description')}
+                                <Tooltip title={t('descriptionTooltip') === 'descriptionTooltip' ? "כאן כותבים את התיאור מוצר המורחב, לדוגמה מפרט טכני" : t('descriptionTooltip')}>
+                                    <InfoCircleOutlined style={{ marginRight: 8, color: '#1890ff', cursor: 'help' }} />
+                                </Tooltip>
+                            </span>
+                        }
+                        style={{ marginBottom: 40 }}
+                    >
                         <Controller
                             name="description"
                             control={control}
@@ -130,8 +150,8 @@ export const AddProductForm = ({ control, errors, categories, setValue, onEditVa
                 {productType === 'variable' && !isEditMode && (
                     <Card variant="borderless" style={{ marginTop: 24 }}>
                         <Alert
-                            message={t('howToAddVariations') || "איך להוסיף וריאציות?"}
-                            description={t('howToAddVariationsDesc') || "כדי להוסיף וריאציות למוצר, יש ללחוץ על הכפתור 'הוסף וריאציה' בתחתית העמוד. המערכת תזהה אוטומטית את התכונות ותוסיף אותן למוצר."}
+                            message="איך מוסיפים וריאציות?"
+                            description="לוחצים על כפתור צור וריאציות בתחתית העמוד ומתחילים, בוחרים את התכונות הרצויות, מגדירים מחיר מלאי ותמונות וזה הכל סיימתם! "
                             type="info"
                             showIcon
                         />

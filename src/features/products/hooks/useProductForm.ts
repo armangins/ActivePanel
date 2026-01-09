@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { productSchema, ProductFormValues } from '../types/schemas';
@@ -76,9 +76,15 @@ export const useProductForm = (productId?: number | null) => {
     const createMutation = useCreateProduct();
     const updateMutation = useUpdateProduct();
 
+    // Stable callback for progress updates
+    const handleProgress = useCallback((progress: any) => {
+        // Optional: Dispatch to a global store or just log securely if needed
+        // secureLog.info('Update Progress:', progress);
+    }, []);
+
     // New hook for robust variable product updates
     const { updateVariableProduct } = useUpdateVariableProduct({
-        updateProgress: (progress) => console.log('Update Progress:', progress)
+        updateProgress: handleProgress
     });
 
     const [isVariableUpdating, setIsVariableUpdating] = useState(false);
@@ -128,8 +134,9 @@ export const useProductForm = (productId?: number | null) => {
             secureLog.error('Product form submission error:', error);
             message.error(error.message || t('errorSavingProduct'));
             if (Object.keys(form.formState.errors).length > 0) {
-                console.log('🔴 Validation errors:', form.formState.errors);
-                console.log('🔵 Form values at time of error:', form.getValues());
+                if (Object.keys(form.formState.errors).length > 0) {
+                    secureLog.error('Validation errors:', form.formState.errors);
+                }
             }
             return false;
         }

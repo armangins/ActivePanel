@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Input, Button, InputNumber, Checkbox, Row, Col, Typography } from 'antd';
+import { Form, Input, Button, InputNumber, Row, Col, Typography } from 'antd';
 import { Controller, Control, FieldErrors } from 'react-hook-form';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProductFormValues } from '@/features/products/types/schemas';
@@ -55,55 +55,33 @@ export const ProductInventory: React.FC<ProductInventoryProps> = ({ control, err
             <Col xs={24} md={12}>
                 {/* Container for Stock Quantity and Checkbox */}
                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'flex-start' }}>
-                    <Controller
-                        name="manage_stock"
-                        control={control}
-                        render={({ field: { value: manageStock } }) => (
-                            manageStock ? (
-                                <Form.Item
-                                    label={t('stockQuantity') || "כמות במלאי"}
-                                    required
-                                    style={{ marginBottom: 12 }}
-                                >
-                                    <Controller
-                                        name="stock_quantity"
-                                        control={control}
-                                        render={({ field, fieldState: { error } }) => (
-                                            <>
-                                                <InputNumber
-                                                    {...field}
-                                                    placeholder="0"
-                                                    style={{ width: '100%' }}
-                                                    min={0}
-                                                    status={error ? 'error' : ''}
-                                                />
-                                                {error && (
-                                                    <Typography.Text type="danger" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
-                                                        {error.message}
-                                                    </Typography.Text>
-                                                )}
-                                            </>
-                                        )}
+                    {/* Stock Quantity Input (Always Visible) */}
+                    <Form.Item
+                        label={t('stockQuantity') || "כמות במלאי"}
+                        required
+                        style={{ marginBottom: 12 }}
+                    >
+                        <Controller
+                            name="stock_quantity"
+                            control={control}
+                            render={({ field, fieldState: { error } }) => (
+                                <>
+                                    <InputNumber
+                                        {...field}
+                                        placeholder="0"
+                                        style={{ width: '100%' }}
+                                        min={0}
+                                        status={error ? 'error' : ''}
                                     />
-                                </Form.Item>
-                            ) : <></>
-                        )}
-                    />
-
-                    <Controller
-                        name="manage_stock"
-                        control={control}
-                        render={({ field }) => (
-                            <div style={{ display: 'flex', alignItems: 'center', height: '100%', minHeight: 32 }}>
-                                <Checkbox
-                                    checked={field.value}
-                                    onChange={field.onChange}
-                                >
-                                    {t('manageStock')}
-                                </Checkbox>
-                            </div>
-                        )}
-                    />
+                                    {error && (
+                                        <Typography.Text type="danger" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+                                            {error.message}
+                                        </Typography.Text>
+                                    )}
+                                </>
+                            )}
+                        />
+                    </Form.Item>
                 </div>
             </Col>
         </Row>

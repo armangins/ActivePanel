@@ -50,7 +50,7 @@ export const useUpdateVariableProduct = ({ updateProgress }: UseUpdateVariablePr
 
             // Upload parent images
             const parentImages = await uploadImagesInParallel(
-                parentImageFiles,
+                parentImageFiles as unknown as File[],
                 uploadImage,
                 (uploaded) => {
                     uploadedCount = uploaded;
@@ -73,23 +73,46 @@ export const useUpdateVariableProduct = ({ updateProgress }: UseUpdateVariablePr
             const allParentImages = [...existingParentImages, ...parentImages];
 
             // Upload variation images
+            // Upload variation images
             const variationImages: { [index: number]: ImageUploadResult } = {};
-            for (let i = 0; i < (data.variations?.length || 0); i++) {
-                const variation = data.variations![i];
-                if (variation.image instanceof File) {
-                    variationImages[i] = await uploadImage(variation.image);
-                    uploadedCount++;
-                    const percentage = calculateProgress(uploadedCount, totalImages, false, 0, 0);
-                    updateProgress({
-                        imagesUploaded: uploadedCount,
-                        percentage,
-                        currentStep: `Uploading images (${uploadedCount}/${totalImages})`
+
+            // 1. Identify which variations have new files to upload
+            const variationsWithFiles = (data.variations || [])
+                .map((v, index) => ({ file: v.image, index }))
+                .filter((item): item is { file: File, index: number } => item.file instanceof File);
+
+            // 2. Upload them in parallel
+            if (variationsWithFiles.length > 0) {
+                const filesToUpload = variationsWithFiles.map(v => v.file);
+
+                await uploadImagesInParallel(
+                    filesToUpload,
+                    uploadImage,
+                    (uploadedBatchCount) => {
+                        // Re-calculating global uploaded count
+                        const totalUploadedSoFar = parentImages.length + uploadedBatchCount;
+                        const percentage = calculateProgress(totalUploadedSoFar, totalImages, false, 0, 0);
+                        updateProgress({
+                            imagesUploaded: totalUploadedSoFar,
+                            percentage,
+                            currentStep: `Uploading images (${totalUploadedSoFar}/${totalImages})`
+                        });
+                    }
+                ).then(results => {
+                    // 3. Map back to indices
+                    results.forEach((result, idx) => {
+                        variationImages[variationsWithFiles[idx].index] = result;
                     });
-                } else if (variation.image && typeof variation.image === 'object') {
-                    // Already uploaded image
-                    variationImages[i] = variation.image as ImageUploadResult;
-                }
+                });
             }
+
+            // 4. Handle existing images
+            (data.variations || []).forEach((variation, index) => {
+                if (variation.image && typeof variation.image === 'object' && !(variation.image instanceof File)) {
+                    // It can be an object with src/id (existing)
+                    variationImages[index] = variation.image as ImageUploadResult;
+                }
+            });
 
             // Phase 2: Update parent product
             updateProgress({
@@ -124,7 +147,7 @@ export const useUpdateVariableProduct = ({ updateProgress }: UseUpdateVariablePr
                 return true;
             });
 
-            console.log('🧹 DEBUG: cleanedAttributes:', JSON.stringify(cleanedAttributes, null, 2));
+            // console.log('🧹 DEBUG: cleanedAttributes:', JSON.stringify(cleanedAttributes, null, 2));
 
             const parentData = {
                 name: data.name,
@@ -223,7 +246,7 @@ export const useUpdateVariableProduct = ({ updateProgress }: UseUpdateVariablePr
                 delete: deletes
             };
 
-            console.log('📤 DEBUG: Batch Sync Payload:', JSON.stringify(batchData, null, 2));
+            // console.log('📤 DEBUG: Batch Sync Payload:', JSON.stringify(batchData, null, 2));
 
             if (creates.length > 0 || updates.length > 0 || deletes.length > 0) {
                 const response = await api.post(`/products/${productId}/variations/batch`, batchData);
