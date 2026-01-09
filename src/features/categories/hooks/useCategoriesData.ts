@@ -34,7 +34,18 @@ export const useCreateCategory = () => {
             queryClient.invalidateQueries({ queryKey: ['categories'] });
         },
         onError: (error: any) => {
-            message.error(error.message || t('errorCreatingCategory') || 'Failed to create category');
+            console.error('Create Category Error:', error);
+            let errorMessage = t('errorCreatingCategory') || 'Failed to create category';
+
+            if (error?.response?.data) {
+                const data = error.response.data;
+                if (data.message) errorMessage += `: ${data.message}`;
+                if (data.code === 'term_exists') errorMessage += ` (${t('categoryExists') || 'Already exists'})`;
+            } else if (error instanceof Error) {
+                errorMessage += `: ${error.message}`;
+            }
+
+            message.error(errorMessage);
         }
     });
 };

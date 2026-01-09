@@ -135,3 +135,14 @@ export const useDeleteVariation = () => {
         }
     });
 };
+
+export const useBatchVariations = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ productId, data }: { productId: number; data: any }) =>
+            productsService.batchVariations(productId, data),
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['products', variables.productId, 'variations'] });
+        }
+    });
+};

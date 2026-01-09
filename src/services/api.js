@@ -77,6 +77,7 @@ const createApiClient = () => {
           // Log warning if CSRF token is missing for state-changing operations
           if (import.meta.env.DEV) {
             console.warn('CSRF token missing for state-changing operation:', config.method, config.url);
+            console.log('Current Cookies:', document.cookie);
           }
         }
       }

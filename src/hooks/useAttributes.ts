@@ -10,7 +10,9 @@ export const useAttributes = () => {
         queryKey: ['attributes'],
         queryFn: () => attributesAPI.getAll(),
         enabled: hasSettings,
-        staleTime: 60 * 1000 * 5, // 5 minutes
+        staleTime: 60 * 1000,
+        refetchInterval: 60 * 1000,
+        refetchOnWindowFocus: true,
     });
 };
 
@@ -65,6 +67,54 @@ export const useDeleteAttribute = () => {
         },
         onError: (error) => {
             message.error('Failed to delete attribute');
+            console.error(error);
+        }
+    });
+};
+
+export const useCreateAttributeTerm = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (vars: { attributeId: number; data: any }) =>
+            attributesAPI.createTerm(vars.attributeId, vars.data),
+        onSuccess: (_, vars) => {
+            message.success('Term created successfully');
+            queryClient.invalidateQueries({ queryKey: ['attribute-terms', vars.attributeId] });
+        },
+        onError: (error) => {
+            message.error('Failed to create term');
+            console.error(error);
+        }
+    });
+};
+
+export const useUpdateAttributeTerm = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (vars: { attributeId: number; termId: number; data: any }) =>
+            attributesAPI.updateTerm(vars.attributeId, vars.termId, vars.data),
+        onSuccess: (_, vars) => {
+            message.success('Term updated successfully');
+            queryClient.invalidateQueries({ queryKey: ['attribute-terms', vars.attributeId] });
+        },
+        onError: (error) => {
+            message.error('Failed to update term');
+            console.error(error);
+        }
+    });
+};
+
+export const useDeleteAttributeTerm = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (vars: { attributeId: number; termId: number }) =>
+            attributesAPI.deleteTerm(vars.attributeId, vars.termId),
+        onSuccess: (_, vars) => {
+            message.success('Term deleted successfully');
+            queryClient.invalidateQueries({ queryKey: ['attribute-terms', vars.attributeId] });
+        },
+        onError: (error) => {
+            message.error('Failed to delete term');
             console.error(error);
         }
     });

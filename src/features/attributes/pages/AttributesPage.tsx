@@ -4,6 +4,8 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAttributes, useDeleteAttribute } from '@/hooks/useAttributes';
 import { AttributeModal } from '../components/AttributeModal';
+import AttributeTermsModal from '../components/AttributeTermsModal';
+import { UnorderedListOutlined } from '@ant-design/icons';
 
 const AttributesPage: React.FC = () => {
     const { t, isRTL } = useLanguage();
@@ -11,6 +13,7 @@ const AttributesPage: React.FC = () => {
     const deleteMutation = useDeleteAttribute();
 
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isTermsModalVisible, setIsTermsModalVisible] = useState(false);
     const [editingAttribute, setEditingAttribute] = useState<any>(null);
     const [searchText, setSearchText] = useState('');
 
@@ -24,12 +27,22 @@ const AttributesPage: React.FC = () => {
         setIsModalVisible(true);
     };
 
+    const handleTerms = (record: any) => {
+        setEditingAttribute(record);
+        setIsTermsModalVisible(true);
+    };
+
     const handleDelete = (id: number) => {
         deleteMutation.mutate(id);
     };
 
     const handleModalCancel = () => {
         setIsModalVisible(false);
+        setEditingAttribute(null);
+    };
+
+    const handleTermsModalCancel = () => {
+        setIsTermsModalVisible(false);
         setEditingAttribute(null);
     };
 
@@ -80,6 +93,13 @@ const AttributesPage: React.FC = () => {
             width: 120,
             render: (_: any, record: any) => (
                 <Space>
+                    <Tooltip title={t('configureTerms') || 'Configure Terms'}>
+                        <Button
+                            type="text"
+                            icon={<UnorderedListOutlined />}
+                            onClick={() => handleTerms(record)}
+                        />
+                    </Tooltip>
                     <Tooltip title={t('edit')}>
                         <Button
                             type="text"
@@ -146,6 +166,12 @@ const AttributesPage: React.FC = () => {
             <AttributeModal
                 visible={isModalVisible}
                 onCancel={handleModalCancel}
+                attribute={editingAttribute}
+            />
+
+            <AttributeTermsModal
+                isOpen={isTermsModalVisible}
+                onClose={handleTermsModalCancel}
                 attribute={editingAttribute}
             />
         </div>

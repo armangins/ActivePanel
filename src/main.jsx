@@ -8,6 +8,7 @@ import { LanguageProvider } from './contexts/LanguageContext'
 import { AntdProvider } from './providers/AntdProvider'
 
 
+
 // Global suppression of browser extension console errors
 // Override console.error to filter out extension-related errors
 const originalConsoleError = console.error;

@@ -150,7 +150,39 @@
     }
 
     .variation-card-image {
-        height: 150px; /* Taller on mobile for better visibility */
-        padding: 0; /* No padding as requested */
+        height: 150px;
+        /* Taller on mobile for better visibility */
+        padding: 0;
+        /* No padding as requested */
     }
+}
+
+/* Layout Classes */
+.modal-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+}
+
+.modal-scrollable-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    background-color: #f0f2f5;
+}
+
+.sticky-sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    height: fit-content; /* Ensure the div itself doesn't stretch weirdly */
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    background-color: #fff;
+    border-top: 1px solid #e8e8e8;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
 }

@@ -9,6 +9,8 @@ import { ProductGrid } from './ProductList/ProductGrid';
 import { ProductTable } from './ProductList/ProductTable';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '@/features/settings';
+import { ProductFilters, ProductFilterValues } from './ProductList/ProductFilters';
+import { useCategoriesList } from '@/features/categories/hooks/useCategoriesData';
 
 
 const { Content } = Layout;
@@ -27,6 +29,17 @@ export const ProductsPage = () => {
     const [selectedProductIds, setSelectedProductIds] = useState<Set<number>>(new Set());
     const [viewProduct, setViewProduct] = useState<any>(null);
 
+    const [filters, setFilters] = useState<ProductFilterValues>({
+        search: '',
+        category: undefined,
+        type: undefined,
+        stock_status: undefined,
+        min_price: undefined,
+        max_price: undefined
+    });
+
+    const { data: categories } = useCategoriesList();
+
     const {
         data,
         isLoading,
@@ -34,8 +47,13 @@ export const ProductsPage = () => {
         hasNextPage,
         isFetchingNextPage
     } = useInfiniteProducts({
-        per_page: 24, // Increased per page for better infinite scroll experience
-        search: ''
+        per_page: 24,
+        search: filters.search,
+        category: filters.category,
+        type: filters.type,
+        stock_status: filters.stock_status,
+        min_price: filters.min_price,
+        max_price: filters.max_price
     });
 
     const products = data?.pages.flatMap(page => page.data) || [];
@@ -143,6 +161,14 @@ export const ProductsPage = () => {
                 </Button>
             </Flex>
 
+            {/* Filters */}
+            <ProductFilters
+                filters={filters}
+                onFilterChange={setFilters}
+                categories={categories || []}
+                isLoading={isLoading}
+            />
+
             <Flex vertical flex={1}>
                 {viewMode === 'grid' ? (
                     <ProductGrid
@@ -162,6 +188,7 @@ export const ProductsPage = () => {
                             onDelete={handleDelete}
                             selectedProductIds={selectedProductIds}
                             onSelectionChange={setSelectedProductIds}
+                            filters={filters}
                         />
                     </Card>
                 )}

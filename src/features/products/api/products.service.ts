@@ -174,5 +174,14 @@ export const productsService = {
             secureLog.error(`Error deleting variation ${variationId} for product ${productId}:`, error);
             throw error;
         }
+    },
+
+    async batchVariations(productId: number, data: any): Promise<any> {
+        try {
+            return await variationsAPI.batch(productId, data);
+        } catch (error) {
+            secureLog.error(`Error batch updating variations for product ${productId}:`, error);
+            throw error;
+        }
     }
 };

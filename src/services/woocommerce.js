@@ -472,12 +472,17 @@ export const attributesAPI = {
   },
 
   create: async (data) => {
-    const response = await api.post('/products/attributes', data);
+    const response = await api.post('/products/attributes', {
+      name: sanitizeInput(data.name),
+      slug: sanitizeInput(data.slug),
+      type: data.type || 'select',
+      order_by: data.order_by || 'menu_order',
+      has_archives: data.has_archives || true,
+    });
     return response.data;
   },
 
   update: async (id, data) => {
-    const response = await api.put(`/products/attributes/${id}`, data);
     return response.data;
   },
 

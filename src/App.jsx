@@ -5,6 +5,7 @@ import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AuthProvider, useAuth, LoginPage, SignUpPage, OAuthCallback, ProtectedRoute } from '@/features/auth';
 import { SettingsProvider } from '@/features/settings';
 import { MessageProvider } from './contexts/MessageContext';
+import { SocketProvider } from './contexts/SocketContext';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
@@ -17,6 +18,7 @@ const Orders = lazy(() => import('@/features/orders'));
 const Customers = lazy(() => import('@/features/customers'));
 const Coupons = lazy(() => import('@/features/coupons'));
 const Categories = lazy(() => import('@/features/categories'));
+const Attributes = lazy(() => import('@/features/attributes/pages/AttributesPage'));
 const Settings = lazy(() => import('@/features/settings'));
 const AttributesPage = lazy(() => import('@/features/attributes'));
 
@@ -132,9 +134,11 @@ function App() {
         <SettingsProvider>
           <LanguageProvider>
             <MessageProvider>
-              <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                <AppContent />
-              </Router>
+              <SocketProvider>
+                <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                  <AppContent />
+                </Router>
+              </SocketProvider>
             </MessageProvider>
           </LanguageProvider>
         </SettingsProvider>
