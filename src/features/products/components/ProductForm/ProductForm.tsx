@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Form, Spin } from 'antd';
-import { useProductForm } from '../../hooks/useProductForm';
+import { useProductForm } from '@/features/products/hooks/useProductForm';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMessage } from '@/contexts/MessageContext';
 import { useCategories } from '@/hooks/useCategories';
 import { useAttributes } from '@/hooks/useAttributes';
 import { AddProductForm } from './AddProductForm';
-import { useCreateProduct } from '../../hooks/useCreateProduct';
+import { useCreateProduct } from '@/features/products/hooks/useCreateProduct';
 import { AddVariationModal } from './Variations/AddVariationModal';
 
 // Components
@@ -15,7 +15,7 @@ import { ProductFormFooter } from './Layout/ProductFormFooter';
 import { LoadingOverlay } from './Layout/LoadingOverlay';
 
 // Hooks
-import { useManualVariation } from '../../hooks/useManualVariation';
+import { useManualVariation } from '@/features/products/hooks/useManualVariation';
 
 export const ProductForm = () => {
     const { id } = useParams();

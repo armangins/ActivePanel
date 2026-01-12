@@ -72,7 +72,8 @@ export const OptimizedImage = ({
                     justifyContent: 'center',
                     backgroundColor: token.colorBgContainer,
                     minHeight: height || 100,
-                    minWidth: width || 100
+                    minWidth: width || 100,
+                    borderRadius: token.borderRadius
                 }}
             >
                 <PictureOutlined style={{ fontSize: 32, color: token.colorTextDisabled }} />

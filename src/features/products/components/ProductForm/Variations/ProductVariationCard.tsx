@@ -3,7 +3,7 @@ import { Card, Input, InputNumber, Button, Space, Row, Col, Form, Switch, Typogr
 import { Controller, Control } from 'react-hook-form';
 import { DeleteOutlined, UploadOutlined, EditOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { ProductFormValues } from '../../../types/schemas';
+import { ProductFormValues } from '@/features/products/types/schemas';
 
 const { Text } = Typography;
 

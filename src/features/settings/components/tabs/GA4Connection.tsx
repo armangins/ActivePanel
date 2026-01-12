@@ -8,8 +8,8 @@ import {
     CloseCircleOutlined,
     ReloadOutlined
 } from '@ant-design/icons';
-import { settingsSchema, SettingsFormData } from '../../types';
-import { useSettings } from '../../providers/SettingsProvider';
+import { settingsSchema, SettingsFormData } from '@/features/settings/types';
+import { useSettings } from '@/features/settings/providers/SettingsProvider';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const { Text, Title, Paragraph } = Typography;

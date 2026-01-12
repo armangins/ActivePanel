@@ -21,6 +21,7 @@
     "date-fns": "^2.30.0",
     "dayjs": "^1.11.13",
     "dompurify": "^3.3.0",
+    "firebase": "^12.7.0",
     "lodash": "^4.17.21",
     "lucide-react": "^0.294.0",
     "motion": "^12.23.25",
@@ -46,6 +47,7 @@
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
     "babel-plugin-lodash": "^3.3.4",
+    "firebase-tools": "^15.2.1",
     "glob": "^13.0.0",
     "jsdom": "^27.2.0",
     "typescript": "^5.9.3",
@@ -61,6 +63,7 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "deploy:check": "npm run build && echo 'Build successful! Ready for deployment.'"
+    "deploy:check": "npm run build && echo 'Build successful! Ready for deployment.'",
+    "deploy": "npm run build && firebase deploy"
   }
 }

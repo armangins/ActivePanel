@@ -1,7 +1,7 @@
 import React from 'react';
 import { Typography, Row, Col, Button } from 'antd';
 import { Control, useFieldArray, useWatch } from 'react-hook-form';
-import { ProductFormValues } from '../../../types/schemas';
+import { ProductFormValues } from '@/features/products/types/schemas';
 import { ProductVariationCard } from './ProductVariationCard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { DeleteOutlined } from '@ant-design/icons';

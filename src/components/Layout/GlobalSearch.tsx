@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { AutoComplete, Input, Typography, Flex, Spin, Empty, Button, Tooltip } from 'antd';
+import { AutoComplete, Input, Typography, Flex, Spin, Empty, Button, Tooltip, theme } from 'antd';
 import { SearchOutlined, InfoCircleOutlined, EditOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useProductSearch } from '@/features/products';
@@ -10,6 +10,7 @@ import { ProductDetailModal } from '@/features/products/components/ProductDetail
 import type { DefaultOptionType } from 'antd/es/select';
 
 const { Text } = Typography;
+const { useToken } = theme;
 
 interface Product {
     id: number;
@@ -32,7 +33,13 @@ interface GlobalSearchProps {
     autoFocus?: boolean;
 }
 
+/**
+ * GlobalSearch Component
+ * 
+ * Provides a global search inputs with autocomplete functionality for products.
+ */
 const GlobalSearch: React.FC<GlobalSearchProps> = ({ placeholder, isRTL, className, style, autoFocus }) => {
+    const { token } = useToken();
     const [searchValue, setSearchValue] = useState('');
     const [debouncedSearchValue] = useDebounce(searchValue, 500);
     const [options, setOptions] = useState<CustomOptionType[]>([]);
@@ -79,7 +86,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ placeholder, isRTL, classNa
                     <Flex align="center" gap={12} style={{ padding: '4px 0' }}>
                         <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 4, overflow: 'hidden' }}>
                             <OptimizedImage
-                                src={product.images?.[0]?.src}
+                                src={product.images?.[0]?.src || ''}
                                 alt={product.name}
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
@@ -158,11 +165,11 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ placeholder, isRTL, classNa
                     <Input
                         size="large"
                         placeholder={placeholder || (t('search') || 'חיפוש...')}
-                        prefix={<SearchOutlined style={{ color: '#bfbfbf', fontSize: 18 }} />}
+                        prefix={<SearchOutlined style={{ color: token.colorTextDisabled, fontSize: 18 }} />}
                         autoFocus={autoFocus}
                         allowClear
                         style={{
-                            borderRadius: '8px',
+                            borderRadius: token.borderRadiusLG,
                             direction: isRTL ? 'rtl' : 'ltr'
                         }}
                     />

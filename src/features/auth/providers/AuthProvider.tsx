@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useLayoutEffect, useMemo, useCallback, ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { authService } from '../api/auth.service';
 import { setAuthToken, setOnRefreshSuccess } from '@/services/api';
 import { User, AuthContextType } from '../types';
@@ -9,6 +10,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
 
     // Inject token into interceptors synchronously
     useLayoutEffect(() => {
@@ -82,9 +84,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } finally {
             setAccessToken(null);
             setUser(null);
+
+            // Critical: Clear all cached data to prevent leakage between users
+            queryClient.clear();
+
             setLoading(false);
         }
-    }, []);
+    }, [queryClient]);
 
     const refreshAccessToken = useCallback(async () => {
         try {
@@ -96,9 +102,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (error) {
             setAccessToken(null);
             setUser(null);
+            queryClient.clear(); // Clear cache if refresh fails (forced logout)
             throw error;
         }
-    }, []);
+    }, [queryClient]);
 
     const getToken = useCallback(() => accessToken, [accessToken]);
 

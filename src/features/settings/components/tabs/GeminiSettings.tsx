@@ -8,8 +8,8 @@ import {
     CloseCircleOutlined,
     ReloadOutlined
 } from '@ant-design/icons';
-import { settingsSchema, SettingsFormData } from '../../types';
-import { useSettings } from '../../providers/SettingsProvider';
+import { settingsSchema, SettingsFormData } from '@/features/settings/types';
+import { useSettings } from '@/features/settings/providers/SettingsProvider';
 import { useLanguage } from '@/contexts/LanguageContext';
 // import { testGeminiConnection } from '@/services/gemini'; // Need to migrate this or import legacy?
 // For now, I will use a dummy test function or import if manageable.

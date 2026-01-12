@@ -8,16 +8,18 @@ import { setGeminiApiKey } from '@/services/gemini';
 const SettingsContext = createContext<SettingsState | null>(null);
 
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, loading: authLoading } = useAuth();
     const [settings, setSettings] = useState<Settings | null>(null);
-    const [loading, setLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(false);
     const [error, setError] = useState<Error | null>(null);
+
+    const loading = authLoading || isFetching;
 
     const fetchSettings = async () => {
         if (!isAuthenticated) return;
 
         try {
-            setLoading(true);
+            setIsFetching(true);
             const data = await settingsService.get();
             setSettings(data || null);
             if (data?.geminiApiKey) {
@@ -35,7 +37,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
                 setSettings(null);
             }
         } finally {
-            setLoading(false);
+            setIsFetching(false);
         }
     };
 
@@ -49,7 +51,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
 
     const updateSettings = async (newSettings: Partial<Settings>) => {
         try {
-            setLoading(true);
+            setIsFetching(true);
             const updated = await settingsService.update(newSettings);
             setSettings(updated);
             if (updated?.geminiApiKey) {
@@ -60,7 +62,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
             setError(err);
             throw err;
         } finally {
-            setLoading(false);
+            setIsFetching(false);
         }
     };
 

@@ -5,6 +5,7 @@ export const settingsService = {
     get: async (): Promise<Settings> => {
         const response = await api.get('/settings');
         // Backend returns { settings: { ... } } or { settings: null } for new users
+        if (response.data.settings === null) return null;
         return response.data.settings || response.data || null;
     },
 

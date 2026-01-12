@@ -5,6 +5,12 @@ interface SparklesIconProps {
     className?: string;
 }
 
+/**
+ * SparklesIcon Component
+ * 
+ * Custom SVG icon for "Sparkles" / "Magic" effects.
+ * Typically used for "Smart" or AI-powered features.
+ */
 export const SparklesIcon: React.FC<SparklesIconProps> = ({ style, className }) => {
     return (
         <svg

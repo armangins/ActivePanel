@@ -13,6 +13,13 @@ interface HeaderSearchProps {
     setMobileSearchOpen: (isOpen: boolean) => void;
 }
 
+/**
+ * HeaderSearch Component
+ * 
+ * Responsive wrapper for GlobalSearch.
+ * - On Mobile: Shows a button that expands into a full-width search bar.
+ * - On Desktop: Shows the full search bar directly.
+ */
 const HeaderSearch: React.FC<HeaderSearchProps> = ({
     mobileSearchOpen,
     setMobileSearchOpen,

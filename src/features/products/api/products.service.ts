@@ -6,8 +6,10 @@ import { Product, ProductsResponse, CreateProductData, UpdateProductData } from 
 export const productsService = {
     async getProducts(params: any): Promise<ProductsResponse> {
         try {
-            return await productsAPI.list(params);
+            const result = await productsAPI.list(params);
+            return result;
         } catch (error) {
+            console.error('[ProductsService] Error fetching products:', error);
             secureLog.error('Error fetching products:', error);
             throw error;
         }

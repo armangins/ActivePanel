@@ -1,8 +1,8 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, InputNumber, Button, Typography, Space } from 'antd';
-import { settingsSchema, SettingsFormData } from '../../types';
-import { useSettings } from '../../providers/SettingsProvider';
+import { settingsSchema, SettingsFormData } from '@/features/settings/types';
+import { useSettings } from '@/features/settings/providers/SettingsProvider';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const { Text } = Typography;

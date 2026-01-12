@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Layout, Typography, Spin, Alert, Row, Col, Button, Result } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { StatsOverview } from './StatsOverview';
@@ -13,8 +15,22 @@ const { Title } = Typography;
 
 export const DashboardPage = () => {
     const { t } = useLanguage();
+    const navigate = useNavigate();
     const { data, isLoading, error, refetch } = useDashboardData();
-    const { settings } = useSettings();
+    const { settings, loading: settingsLoading } = useSettings();
+
+    useEffect(() => {
+        console.log('DashboardPage: Settings state:', { settings, settingsLoading });
+    }, [settings, settingsLoading]);
+
+    // Show loading state while checking configuration
+    if (settingsLoading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <Spin size="large" tip={t('loading') || 'טוען הגדרות...'} />
+            </div>
+        );
+    }
 
     // Check configuration
     const isConfigured = !!(settings?.hasConsumerKey && settings?.hasConsumerSecret);
@@ -26,7 +42,7 @@ export const DashboardPage = () => {
                 title={t('configureWooCommerceSettings') || 'Please configure WooCommerce Settings'}
                 subTitle={t('welcomeToDashboard') || 'Welcome! Connect your store to see data.'}
                 extra={
-                    <Button type="primary" href="/settings">
+                    <Button type="primary" onClick={() => navigate('/settings')}>
                         {t('settings') || 'Go to Settings'}
                     </Button>
                 }

@@ -9,8 +9,7 @@ import { ProductGrid } from './ProductList/ProductGrid';
 import { ProductTable } from './ProductList/ProductTable';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '@/features/settings';
-import { ProductFilters, ProductFilterValues } from './ProductList/ProductFilters';
-import { useCategoriesList } from '@/features/categories/hooks/useCategoriesData';
+
 
 
 const { Content } = Layout;
@@ -22,23 +21,16 @@ export const ProductsPage = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
     const { isMobile } = useResponsive();
-    const { settings } = useSettings();
+    const { settings, loading: settingsLoading } = useSettings();
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
 
     const [selectedProductIds, setSelectedProductIds] = useState<Set<number>>(new Set());
     const [viewProduct, setViewProduct] = useState<any>(null);
 
-    const [filters, setFilters] = useState<ProductFilterValues>({
-        search: '',
-        category: undefined,
-        type: undefined,
-        stock_status: undefined,
-        min_price: undefined,
-        max_price: undefined
-    });
 
-    const { data: categories } = useCategoriesList();
+
+
 
     const {
         data,
@@ -48,12 +40,6 @@ export const ProductsPage = () => {
         isFetchingNextPage
     } = useInfiniteProducts({
         per_page: 24,
-        search: filters.search,
-        category: filters.category,
-        type: filters.type,
-        stock_status: filters.stock_status,
-        min_price: filters.min_price,
-        max_price: filters.max_price
     });
 
     const products = data?.pages.flatMap(page => page.data) || [];
@@ -86,6 +72,12 @@ export const ProductsPage = () => {
         };
     }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+    const isConfigured = !!(settings?.hasConsumerKey && settings?.hasConsumerSecret);
+
+    useEffect(() => {
+        console.log('ProductsPage: Settings state:', { settings, settingsLoading, isConfigured });
+    }, [settings, settingsLoading, isConfigured]);
+
     const handleDelete = useCallback((product: any) => {
         Modal.confirm({
             title: t('deleteProduct'),
@@ -113,9 +105,29 @@ export const ProductsPage = () => {
         });
     }, [t, selectedProductIds, bulkDeleteMutation]);
 
-    const isConfigured = !!(settings?.hasConsumerKey && settings?.hasConsumerSecret);
+    if (settingsLoading) {
+        return (
+            <Flex justify="center" align="center" style={{ minHeight: '60vh' }}>
+                <Spin size="large" tip={t('loading') || 'טוען הגדרות...'} />
+            </Flex>
+        );
+    }
 
-    if (!isConfigured) return <div>{t('setupRequired')}</div>;
+    if (!isConfigured) {
+        return (
+            <Content style={{ padding: 24 }}>
+                <Card>
+                    <Flex vertical align="center" gap={16} style={{ padding: '40px 0' }}>
+                        <Text strong style={{ fontSize: 18 }}>{t('setupRequired') || 'WooCommerce Setup Required'}</Text>
+                        <Text type="secondary">{t('configureSettingsToViewProducts') || 'Please connect your store in settings to manage products.'}</Text>
+                        <Button type="primary" onClick={() => navigate('/settings')}>
+                            {t('goToSettings') || 'Go to Settings'}
+                        </Button>
+                    </Flex>
+                </Card>
+            </Content>
+        );
+    }
 
     return (
         <Content style={{
@@ -161,13 +173,7 @@ export const ProductsPage = () => {
                 </Button>
             </Flex>
 
-            {/* Filters */}
-            <ProductFilters
-                filters={filters}
-                onFilterChange={setFilters}
-                categories={categories || []}
-                isLoading={isLoading}
-            />
+
 
             <Flex vertical flex={1}>
                 {viewMode === 'grid' ? (
@@ -188,7 +194,6 @@ export const ProductsPage = () => {
                             onDelete={handleDelete}
                             selectedProductIds={selectedProductIds}
                             onSelectionChange={setSelectedProductIds}
-                            filters={filters}
                         />
                     </Card>
                 )}

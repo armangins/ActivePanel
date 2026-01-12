@@ -25,6 +25,12 @@ interface SidebarMenuProps {
     onMenuClick: (info: any) => void;
 }
 
+/**
+ * SidebarMenu Component
+ * 
+ * Renders the navigation links for the Sidebar.
+ * Handles collapsible state and RTL direction.
+ */
 const SidebarMenu: React.FC<SidebarMenuProps> = ({
     t,
     isRTL,
@@ -52,11 +58,11 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
             children: [
                 {
                     key: '/products/list',
-                    label: 'כל המוצרים'
+                    label: t('allProducts') || 'All Products'
                 },
                 {
                     key: '/products/add',
-                    label: 'הוסף מוצר חדש'
+                    label: t('addProduct') || 'Add New Product'
                 },
                 {
                     key: '/products/attributes',

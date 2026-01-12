@@ -2,7 +2,7 @@ import React from 'react';
 import { Form, Alert, Row, Col, Input, Select, Checkbox, InputNumber, Upload, Button, Image } from 'antd';
 import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getCombinationSignature } from '../../../utils/variationUtils';
+import { getCombinationSignature } from '@/features/products/utils/variationUtils';
 
 interface VariationReviewStepProps {
     form: any;

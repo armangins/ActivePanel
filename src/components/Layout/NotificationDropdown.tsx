@@ -20,6 +20,12 @@ interface NotificationDropdownProps {
   setIsOpen: (isOpen: boolean) => void;
 }
 
+/**
+ * NotificationDropdown Component
+ * 
+ * Displays a list of recent order notifications.
+ * Allows users to clear notifications, remove individual items, or navigate to order details.
+ */
 const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   newOrdersCount,
   newOrders,

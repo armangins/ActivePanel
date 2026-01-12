@@ -13,13 +13,17 @@ interface UserMenuDropdownProps {
   onLogout: () => void;
 }
 
+/**
+ * UserMenuDropdown Component
+ * 
+ * Displays the current user's avatar and a dropdown menu with user actions (Logout).
+ */
 const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
   user,
   onLogout,
 }) => {
   const { t, isRTL } = useLanguage();
   const { token } = useToken();
-  const screens = useBreakpoint();
 
   const userMenuItems: MenuProps['items'] = [
     {
@@ -55,7 +59,8 @@ const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
           alignItems: 'center',
           justifyContent: 'center',
           width: 40,
-          height: 40
+          height: 40,
+          backgroundColor: token.colorBgContainer
         }}
       >
         <Avatar src={user?.picture} icon={<UserOutlined />} size={36} />

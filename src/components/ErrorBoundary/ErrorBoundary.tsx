@@ -11,6 +11,12 @@ interface ErrorBoundaryState {
     errorInfo: ErrorInfo | null;
 }
 
+/**
+ * ErrorBoundary Component
+ * 
+ * Catches JavaScript errors anywhere in its child component tree,
+ * logs those errors, and displays a fallback UI instead of the component tree that crashed.
+ */
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     constructor(props: ErrorBoundaryProps) {
         super(props);
@@ -38,7 +44,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: 16
+                    padding: 16,
+                    background: '#f5f5f5' // Fallback or global background
                 }}>
                     <Result
                         status="error"
@@ -64,7 +71,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                                 </summary>
                                 <pre style={{
                                     overflow: 'auto',
-                                    backgroundColor: '#f5f5f5',
+                                    backgroundColor: 'rgba(0,0,0,0.05)',
                                     padding: 8,
                                     borderRadius: 4,
                                     maxHeight: 200,

@@ -20,6 +20,12 @@ interface SidebarProps {
   isCollapsed?: boolean;
 }
 
+/**
+ * Sidebar Component
+ * 
+ * Main navigation sidebar containing the app logo and menu items.
+ * Responsive: Renders as a Drawer on mobile and a collapsible Sider on desktop.
+ */
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed: externalCollapsed }) => {
   const { token } = useToken();
   const {
@@ -129,7 +135,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed: externa
         direction: isRTL ? 'rtl' : 'ltr',
         background: token.colorBgContainer,
         borderRight: `1px solid ${token.colorBorderSecondary}`,
-        boxShadow: '2px 0 8px rgba(0, 0, 0, 0.04)',
+        boxShadow: 'var(--ant-box-shadow-tertiary)', // Use CSS var if token fails, or fallback
         zIndex: 100
       }}
       theme="light"

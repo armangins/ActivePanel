@@ -23,6 +23,14 @@ interface HeaderProps {
   isCollapsed: boolean;
 }
 
+/**
+ * Header Component
+ * 
+ * Main application header containing:
+ * - Menu toggles (Mobile/Desktop)
+ * - Global Search
+ * - Notifications, Refresh, and User Profile actions
+ */
 const Header: React.FC<HeaderProps> = ({ onMenuClick, onCollapseToggle, isCollapsed }) => {
   const { token } = useToken();
   const { isDesktop, isMobile } = useResponsive();

@@ -1,14 +1,28 @@
-declare module '@/services/woocommerce' {
-    export const attributesAPI: any;
-    export const mediaAPI: any;
-    export const productsAPI: any;
-    // Add other exports as needed
+// Image imports
+declare module '*.png' {
+    const value: string;
+    export default value;
 }
 
-declare module '@/hooks/useWooCommerceSettings' {
-    export const useWooCommerceSettings: () => { hasSettings: boolean };
+declare module '*.jpg' {
+    const value: string;
+    export default value;
 }
 
-declare module '@/hooks/useCategories' {
-    export const useCategories: () => { data: any[], isLoading: boolean };
+declare module '*.jpeg' {
+    const value: string;
+    export default value;
+}
+
+declare module '*.svg' {
+    import React from 'react';
+    export const ReactComponent: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
+    const src: string;
+    export default src;
+}
+
+// Global window extensions
+interface Window {
+    __REDUX_DEVTOOLS_EXTENSION_COMPOSE__?: any;
+    gtag?: (...args: any[]) => void;
 }

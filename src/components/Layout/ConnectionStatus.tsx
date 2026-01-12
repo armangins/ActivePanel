@@ -4,6 +4,7 @@ import {
     DisconnectOutlined as WifiOff,
     ExclamationCircleOutlined as AlertCircle
 } from '@ant-design/icons';
+import { theme } from 'antd';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { testConnection } from '../../services/woocommerce';
 
@@ -15,8 +16,15 @@ interface StatusConfig {
     icon: React.ReactNode;
 }
 
+/**
+ * ConnectionStatus Component
+ * 
+ * Displays the current connection status to the backend/WooCommerce API.
+ * Automatically checks connection periodically and updates status.
+ */
 const ConnectionStatus: React.FC = () => {
     const { t } = useLanguage();
+    const { token } = theme.useToken();
     const [status, setStatus] = useState<ConnectionStatusType>('checking');
     const [message, setMessage] = useState<string>('');
 
@@ -52,17 +60,18 @@ const ConnectionStatus: React.FC = () => {
     const getStatusConfig = (): StatusConfig => {
         switch (status) {
             case 'connected':
-                return { color: '#52c41a', bgColor: '#f6ffed', icon: <Wifi /> };
+                return { color: token.colorSuccess, bgColor: token.colorSuccessBg, icon: <Wifi /> };
             case 'disconnected':
-                return { color: '#8c8c8c', bgColor: '#fafafa', icon: <WifiOff /> };
+                return { color: token.colorTextDisabled, bgColor: token.colorFillQuaternary, icon: <WifiOff /> };
             case 'error':
-                return { color: '#ff4d4f', bgColor: '#fff2f0', icon: <WifiOff /> };
+                return { color: token.colorError, bgColor: token.colorErrorBg, icon: <WifiOff /> };
             default:
-                return { color: '#faad14', bgColor: '#fffbe6', icon: <AlertCircle /> };
+                return { color: token.colorWarning, bgColor: token.colorWarningBg, icon: <AlertCircle /> };
         }
     };
 
     const config = getStatusConfig();
+    const showMessage = window.innerWidth >= 768;
 
     return (
         <div
@@ -71,7 +80,7 @@ const ConnectionStatus: React.FC = () => {
                 alignItems: 'center',
                 gap: 8,
                 padding: '6px 12px',
-                borderRadius: 8,
+                borderRadius: token.borderRadius,
                 fontSize: 14,
                 fontWeight: 500,
                 color: config.color,
@@ -83,7 +92,7 @@ const ConnectionStatus: React.FC = () => {
             onClick={checkConnection}
         >
             {config.icon}
-            <span style={{ display: window.innerWidth >= 768 ? 'inline' : 'none' }}>{message}</span>
+            {showMessage && <span>{message}</span>}
         </div>
     );
 };
