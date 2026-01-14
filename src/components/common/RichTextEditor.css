@@ -1,0 +1,167 @@
+.rich-text-editor .quill {
+    background-color: var(--rte-bg-container);
+    border-radius: var(--rte-border-radius);
+    transition: all 0.2s;
+}
+
+.rich-text-editor .ql-toolbar {
+    border: 1px solid var(--rte-border-color) !important;
+    border-top-left-radius: var(--rte-border-radius);
+    border-top-right-radius: var(--rte-border-radius);
+    background-color: var(--rte-bg-layout);
+    direction: ltr;
+    /* Toolbar always LTR */
+    text-align: left;
+}
+
+.rich-text-editor .ql-container {
+    border: 1px solid var(--rte-border-color) !important;
+    border-top: none !important;
+    border-bottom-left-radius: var(--rte-border-radius);
+    border-bottom-right-radius: var(--rte-border-radius);
+    font-family: var(--rte-font-family);
+    font-size: var(--rte-font-size);
+}
+
+/* Base editor styles (handled by inline style in TSX for direction/align, but we can set defaults here) */
+.rich-text-editor .ql-editor {
+    min-height: 150px;
+    color: var(--rte-text-color);
+}
+
+.rich-text-editor.rtl .ql-editor {
+    direction: rtl;
+    text-align: right;
+}
+
+.rich-text-editor.ltr .ql-editor {
+    direction: ltr;
+    text-align: left;
+}
+
+.rich-text-editor .ql-editor.ql-blank::before {
+    color: var(--rte-placeholder-color);
+    font-style: normal;
+    /* absolute positioning for placeholder is handled by quill usually, but our overrides were: */
+    /* right/left are direction dependent, we might keep those inline or use extensive CSS logic. 
+       Actually, standard Quill uses separate classes for RTL, but we'll stick to the inline overrides we had 
+       or simpler RTL logic here if possible. 
+       Wait, the previous code had JS logic for right/left based on isoRTL.
+       We can use CSS logical properties or just keep that part inline if it's too complex. 
+       But let's try to map it. We can add a .rtl class to the parent.
+    */
+}
+
+.rich-text-editor.rtl .ql-editor.ql-blank::before {
+    right: 15px;
+    left: auto;
+}
+
+.rich-text-editor.ltr .ql-editor.ql-blank::before {
+    left: 15px;
+    right: auto;
+}
+
+/* Explicitly enforce styles for formatting tags to override global resets */
+/* Use !important to ensure styles apply over custom font inheritance */
+.rich-text-editor .ql-editor strong,
+.rich-text-editor .ql-editor b {
+    font-weight: 700 !important;
+}
+
+.rich-text-editor .ql-editor em,
+.rich-text-editor .ql-editor i {
+    font-style: italic !important;
+}
+
+.rich-text-editor .ql-editor u {
+    text-decoration: underline !important;
+}
+
+.rich-text-editor .ql-editor s {
+    text-decoration: line-through !important;
+}
+
+/* Blockquotes: Direction-aware borders and padding */
+.rich-text-editor .ql-editor blockquote {
+    color: var(--rte-text-description) !important;
+    font-style: italic !important;
+    margin-top: 5px !important;
+    margin-bottom: 5px !important;
+}
+
+.rich-text-editor.ltr .ql-editor blockquote {
+    border-left: 4px solid #ccc !important;
+    padding-left: 16px !important;
+    margin-left: 0 !important;
+}
+
+.rich-text-editor.rtl .ql-editor blockquote {
+    border-right: 4px solid #ccc !important;
+    border-left: none !important;
+    padding-right: 16px !important;
+    margin-right: 0 !important;
+}
+
+/* Lists: Restore distinct list styles and direction-aware padding */
+.rich-text-editor .ql-editor ul,
+.rich-text-editor .ql-editor ol {
+    margin-bottom: 1em !important;
+}
+
+.rich-text-editor .ql-editor ul {
+    list-style-type: disc !important;
+}
+
+.rich-text-editor .ql-editor ol {
+    list-style-type: decimal !important;
+}
+
+.rich-text-editor.ltr .ql-editor ul,
+.rich-text-editor.ltr .ql-editor ol {
+    padding-left: 2.5em !important;
+    padding-right: 0 !important;
+}
+
+.rich-text-editor.rtl .ql-editor ul,
+.rich-text-editor.rtl .ql-editor ol {
+    padding-right: 2.5em !important;
+    padding-left: 0 !important;
+}
+
+/* Marker positioning */
+.rich-text-editor .ql-editor li {
+    line-height: 1.5; /* Ensure enough height */
+}
+
+.rich-text-editor.ltr .ql-editor li {
+    list-style-position: outside !important;
+    margin-left: 0.5em !important;
+    margin-right: 0 !important;
+}
+
+/* For RTL, 'inside' often behaves better to keep bullets next to text */
+.rich-text-editor.rtl .ql-editor li {
+    list-style-position: inside !important;
+    margin-right: 0.5em !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important; /* Reset padding to avoid double gaps with inside */
+}
+
+.rich-text-editor .ql-editor h1 {
+    font-size: 2em !important;
+    font-weight: 700 !important;
+    margin-bottom: 0.5em !important;
+}
+
+.rich-text-editor .ql-editor h2 {
+    font-size: 1.5em !important;
+    font-weight: 700 !important;
+    margin-bottom: 0.5em !important;
+}
+
+/* Hover effect */
+.rich-text-editor:hover .ql-toolbar,
+.rich-text-editor:hover .ql-container {
+    border-color: var(--rte-primary-hover) !important;
+}

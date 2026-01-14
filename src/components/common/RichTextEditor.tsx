@@ -4,6 +4,8 @@ import 'react-quill/dist/quill.snow.css';
 import { theme } from 'antd';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+import './RichTextEditor.css';
+
 interface RichTextEditorProps {
     value: string;
     onChange: (value: string) => void;
@@ -37,8 +39,23 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         'link', 'image'
     ];
 
+    // Map Ant Design tokens to CSS variables
+    const dynamicStyle = {
+        '--rte-bg-container': token.colorBgContainer,
+        '--rte-border-radius': `${token.borderRadius}px`,
+        '--rte-border-color': token.colorBorder,
+        '--rte-bg-layout': token.colorBgLayout,
+        '--rte-font-family': token.fontFamily,
+        '--rte-font-size': `${token.fontSize}px`,
+        '--rte-text-color': token.colorText,
+        '--rte-placeholder-color': token.colorTextPlaceholder,
+        '--rte-primary-hover': token.colorPrimaryHover,
+        '--rte-text-description': token.colorTextDescription,
+        ...style,
+    } as React.CSSProperties;
+
     return (
-        <div className={`rich-text-editor ${isRTL ? 'rtl' : 'ltr'}`} style={style}>
+        <div className={`rich-text-editor ${isRTL ? 'rtl' : 'ltr'}`} style={dynamicStyle}>
             <ReactQuill
                 theme="snow"
                 value={value || ''}
@@ -51,53 +68,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                     textAlign: isRTL ? 'right' : 'left',
                 }}
             />
-            <style>
-                {`
-                    .rich-text-editor .quill {
-                        background-color: ${token.colorBgContainer};
-                        border-radius: ${token.borderRadius}px;
-                        transition: all 0.2s;
-                    }
-                    .rich-text-editor .ql-toolbar {
-                        border: 1px solid ${token.colorBorder} !important;
-                        border-top-left-radius: ${token.borderRadius}px;
-                        border-top-right-radius: ${token.borderRadius}px;
-                        background-color: ${token.colorBgLayout};
-                        direction: ltr; /* Toolbar always LTR */
-                        text-align: left;
-                    }
-                    .rich-text-editor .ql-container {
-                        border: 1px solid ${token.colorBorder} !important;
-                        border-top: none !important;
-                        border-bottom-left-radius: ${token.borderRadius}px;
-                        border-bottom-right-radius: ${token.borderRadius}px;
-                        font-family: ${token.fontFamily};
-                        font-size: ${token.fontSize}px;
-                    }
-                    .rich-text-editor .ql-editor {
-                        min-height: 150px;
-                        direction: ${isRTL ? 'rtl' : 'ltr'};
-                        text-align: ${isRTL ? 'right' : 'left'};
-                        color: ${token.colorText};
-                    }
-                    .rich-text-editor .ql-editor.ql-blank::before {
-                        color: ${token.colorTextPlaceholder};
-                        font-style: normal;
-                        right: ${isRTL ? '15px' : 'auto'};
-                        left: ${isRTL ? 'auto' : '15px'};
-                    }
-                    
-                    /* Hover effect */
-                    .rich-text-editor:hover .ql-toolbar,
-                    .rich-text-editor:hover .ql-container {
-                        border-color: ${token.colorPrimaryHover} !important;
-                    }
-
-                    /* Focus effect usually handled by a class, but ReactQuill doesn't expose it easily on the container. 
-                       We can simulate it or just rely on the editor focus. 
-                       For now, let's keep it simple with hover. */
-                `}
-            </style>
         </div>
     );
 };

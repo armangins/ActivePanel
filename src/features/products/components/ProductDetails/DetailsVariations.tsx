@@ -1,9 +1,10 @@
 import React from 'react';
-import { Card, Button, Input, InputNumber, Typography, Checkbox, Tag, Space, Upload } from 'antd';
+import { Card, Button, Input, InputNumber, Typography, Checkbox, Tag, Space, Upload, Empty } from 'antd';
 import { Control, useFieldArray, useWatch, Controller } from 'react-hook-form';
 import { DeleteOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProductFormValues } from '../../types/schemas';
+import './DetailsVariations.css';
 
 const { Title, Text } = Typography;
 
@@ -23,11 +24,11 @@ export const DetailsVariations: React.FC<DetailsVariationsProps> = ({ control })
     });
 
     return (
-        <Card variant="borderless" className="details-card" styles={{ body: { padding: '0' } }}>
-            <div style={{ padding: '24px 24px 0 24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+        <Card variant="borderless" className="details-card details-variations-card">
+            <div className="variations-header">
+                <div className="variations-title-row">
                     <div>
-                        <Title level={4} style={{ margin: 0, marginBottom: 4 }}>{t('variations') || 'Variations'}</Title>
+                        <Title level={4} className="variation-section-title">{t('variations') || 'Variations'}</Title>
                         <Text type="secondary">{t('manageVariationsDesc') || 'Manage stock and prices for different options.'}</Text>
                     </div>
                     <Space>
@@ -39,22 +40,15 @@ export const DetailsVariations: React.FC<DetailsVariationsProps> = ({ control })
                 </div>
 
                 {/* Attributes Chips */}
-                <div style={{ marginBottom: 24, marginTop: 24, display: 'flex', gap: 32 }}>
+                <div className="attributes-section">
                     {attributes.map((attr, index) => (
-                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <Text strong style={{ textTransform: 'uppercase', fontSize: 13, color: '#666' }}>
+                        <div key={index} className="attribute-group">
+                            <Text strong className="attribute-label">
                                 {attr.name}
                             </Text>
                             <Space size={8}>
                                 {attr.options?.map((option, optIndex) => (
-                                    <Tag key={optIndex} style={{
-                                        margin: 0,
-                                        padding: '4px 12px',
-                                        borderRadius: 16,
-                                        border: '1px solid #E0E0E0',
-                                        background: '#F5F5F5',
-                                        fontSize: 13
-                                    }}>
+                                    <Tag key={optIndex} className="attribute-tag">
                                         {option}
                                     </Tag>
                                 ))}
@@ -67,16 +61,7 @@ export const DetailsVariations: React.FC<DetailsVariationsProps> = ({ control })
             {/* Variations Table */}
             <div className="variations-table">
                 {/* Header */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '40px 1.5fr 1fr 1fr 1fr 1fr 40px',
-                    padding: '12px 24px',
-                    borderBottom: '1px solid #f0f0f0',
-                    background: '#FAFAFA',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: '#666'
-                }}>
+                <div className="variations-grid-header">
                     <div><Checkbox /></div>
                     <div>{t('variant') || 'Variant'}</div>
                     <div>{t('sku') || 'SKU'}</div>
@@ -88,20 +73,13 @@ export const DetailsVariations: React.FC<DetailsVariationsProps> = ({ control })
 
                 {/* Rows */}
                 {fields.map((field, index) => (
-                    <div key={field.id} style={{
-                        display: 'grid',
-                        gridTemplateColumns: '40px 1.5fr 1fr 1fr 1fr 1fr 40px',
-                        padding: '16px 24px',
-                        borderBottom: '1px solid #f0f0f0',
-                        alignItems: 'center',
-                        gap: 16
-                    }}>
+                    <div key={field.id} className="variations-grid-row">
                         <div>
                             <Checkbox />
                         </div>
 
                         {/* Variant Info (Image + Name) */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div className="variant-info">
                             <Controller
                                 name={`variations.${index}.image`}
                                 control={control}
@@ -116,23 +94,12 @@ export const DetailsVariations: React.FC<DetailsVariationsProps> = ({ control })
                                             }
                                         }}
                                     >
-                                        <div style={{
-                                            width: 40,
-                                            height: 40,
-                                            borderRadius: 6,
-                                            background: '#f5f5f5',
-                                            border: '1px solid #eee',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            cursor: 'pointer',
-                                            overflow: 'hidden'
-                                        }}>
+                                        <div className="variant-image-uploader">
                                             {imgField.value ? (
                                                 <img
                                                     src={imgField.value instanceof File ? URL.createObjectURL(imgField.value) : imgField.value.src}
                                                     alt="Var"
-                                                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                                    className="variant-image-preview"
                                                 />
                                             ) : (
                                                 <UploadOutlined style={{ color: '#ccc', fontSize: 16 }} />
@@ -141,13 +108,13 @@ export const DetailsVariations: React.FC<DetailsVariationsProps> = ({ control })
                                     </Upload>
                                 )}
                             />
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <div className="variant-attributes-column">
                                 {/* Generate combination name based on attributes */}
                                 <Controller
                                     control={control}
                                     name={`variations.${index}.attributes`}
                                     render={({ field: attrsField }) => (
-                                        <Text strong style={{ fontSize: 14 }}>
+                                        <Text strong className="variation-attributes-text">
                                             {attrsField.value?.map((a: any) => a.option).join(' / ') || `Variant ${index + 1}`}
                                         </Text>
                                     )}
@@ -172,7 +139,7 @@ export const DetailsVariations: React.FC<DetailsVariationsProps> = ({ control })
                                 <InputNumber
                                     {...field}
                                     prefix="₪"
-                                    style={{ width: '100%' }}
+                                    className="variation-input"
                                     placeholder="0.00"
                                 />
                             )}
@@ -186,7 +153,7 @@ export const DetailsVariations: React.FC<DetailsVariationsProps> = ({ control })
                                 <InputNumber
                                     {...field}
                                     prefix="₪"
-                                    style={{ width: '100%' }}
+                                    className="variation-input"
                                     placeholder="0.00"
                                 />
                             )}
@@ -199,7 +166,7 @@ export const DetailsVariations: React.FC<DetailsVariationsProps> = ({ control })
                             render={({ field }) => (
                                 <InputNumber
                                     {...field}
-                                    style={{ width: '100%' }}
+                                    className="variation-input"
                                     placeholder="0"
                                 />
                             )}
@@ -216,8 +183,11 @@ export const DetailsVariations: React.FC<DetailsVariationsProps> = ({ control })
                 ))}
 
                 {fields.length === 0 && (
-                    <div style={{ padding: '32px', textAlign: 'center', color: '#999' }}>
-                        {t('noVariations') || 'No variations yet. Click "Add Variant" to start.'}
+                    <div className="no-variations-state">
+                        <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description={t('noVariations') || 'No variations yet. Click "Add Variant" to start.'}
+                        />
                     </div>
                 )}
             </div>

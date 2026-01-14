@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import type { UploadFile, UploadProps } from 'antd';
-import { mediaAPI } from '@/services/woocommerce';
+// import { mediaAPI } from '@/services/woocommerce'; // Removed
+import { uploadImageToFirebase } from '@/services/firebase';
 import { useMessage } from '@/contexts/MessageContext';
 // @ts-ignore
 import { secureLog } from '@/utils/logger';
 import { convertImageToWebP } from '@/utils/imageConversion';
 import type { ImageData } from './types';
-import { mediaUploadResponseSchema } from './types';
+// import { mediaUploadResponseSchema } from './types'; // Removed
 
 export const useImageUpload = (
     value: ImageData[] = [],
@@ -87,33 +88,19 @@ export const useImageUpload = (
             try {
                 fileToUpload = await convertImageToWebP(file as File);
             } catch (conversionError) {
-                console.error('WebP conversion failed', conversionError);
-                // Fallback to original file if conversion fails, or throw?
-                // Let's throw to be strict as per "how can we convert..." request, 
-                // but maybe safe to fallback. Given the user wants feedback, failing with specific error is better.
-                throw new Error('Failed to convert image to WebP');
+                console.error('WebP conversion failed, falling back to original', conversionError);
+                fileToUpload = file as File; // Fallback to original
             }
 
-            const formData = new FormData();
-            formData.append('file', fileToUpload);
-
-            const response = await mediaAPI.upload(formData);
-
-            // Validate response with Zod
-            const validatedResponse = mediaUploadResponseSchema.parse(response);
-
-            const uploadedUrl = validatedResponse.source_url || validatedResponse.guid?.rendered;
-
-            if (!uploadedUrl) {
-                throw new Error('Upload failed - No URL returned');
-            }
+            // Upload to Firebase Storage
+            const uploadedUrl = await uploadImageToFirebase(fileToUpload);
 
             onSuccess({
                 url: uploadedUrl,
-                uid: validatedResponse.id,
+                uid: file.uid,
             });
 
-            // Update file list with the real URL and truncated name
+            // Update file list with the real URL
             setFileList((prev) => {
                 const updated = prev.map((f) => {
                     if (f.uid === (file as unknown as UploadFile).uid) {
@@ -125,14 +112,14 @@ export const useImageUpload = (
                             ...f,
                             status: 'done' as const,
                             url: uploadedUrl,
-                            uid: validatedResponse.id.toString(),
+                            uid: file.uid, // Keep original UID (non-numeric for new files)
                             name: truncateFilename(file.name),
                             preview: undefined,
                         };
                     }
                     return f;
                 });
-                // Defer form value update to avoid setState during render
+                // Defer form value update
                 setTimeout(() => {
                     updateFormValue(updated);
                 }, 0);
@@ -140,13 +127,11 @@ export const useImageUpload = (
             });
         } catch (error: any) {
             secureLog.error('Image upload failed', error);
-            // Extract meaningful error message
-            const errorMessage = error?.response?.data?.message || error?.message || 'Failed to upload image';
+            const errorMessage = error?.message || 'Failed to upload image';
             message.error(errorMessage);
 
             onError?.(error);
 
-            // Update file status to error so user knows it failed
             setFileList((prev) => {
                 return prev.map((f) => {
                     if (f.uid === (file as unknown as UploadFile).uid) {
@@ -168,9 +153,9 @@ export const useImageUpload = (
             // Check if we already have a blob URL for this file uid in our ref
             const existingBlobUrl = blobUrlMapRef.current.get(file.uid);
             if (existingBlobUrl) {
-                file.url = existingBlobUrl;
+                // Keep preview but DO NOT set status to done optimistically
                 file.preview = existingBlobUrl;
-                file.status = 'done';
+                // file.status = 'done'; // Removed to disable optimistic UI
                 return file;
             }
 
@@ -183,8 +168,8 @@ export const useImageUpload = (
                 blobUrlMapRef.current.set(file.uid, blobUrl);
 
                 file.preview = blobUrl;  // For modal preview
-                file.url = blobUrl;      // For thumbnail display
-                file.status = 'done';
+                // file.url = blobUrl;   // Removed: Do not treat blob as final URL
+                // file.status = 'done'; // Removed: Do not mark as done until upload finishes
             }
             return file;
         });

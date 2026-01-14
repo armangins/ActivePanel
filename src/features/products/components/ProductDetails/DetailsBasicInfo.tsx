@@ -46,7 +46,7 @@ export const DetailsBasicInfo: React.FC<DetailsBasicInfoProps> = ({ control }) =
                         <RichTextEditor
                             value={field.value}
                             onChange={field.onChange}
-                            placeholder={t('enterShortDescription')}
+                            placeholder="תיאור מוצר קצר"
                             minHeight={150}
                         />
                     )}
@@ -70,7 +70,7 @@ export const DetailsBasicInfo: React.FC<DetailsBasicInfoProps> = ({ control }) =
                         <RichTextEditor
                             value={field.value}
                             onChange={field.onChange}
-                            placeholder={t('enterProductDescription')}
+                            placeholder=" תיאור מוצר מפורט"
                         />
                     )}
                 />

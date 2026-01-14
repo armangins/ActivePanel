@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Modal, Row, Col, Form, Space, theme } from 'antd';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, useWatch } from 'react-hook-form';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useVariations, useProductDetail } from '@/features/products/hooks/useProductsData';
 import { ProductFormValues } from '@/features/products/types/schemas';
@@ -45,6 +45,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
 
     const { handleSubmit, reset, control, formState: { isDirty } } = methods;
 
+    // Watch product type to update UI dynamically
+    const productType = useWatch({ control, name: 'type' }) || product?.type;
+
     const { handleSave, isSaving } = useProductSave({ product, onClose });
 
     // Reset form when product changes
@@ -59,21 +62,26 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
 
     }, [variationsData, isLoadingVariations, product?.type, reset, methods]);
 
+    const handleCancel = () => {
+        if (isDirty) {
+            Modal.confirm({
+                title: t('unsavedChangesWarning') || 'יש שינויים שלא נשמרו. האם לצאת?',
+                okText: t('yes') || 'כן',
+                cancelText: t('no') || 'לא',
+                onOk: () => onClose(),
+            });
+        } else {
+            onClose();
+        }
+    };
+
     if (!product) return null;
 
     return (
         <Modal
             open={open}
-            onCancel={() => {
-                if (isDirty) {
-                    if (window.confirm(t('unsavedChangesWarning') || 'יש שינויים שלא נשמרו. האם לצאת?')) {
-                        onClose();
-                    }
-                } else {
-                    onClose();
-                }
-            }}
-            width={1200}
+            onCancel={handleCancel}
+            width={1000}
             title={t('editProduct')}
             footer={null}
             centered
@@ -91,7 +99,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                                 <Space direction="vertical" size="large" style={{ width: '100%' }}>
                                     <DetailsBasicInfo control={control} />
                                     <DetailsMedia control={control} />
-                                    {product.type === 'variable' && (
+                                    {productType === 'variable' && (
                                         <DetailsVariations control={control} />
                                     )}
                                 </Space>
@@ -102,7 +110,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                                 <div className="sticky-sidebar">
                                     <Space direction="vertical" size="large" style={{ width: '100%' }}>
                                         <DetailsOrganization control={control} />
-                                        <DetailsPricing control={control} productType={product.type} />
+                                        <DetailsPricing control={control} productType={productType} />
                                     </Space>
                                 </div>
                             </Col>
