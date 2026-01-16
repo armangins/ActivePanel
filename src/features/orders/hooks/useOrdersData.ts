@@ -11,15 +11,20 @@ interface UseOrdersParams {
     enabled?: boolean;
 }
 
+import { ordersResponseSchema } from '../types/schemas';
+
 export const useOrdersData = ({ page = 1, per_page = 10, search = '', status = 'all', enabled = true }: UseOrdersParams = {}) => {
     const { settings } = useSettings();
     const isConfigured = !!(settings?.hasConsumerKey && settings?.hasConsumerSecret);
 
     return useQuery<OrdersResponse>({
         queryKey: ['orders', page, per_page, search, status],
-        queryFn: () => ordersService.getOrders({ page, per_page, search, status }),
+        queryFn: async () => {
+            const data = await ordersService.getOrders({ page, per_page, search, status });
+            return ordersResponseSchema.parse(data);
+        },
         enabled: isConfigured && enabled,
-        staleTime: 1 * 60 * 1000, // 1 minute stale time for orders as they change frequently
+        staleTime: 1 * 60 * 1000,
         placeholderData: (previousData) => previousData
     });
 };
@@ -79,7 +84,7 @@ export const useUpdateOrder = () => {
             // Return context with previous data for rollback
             return { previousOrders };
         },
-        onError: (err, variables, context) => {
+        onError: (_err, _variables, context) => {
             // Rollback on error
             if (context?.previousOrders) {
                 queryClient.setQueryData(['orders'], context.previousOrders);

@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { ProductDetailModal } from '../components/ProductDetails/ProductDetailModal';
+import { ProductDetailModal } from '../components/ProductDetails/ProductDetailModal/ProductDetailModal';
 // Mock LanguageContext
 vi.mock('@/contexts/LanguageContext', () => ({
     useLanguage: () => ({

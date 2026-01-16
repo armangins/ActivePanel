@@ -1,5 +1,6 @@
-import { Table, Tag, Button, Space, Avatar, Typography, Grid, List } from 'antd';
-import { SearchOutlined, InboxOutlined, UserOutlined } from '@ant-design/icons';
+import { Table, Tag, Button, Space, Avatar, Typography, Grid, List, theme } from 'antd';
+import type { Breakpoint } from 'antd';
+import { SearchOutlined, InboxOutlined } from '@ant-design/icons';
 import { Order } from '../types';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -12,7 +13,8 @@ interface OrdersTableProps {
 }
 
 export const OrdersTable = ({ orders, onViewDetails, isLoading }: OrdersTableProps) => {
-    const { t, isRTL, formatCurrency } = useLanguage();
+    const { token } = theme.useToken();
+    const { t, formatCurrency } = useLanguage();
     const screens = Grid.useBreakpoint();
 
     const getStatusColor = (status: string) => {
@@ -45,8 +47,8 @@ export const OrdersTable = ({ orders, onViewDetails, isLoading }: OrdersTablePro
                             style={{
                                 cursor: 'pointer',
                                 padding: '12px 16px',
-                                borderBottom: '1px solid #f0f0f0',
-                                backgroundColor: '#fff'
+                                borderBottom: `1px solid ${token.colorSplit}`,
+                                backgroundColor: token.colorBgContainer
                             }}
                         >
                             <div style={{ display: 'flex', width: '100%', alignItems: 'center', gap: 12 }}>
@@ -56,14 +58,14 @@ export const OrdersTable = ({ orders, onViewDetails, isLoading }: OrdersTablePro
                                     size={48}
                                     src={productImage}
                                     icon={<InboxOutlined />}
-                                    style={{ flexShrink: 0, backgroundColor: '#f0f2f5' }}
+                                    style={{ flexShrink: 0, backgroundColor: token.colorFillSecondary }}
                                 />
 
                                 {/* Middle Content */}
                                 <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
                                         <Text strong style={{ fontSize: 14 }}>{customerName}</Text>
-                                        <Text strong style={{ color: '#1890ff' }}>{formatCurrency(parseFloat(order.total))}</Text>
+                                        <Text strong style={{ color: token.colorPrimary }}>{formatCurrency(parseFloat(order.total))}</Text>
                                     </div>
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -105,7 +107,7 @@ export const OrdersTable = ({ orders, onViewDetails, isLoading }: OrdersTablePro
                             size={48}
                             src={productImage}
                             icon={<InboxOutlined />}
-                            style={{ backgroundColor: '#f0f2f5' }}
+                            style={{ backgroundColor: token.colorFillSecondary }}
                         />
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <Text strong>{customerName}</Text>
@@ -125,7 +127,7 @@ export const OrdersTable = ({ orders, onViewDetails, isLoading }: OrdersTablePro
             title: t('date') || 'Date',
             dataIndex: 'date_created',
             key: 'date',
-            responsive: ['md'],
+            responsive: ['md'] as Breakpoint[],
             render: (date: string) => new Date(date).toLocaleDateString()
         },
         {

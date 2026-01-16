@@ -1,17 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Form, Button, Steps } from 'antd';
+import React from 'react';
+import { Modal, Button, Steps } from 'antd';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useMessage } from '@/contexts/MessageContext';
-import {
-    NewVariationData,
-    generateCombinations,
-    calculateTotalCombinations,
-    AttributeToCombine,
-    getCombinationSignature
-} from '../../../utils/variationUtils';
+import { NewVariationData, calculateTotalCombinations } from '../../../utils/variationUtils';
 import { useVariationStyles } from './styles';
 import { VariationWizardStep } from './VariationWizardStep';
-import { VariationReviewStep } from './VariationReviewStep';
+import { VariationConfigurationStep } from './VariationConfigurationStep';
+import { VariationSummaryStep } from './VariationSummaryStep';
+import { useVariationModalLogic } from './useVariationModalLogic';
 
 interface AddVariationModalProps {
     visible: boolean;
@@ -26,223 +21,105 @@ interface AddVariationModalProps {
     existingAttributes?: any[];
 }
 
-export const AddVariationModal: React.FC<AddVariationModalProps> = ({
-    visible,
-    onCancel,
-    onAdd,
-    globalAttributes = [],
-    initialValues,
-    isEditing = false,
-    parentSku = '',
-    parentManageStock = false,
-    parentStockQuantity,
-    existingAttributes = []
-}) => {
+/**
+ * Modal to add or edit product variations.
+ * Uses a 3-step wizard workflow:
+ * 0. Select Attributes & Values
+ * 1. Configuration (Price, Stock, Image) - Manual or Auto
+ * 2. Summary
+ * 
+ * Logic is handled by `useVariationModalLogic`.
+ */
+export const AddVariationModal: React.FC<AddVariationModalProps> = (props) => {
     const { t } = useLanguage();
-    const message = useMessage();
-    const [form] = Form.useForm();
     const styles = useVariationStyles();
 
-    // Workflow state
-    const [step, setStep] = useState<0 | 1>(0); // 0: Define Attributes & Values, 1: Review & Pricing
+    // Use the custom hook for logic
+    const {
+        form,
+        step,
+        setStep,
+        activeAttributeIds,
+        setActiveAttributeIds,
+        wizardAttributes,
+        handleWizardAttributeValueSelect,
+        variationData,
+        handleConfigChange,
+        previewCombinations,
+        totalCombinations,
+        handleNext,
+        handleOk,
+        generationMode,
+        addManualCombination,
+        removeManualCombination,
+        updateManualCombination,
+        handleModeSelect,
+        switchToManualWithAutoData
+    } = useVariationModalLogic(props);
 
-    // For Wizard Mode: We track currently selected attributes AND their selected values.
-    const [wizardAttributes, setWizardAttributes] = useState<Record<number, string[]>>({});
+    const { onCancel, visible, isEditing, globalAttributes, existingAttributes } = props;
 
-    // Active attributes list
-    const [activeAttributeIds, setActiveAttributeIds] = useState<number[]>([]);
-
-    useEffect(() => {
-        if (visible) {
-            if (isEditing && initialValues?.attributes) {
-                const ids = initialValues.attributes.map((a: any) => a.id);
-                setActiveAttributeIds(ids);
-                const initialVals: Record<number, string[]> = {};
-                initialValues.attributes.forEach((a: any) => {
-                    initialVals[a.id] = [a.option];
-                });
-                setWizardAttributes(initialVals);
-                setStep(1);
-            } else if (existingAttributes && existingAttributes.length > 0) {
-                const ids = existingAttributes.map((a: any) => a.id);
-                setActiveAttributeIds(ids);
-                setWizardAttributes({});
-                setStep(0);
-            } else {
-                setActiveAttributeIds([]);
-                setWizardAttributes({});
-                setStep(0);
-            }
-        }
-    }, [visible, isEditing, initialValues, existingAttributes]);
-
-    useEffect(() => {
-        if (visible) {
-            form.resetFields();
-            if (initialValues) {
-                form.setFieldsValue({ ...initialValues });
-            } else {
-                form.setFieldsValue({
-                    manage_stock: parentManageStock,
-                    stock_quantity: parentStockQuantity,
-                    stock_status: 'instock',
-                    sku: parentSku
-                });
-            }
-        }
-    }, [visible, form, initialValues, parentManageStock, parentStockQuantity, parentSku]);
-
-    const totalCombinations = calculateTotalCombinations(activeAttributeIds, wizardAttributes);
-
-    const [variationImages, setVariationImages] = useState<Record<string, any>>({});
-
-    const handleWizardAttributeValueSelect = (attrId: number, value: string) => {
-        setWizardAttributes(prev => {
-            const currentValues = prev[attrId] || [];
-            if (currentValues.includes(value)) {
-                return { ...prev, [attrId]: currentValues.filter(v => v !== value) };
-            } else {
-                return { ...prev, [attrId]: [...currentValues, value] };
-            }
-        });
-    };
-
-    const handleImageChange = (signature: string, image: any) => {
-        setVariationImages(prev => ({ ...prev, [signature]: image }));
-    };
-
-    const handleOk = () => {
-        form.validateFields()
-            .then(values => {
-                if (isEditing) {
-                    // EDIT SINGLE MODE
-                    const selectedAttributes: { id: number; name: string; option: string }[] = [];
-                    if (initialValues && initialValues.attributes) {
-                        initialValues.attributes.forEach((attr: any) => {
-                            const wizardVals = wizardAttributes[attr.id];
-                            if (wizardVals && wizardVals.length > 0) {
-                                selectedAttributes.push({
-                                    id: attr.id,
-                                    name: attr.name,
-                                    option: wizardVals[0]
-                                });
-                            } else {
-                                selectedAttributes.push({
-                                    id: attr.id,
-                                    name: attr.name,
-                                    option: attr.option
-                                });
-                            }
-                        });
-                    }
-
-                    const variationData: NewVariationData = {
-                        attributes: selectedAttributes,
-                        sku: values.sku,
-                        regular_price: values.regular_price,
-                        sale_price: values.sale_price,
-                        manage_stock: values.manage_stock,
-                        stock_quantity: values.stock_quantity,
-                        stock_status: values.stock_status || 'instock'
-                    };
-                    onAdd(variationData);
-                } else {
-                    // GENERATING NEW VARIATIONS
-                    const attributesToCombine: AttributeToCombine[] = activeAttributeIds.map(id => {
-                        const attr = globalAttributes.find((a: any) => a.id === id);
-                        return {
-                            id: id,
-                            name: attr?.name || '',
-                            values: wizardAttributes[id] || []
-                        };
-                    }).filter(a => a.values.length > 0);
-
-                    if (attributesToCombine.length === 0) {
-                        message.error(t('selectAtLeastOneAttribute') || 'Select attribute');
-                        return;
-                    }
-
-                    const rawCombinations = generateCombinations(attributesToCombine);
-
-                    const newVariations = rawCombinations.map((combo, idx) => {
-                        const signature = getCombinationSignature(combo);
-                        return {
-                            attributes: combo,
-                            sku: values.sku ? `${values.sku} -${idx + 1} ` : undefined,
-                            regular_price: values.regular_price,
-                            sale_price: values.sale_price,
-                            manage_stock: values.manage_stock,
-                            stock_quantity: values.stock_quantity,
-                            stock_status: values.stock_status || 'instock',
-                            image: variationImages[signature]
-                        };
-                    });
-
-                    onAdd(newVariations);
-                }
-
-                cleanup();
-            })
-            .catch(info => {
-                console.log('Validate Failed:', info);
-            });
-    };
-
-    const cleanup = () => {
-        form.resetFields();
-        setWizardAttributes({});
-        setVariationImages({});
-        setActiveAttributeIds([]);
-        setStep(0);
-        onCancel();
-    };
+    // --- Render Helpers ---
 
     const modalTitle = (
         <div>
             <div style={styles.modalTitleStyle}>{t('productVariationGenerator')}</div>
             <div style={styles.modalDescStyle}>
-                {t('variationGeneratorDesc')}
+                {isEditing ? t('editVariation') : t('variationGeneratorDesc')}
             </div>
         </div>
     );
 
+    const stepItems = [
+        { title: t('attributes') },
+        { title: t('configuration') },
+        { title: t('summary') },
+    ];
+
     const modalFooter = (
         <div style={styles.footerContainerStyle}>
             <div>
-                {step === 0 && activeAttributeIds.length > 0 && (
+                {step === 0 && activeAttributeIds.length > 0 && generationMode === 'auto' && (
                     <span style={styles.footerInfoStyle}>
-                        {t('generatingCombinations', { count: totalCombinations })}
+                        {t('generatingCombinations', { count: calculateTotalCombinations(activeAttributeIds, wizardAttributes) })}
                     </span>
                 )}
             </div>
             <div style={styles.footerButtonsStyle}>
                 <Button onClick={onCancel}>{t('cancel')}</Button>
-                {step === 0 ? (
-                    <Button
-                        type="primary"
-                        onClick={() => {
-                            if (activeAttributeIds.length === 0) {
-                                message.error(t('selectAtLeastOneAttribute') || "Select attribute");
-                                return;
-                            }
-                            if (totalCombinations === 0) {
-                                message.error(t('selectValuesForEachAttribute'));
-                                return;
-                            }
-                            if (totalCombinations > 500) {
-                                message.error(t('tooManyVariations', { count: totalCombinations }) || `Too many variations (${totalCombinations}). Limit is 500.`);
-                                return;
-                            }
-                            setStep(1);
-                        }}
-                    >
-                        {t('nextReviewPricing')}
-                    </Button>
-                ) : (
+
+                {step === 0 && (
+                    <>
+                        {/* 
+                            In 3-step flow, Step 0 handles both Attributes & Values.
+                            Users choose generation mode here to proceed to Step 1 (Configuration).
+                        */}
+                        <Button
+                            onClick={() => handleModeSelect('manual')}
+                        >
+                            {t('createManually')}
+                        </Button>
+                        <Button type="primary" onClick={switchToManualWithAutoData}>
+                            {/* If auto, we proceed via switchToManualWithAutoData which sets mode to manual (with data) and calls next/setStep(1) */}
+                            {t('generateAllCombinations') || 'Generate All'}
+                        </Button>
+                    </>
+                )}
+
+                {step === 1 && (
                     <>
                         <Button onClick={() => setStep(0)}>{t('back')}</Button>
+                        <Button type="primary" onClick={handleNext}>
+                            {t('next')}
+                        </Button>
+                    </>
+                )}
+
+                {step === 2 && (
+                    <>
+                        <Button onClick={() => setStep(1)}>{t('back')}</Button>
                         <Button type="primary" onClick={handleOk}>
-                            {isEditing ? (t('update')) : (t('generateVariationsCount', { count: totalCombinations }) || t('generateVariations'))}
+                            {isEditing ? t('saveChanges') : t('generateVariations')}
                         </Button>
                     </>
                 )}
@@ -250,55 +127,55 @@ export const AddVariationModal: React.FC<AddVariationModalProps> = ({
         </div>
     );
 
-    const previewCombinations = React.useMemo(() => {
-        const attributesToCombine: AttributeToCombine[] = activeAttributeIds.map(id => {
-            const attr = globalAttributes.find((a: any) => a.id === id);
-            return {
-                id: id,
-                name: attr?.name || '',
-                values: wizardAttributes[id] || []
-            };
-        }).filter(a => a.values.length > 0);
-
-        if (attributesToCombine.length === 0) return [];
-        return generateCombinations(attributesToCombine);
-    }, [activeAttributeIds, wizardAttributes, globalAttributes]);
-
     return (
         <Modal
             title={modalTitle}
             open={visible}
-            onOk={() => { }} // Handled in footer
             onCancel={onCancel}
-            width={800}
             footer={modalFooter}
+            width={900}
+            destroyOnClose
+            maskClosable={false}
         >
-            <div style={styles.stepsContainerStyle}>
-                <Steps
-                    labelPlacement="vertical"
-                    current={step}
-                    items={[
-                        { title: t('בחר תכונות') },
-                        { title: t('תמחור') },
-                    ]}
-                />
-            </div>
+            {!isEditing && (
+                <div style={styles.stepsContainerStyle}>
+                    <Steps current={step} items={stepItems} size="small" />
+                </div>
+            )}
 
-            {step === 0 ? (
+            {step === 0 && (
                 <VariationWizardStep
-                    globalAttributes={globalAttributes}
+                    globalAttributes={globalAttributes || []}
                     activeAttributeIds={activeAttributeIds}
                     setActiveAttributeIds={setActiveAttributeIds}
                     wizardAttributes={wizardAttributes}
                     onAttributeValueSelect={handleWizardAttributeValueSelect}
                     form={form}
+                    existingAttributes={existingAttributes}
                 />
-            ) : (
-                <VariationReviewStep
-                    form={form}
+            )}
+
+            {step === 1 && (
+                <VariationConfigurationStep
                     combinations={previewCombinations}
-                    images={variationImages}
-                    onImageChange={handleImageChange}
+                    data={variationData}
+                    onChange={handleConfigChange}
+                    isManual={generationMode === 'manual'}
+                    onAddRow={addManualCombination}
+                    onRemoveRow={removeManualCombination}
+                    onUpdateCombo={updateManualCombination}
+                    activeAttributes={activeAttributeIds.map(id =>
+                        (globalAttributes || []).find((a: any) => a.id === id) ||
+                        (existingAttributes || []).find((a: any) => a.id === id || a.name === id)
+                    ).filter(Boolean)}
+                />
+            )}
+
+            {step === 2 && (
+                <VariationSummaryStep
+                    combinations={previewCombinations}
+                    data={variationData}
+                    total={totalCombinations}
                 />
             )}
         </Modal>

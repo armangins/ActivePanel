@@ -6,7 +6,7 @@ import { getCombinationSignature } from '@/features/products/utils/variationUtil
 
 interface VariationReviewStepProps {
     form: any;
-    combinations?: { id: number; name: string; option: string }[][];
+    combinations?: { id: number | string; name: string; option: string }[][];
     images?: Record<string, any>;
     onImageChange?: (signature: string, image: any) => void;
 }

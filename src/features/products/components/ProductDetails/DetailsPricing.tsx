@@ -10,9 +10,10 @@ const { Text, Link } = Typography;
 interface DetailsPricingProps {
     control: Control<ProductFormValues>;
     productType?: string;
+    onOpenVariationModal: () => void;
 }
 
-export const DetailsPricing: React.FC<DetailsPricingProps> = ({ control, productType }) => {
+export const DetailsPricing: React.FC<DetailsPricingProps> = ({ control, productType, onOpenVariationModal }) => {
     const { t } = useLanguage();
     const { token } = theme.useToken();
     const { setValue } = useFormContext<ProductFormValues>();
@@ -45,7 +46,7 @@ export const DetailsPricing: React.FC<DetailsPricingProps> = ({ control, product
                         <Text type="secondary" style={{ textAlign: 'center' }}>
                             תחילה יש ליצור וריאציות ואחר מכן להגדיר מחיר
                         </Text>
-                        <Button type="primary">
+                        <Button type="primary" onClick={onOpenVariationModal}>
                             {t('createVariations') || 'צור וריאציות'}
                         </Button>
                     </div>

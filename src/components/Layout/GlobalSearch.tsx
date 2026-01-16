@@ -6,7 +6,7 @@ import { useProductSearch } from '@/features/products';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { useDebounce } from '@/hooks/useDebounce';
-import { ProductDetailModal } from '@/features/products/components/ProductDetails/ProductDetailModal';
+import { ProductDetailModal } from '@/features/products/components/ProductDetails/ProductDetailModal/ProductDetailModal';
 import type { DefaultOptionType } from 'antd/es/select';
 
 const { Text } = Typography;

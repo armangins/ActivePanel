@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Layout, Button, Card, Flex, Modal, Spin, Typography, Segmented, FloatButton } from 'antd';
-import { ProductDetailModal } from './ProductDetails/ProductDetailModal';
+import { ProductDetailModal } from './ProductDetails/ProductDetailModal/ProductDetailModal';
 import { AppstoreOutlined, BarsOutlined, PlusOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useResponsive } from '@/hooks/useResponsive';
@@ -37,12 +37,30 @@ export const ProductsPage = () => {
         isLoading,
         fetchNextPage,
         hasNextPage,
-        isFetchingNextPage
+        isFetchingNextPage,
+        error,
+        isError
     } = useInfiniteProducts({
         per_page: 24,
     });
 
-    const products = data?.pages.flatMap(page => page.data) || [];
+    useEffect(() => {
+        if (isError && error) {
+            console.error('ProductsPage: Error fetching products:', error);
+        }
+    }, [isError, error]);
+
+    const products = useMemo(() => {
+        const allProducts = data?.pages.flatMap(page => page.data) || [];
+        // Deduplicate products by ID
+        const uniqueProducts = new Map();
+        allProducts.forEach(p => {
+            if (p && p.id) {
+                uniqueProducts.set(p.id, p);
+            }
+        });
+        return Array.from(uniqueProducts.values());
+    }, [data]);
 
 
     const deleteMutation = useDeleteProduct();
@@ -107,8 +125,9 @@ export const ProductsPage = () => {
 
     if (settingsLoading) {
         return (
-            <Flex justify="center" align="center" style={{ minHeight: '60vh' }}>
-                <Spin size="large" tip={t('loading') || 'טוען הגדרות...'} />
+            <Flex justify="center" align="center" vertical gap="middle" style={{ minHeight: '60vh' }}>
+                <Spin size="large" />
+                <div>{t('loading') || 'טוען הגדרות...'}</div>
             </Flex>
         );
     }

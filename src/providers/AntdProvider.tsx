@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, App } from 'antd';
 import heIL from 'antd/locale/he_IL';
 import dayjs from 'dayjs';
 import 'dayjs/locale/he';
@@ -17,6 +17,7 @@ interface AntdProviderProps {
  * 
  * Configures the global Ant Design theme, locale, and direction (RTL/LTR).
  * Sets up design tokens for colors, typography, and spacing.
+ * Wraps the app in <App> to enable static methods (message, notification, modal).
  * 
  * @param children - Child components to wrap
  */
@@ -29,7 +30,7 @@ export const AntdProvider = ({ children }: AntdProviderProps) => {
             direction={isRTL ? 'rtl' : 'ltr'}
             theme={{
                 token: {
-                    fontFamily: "'Polin Light', 'Polin', 'Arial Hebrew', sans-serif",
+                    fontFamily: "'Noto Sans Hebrew', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
                     fontSize: 14,
                     borderRadius: 8,
 
@@ -108,7 +109,9 @@ export const AntdProvider = ({ children }: AntdProviderProps) => {
                 }
             }}
         >
-            {children}
+            <App>
+                {children}
+            </App>
         </ConfigProvider>
     );
 };

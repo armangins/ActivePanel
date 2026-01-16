@@ -4,13 +4,18 @@ import { useSettings } from '@/features/settings';
 import { useMessage } from '@/contexts/MessageContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+import { couponsResponseSchema, couponResponseSchema } from '../types/schemas';
+
 export const useCouponsData = (params: any = {}) => {
     const { settings } = useSettings();
     const isConfigured = !!(settings?.hasConsumerKey && settings?.hasConsumerSecret);
 
     return useQuery({
         queryKey: ['coupons', params],
-        queryFn: () => couponsService.getCoupons(params),
+        queryFn: async () => {
+            const data = await couponsService.getCoupons(params);
+            return couponsResponseSchema.parse(data);
+        },
         enabled: isConfigured,
         placeholderData: (previousData) => previousData
     });
@@ -22,7 +27,10 @@ export const useCouponDetail = (id: number | null) => {
 
     return useQuery({
         queryKey: ['coupons', id],
-        queryFn: () => couponsService.getCoupon(id!),
+        queryFn: async () => {
+            const data = await couponsService.getCoupon(id!);
+            return couponResponseSchema.parse(data);
+        },
         enabled: isConfigured && !!id
     });
 };

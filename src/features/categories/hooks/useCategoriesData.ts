@@ -4,13 +4,18 @@ import { CreateCategoryData, UpdateCategoryData } from '../types';
 import { message } from 'antd';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+import { categoriesResponseSchema } from '../types/schemas';
+
 export const useCategoriesData = (params: any = {}) => {
     return useQuery({
         queryKey: ['categories', params],
-        queryFn: () => categoriesService.getCategories({
-            ...params,
-            _t: Date.now() // Cache buster
-        }),
+        queryFn: async () => {
+            const data = await categoriesService.getCategories({
+                ...params,
+                _t: Date.now() // Cache buster
+            });
+            return categoriesResponseSchema.parse(data);
+        },
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 };
@@ -18,7 +23,10 @@ export const useCategoriesData = (params: any = {}) => {
 export const useCategoriesList = () => {
     return useQuery({
         queryKey: ['categories', 'all'],
-        queryFn: () => categoriesService.getCategories({ per_page: 100 }),
+        queryFn: async () => {
+            const data = await categoriesService.getCategories({ per_page: 100 });
+            return categoriesResponseSchema.parse(data);
+        },
         staleTime: 5 * 60 * 1000,
     });
 }

@@ -3,18 +3,18 @@ import { Card, Button, Input, InputNumber, Typography, Checkbox, Tag, Space, Upl
 import { Control, useFieldArray, useWatch, Controller } from 'react-hook-form';
 import { DeleteOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { ProductFormValues } from '../../types/schemas';
+import { ProductFormValues } from '../../../types/schemas';
 import './DetailsVariations.css';
 
 const { Title, Text } = Typography;
 
 interface DetailsVariationsProps {
     control: Control<ProductFormValues>;
+    onOpenVariationModal: () => void;
 }
 
-export const DetailsVariations: React.FC<DetailsVariationsProps> = ({ control }) => {
+export const DetailsVariations: React.FC<DetailsVariationsProps> = ({ control, onOpenVariationModal }) => {
     const { t } = useLanguage();
-
     // Watch attributes for the "Chips" display
     const attributes = useWatch({ control, name: 'attributes' }) || [];
 
@@ -33,7 +33,7 @@ export const DetailsVariations: React.FC<DetailsVariationsProps> = ({ control })
                     </div>
                     <Space>
                         <Button>{t('editOptions') || 'Edit Options'}</Button>
-                        <Button type="primary" ghost icon={<PlusOutlined />}>
+                        <Button type="primary" ghost icon={<PlusOutlined />} onClick={onOpenVariationModal}>
                             {t('addVariant') || 'Add Variant'}
                         </Button>
                     </Space>
@@ -64,10 +64,10 @@ export const DetailsVariations: React.FC<DetailsVariationsProps> = ({ control })
                 <div className="variations-grid-header">
                     <div><Checkbox /></div>
                     <div>{t('variant') || 'Variant'}</div>
-                    <div>{t('sku') || 'SKU'}</div>
-                    <div>{t('regularPrice') || 'Regular Price'}</div>
-                    <div>{t('salePrice') || 'Sale Price'}</div>
-                    <div>{t('stock') || 'Stock'}</div>
+                    <div>{t('sku') || 'מק״ט'}</div>
+                    <div>{t('regularPrice') || 'מחיר'}</div>
+                    <div>{t('salePrice') || 'מחיר בצע'}</div>
+                    <div>{t('stock') || 'במלאי'}</div>
                     <div></div>
                 </div>
 
@@ -191,6 +191,6 @@ export const DetailsVariations: React.FC<DetailsVariationsProps> = ({ control })
                     </div>
                 )}
             </div>
-        </Card>
+        </Card >
     );
 };

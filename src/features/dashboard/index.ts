@@ -4,4 +4,5 @@ export * from './hooks/useDashboardData';
 export * from './components/DashboardPage';
 // Default export
 import { DashboardPage } from './components/DashboardPage';
+export * from './components/DashboardErrorBoundary';
 export default DashboardPage;

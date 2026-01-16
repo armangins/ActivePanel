@@ -8,15 +8,18 @@ import { Product } from '@/features/products/types';
 import './ProductDetailModal.css';
 
 // Components
-import { DetailsBasicInfo } from './DetailsBasicInfo';
-import { DetailsMedia } from './DetailsMedia';
-import { DetailsVariations } from './DetailsVariations';
-import { DetailsOrganization } from './DetailsOrganization';
-import { DetailsPricing } from './DetailsPricing';
-import { ProductDetailFooter } from './ProductDetailFooter';
+import { DetailsBasicInfo } from '../DetailsBasicInfo';
+import { DetailsMedia } from '../DetailsMedia';
+import { DetailsVariations } from '../DetailsVariations/DetailsVariations';
+import { DetailsOrganization } from '../DetailsOrganization';
+import { DetailsPricing } from '../DetailsPricing';
+import { ProductDetailFooter } from '../ProductDetailFooter';
 
 // Hooks
 import { useProductSave } from '@/features/products/hooks/useProductSave';
+import { useAttributes } from '@/hooks/useAttributes';
+import { useManualVariation } from '@/features/products/hooks/useManualVariation';
+import { AddVariationModal } from '../../ProductForm/Variations/AddVariationModal';
 
 interface ProductDetailModalProps {
     product: Product;
@@ -29,6 +32,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
     const { t } = useLanguage();
     const { useToken } = theme;
     const { token } = useToken();
+
+    // Variation Modal State
+    const [isVariationModalOpen, setIsVariationModalOpen] = React.useState(false);
+    const [editingVariationIndex, setEditingVariationIndex] = React.useState<number | null>(null);
+
+    const { data: globalAttributes = [] } = useAttributes();
 
     // Fetch full product details to ensure we have permalink and latest data
     const { data: fullProduct } = useProductDetail(product?.id);
@@ -49,6 +58,15 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
     const productType = useWatch({ control, name: 'type' }) || product?.type;
 
     const { handleSave, isSaving } = useProductSave({ product, onClose });
+
+    // Custom hook for manual variation logic
+    const { handleManualAdd } = useManualVariation(methods, editingVariationIndex, setEditingVariationIndex);
+
+    const handleOpenVariationModal = () => setIsVariationModalOpen(true);
+    const parentSku = useWatch({ control, name: 'sku' });
+    const parentManageStock = useWatch({ control, name: 'manage_stock' });
+    const parentStockQuantity = useWatch({ control, name: 'stock_quantity' }) ?? undefined;
+    const currentAttributes = useWatch({ control, name: 'attributes' });
 
     // Reset form when product changes
     useEffect(() => {
@@ -100,7 +118,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                                     <DetailsBasicInfo control={control} />
                                     <DetailsMedia control={control} />
                                     {productType === 'variable' && (
-                                        <DetailsVariations control={control} />
+                                        <DetailsVariations control={control} onOpenVariationModal={handleOpenVariationModal} />
                                     )}
                                 </Space>
                             </Col>
@@ -110,7 +128,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                                 <div className="sticky-sidebar">
                                     <Space direction="vertical" size="large" style={{ width: '100%' }}>
                                         <DetailsOrganization control={control} />
-                                        <DetailsPricing control={control} productType={productType} />
+                                        <DetailsPricing control={control} productType={productType} onOpenVariationModal={handleOpenVariationModal} />
                                     </Space>
                                 </div>
                             </Col>
@@ -127,6 +145,24 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                     />
                 </Form>
             </FormProvider>
+
+            {isVariationModalOpen && (
+                <AddVariationModal
+                    visible={isVariationModalOpen}
+                    onCancel={() => {
+                        setIsVariationModalOpen(false);
+                        setEditingVariationIndex(null);
+                    }}
+                    onAdd={handleManualAdd}
+                    globalAttributes={globalAttributes}
+                    initialValues={editingVariationIndex !== null ? methods.getValues(`variations.${editingVariationIndex}` as any) : undefined}
+                    isEditing={editingVariationIndex !== null}
+                    parentSku={parentSku}
+                    parentManageStock={parentManageStock}
+                    parentStockQuantity={parentStockQuantity}
+                    existingAttributes={currentAttributes}
+                />
+            )}
         </Modal>
     );
 };

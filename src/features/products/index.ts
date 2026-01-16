@@ -7,4 +7,5 @@ export * from './components/ProductForm/ProductForm';
 
 // Default exports
 import { ProductsPage } from './components/ProductsPage';
+export * from './components/ProductsErrorBoundary';
 export default ProductsPage;

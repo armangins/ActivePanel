@@ -1,16 +1,18 @@
 import React from 'react';
-import { Select, Tag, Card } from 'antd';
+import { Select, Button, Typography, theme, Flex } from 'antd';
+import { DeleteOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AttributeTermSelector } from './AttributeTermSelector';
 import { useVariationStyles } from './styles';
 
 interface VariationWizardStepProps {
     globalAttributes: any[];
-    activeAttributeIds: number[];
-    setActiveAttributeIds: React.Dispatch<React.SetStateAction<number[]>>;
-    wizardAttributes: Record<number, string[]>;
-    onAttributeValueSelect: (attrId: number, value: string) => void;
+    activeAttributeIds: (number | string)[];
+    setActiveAttributeIds: React.Dispatch<React.SetStateAction<(number | string)[]>>;
+    wizardAttributes: Record<number | string, string[]>;
+    onAttributeValueSelect: (attrId: number | string, value: string) => void;
     form: any;
+    existingAttributes?: any[];
 }
 
 export const VariationWizardStep: React.FC<VariationWizardStepProps> = ({
@@ -19,77 +21,124 @@ export const VariationWizardStep: React.FC<VariationWizardStepProps> = ({
     setActiveAttributeIds,
     wizardAttributes,
     onAttributeValueSelect,
-    form
+    form,
+    existingAttributes = []
 }) => {
     const { t } = useLanguage();
     const styles = useVariationStyles();
+    const { token } = theme.useToken();
+
+    // Helper to find attribute by ID from either source
+    const getAttribute = (id: number | string) => {
+        return globalAttributes.find((a: any) => a.id === id) ||
+            existingAttributes.find((a: any) => (a.id === id) || (a.id === 0 && a.name === id));
+    };
+
+    // Combine attributes for the dropdown
+    const availableAttributes = React.useMemo(() => {
+        const combined = [...globalAttributes];
+        existingAttributes.forEach(attr => {
+            if (!combined.find(c => c.id === attr.id)) {
+                combined.push(attr);
+            }
+        });
+        return combined;
+    }, [globalAttributes, existingAttributes]);
 
     return (
         <div style={styles.stepContentStyle}>
-            <div style={styles.stepsContainerStyle}>
-                <div style={styles.selectorLabelStyle}>1. {t('selectAttributes')}</div>
-                <div style={styles.wizardInstructionStyle}>בחרו את התכונות שתרצו להצמיד למוצר לדוגמה (צבע,מידה וכו)</div>
+            {/* Header / Instruction */}
+            <div style={{ marginBottom: token.marginLG }}>
+                <Typography.Title level={5} style={{ margin: 0 }}>
+                    {t('selectAttributes')}
+                </Typography.Title>
+                <Typography.Text type="secondary">
+                    {t('variationGeneratorDesc')}
+                </Typography.Text>
+            </div>
+
+            {/* Main Selector for Adding Attributes */}
+            <div style={{ marginBottom: token.marginLG }}>
+                <div style={{ marginBottom: token.marginXS }}>
+                    <Typography.Text strong>
+                        {t('selectAttributesFirst')}
+                    </Typography.Text>
+                </div>
                 <Select
                     placeholder={t('searchOrSelectAttributes')}
-                    style={{ width: '100%', marginBottom: 12 }}
+                    style={{ width: '100%', maxWidth: 400 }}
                     mode="multiple"
                     optionLabelProp="label"
                     value={activeAttributeIds}
                     onChange={(vals) => setActiveAttributeIds(vals)}
-                    options={globalAttributes.map((attr: any) => ({
-                        label: attr.name,
-                        value: attr.id,
-                        key: attr.id
-                    }))}
-                />
-                <div style={styles.tagsContainerStyle}>
-                    {activeAttributeIds.map(id => {
-                        const attr = globalAttributes.find((a: any) => a.id === id);
-                        return attr ? (
-                            <Tag
-                                key={id}
-                                closable
-                                onClose={() => setActiveAttributeIds(prev => prev.filter(pid => pid !== id))}
-                                color="blue"
-                                style={{ fontSize: 13, padding: '4px 10px' }}
-                            >
-                                {attr.name}
-                            </Tag>
-                        ) : null;
+                    options={availableAttributes.map((attr: any) => {
+                        const safeValue = attr.id > 0 ? attr.id : attr.name;
+                        return {
+                            label: attr.name,
+                            value: safeValue,
+                            key: safeValue
+                        };
                     })}
-                </div>
+                />
             </div>
 
-            <div style={styles.cardsContainerStyle}>
-                {activeAttributeIds.map(id => {
-                    const attr = globalAttributes.find((a: any) => a.id === id);
+            {/* List of Rows for Each Selected Attribute */}
+            <Flex vertical gap={token.margin}>
+                {activeAttributeIds.map((id) => {
+                    const attr = getAttribute(id);
                     if (!attr) return null;
-                    const selectedCount = wizardAttributes[id]?.length || 0;
 
                     return (
-                        <Card
+                        <Flex
                             key={id}
-                            title={
-                                <div style={styles.cardHeaderStyle}>
-                                    <span>{attr.name}</span>
-                                </div>
-                            }
-                            extra={<span style={styles.cardExtraStyle}>{selectedCount} {t('valuesAdded')}</span>}
-                            size="small"
-                            type="inner"
+                            align="center"
+                            gap={token.margin}
+                            style={{
+                                padding: token.padding,
+                                background: token.colorFillQuaternary,
+                                borderRadius: token.borderRadius,
+                                border: `1px solid ${token.colorBorderSecondary}`
+                            }}
                         >
-                            <div style={styles.wizardInstructionStyle}>{t('variationValuesInstruction')}</div>
-                            <AttributeTermSelector
-                                attribute={attr}
-                                form={form}
-                                onSelect={(_, val) => onAttributeValueSelect(id, val)}
-                                selectedValues={wizardAttributes[id] || []}
-                                mode="multiple"
+                            {/* Attribute Name Column */}
+                            <div style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                {attr.name}
+                            </div>
+
+                            {/* Value Selector Column */}
+                            <div style={{ flex: 1 }}>
+                                <AttributeTermSelector
+                                    attribute={attr}
+                                    form={form}
+                                    mode="multiple"
+                                    selectedValues={wizardAttributes[id] || []}
+                                    onSelect={(_, value) => onAttributeValueSelect(id, value)}
+                                />
+                            </div>
+
+                            {/* Remove Action */}
+                            <Button
+                                type="text"
+                                danger
+                                icon={<DeleteOutlined />}
+                                onClick={() => setActiveAttributeIds(prev => prev.filter(pid => pid !== id))}
                             />
-                        </Card>
+                        </Flex>
                     );
                 })}
-            </div>
+
+                {activeAttributeIds.length === 0 && (
+                    <div style={{
+                        padding: token.paddingXL,
+                        textAlign: 'center',
+                        color: token.colorTextTertiary,
+                        background: token.colorFillQuaternary,
+                        borderRadius: token.borderRadius
+                    }}>
+                        {t('noAttributesSelected')}
+                    </div>
+                )}
+            </Flex>
         </div>
     );
 };

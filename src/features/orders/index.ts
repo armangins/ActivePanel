@@ -5,4 +5,5 @@ export * from './components/OrdersPage';
 export * from './components/OrderDetailsModal';
 // Default export
 import { OrdersPage } from './components/OrdersPage';
+export * from './components/OrdersErrorBoundary';
 export default OrdersPage;

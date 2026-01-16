@@ -1,9 +1,10 @@
 import React from 'react';
-import { Card, Input, InputNumber, Button, Space, Row, Col, Form, Switch, Typography, Upload } from 'antd';
+import { Card, Input, InputNumber, Button, Space, Row, Col, Form, Switch, Typography } from 'antd';
 import { Controller, Control } from 'react-hook-form';
-import { DeleteOutlined, UploadOutlined, EditOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProductFormValues } from '@/features/products/types/schemas';
+import { VariationImageUpload } from './VariationImageUpload';
 
 const { Text } = Typography;
 
@@ -57,120 +58,10 @@ export const ProductVariationCard: React.FC<ProductVariationCardProps> = ({
                         name={`variations.${index}.image`}
                         control={control}
                         render={({ field }) => (
-                            <div style={{ width: '100%' }}>
-                                <Upload
-                                    listType="picture-card"
-                                    maxCount={1}
-                                    showUploadList={false} // Hide default list to use custom preview
-                                    beforeUpload={() => false}
-                                    fileList={
-                                        field.value instanceof File
-                                            ? [{
-                                                uid: '-1',
-                                                name: field.value.name,
-                                                status: 'done' as const,
-                                                url: URL.createObjectURL(field.value)
-                                            }]
-                                            : field.value?.src
-                                                ? [{
-                                                    uid: '-1',
-                                                    name: field.value.name || 'image',
-                                                    status: 'done' as const,
-                                                    url: field.value.src
-                                                }]
-                                                : []
-                                    }
-                                    onChange={async (info) => {
-                                        // Always take the last file (replacement)
-                                        if (info.fileList.length > 0) {
-                                            const file = info.fileList[info.fileList.length - 1]; // Take latest
-
-                                            // Store the actual File object for upload
-                                            if (file.originFileObj) {
-                                                field.onChange(file.originFileObj);
-                                            }
-                                        }
-                                    }}
-                                    className="full-width-upload"
-                                >
-                                    {field.value ? (
-                                        // Custom Preview with Overlays
-                                        <div style={{ position: 'relative', width: '100%', height: 180, overflow: 'hidden', borderRadius: 8 }}>
-                                            <img
-                                                src={
-                                                    field.value instanceof File
-                                                        ? URL.createObjectURL(field.value)
-                                                        : field.value?.src
-                                                }
-                                                alt="Variation"
-                                                style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#f5f5f5' }}
-                                            />
-                                            {/* Hover Overlay */}
-                                            <div
-                                                className="upload-overlay"
-                                                style={{
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    left: 0,
-                                                    right: 0,
-                                                    bottom: 0,
-                                                    background: 'rgba(0,0,0,0.5)',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    gap: 8,
-                                                    opacity: 0,
-                                                    transition: 'opacity 0.2s',
-                                                }}
-                                            >
-                                                {/* Replace Button - Trigger Upload */}
-                                                <Button
-                                                    type="text"
-                                                    icon={<EditOutlined style={{ color: 'white', fontSize: 16 }} />}
-                                                    title={t('replaceImage') || "Replace"}
-                                                />
-
-                                                {/* Remove Button */}
-                                                <Button
-                                                    type="text"
-                                                    icon={<DeleteOutlined style={{ color: 'white', fontSize: 16 }} />}
-                                                    title={t('removeImage') || "Remove"}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        field.onChange(undefined);
-                                                    }}
-                                                />
-                                            </div>
-                                            <style>{`
-                                                .full-width-upload:hover .upload-overlay {
-                                                    opacity: 1 !important;
-                                                }
-                                            `}</style>
-                                        </div>
-                                    ) : (
-                                        // Upload Placeholder
-                                        <div style={{
-                                            width: '100%',
-                                            height: 180,
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}>
-                                            <UploadOutlined style={{ fontSize: 32, color: '#999' }} />
-                                            <div style={{ marginTop: 8, color: '#999' }}>{t('upload')}</div>
-                                        </div>
-                                    )}
-                                </Upload>
-                                <style>{`
-                                    .full-width-upload .ant-upload-select {
-                                        width: 100% !important;
-                                        height: 180px !important;
-                                        overflow: hidden;
-                                        padding: 0 !important;
-                                    }
-                                `}</style>
-                            </div>
+                            <VariationImageUpload
+                                value={field.value}
+                                onChange={field.onChange}
+                            />
                         )}
                     />
                 </Form.Item>

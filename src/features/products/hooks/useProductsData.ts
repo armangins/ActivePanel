@@ -3,6 +3,8 @@ import { productsService } from '../api/products.service';
 import { ProductsResponse, Product, CreateProductData, UpdateProductData } from '../types';
 import { useSettings } from '@/features/settings';
 
+import { productsResponseSchema, productResponseSchema } from '../types/schemas';
+
 // Infinite Query Hook
 export const useInfiniteProducts = (params: any = {}) => {
     const { settings } = useSettings();
@@ -11,7 +13,11 @@ export const useInfiniteProducts = (params: any = {}) => {
     return useInfiniteQuery<ProductsResponse>({
         queryKey: ['products', 'infinite', params],
         initialPageParam: 1,
-        queryFn: ({ pageParam = 1 }) => productsService.getProducts({ ...params, page: pageParam as number }),
+        queryFn: async ({ pageParam = 1 }) => {
+            const data = await productsService.getProducts({ ...params, page: pageParam as number });
+            // Note: Infinite query pagination structure might differ, validating page data
+            return productsResponseSchema.parse(data);
+        },
         getNextPageParam: (lastPage: any, allPages) => {
             // Assuming API returns totalPages or we calculate it
             const currentPage = allPages.length;
@@ -28,7 +34,10 @@ export const useProductsData = (params: any = {}, queryOptions: any = {}) => {
 
     return useQuery<ProductsResponse>({
         queryKey: ['products', params],
-        queryFn: () => productsService.getProducts(params),
+        queryFn: async () => {
+            const data = await productsService.getProducts(params);
+            return productsResponseSchema.parse(data);
+        },
         enabled: isConfigured && (queryOptions.enabled !== false),
         placeholderData: (previousData) => previousData,
         ...queryOptions
@@ -41,7 +50,10 @@ export const useProductDetail = (id: number | null) => {
 
     return useQuery<Product>({
         queryKey: ['product', id],
-        queryFn: () => productsService.getProductById(id!),
+        queryFn: async () => {
+            const data = await productsService.getProductById(id!);
+            return productResponseSchema.parse(data);
+        },
         enabled: isConfigured && !!id
     });
 };
@@ -108,7 +120,7 @@ export const useCreateVariation = () => {
     return useMutation({
         mutationFn: ({ productId, data }: { productId: number; data: any }) =>
             productsService.createVariation(productId, data),
-        onSuccess: (data, variables) => {
+        onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['products', variables.productId, 'variations'] });
         }
     });
@@ -119,7 +131,7 @@ export const useUpdateVariation = () => {
     return useMutation({
         mutationFn: ({ productId, variationId, data }: { productId: number; variationId: number; data: any }) =>
             productsService.updateVariation(productId, variationId, data),
-        onSuccess: (data, variables) => {
+        onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['products', variables.productId, 'variations'] });
         }
     });
@@ -130,7 +142,7 @@ export const useDeleteVariation = () => {
     return useMutation({
         mutationFn: ({ productId, variationId }: { productId: number; variationId: number }) =>
             productsService.deleteVariation(productId, variationId),
-        onSuccess: (data, variables) => {
+        onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['products', variables.productId, 'variations'] });
         }
     });
@@ -141,7 +153,7 @@ export const useBatchVariations = () => {
     return useMutation({
         mutationFn: ({ productId, data }: { productId: number; data: any }) =>
             productsService.batchVariations(productId, data),
-        onSuccess: (data, variables) => {
+        onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['products', variables.productId, 'variations'] });
         }
     });

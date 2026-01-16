@@ -3,6 +3,8 @@ import { customersService } from '../api/customers.service';
 import { CustomersResponse, Customer } from '../types';
 import { useSettings } from '@/features/settings';
 
+import { customersResponseSchema, customerSchema } from '../types/schemas';
+
 interface UseCustomersParams {
     page?: number;
     per_page?: number;
@@ -16,7 +18,10 @@ export const useCustomersData = ({ page = 1, per_page = 10, search = '', enabled
 
     return useQuery<CustomersResponse>({
         queryKey: ['customers', page, per_page, search],
-        queryFn: () => customersService.getCustomers({ page, per_page, search }),
+        queryFn: async () => {
+            const data = await customersService.getCustomers({ page, per_page, search });
+            return customersResponseSchema.parse(data);
+        },
         enabled: isConfigured && enabled,
         staleTime: 5 * 60 * 1000,
         placeholderData: (previousData) => previousData // Keep previous data while fetching new page
@@ -29,7 +34,10 @@ export const useCustomerDetails = (id: number | null) => {
 
     return useQuery<Customer>({
         queryKey: ['customer', id],
-        queryFn: () => customersService.getCustomerById(id!),
+        queryFn: async () => {
+            const data = await customersService.getCustomerById(id!);
+            return customerSchema.parse(data);
+        },
         enabled: isConfigured && !!id,
         staleTime: 10 * 60 * 1000
     });

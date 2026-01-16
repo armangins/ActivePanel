@@ -22,7 +22,7 @@ export const useAttributeTerms = (attributeId: number | undefined) => {
     return useQuery({
         queryKey: ['attribute-terms', attributeId],
         queryFn: () => attributesAPI.getTerms(attributeId!),
-        enabled: hasSettings && !!attributeId,
+        enabled: hasSettings && !!attributeId && Number.isInteger(attributeId) && attributeId < 2147483647, // Ensure valid int32 ID to avoid fetching local attributes
         staleTime: 60 * 1000 * 5, // 5 minutes
     });
 };

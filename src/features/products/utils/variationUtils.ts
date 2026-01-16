@@ -1,5 +1,5 @@
 export interface NewVariationData {
-    attributes: { id: number; name: string; option: string }[];
+    attributes: { id: number | string; name: string; option: string }[];
     sku?: string;
     regular_price: string;
     sale_price?: string;
@@ -10,17 +10,17 @@ export interface NewVariationData {
 }
 
 export interface AttributeToCombine {
-    id: number;
+    id: number | string;
     name: string;
     values: string[];
 }
 
-export const generateCombinations = (attrs: AttributeToCombine[], index = 0): { id: number, name: string, option: string }[][] => {
+export const generateCombinations = (attrs: AttributeToCombine[], index = 0): { id: number | string, name: string, option: string }[][] => {
     if (index === attrs.length) return [[]];
 
     const currentAttr = attrs[index];
     const recursiveCombinations = generateCombinations(attrs, index + 1);
-    const combinations: { id: number, name: string, option: string }[][] = [];
+    const combinations: { id: number | string, name: string, option: string }[][] = [];
 
     currentAttr.values.forEach(val => {
         recursiveCombinations.forEach(suffix => {
@@ -35,8 +35,8 @@ export const generateCombinations = (attrs: AttributeToCombine[], index = 0): { 
     return combinations;
 };
 
-export const calculateTotalCombinations = (activeAttributeIds: number[], wizardAttributes: Record<number, string[]>): number => {
-    return activeAttributeIds.reduce((acc, id) => {
+export const calculateTotalCombinations = (activeAttributeIds: (number | string)[], wizardAttributes: Record<number | string, string[]>): number => {
+    return activeAttributeIds.reduce<number>((acc, id) => {
         const count = wizardAttributes[id]?.length || 0;
         return count === 0 ? acc : acc * count;
     }, activeAttributeIds.length > 0 ? 1 : 0);

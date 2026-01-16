@@ -8,4 +8,5 @@ export * from './components/OAuthCallback';
 export * from './components/ProtectedRoute';
 
 import { LoginPage } from './components/LoginPage';
+export * from './components/AuthErrorBoundary';
 export default LoginPage;
