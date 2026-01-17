@@ -10,7 +10,7 @@ interface VariationWizardStepProps {
     activeAttributeIds: (number | string)[];
     setActiveAttributeIds: React.Dispatch<React.SetStateAction<(number | string)[]>>;
     wizardAttributes: Record<number | string, string[]>;
-    onAttributeValueSelect: (attrId: number | string, value: string) => void;
+    onAttributeValueSelect: (attrId: number | string, value: string, label?: string) => void;
     form: any;
     existingAttributes?: any[];
 }
@@ -66,7 +66,7 @@ export const VariationWizardStep: React.FC<VariationWizardStepProps> = ({
                 </div>
                 <Select
                     placeholder={t('searchOrSelectAttributes')}
-                    style={{ width: '100%', maxWidth: 400 }}
+                    style={{ width: '100%' }}
                     mode="multiple"
                     optionLabelProp="label"
                     value={activeAttributeIds}
@@ -112,7 +112,7 @@ export const VariationWizardStep: React.FC<VariationWizardStepProps> = ({
                                     form={form}
                                     mode="multiple"
                                     selectedValues={wizardAttributes[id] || []}
-                                    onSelect={(_, value) => onAttributeValueSelect(id, value)}
+                                    onSelect={(_, value, label) => onAttributeValueSelect(id, value, label)}
                                 />
                             </div>
 

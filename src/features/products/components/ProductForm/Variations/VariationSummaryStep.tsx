@@ -12,32 +12,7 @@ interface VariationSummaryStepProps {
     total?: number;
 }
 
-const SummaryImagePreview = ({ image }: { image: any }) => {
-    const src = useMemo(() => {
-        if (!image) return null;
-        if (typeof image === 'string') return image;
-        return URL.createObjectURL(image);
-    }, [image]);
-
-    useEffect(() => {
-        return () => {
-            if (src && typeof image !== 'string') {
-                URL.revokeObjectURL(src);
-            }
-        };
-    }, [src, image]);
-
-    if (!src) return <span style={{ fontSize: 12, color: '#ccc' }}>-</span>;
-
-    return (
-        <Image
-            src={src}
-            width={32}
-            height={32}
-            style={{ borderRadius: 4, objectFit: 'cover' }}
-        />
-    );
-}
+import { VariationImagePreview } from './VariationImagePreview';
 
 export const VariationSummaryStep: React.FC<VariationSummaryStepProps> = ({
     combinations = [],
@@ -68,7 +43,11 @@ export const VariationSummaryStep: React.FC<VariationSummaryStepProps> = ({
             render: (_, record) => {
                 const signature = getCombinationSignature(record.combo);
                 const rowData = data[signature];
-                return <SummaryImagePreview image={rowData?.image} />;
+                return (
+                    <div style={{ width: 32, height: 32 }}>
+                        <VariationImagePreview image={rowData?.image} size={32} />
+                    </div>
+                );
             }
         },
         {

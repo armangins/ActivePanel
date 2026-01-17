@@ -4,12 +4,12 @@ import { useAttributeTerms } from '@/hooks/useAttributes';
 import { useVariationStyles } from './styles';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const { CheckableTag } = Tag;
 
+const { CheckableTag } = Tag;
 interface AttributeTermSelectorProps {
     attribute: any;
     form: any;
-    onSelect: (attrName: string, term: string) => void;
+    onSelect: (attrName: string, term: string, label?: string) => void;
     selectedValues?: string[];
     mode?: 'single' | 'multiple';
 }
@@ -21,15 +21,32 @@ export const AttributeTermSelector: React.FC<AttributeTermSelectorProps> = ({
     selectedValues = [],
     mode = 'single'
 }) => {
+    console.log('🎨 AttributeTermSelector RENDERED:', {
+        attributeName: attribute?.name,
+        attributeId: attribute?.id,
+        attributeType: attribute?.type
+    });
+
     const { data: terms, isLoading } = useAttributeTerms(attribute.id);
     const { noOptionsStyle } = useVariationStyles();
     const { token } = theme.useToken();
     const { t } = useLanguage();
     const formValue = Form.useWatch(attribute ? attribute.name : '', form);
 
-    if (isLoading) return <Spin size="small" />;
+    const options = React.useMemo(() => {
+        if (terms && terms.length > 0) {
+            return terms.map((t: any) => ({
+                label: t.name,
+                value: t.name, // CRITICAL FIX: Use name, not slug, to prevent WC duplicates
+                slug: t.slug,
+                color: t.color, // Color hex value for color-type attributes
+                image: t.image  // Image URL for image-type attributes
+            }));
+        }
+        return (attribute.options || []).map((opt: string) => ({ label: opt, value: opt }));
+    }, [terms, attribute.options]);
 
-    const options = terms && terms.length > 0 ? terms.map((t: any) => t.name) : (attribute.options || []);
+    if (isLoading) return <Spin size="small" />;
 
     if (!options || options.length === 0) {
         return (
@@ -38,6 +55,8 @@ export const AttributeTermSelector: React.FC<AttributeTermSelectorProps> = ({
             </div>
         );
     }
+
+    const isImageAttribute = attribute.type === 'image';
 
     return (
         <div>
@@ -48,20 +67,40 @@ export const AttributeTermSelector: React.FC<AttributeTermSelectorProps> = ({
             )}
 
             <Space size={[8, 8]} wrap>
-                {options.map((option: string) => {
-                    const isSelected = mode === 'single' ? formValue === option : selectedValues.includes(option);
+                {options.map((option: { label: string; value: string; color?: string; image?: string; slug?: string }) => {
+                    const isSelected = mode === 'single' ? formValue === option.value : selectedValues.includes(option.value);
+
                     return (
                         <CheckableTag
-                            key={option}
+                            key={option.value}
                             checked={isSelected}
-                            onChange={() => onSelect(attribute.name, option)}
+                            onChange={() => onSelect(attribute.name, option.value, option.label)}
                             style={{
-                                border: `1px solid ${isSelected ? token.colorPrimary : token.colorBorder}`,
+                                border: `2px solid ${isSelected ? token.colorPrimary : token.colorBorder}`,
                                 padding: `${token.paddingXXS}px ${token.paddingSM}px`,
-                                fontSize: token.fontSize
+                                fontSize: token.fontSize,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 6,
+                                borderRadius: token.borderRadius,
+                                height: 'auto'
                             }}
                         >
-                            {option}
+                            {isImageAttribute && option.image && (
+                                <img
+                                    src={option.image}
+                                    alt={option.label}
+                                    style={{
+                                        width: 20,
+                                        height: 20,
+                                        objectFit: 'cover',
+                                        borderRadius: 2,
+                                        flexShrink: 0
+                                    }}
+                                />
+                            )}
+                            {option.label}
                         </CheckableTag>
                     );
                 })}

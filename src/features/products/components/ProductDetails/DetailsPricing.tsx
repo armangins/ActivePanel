@@ -85,6 +85,22 @@ export const DetailsPricing: React.FC<DetailsPricingProps> = ({ control, product
                             </Col>
                         </Row>
 
+                        <div style={{ marginTop: 16 }}>
+                            <Form.Item label={t('stockQuantity') || 'Stock Quantity'}>
+                                <Controller
+                                    name="stock_quantity"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <InputNumber
+                                            {...field}
+                                            style={{ width: '100%' }}
+                                            min={0}
+                                        />
+                                    )}
+                                />
+                            </Form.Item>
+                        </div>
+
 
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', fontSize: 13, marginBottom: 16 }}>

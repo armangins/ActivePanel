@@ -6,7 +6,6 @@ import { useProductSearch } from '@/features/products';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { useDebounce } from '@/hooks/useDebounce';
-import { ProductDetailModal } from '@/features/products/components/ProductDetails/ProductDetailModal/ProductDetailModal';
 import type { DefaultOptionType } from 'antd/es/select';
 
 const { Text } = Typography;
@@ -43,7 +42,6 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ placeholder, isRTL, classNa
     const [searchValue, setSearchValue] = useState('');
     const [debouncedSearchValue] = useDebounce(searchValue, 500);
     const [options, setOptions] = useState<CustomOptionType[]>([]);
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const navigate = useNavigate();
     const { t, formatCurrency } = useLanguage();
 
@@ -88,7 +86,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ placeholder, isRTL, classNa
                             <OptimizedImage
                                 src={product.images?.[0]?.src || ''}
                                 alt={product.name}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                className="global-search-image"
                             />
                         </div>
                         <Flex vertical flex={1} style={{ overflow: 'hidden' }}>
@@ -106,7 +104,8 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ placeholder, isRTL, classNa
                                     icon={<InfoCircleOutlined />}
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        setSelectedProduct(product);
+                                        navigate(`/products?edit=${product.id}`);
+                                        setSearchValue('');
                                     }}
                                 />
                             </Tooltip>
@@ -117,7 +116,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ placeholder, isRTL, classNa
                                     icon={<EditOutlined />}
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        navigate(`/products/edit/${product.id}`);
+                                        navigate(`/products?edit=${product.id}`);
                                         setSearchValue('');
                                     }}
                                 />
@@ -143,53 +142,37 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ placeholder, isRTL, classNa
         }
     }, [searchResults, isLoading, debouncedSearchValue, formatCurrency, t, navigate]);
 
-    const handleSelect = (value: string, option: CustomOptionType) => {
+    const handleSelect = (_value: string, option: CustomOptionType) => {
         if (option.product) {
-            navigate(`/products/edit/${option.product.id}`);
+            navigate(`/products?edit=${option.product.id}`);
             setSearchValue(''); // Clear search after selection
         }
     };
 
     return (
-        <>
-            <div className={`global-search ${className || ''}`} style={{ width: '100%', maxWidth: '400px', ...style }}>
-                <AutoComplete
-                    popupMatchSelectWidth={400}
-                    style={{ width: '100%' }}
-                    options={options}
-                    onSelect={handleSelect}
-                    onSearch={setSearchValue}
-                    value={searchValue}
-                // listHeight={400} // Removed: AntD handles this well by default, or use if strictly needed
-                >
-                    <Input
-                        size="large"
-                        placeholder={placeholder || (t('search') || 'חיפוש...')}
-                        prefix={<SearchOutlined style={{ color: token.colorTextDisabled, fontSize: 18 }} />}
-                        autoFocus={autoFocus}
-                        allowClear
-                        style={{
-                            borderRadius: token.borderRadiusLG,
-                            direction: isRTL ? 'rtl' : 'ltr'
-                        }}
-                    />
-                </AutoComplete>
-            </div>
-
-            {/* Product Detail Modal */}
-            {selectedProduct && (
-                <ProductDetailModal
-                    product={selectedProduct}
-                    open={!!selectedProduct}
-                    onClose={() => setSelectedProduct(null)}
-                    onEdit={(product: Product) => {
-                        navigate(`/products/edit/${product.id}`);
-                        setSelectedProduct(null);
-                        setSearchValue('');
+        <div className={`global-search ${className || ''}`} style={{ width: '100%', maxWidth: '400px', ...style }}>
+            <AutoComplete
+                popupMatchSelectWidth={400}
+                style={{ width: '100%' }}
+                options={options}
+                onSelect={handleSelect}
+                onSearch={setSearchValue}
+                value={searchValue}
+            // listHeight={400} // Removed: AntD handles this well by default, or use if strictly needed
+            >
+                <Input
+                    size="large"
+                    placeholder={placeholder || (t('search') || 'חיפוש...')}
+                    prefix={<SearchOutlined style={{ color: token.colorTextDisabled, fontSize: 18 }} />}
+                    autoFocus={autoFocus}
+                    allowClear
+                    style={{
+                        borderRadius: token.borderRadiusLG,
+                        direction: isRTL ? 'rtl' : 'ltr'
                     }}
                 />
-            )}
-        </>
+            </AutoComplete>
+        </div>
     );
 };
 

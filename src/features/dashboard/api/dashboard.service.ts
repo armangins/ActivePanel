@@ -6,7 +6,7 @@ import { DashboardStats, DashboardData, SalesChartData, DashboardOrder, Dashboar
 export const dashboardService = {
     async getGlobalStats(): Promise<DashboardStats> {
         try {
-            const [totalProducts, totalOrders, totalCustomers, allOrdersResponse] = await Promise.all([
+            const [totalProducts, totalOrders, totalCustomers, salesReport] = await Promise.all([
                 productsAPI.getTotalCount().catch(err => {
                     console.warn('Failed to fetch product count:', err);
                     return 0;
@@ -19,27 +19,23 @@ export const dashboardService = {
                     console.warn('Failed to fetch customer count:', err);
                     return 0;
                 }),
-                ordersAPI.getAll({
-                    per_page: 100, // Fetch recent 100 to calc revenue efficiently approx
-                    orderby: 'date',
-                    order: 'desc'
-                }).catch(err => {
-                    console.warn('Failed to fetch orders:', err);
+                reportsAPI.getSales('year').catch(err => {
+                    console.warn('Failed to fetch sales report:', err);
                     return [];
-                }),
+                })
             ]);
 
-            // Calculate revenue from fetched orders (approximation based on last 100 or need full dump? 
-            // Legacy code fetched 100 for recent orders list, but might have used a report endpoint for total revenue?
-            // Checking legacy code: It fetched 100 orders and calculated revenue from that. This is technically incorrect for "Total Revenue" 
-            // but we must preserve behavior for now or improve if obvious API exists. 
-            // Woo API has reports/sales. 
-            // Legacy code used `allOrdersResponse` to calculate `totalRevenue`.
+            // Calculate revenue from reportsAPI (authoritative source)
+            // Report returns array, usually one item for the requested period 'year' or multiple if granular
+            // The endpoint /reports/sales with period=year usually returns total_sales for that year
+            // If it returns an array of reports, we sum them up or take the first one.
+            // WooCommerce REST API /reports/sales returns array.
 
-            const completedOrders = (allOrdersResponse || []).filter((o: any) => o.status === 'completed');
-            const totalRevenue = completedOrders.reduce((sum: number, order: any) => {
-                return sum + parseFloat(order.total || '0');
-            }, 0);
+            let totalRevenue = 0;
+            if (Array.isArray(salesReport) && salesReport.length > 0) {
+                // Sum up total_sales from all report entries (though usually 1 for 'year')
+                totalRevenue = salesReport.reduce((sum: number, report: any) => sum + parseFloat(report.total_sales || '0'), 0);
+            }
 
             return {
                 totalRevenue: totalRevenue.toFixed(2),
@@ -108,12 +104,16 @@ export const dashboardService = {
     // Aggregation helper
     async getDashboardData(): Promise<DashboardData> {
         // Parallel fetch
-        const [stats, recentOrders, topProducts, allOrdersForChart] = await Promise.all([
+        const [stats, recentOrders, topProducts] = await Promise.all([
             this.getGlobalStats(),
             this.getRecentOrders(),
-            this.getTopProducts(),
-            ordersAPI.getAll({ per_page: 100 })
+            this.getTopProducts()
         ]);
+
+        // For the chart, we still need some data. The previous code fetched 100 orders.
+        // Let's keep fetching orders for the chart separately but maybe optimized?
+        // Actually, let's keep it but separate from the stats call to be clean.
+        const allOrdersForChart = await ordersAPI.getAll({ per_page: 100 });
 
         const salesChartData = await this.getSalesChartData(allOrdersForChart);
         const lowStockProducts = await productsAPI.getLowStockProducts();

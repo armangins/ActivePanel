@@ -67,7 +67,7 @@ export const productsService = {
                 const response = await productsAPI.list({
                     page,
                     per_page: 100,
-                    _fields: 'id,name,sku,price,regular_price,sale_price,images,stock_status'
+                    _fields: 'id,name,sku,price,regular_price,sale_price,images,stock_status,type'
                 });
 
                 if (response.data && response.data.length > 0) {
@@ -152,7 +152,7 @@ export const productsService = {
 
     async createVariation(productId: number, data: any): Promise<any> {
         try {
-            return await productsAPI.createVariation(productId, data);
+            return await variationsAPI.create(productId, data);
         } catch (error) {
             secureLog.error(`Error creating variation for product ${productId}:`, error);
             throw error;
@@ -161,7 +161,7 @@ export const productsService = {
 
     async updateVariation(productId: number, variationId: number, data: any): Promise<any> {
         try {
-            return await productsAPI.updateVariation(productId, variationId, data);
+            return await variationsAPI.update(productId, variationId, data);
         } catch (error) {
             secureLog.error(`Error updating variation ${variationId} for product ${productId}:`, error);
             throw error;
@@ -170,7 +170,7 @@ export const productsService = {
 
     async deleteVariation(productId: number, variationId: number): Promise<boolean> {
         try {
-            await productsAPI.deleteVariation(productId, variationId);
+            await variationsAPI.delete(productId, variationId);
             return true;
         } catch (error) {
             secureLog.error(`Error deleting variation ${variationId} for product ${productId}:`, error);

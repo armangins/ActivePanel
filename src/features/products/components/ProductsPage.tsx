@@ -7,30 +7,26 @@ import { useResponsive } from '@/hooks/useResponsive';
 import { useInfiniteProducts, useDeleteProduct, useBulkDeleteProducts } from '../hooks/useProductsData';
 import { ProductGrid } from './ProductList/ProductGrid';
 import { ProductTable } from './ProductList/ProductTable';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSettings } from '@/features/settings';
-
-
 
 const { Content } = Layout;
 const { Text } = Typography;
 
-// ... existing imports
-
 export const ProductsPage = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { isMobile } = useResponsive();
     const { settings, loading: settingsLoading } = useSettings();
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-
     const [selectedProductIds, setSelectedProductIds] = useState<Set<number>>(new Set());
-    const [viewProduct, setViewProduct] = useState<any>(null);
 
-
-
-
+    // URL-based Modal State
+    const isCreateMode = searchParams.get('create') === 'true';
+    const editId = searchParams.get('edit');
+    const isEditMode = !!editId;
 
     const {
         data,
@@ -52,7 +48,6 @@ export const ProductsPage = () => {
 
     const products = useMemo(() => {
         const allProducts = data?.pages.flatMap(page => page.data) || [];
-        // Deduplicate products by ID
         const uniqueProducts = new Map();
         allProducts.forEach(p => {
             if (p && p.id) {
@@ -61,6 +56,40 @@ export const ProductsPage = () => {
         });
         return Array.from(uniqueProducts.values());
     }, [data]);
+
+    // Derive product to edit from URL and available data
+    const productToEdit = useMemo(() => {
+        if (!editId) return null;
+        const id = parseInt(editId, 10);
+        return products.find(p => p.id === id) || { id };
+    }, [editId, products]);
+
+    const handleCloseModal = useCallback(() => {
+        setSearchParams(params => {
+            const newParams = new URLSearchParams(params);
+            newParams.delete('create');
+            newParams.delete('edit');
+            return newParams;
+        });
+    }, [setSearchParams]);
+
+    const handleOpenCreate = useCallback(() => {
+        setSearchParams(params => {
+            const newParams = new URLSearchParams(params);
+            newParams.set('create', 'true');
+            newParams.delete('edit');
+            return newParams;
+        });
+    }, [setSearchParams]);
+
+    const handleOpenEdit = useCallback((product: any) => {
+        setSearchParams(params => {
+            const newParams = new URLSearchParams(params);
+            newParams.set('edit', String(product.id));
+            newParams.delete('create');
+            return newParams;
+        });
+    }, [setSearchParams]);
 
 
     const deleteMutation = useDeleteProduct();
@@ -184,7 +213,7 @@ export const ProductsPage = () => {
                 <Button
                     type="primary"
                     icon={<PlusOutlined />}
-                    onClick={() => navigate('/products/add')}
+                    onClick={handleOpenCreate}
                     shape={isMobile ? "circle" : "default"}
                     style={isMobile ? { minWidth: 40, width: 40, height: 40, padding: 0 } : undefined}
                 >
@@ -199,8 +228,8 @@ export const ProductsPage = () => {
                     <ProductGrid
                         products={products}
                         isLoading={isLoading}
-                        onView={(p) => setViewProduct(p)}
-                        onEdit={(p) => navigate(`/products/edit/${p.id}`)}
+                        onView={handleOpenEdit}
+                        onEdit={handleOpenEdit}
                         onDelete={handleDelete}
                     />
                 ) : (
@@ -208,8 +237,8 @@ export const ProductsPage = () => {
                         <ProductTable
                             products={products}
                             isLoading={isLoading}
-                            onView={(p) => setViewProduct(p)}
-                            onEdit={(p) => navigate(`/products/edit/${p.id}`)}
+                            onView={handleOpenEdit}
+                            onEdit={handleOpenEdit}
                             onDelete={handleDelete}
                             selectedProductIds={selectedProductIds}
                             onSelectionChange={setSelectedProductIds}
@@ -240,12 +269,12 @@ export const ProductsPage = () => {
                 </div>
             </Flex>
 
-            {/* Product Details Modal */}
+            {/* Product Details Modal (Unified for Add/Edit) */}
             <ProductDetailModal
-                product={viewProduct}
-                open={!!viewProduct}
-                onClose={() => setViewProduct(null)}
-                onEdit={(p) => navigate(`/products/edit/${p.id}`)}
+                product={productToEdit as any}
+                open={isEditMode || isCreateMode}
+                onClose={handleCloseModal}
+                onEdit={(p) => handleOpenEdit(p)}
             />
 
             {/* Mobile Float Button */}
@@ -254,7 +283,7 @@ export const ProductsPage = () => {
                     type="primary"
                     shape="circle"
                     icon={<PlusOutlined />}
-                    onClick={() => navigate('/products/add')}
+                    onClick={handleOpenCreate}
                     style={{
                         bottom: 24,
                         right: 24,

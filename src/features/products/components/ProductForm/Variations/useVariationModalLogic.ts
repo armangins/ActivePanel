@@ -18,6 +18,7 @@ export interface UseVariationModalLogicProps {
     globalAttributes?: any[];
     initialValues?: any;
     isEditing?: boolean;
+    parentName?: string;
     parentSku?: string;
     parentManageStock?: boolean;
     parentStockQuantity?: number;
@@ -38,6 +39,7 @@ export const useVariationModalLogic = ({
     globalAttributes = [],
     initialValues,
     isEditing = false,
+    parentName = '',
     parentSku = '',
     parentManageStock = false,
     parentStockQuantity,
@@ -58,6 +60,9 @@ export const useVariationModalLogic = ({
 
     // Active attributes list
     const [activeAttributeIds, setActiveAttributeIds] = useState<(number | string)[]>([]);
+
+    // Attribute Label Map (Slug -> Label)
+    const [slugToLabelMap, setSlugToLabelMap] = useState<Record<string, string>>({});
 
     // Manual Mode State
     const [manualCombinations, setManualCombinations] = useState<{ id: number | string; name: string; option: string }[][]>([]);
@@ -91,16 +96,8 @@ export const useVariationModalLogic = ({
 
                 setGenerationMode('manual');
                 setStep(1); // Go to Config directly for editing (Step index 1 in 0,1,2 flow might be confusing if 1 is Config? No: 0=Attr, 1=Config, 2=Summary. So 1 is correct.)
-            } else if (existingAttributes && existingAttributes.length > 0) {
-                // Pre-select existing attributes if any but treat as new flow start
-                const ids = existingAttributes.map((a: any) => a.id > 0 ? a.id : a.name);
-                setActiveAttributeIds(ids);
-                setWizardAttributes({}); // Clear prior state
-                setStep(0);
-                setGenerationMode('auto');
-                setManualCombinations([]);
             } else {
-                // Reset state for new entry
+                // Always reset state for new variations - start with clean form
                 setActiveAttributeIds([]);
                 setWizardAttributes({});
                 setStep(0);
@@ -113,7 +110,7 @@ export const useVariationModalLogic = ({
                 manage_stock: parentManageStock,
                 stock_quantity: parentStockQuantity,
                 stock_status: 'instock',
-                sku: parentSku
+                sku: '' // CRITICAL FIX: Do not inherit Parent SKU by default to avoid duplicates
             };
             form.setFieldsValue(targetValues);
         }
@@ -125,7 +122,11 @@ export const useVariationModalLogic = ({
         ? calculateTotalCombinations(activeAttributeIds, wizardAttributes)
         : manualCombinations.length;
 
-    const handleWizardAttributeValueSelect = (attrId: number | string, value: string) => {
+    const handleWizardAttributeValueSelect = (attrId: number | string, value: string, label?: string) => {
+        if (label) {
+            setSlugToLabelMap(prev => ({ ...prev, [value]: label }));
+        }
+
         setWizardAttributes(prev => {
             const currentValues = prev[attrId] || [];
             if (currentValues.includes(value)) {
@@ -197,6 +198,22 @@ export const useVariationModalLogic = ({
         return generateCombinations(attributesToCombine);
     }, [activeAttributeIds, wizardAttributes, globalAttributes, existingAttributes, generationMode, manualCombinations]);
 
+    // Clean up stale variation data when combinations change
+    useEffect(() => {
+        if (!isEditing && previewCombinations.length > 0) {
+            const validSignatures = new Set(previewCombinations.map(combo => getCombinationSignature(combo)));
+            setVariationData(prev => {
+                const cleaned: Record<string, VariationConfigData> = {};
+                Object.keys(prev).forEach(sig => {
+                    if (validSignatures.has(sig)) {
+                        cleaned[sig] = prev[sig];
+                    }
+                });
+                return cleaned;
+            });
+        }
+    }, [previewCombinations, isEditing]);
+
 
     const handleModeSelect = (mode: 'auto' | 'manual') => {
         setGenerationMode(mode);
@@ -220,15 +237,19 @@ export const useVariationModalLogic = ({
     const handleNext = () => {
         if (step === 0) {
             // Step 0: Attributes (and implied values for Auto)
+            // Validation: Must select at least one attribute
             if (activeAttributeIds.length === 0) {
-                if (activeAttributeIds.length === 0) {
-                    message.error(t('selectAtLeastOneAttribute'));
-                    return;
-                }
+                message.error(t('selectAtLeastOneAttribute'));
                 return;
             }
-            // Auto-advance logic usually happens via Mode Buttons in Footer for Step 0.
-            // But if called directly:
+
+            // Validation: Must select at least one value for EACH selected attribute
+            const missingValues = activeAttributeIds.some(id => !wizardAttributes[id] || wizardAttributes[id].length === 0);
+            if (missingValues) {
+                message.error(t('selectValuesForEachAttribute'));
+                return;
+            }
+
             setStep(1);
         } else if (step === 1) {
             // Step 1: Configuration
@@ -255,7 +276,7 @@ export const useVariationModalLogic = ({
             const missingRequired = previewCombinations.some((combo: any) => {
                 const sig = getCombinationSignature(combo);
                 const data = variationData[sig];
-                return !data?.regular_price; // || data?.stock_quantity === null; // Stock might be opt?
+                return !data?.regular_price || data?.stock_quantity === null || data?.stock_quantity === undefined;
             });
 
             if (missingRequired) {
@@ -343,14 +364,26 @@ export const useVariationModalLogic = ({
             let finalVariations: NewVariationData[] = [];
 
             if (generationMode === 'manual') {
-                // Filter out incomplete rows
-                const validRows = manualCombinations.filter(combo => combo.length === activeAttributeIds.length);
+                // Filter out incomplete rows (must have all attributes AND selected options)
+                const validRows = manualCombinations.filter(combo =>
+                    combo.length === activeAttributeIds.length &&
+                    combo.every(c => c.option && c.option.trim() !== '')
+                );
 
                 finalVariations = validRows.map(combo => {
                     const signature = getCombinationSignature(combo);
                     const config = variationData[signature] || {};
+
+                    // Generate variation name: "Parent Product Name - Attribute Values"
+                    const attributeValues = combo.map(c => c.option).join(' - ');
+                    const variationName = parentName ? `${parentName} - ${attributeValues}` : attributeValues;
+
                     return {
-                        attributes: combo,
+                        attributes: combo.map(c => ({
+                            ...c,
+                            display_option: slugToLabelMap[c.option] || c.option
+                        })),
+                        name: variationName,
                         sku: config.sku, // Allow manual mode to support per-row SKU if we add it to config, otherwise undef or base
                         regular_price: config.regular_price,
                         sale_price: config.sale_price,
@@ -376,8 +409,16 @@ export const useVariationModalLogic = ({
                     const data = variationData[signature] || {};
                     const baseSku = form.getFieldValue('sku');
 
+                    // Generate variation name: "Parent Product Name - Attribute Values"
+                    const attributeValues = combo.map(c => c.option).join(' - ');
+                    const variationName = parentName ? `${parentName} - ${attributeValues}` : attributeValues;
+
                     return {
-                        attributes: combo,
+                        attributes: combo.map(c => ({
+                            ...c,
+                            display_option: slugToLabelMap[c.option] || c.option
+                        })),
+                        name: variationName,
                         sku: baseSku ? `${baseSku}-${idx + 1}` : undefined,
                         regular_price: data.regular_price,
                         sale_price: data.sale_price,
@@ -397,6 +438,18 @@ export const useVariationModalLogic = ({
 
 
     const switchToManualWithAutoData = () => {
+        // Validate that attributes have values selected
+        if (activeAttributeIds.length === 0) {
+            message.error(t('selectAtLeastOneAttribute'));
+            return;
+        }
+
+        const missingValues = activeAttributeIds.some(id => !wizardAttributes[id] || wizardAttributes[id].length === 0);
+        if (missingValues) {
+            message.warning(t('selectValuesForEachAttribute'));
+            return;
+        }
+
         const attributesToCombine: AttributeToCombine[] = activeAttributeIds.map(id => {
             const attr = globalAttributes.find((a: any) => a.id === id) ||
                 existingAttributes.find((a: any) => (a.id === id) || (a.id === 0 && a.name === id));

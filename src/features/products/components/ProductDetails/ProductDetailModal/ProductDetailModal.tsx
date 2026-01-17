@@ -22,7 +22,7 @@ import { useManualVariation } from '@/features/products/hooks/useManualVariation
 import { AddVariationModal } from '../../ProductForm/Variations/AddVariationModal';
 
 interface ProductDetailModalProps {
-    product: Product;
+    product?: Product | null;
     open: boolean;
     onClose: () => void;
     onEdit?: (product: Product) => void;
@@ -39,23 +39,35 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
 
     const { data: globalAttributes = [] } = useAttributes();
 
-    // Fetch full product details to ensure we have permalink and latest data
-    const { data: fullProduct } = useProductDetail(product?.id);
+    // Fetch full product details only if we have a product ID (Edit Mode)
+    const { data: fullProduct } = useProductDetail(product?.id || null);
 
     // Fetch variations if product is variable
-    const { data: variationsData, isLoading: isLoadingVariations } = useVariations(product?.id);
+    const { data: variationsData, isLoading: isLoadingVariations } = useVariations(product?.id as any);
 
-    // Initialize form with product data, but reset variations to empty array initially
-    // to avoid type conflict (Product.variations is number[], ProductFormValues.variations is Object[])
-    // The actual variation objects will be populated by the useEffect below once fetched.
+    // Default values for NEW product
+    const defaultValues: Partial<ProductFormValues> = {
+        type: 'simple',
+        status: 'publish',
+        stock_status: 'instock',
+        manage_stock: false,
+        virtual: false,
+        downloadable: false,
+        variations: [],
+        images: [],
+        attributes: []
+        // Add other defaults as needed
+    };
+
+    // Initialize form
     const methods = useForm<ProductFormValues>({
-        defaultValues: product ? { ...product, variations: [] } as unknown as ProductFormValues : {}
+        defaultValues: product ? { ...product, variations: [] } as unknown as ProductFormValues : defaultValues as ProductFormValues
     });
 
     const { handleSubmit, reset, control, formState: { isDirty } } = methods;
 
     // Watch product type to update UI dynamically
-    const productType = useWatch({ control, name: 'type' }) || product?.type;
+    const productType = useWatch({ control, name: 'type' }) || 'simple';
 
     const { handleSave, isSaving } = useProductSave({ product, onClose });
 
@@ -70,14 +82,28 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
 
     // Reset form when product changes
     useEffect(() => {
-        if (product && open) {
-            reset({ ...product, variations: [] } as unknown as ProductFormValues);
+        if (open) {
+            if (product) {
+                // Edit Mode
+                const productData = fullProduct || product;
+                // Only reset if we are switching products or just opened
+                reset({ ...productData, variations: [] } as unknown as ProductFormValues);
+            } else {
+                // Create Mode -> Reset to defaults
+                reset(defaultValues as ProductFormValues);
+            }
         }
-    }, [product, open, reset]);
+    }, [product, fullProduct, open, reset]);
 
     // Populate variations when loaded using reset to sync with useFieldArray
     useEffect(() => {
-
+        if (product?.type === 'variable' && variationsData && !isLoadingVariations) {
+            console.log('ProductDetailModal: Setting variations', variationsData);
+            reset({
+                ...methods.getValues(),
+                variations: variationsData
+            } as unknown as ProductFormValues);
+        }
     }, [variationsData, isLoadingVariations, product?.type, reset, methods]);
 
     const handleCancel = () => {
@@ -93,14 +119,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
         }
     };
 
-    if (!product) return null;
+    // removed: if (!product) return null; -> Now we render even if !product (Create Mode)
+
+    const modalTitle = product ? t('editProduct') : t('addNewProduct');
 
     return (
         <Modal
             open={open}
             onCancel={handleCancel}
             width={1000}
-            title={t('editProduct')}
+            title={modalTitle}
             footer={null}
             centered
             className="product-detail-modal"
@@ -120,6 +148,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                                     {productType === 'variable' && (
                                         <DetailsVariations control={control} onOpenVariationModal={handleOpenVariationModal} />
                                     )}
+                                    {/* DEBUG: Log product type and variations count */}
+                                    {console.log('RENDER: Product Type:', productType, 'Variations:', methods.getValues('variations')?.length)}
                                 </Space>
                             </Col>
 
@@ -140,7 +170,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                         onClose={onClose}
                         onSave={handleSubmit(handleSave)}
                         isSaving={isSaving}
-                        product={product}
+                        product={product || undefined}
                         fullProduct={fullProduct}
                     />
                 </Form>
@@ -153,10 +183,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                         setIsVariationModalOpen(false);
                         setEditingVariationIndex(null);
                     }}
-                    onAdd={handleManualAdd}
+                    onAdd={handleManualAdd as any}
                     globalAttributes={globalAttributes}
                     initialValues={editingVariationIndex !== null ? methods.getValues(`variations.${editingVariationIndex}` as any) : undefined}
                     isEditing={editingVariationIndex !== null}
+                    parentName={product?.name}
                     parentSku={parentSku}
                     parentManageStock={parentManageStock}
                     parentStockQuantity={parentStockQuantity}

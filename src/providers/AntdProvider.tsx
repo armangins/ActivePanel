@@ -3,7 +3,7 @@ import { ConfigProvider, App } from 'antd';
 import heIL from 'antd/locale/he_IL';
 import dayjs from 'dayjs';
 import 'dayjs/locale/he';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Configure dayjs to use Hebrew locale
 dayjs.locale('he');

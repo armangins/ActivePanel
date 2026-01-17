@@ -3,7 +3,30 @@ import { Input, InputNumber, Button, Upload, Image, Select, Flex, theme, Typogra
 import { UploadOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getCombinationSignature } from '@/features/products/utils/variationUtils';
-// import { useVariationStyles } from './styles'; // Unused
+import { useAttributeTerms } from '@/hooks/useAttributes';
+import { VariationImagePreview } from './VariationImagePreview';
+import { ColorSwatch } from './ColorSwatch';
+
+const LazyAttributeSelect: React.FC<{
+    attributeId: string | number;
+    attributeName: string;
+    value: string;
+    onChange: (val: string) => void;
+}> = ({ attributeId, attributeName, value, onChange }) => {
+    const { data: terms, isLoading } = useAttributeTerms(attributeId);
+
+    return (
+        <Select
+            style={{ width: 100 }}
+            placeholder={attributeName}
+            value={value}
+            onChange={onChange}
+            options={(terms || []).map((t: any) => ({ label: t.name, value: t.name }))}
+            size="small"
+            loading={isLoading}
+        />
+    );
+};
 
 export interface VariationConfigData {
     regular_price: string;
@@ -31,62 +54,6 @@ interface VariationConfigurationStepProps {
     onUpdateCombo?: (rowIndex: number, attrId: number | string, value: string) => void;
     activeAttributes?: any[];
 }
-
-const ImagePreview = ({ image, onRemove }: { image: any, onRemove: () => void }) => {
-    const { token } = theme.useToken();
-
-    const src = useMemo(() => {
-        if (!image) return null;
-        if (typeof image === 'string') return image;
-        return URL.createObjectURL(image);
-    }, [image]);
-
-    useEffect(() => {
-        return () => {
-            if (src && typeof image !== 'string') {
-                URL.revokeObjectURL(src);
-            }
-        };
-    }, [src, image]);
-
-    if (!src) return null;
-
-    return (
-        <div style={{
-            position: 'relative',
-            width: '100%',
-            height: '100%',
-            borderRadius: token.borderRadius,
-            overflow: 'hidden',
-            border: `1px solid ${token.colorBorder}`
-        }}>
-            <Image
-                src={src}
-                width="100%"
-                height="100%"
-                preview={false}
-                style={{ objectFit: 'cover' }}
-            />
-            <Flex
-                align="center"
-                justify="center"
-                style={{
-                    position: 'absolute',
-                    top: 0, right: 0, bottom: 0, left: 0,
-                    background: 'rgba(0,0,0,0.5)',
-                    cursor: 'pointer',
-                    opacity: 0,
-                    transition: 'opacity 0.2s',
-                }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '0'}
-                onClick={onRemove}
-            >
-                <DeleteOutlined style={{ color: token.colorWhite }} />
-            </Flex>
-        </div>
-    );
-};
 
 
 
@@ -118,7 +85,7 @@ export const VariationConfigurationStep: React.FC<VariationConfigurationStepProp
 
     const columns: ColumnsType<any> = [
         {
-            title: t('variation'),
+            title: t('variations'),
             dataIndex: 'combo',
             key: 'combo',
             width: isManual ? 250 : 150,
@@ -129,71 +96,54 @@ export const VariationConfigurationStep: React.FC<VariationConfigurationStepProp
                             {activeAttributes.map((attr: any) => {
                                 const currentVal = combo.find((c: any) => c.id === attr.id)?.option;
                                 return (
-                                    <Select
+                                    <LazyAttributeSelect
                                         key={attr.id}
-                                        style={{ width: 100 }}
-                                        placeholder={attr.name}
+                                        attributeId={attr.id}
+                                        attributeName={attr.name}
                                         value={currentVal}
-                                        onChange={(val) => onUpdateCombo && onUpdateCombo(index, attr.id, val)}
-                                        options={(attr.options || []).map((opt: string) => ({ label: opt, value: opt }))}
-                                        size="small"
+                                        onChange={(val: string) => onUpdateCombo && onUpdateCombo(index, attr.id, val)}
                                     />
                                 );
                             })}
                         </Flex>
                     );
                 }
-                return (
-                    <Typography.Text strong>
-                        {combo.map((c: any) => c.option).join(' / ')}
-                    </Typography.Text>
-                );
-            }
-        },
-        {
-            title: t('image'),
-            dataIndex: 'image',
-            key: 'image',
-            width: 80,
-            render: (_, record) => {
-                const signature = getCombinationSignature(record.combo);
-                const rowData = data[signature] || {};
 
+                // For auto-generated variations, show color swatches for color attributes
                 return (
-                    <div style={{ width: 50, height: 50 }}>
-                        {rowData.image ? (
-                            <ImagePreview
-                                image={rowData.image}
-                                onRemove={() => onChange(signature, 'image', null)}
-                            />
-                        ) : (
-                            <Upload
-                                beforeUpload={(file) => handleImageUpload(signature, file)}
-                                showUploadList={false}
-                            >
-                                <div style={{
-                                    width: 50,
-                                    height: 50,
-                                    border: `1px dashed ${token.colorBorder}`,
-                                    borderRadius: token.borderRadius,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: 'pointer',
-                                    background: token.colorFillQuaternary
-                                }}>
-                                    <UploadOutlined style={{ color: token.colorTextSecondary }} />
-                                </div>
-                            </Upload>
-                        )}
-                    </div>
+                    <Flex gap={8} align="center" wrap="wrap">
+                        {combo.map((c: any, idx: number) => {
+                            // Check if this attribute is a color type
+                            const attr = activeAttributes?.find((a: any) => a.id === c.id || a.name === c.name);
+                            const isColorAttr = attr?.type === 'color';
+
+                            if (isColorAttr && c.id) {
+                                // For color attributes, use ColorSwatch component to fetch and display color
+                                return (
+                                    <ColorSwatch
+                                        key={idx}
+                                        attributeId={c.id}
+                                        colorName={c.option}
+                                    />
+                                );
+                            }
+
+                            // For non-color attributes, show text
+                            return (
+                                <Typography.Text key={idx} strong>
+                                    {c.option}
+                                    {idx < combo.length - 1 && ' / '}
+                                </Typography.Text>
+                            );
+                        })}
+                    </Flex>
                 );
             }
         },
         {
-            title: t('regular_price'),
+            title: t('regularPrice'),
             dataIndex: 'regular_price',
-            key: 'regular_price',
+            key: 'regularPrice',
             width: 150,
             render: (_, record) => {
                 const signature = getCombinationSignature(record.combo);
@@ -212,9 +162,9 @@ export const VariationConfigurationStep: React.FC<VariationConfigurationStepProp
             }
         },
         {
-            title: t('sale_price'),
+            title: t('salePrice'),
             dataIndex: 'sale_price',
-            key: 'sale_price',
+            key: 'salePrice',
             width: 150,
             render: (_, record) => {
                 const signature = getCombinationSignature(record.combo);
@@ -250,6 +200,70 @@ export const VariationConfigurationStep: React.FC<VariationConfigurationStepProp
                         onChange={val => onChange(signature, 'stock_quantity', val)}
                         status={isError ? 'error' : ''}
                     />
+                );
+            }
+        },
+        {
+            title: t('images'),
+            dataIndex: 'image',
+            key: 'images',
+            width: 80,
+            render: (_, record) => {
+                const signature = getCombinationSignature(record.combo);
+                const rowData = data[signature] || {};
+
+                return (
+                    <div style={{ width: 50, height: 50 }}>
+                        {rowData.image ? (
+                            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                                <VariationImagePreview
+                                    image={rowData.image}
+                                    showBorder
+                                />
+                                <div
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onChange(signature, 'image', null);
+                                    }}
+                                    style={{
+                                        position: 'absolute',
+                                        inset: 0,
+                                        background: 'rgba(0,0,0,0.5)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        opacity: 0,
+                                        transition: 'opacity 0.2s',
+                                        cursor: 'pointer',
+                                        borderRadius: token.borderRadius
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                                    onMouseLeave={e => e.currentTarget.style.opacity = '0'}
+                                >
+                                    <DeleteOutlined style={{ color: 'white' }} />
+                                </div>
+                            </div>
+                        ) : (
+                            <Upload
+                                beforeUpload={(file) => handleImageUpload(signature, file)}
+                                showUploadList={false}
+                            >
+                                <div style={{
+                                    width: 50,
+                                    height: 50,
+                                    border: `1px dashed ${token.colorBorder}`,
+                                    borderRadius: token.borderRadius,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    background: token.colorFillQuaternary
+                                }}>
+                                    <UploadOutlined style={{ color: token.colorTextSecondary }} />
+                                </div>
+                            </Upload>
+                        )}
+                    </div>
                 );
             }
         },

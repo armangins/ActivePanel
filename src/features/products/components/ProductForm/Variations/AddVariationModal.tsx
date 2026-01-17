@@ -15,6 +15,7 @@ interface AddVariationModalProps {
     globalAttributes?: any[];
     initialValues?: any;
     isEditing?: boolean;
+    parentName?: string;
     parentSku?: string;
     parentManageStock?: boolean;
     parentStockQuantity?: number;
@@ -53,7 +54,6 @@ export const AddVariationModal: React.FC<AddVariationModalProps> = (props) => {
         addManualCombination,
         removeManualCombination,
         updateManualCombination,
-        handleModeSelect,
         switchToManualWithAutoData
     } = useVariationModalLogic(props);
 
@@ -72,7 +72,7 @@ export const AddVariationModal: React.FC<AddVariationModalProps> = (props) => {
 
     const stepItems = [
         { title: t('attributes') },
-        { title: t('configuration') },
+        { title: t('pricingAndStock') },
         { title: t('summary') },
     ];
 
@@ -89,28 +89,16 @@ export const AddVariationModal: React.FC<AddVariationModalProps> = (props) => {
                 <Button onClick={onCancel}>{t('cancel')}</Button>
 
                 {step === 0 && (
-                    <>
-                        {/* 
-                            In 3-step flow, Step 0 handles both Attributes & Values.
-                            Users choose generation mode here to proceed to Step 1 (Configuration).
-                        */}
-                        <Button
-                            onClick={() => handleModeSelect('manual')}
-                        >
-                            {t('createManually')}
-                        </Button>
-                        <Button type="primary" onClick={switchToManualWithAutoData}>
-                            {/* If auto, we proceed via switchToManualWithAutoData which sets mode to manual (with data) and calls next/setStep(1) */}
-                            {t('generateAllCombinations') || 'Generate All'}
-                        </Button>
-                    </>
+                    <Button type="primary" onClick={switchToManualWithAutoData}>
+                        {t('generateAllCombinations') || 'Generate All'}
+                    </Button>
                 )}
 
                 {step === 1 && (
                     <>
                         <Button onClick={() => setStep(0)}>{t('back')}</Button>
                         <Button type="primary" onClick={handleNext}>
-                            {t('next')}
+                            {t('summary')}
                         </Button>
                     </>
                 )}
@@ -124,7 +112,7 @@ export const AddVariationModal: React.FC<AddVariationModalProps> = (props) => {
                     </>
                 )}
             </div>
-        </div>
+        </div >
     );
 
     return (
@@ -164,10 +152,14 @@ export const AddVariationModal: React.FC<AddVariationModalProps> = (props) => {
                     onAddRow={addManualCombination}
                     onRemoveRow={removeManualCombination}
                     onUpdateCombo={updateManualCombination}
-                    activeAttributes={activeAttributeIds.map(id =>
-                        (globalAttributes || []).find((a: any) => a.id === id) ||
-                        (existingAttributes || []).find((a: any) => a.id === id || a.name === id)
-                    ).filter(Boolean)}
+                    activeAttributes={activeAttributeIds.map(id => {
+                        const attr = (globalAttributes || []).find((a: any) => a.id === id) ||
+                            (existingAttributes || []).find((a: any) => a.id === id || a.name === id);
+                        return attr ? {
+                            ...attr,
+                            options: wizardAttributes[id] || []  // Only selected values, not all available terms
+                        } : null;
+                    }).filter(Boolean)}
                 />
             )}
 

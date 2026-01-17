@@ -9,7 +9,7 @@ interface ProductDetailFooterProps {
     onClose: () => void;
     onSave: () => void;
     isSaving: boolean;
-    product: Product;
+    product?: Product;
     fullProduct?: Product;
 }
 
@@ -23,6 +23,8 @@ export const ProductDetailFooter: React.FC<ProductDetailFooterProps> = ({
     const { t } = useLanguage();
     const { useToken } = theme;
     const { token } = useToken();
+
+    const permalink = fullProduct?.permalink || product?.permalink;
 
     return (
         <div style={{
@@ -39,11 +41,10 @@ export const ProductDetailFooter: React.FC<ProductDetailFooterProps> = ({
             >
                 {t('cancel')}
             </Button>
-            {/* Use fullProduct.permalink if available, fallback to product.permalink */}
-            {(fullProduct?.permalink || product.permalink) && (
+            {permalink && (
                 <Button
                     icon={<GlobalOutlined />}
-                    href={fullProduct?.permalink || product.permalink}
+                    href={permalink}
                     target="_blank"
                 >
                     {t('viewOnSite')}

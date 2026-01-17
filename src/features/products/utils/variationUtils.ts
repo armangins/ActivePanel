@@ -1,5 +1,6 @@
 export interface NewVariationData {
-    attributes: { id: number | string; name: string; option: string }[];
+    attributes: { id: number | string; name: string; option: string; display_option?: string }[];
+    name?: string;
     sku?: string;
     regular_price: string;
     sale_price?: string;

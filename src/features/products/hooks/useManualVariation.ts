@@ -12,67 +12,18 @@ export const useManualVariation = (
     const messageApi = useMessage();
 
     const handleManualAdd = (data: ProductVariation | ProductVariation[]) => {
-        // Handle both single object and array
-        const variationsList = Array.isArray(data) ? data : [data];
+        const variationsInput = Array.isArray(data) ? data : [data];
+        const currentVariations = form.getValues('variations') || [];
 
-        // Sync attributes: Add any new attributes/options from the modal to the product form state
-        // We accumulate changes across all variations in the list
-        const formAttributes = form.getValues('attributes') || [];
-        const newFormAttributes = [...formAttributes];
-        let attributesChanged = false;
+        // 1. DUPLICATE PREVENTION & MERGING
+        let updatedVariations = [...currentVariations];
+        let addedCount = 0;
 
-        variationsList.forEach(variation => {
-            if (variation.attributes && Array.isArray(variation.attributes)) {
-                variation.attributes.forEach((newAttr: any) => {
-                    const existingAttrIndex = newFormAttributes.findIndex((a: any) => a.name === newAttr.name);
-
-                    if (existingAttrIndex > -1) {
-                        // Attribute exists, check if option needs to be added
-                        const existingOptions = newFormAttributes[existingAttrIndex].options || [];
-                        if (!existingOptions.includes(newAttr.option)) {
-                            newFormAttributes[existingAttrIndex] = {
-                                ...newFormAttributes[existingAttrIndex],
-                                options: [...existingOptions, newAttr.option]
-                            };
-                            attributesChanged = true;
-                        }
-                    } else {
-                        // Attribute does not exist, check if we already added it in this batch (from previous variation in loop)
-                        const newlyAddedIndex = newFormAttributes.findIndex((a: any) => a.name === newAttr.name);
-                        if (newlyAddedIndex > -1) {
-                            // Already added in this batch, just append option logic
-                            const existingOptions = newFormAttributes[newlyAddedIndex].options || [];
-                            if (!existingOptions.includes(newAttr.option)) {
-                                newFormAttributes[newlyAddedIndex].options.push(newAttr.option);
-                                attributesChanged = true;
-                            }
-                        } else {
-                            // Attribute completely new to the form
-                            newFormAttributes.push({
-                                id: newAttr.id || Date.now() + Math.random(),
-                                name: newAttr.name,
-                                options: [newAttr.option],
-                                visible: true,
-                                variation: true
-                            });
-                            attributesChanged = true;
-                        }
-                    }
-                });
-            }
-        });
-
-        if (attributesChanged) {
-            form.setValue('attributes', newFormAttributes, { shouldDirty: true });
-        }
-
-        const existingVariations = form.getValues('variations') || [];
-
-        // CASE 1: Editing a SINGLE variation
         if (editingVariationIndex !== null && !Array.isArray(data)) {
+            // CASE 1: Editing a single existing variation
             const singleData = data as ProductVariation;
-            const newVariation = {
-                id: existingVariations[editingVariationIndex] ? existingVariations[editingVariationIndex].id : 0,
+            updatedVariations[editingVariationIndex] = {
+                ...updatedVariations[editingVariationIndex],
                 sku: singleData.sku || '',
                 regular_price: singleData.regular_price,
                 sale_price: singleData.sale_price,
@@ -82,37 +33,125 @@ export const useManualVariation = (
                 attributes: singleData.attributes,
                 image: singleData.image
             };
-
-            const updatedVariations = [...existingVariations];
-            updatedVariations[editingVariationIndex] = {
-                ...updatedVariations[editingVariationIndex],
-                ...newVariation
-            };
-            form.setValue('variations', updatedVariations, { shouldDirty: true });
             messageApi.success(t('variationUpdated') || 'Variation updated');
-        }
-        // CASE 2: Adding NEW variations (Single or Batch)
-        else {
-            const newVariations = variationsList.map((v) => ({
-                id: 0, // New variation ID placeholder
-                sku: v.sku || '', // If bulk generating, sku might be empty or pattern-based
-                regular_price: v.regular_price,
-                sale_price: v.sale_price,
-                stock_quantity: v.stock_quantity || 0,
-                stock_status: v.stock_status,
-                manage_stock: v.manage_stock,
-                attributes: v.attributes,
-                image: v.image
-            }));
+        } else {
+            // CASE 2: Adding NEW variations (Single or Batch)
+            // intelligent merge: check if variation exists
+            variationsInput.forEach(newVar => {
+                if (!newVar.attributes || newVar.attributes.length === 0) return;
 
-            form.setValue('variations', [...existingVariations, ...newVariations], { shouldDirty: true });
+                // STRICT VALIDATION: Filter out variations with missing/empty attribute options
+                // This prevents "Any" variations from being created accidentally
+                const isIncomplete = newVar.attributes.some((a: any) => !a.option || a.option === '');
+                if (isIncomplete) return;
 
-            if (newVariations.length > 1) {
-                messageApi.success(t('variationsGeneratedCount', { count: newVariations.length }) || `${newVariations.length} variations generated`);
+                // Generate signature for duplicate check
+                const newSignature = newVar.attributes
+                    .map((a: any) => `${a.name}:${a.option}`)
+                    .sort()
+                    .join('|');
+
+                const existsIndex = updatedVariations.findIndex(existing => {
+                    const existingSignature = existing.attributes
+                        ?.map((a: any) => `${a.name}:${a.option}`)
+                        .sort()
+                        .join('|');
+                    return existingSignature === newSignature;
+                });
+
+                if (existsIndex > -1) {
+                    // Update existing variation
+                    // useful if user regenerates to update prices or stock for existing combos
+                    updatedVariations[existsIndex] = {
+                        ...updatedVariations[existsIndex],
+                        regular_price: newVar.regular_price,
+                        sale_price: newVar.sale_price,
+                        stock_quantity: newVar.stock_quantity || 0,
+                        manage_stock: newVar.manage_stock,
+                        image: newVar.image || updatedVariations[existsIndex].image,
+                        sku: newVar.sku || updatedVariations[existsIndex].sku
+                    };
+                } else {
+                    // Add new variation
+                    updatedVariations.push({
+                        id: 0,
+                        sku: newVar.sku || '',
+                        regular_price: newVar.regular_price,
+                        sale_price: newVar.sale_price,
+                        stock_quantity: newVar.stock_quantity || 0,
+                        stock_status: newVar.stock_status,
+                        manage_stock: newVar.manage_stock,
+                        attributes: newVar.attributes,
+                        image: newVar.image,
+                        price: newVar.regular_price || '',
+                        weight: '',
+                        length: '',
+                        width: '',
+                        height: ''
+                    });
+                    addedCount++;
+                }
+            });
+
+            if (addedCount > 0) {
+                messageApi.success(t('variationsGeneratedCount', { count: addedCount }) || `${addedCount} variations generated`);
             } else {
-                messageApi.success(t('variationAdded') || 'Variation added manually');
+                messageApi.info(t('variationsUpdated') || 'Existing variations updated');
             }
         }
+
+        // 2. ATTRIBUTE SYNC (PRESERVATION)
+        // Recalculate which attributes are used in variations
+        const usedAttributeNames = new Set<string>();
+        updatedVariations.forEach(v => {
+            v.attributes?.forEach((attr: any) => {
+                const option = attr.option || attr.slug;
+                const isAny = typeof option === 'string' && option.toLowerCase() === 'any';
+                if (attr.name && option && !isAny) {
+                    usedAttributeNames.add(attr.name);
+                }
+            });
+        });
+
+        const currentFormAttributes = form.getValues('attributes') || [];
+        // Map existing attributes: Set variation=true if used, otherwise KEEP it but set variation=false
+        const newFormAttributes = currentFormAttributes.map((attr: any) => ({
+            ...attr,
+            variation: usedAttributeNames.has(attr.name)
+        }));
+
+        // 3. MERGE NEW ATTRIBUTES from the wizard
+        variationsInput.forEach(v => {
+            v.attributes?.forEach((newAttr: any) => {
+                const existingIdx = newFormAttributes.findIndex((a: any) => a.name === newAttr.name);
+                const valueToAdd = newAttr.slug || newAttr.option;
+
+                if (existingIdx > -1) {
+                    // Attribute exists, ensure option is present
+                    const existingOptions = newFormAttributes[existingIdx].options || [];
+                    if (!existingOptions.includes(valueToAdd)) {
+                        newFormAttributes[existingIdx].options = [...existingOptions, valueToAdd];
+                    }
+                    // Mark as used for variation
+                    newFormAttributes[existingIdx].variation = true;
+                } else {
+                    // Completely new attribute - add it
+                    newFormAttributes.push({
+                        id: newAttr.id || Date.now() + Math.floor(Math.random() * 1000),
+                        name: newAttr.name,
+                        options: [valueToAdd],
+                        visible: true,
+                        variation: true,
+                        slug: newAttr.slug || `attr-${Date.now()}`,
+                        position: 0
+                    });
+                }
+            });
+        });
+
+        // Update form state
+        form.setValue('attributes', newFormAttributes, { shouldDirty: true });
+        form.setValue('variations', updatedVariations, { shouldDirty: true });
 
         setEditingVariationIndex(null);
     };

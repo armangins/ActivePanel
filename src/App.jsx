@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout, Spin } from 'antd';
-import { useLanguage } from './contexts/LanguageContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { AuthProvider, useAuth, LoginPage, SignUpPage, OAuthCallback, ProtectedRoute } from '@/features/auth';
 import { SettingsProvider } from '@/features/settings';
 import { MessageProvider } from './contexts/MessageContext';
@@ -13,7 +13,6 @@ import { useResponsive } from '@/hooks/useResponsive';
 // Lazy load route components for code-splitting
 const Dashboard = lazy(() => import('@/features/dashboard'));
 const Products = lazy(() => import('@/features/products'));
-const ProductForm = lazy(() => import('@/features/products').then(module => ({ default: module.ProductForm })));
 const Orders = lazy(() => import('@/features/orders'));
 const Customers = lazy(() => import('@/features/customers'));
 const Coupons = lazy(() => import('@/features/coupons'));
@@ -90,8 +89,6 @@ function AppContent() {
                       <Route path="/" element={<Navigate to="/dashboard" replace />} />
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/products" element={<Products />} />
-                      <Route path="/products/add" element={<ProductForm />} />
-                      <Route path="/products/edit/:id" element={<ProductForm />} />
                       <Route path="/products/attributes" element={<AttributesPage />} />
                       <Route path="/orders" element={<Orders />} />
                       <Route path="/customers" element={<Customers />} />

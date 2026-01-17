@@ -57,11 +57,11 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
             'data-onboarding': 'products-nav',
             children: [
                 {
-                    key: '/products/list',
+                    key: '/products',
                     label: t('allProducts') || 'All Products'
                 },
                 {
-                    key: '/products/add',
+                    key: '/products?create=true',
                     label: t('addProduct') || 'Add New Product'
                 },
                 {
